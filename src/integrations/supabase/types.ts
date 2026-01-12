@@ -419,25 +419,46 @@ export type Database = {
       }
       organizations: {
         Row: {
+          accent_color: string | null
           created_at: string | null
           domain: string | null
+          footer_text: string | null
           id: string
+          logo_url: string | null
           name: string
+          primary_color: string | null
+          secondary_color: string | null
+          settings: Json | null
           updated_at: string | null
+          welcome_message: string | null
         }
         Insert: {
+          accent_color?: string | null
           created_at?: string | null
           domain?: string | null
+          footer_text?: string | null
           id?: string
+          logo_url?: string | null
           name: string
+          primary_color?: string | null
+          secondary_color?: string | null
+          settings?: Json | null
           updated_at?: string | null
+          welcome_message?: string | null
         }
         Update: {
+          accent_color?: string | null
           created_at?: string | null
           domain?: string | null
+          footer_text?: string | null
           id?: string
+          logo_url?: string | null
           name?: string
+          primary_color?: string | null
+          secondary_color?: string | null
+          settings?: Json | null
           updated_at?: string | null
+          welcome_message?: string | null
         }
         Relationships: []
       }
