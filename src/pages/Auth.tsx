@@ -442,25 +442,27 @@ export default function Auth() {
                   </div>
                 </div>
 
-                {/* Demo Login Button - Only shown in development */}
-                {isDevelopment() && (
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleDemoLogin}
-                    disabled={demoLoading}
-                  >
-                    {demoLoading ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Shield className="w-4 h-4 mr-2" />
-                    )}
-                    {selectedRole === 'admin' || selectedRole === 'vendor' 
-                      ? `Demo ${roleConfig[selectedRole].label} Access`
-                      : 'Continue with UAE Pass (Demo)'
-                    }
-                  </Button>
-                )}
+                {/* UAE Pass Demo Login Button */}
+                <Button
+                  variant="outline"
+                  className="w-full border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 hover:border-emerald-500/50"
+                  onClick={handleDemoLogin}
+                  disabled={demoLoading}
+                >
+                  {demoLoading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#00B074"/>
+                      <path d="M2 17L12 22L22 17" stroke="#00B074" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M2 12L12 17L22 12" stroke="#00B074" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                    Continue with UAE Pass
+                  </span>
+                  <span className="ml-2 text-xs text-muted-foreground">(Demo)</span>
+                </Button>
 
                 <p className="text-center text-sm text-muted-foreground">
                   {isLogin ? "Don't have an account? " : 'Already have an account? '}
