@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_saved_reports: {
+        Row: {
+          admin_user_id: string
+          created_at: string | null
+          data_snapshot: Json | null
+          filters: Json | null
+          id: string
+          report_name: string
+          report_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          admin_user_id: string
+          created_at?: string | null
+          data_snapshot?: Json | null
+          filters?: Json | null
+          id?: string
+          report_name: string
+          report_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          admin_user_id?: string
+          created_at?: string | null
+          data_snapshot?: Json | null
+          filters?: Json | null
+          id?: string
+          report_name?: string
+          report_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       benefit_entitlements: {
         Row: {
           annual_allowance: number
@@ -309,6 +342,7 @@ export type Database = {
           tags: string[] | null
           terms: string | null
           title: string
+          vendor_id: string | null
         }
         Insert: {
           category: string
@@ -323,6 +357,7 @@ export type Database = {
           tags?: string[] | null
           terms?: string | null
           title: string
+          vendor_id?: string | null
         }
         Update: {
           category?: string
@@ -337,8 +372,17 @@ export type Database = {
           tags?: string[] | null
           terms?: string | null
           title?: string
+          vendor_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_offers_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       perk_activations: {
         Row: {
@@ -368,6 +412,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      platform_analytics: {
+        Row: {
+          company_size: string | null
+          created_at: string | null
+          id: string
+          industry: string | null
+          metadata: Json | null
+          metric_name: string
+          metric_type: string
+          metric_value: number
+          period_end: string
+          period_start: string
+          region: string | null
+        }
+        Insert: {
+          company_size?: string | null
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          metadata?: Json | null
+          metric_name: string
+          metric_type: string
+          metric_value: number
+          period_end: string
+          period_start: string
+          region?: string | null
+        }
+        Update: {
+          company_size?: string | null
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          metadata?: Json | null
+          metric_name?: string
+          metric_type?: string
+          metric_value?: number
+          period_end?: string
+          period_start?: string
+          region?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -613,6 +699,120 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      vendor_transactions: {
+        Row: {
+          code_used: string | null
+          commission_amount: number
+          created_at: string | null
+          discount_amount: number | null
+          id: string
+          offer_id: string | null
+          original_amount: number
+          redeemed_at: string | null
+          settled_at: string | null
+          status: string | null
+          transaction_type: string
+          user_id: string
+          vendor_id: string
+        }
+        Insert: {
+          code_used?: string | null
+          commission_amount: number
+          created_at?: string | null
+          discount_amount?: number | null
+          id?: string
+          offer_id?: string | null
+          original_amount: number
+          redeemed_at?: string | null
+          settled_at?: string | null
+          status?: string | null
+          transaction_type?: string
+          user_id: string
+          vendor_id: string
+        }
+        Update: {
+          code_used?: string | null
+          commission_amount?: number
+          created_at?: string | null
+          discount_amount?: number | null
+          id?: string
+          offer_id?: string | null
+          original_amount?: number
+          redeemed_at?: string | null
+          settled_at?: string | null
+          status?: string | null
+          transaction_type?: string
+          user_id?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_transactions_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_transactions_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendors: {
+        Row: {
+          commission_rate: number | null
+          company_name: string
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          total_revenue: number | null
+          total_transactions: number | null
+          updated_at: string | null
+          user_id: string
+          website_url: string | null
+        }
+        Insert: {
+          commission_rate?: number | null
+          company_name: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          total_revenue?: number | null
+          total_transactions?: number | null
+          updated_at?: string | null
+          user_id: string
+          website_url?: string | null
+        }
+        Update: {
+          commission_rate?: number | null
+          company_name?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          total_revenue?: number | null
+          total_transactions?: number | null
+          updated_at?: string | null
+          user_id?: string
+          website_url?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
