@@ -79,7 +79,7 @@ export default function AdminBenchmarks() {
   };
 
   const radarData = regionalData.map(r => ({
-    name: r.region,
+    subject: r.region,
     value: r.avgUtilization,
     fullMark: 100,
   }));
@@ -353,7 +353,7 @@ export default function AdminBenchmarks() {
                   secondaryValue: s.avgSpend / 1000
                 }))}
                 height={300}
-                showSecondaryBar
+                showSecondary
                 primaryLabel={t('Utilization %', 'الاستخدام %')}
                 secondaryLabel={t('Spend (K)', 'الإنفاق (ألف)')}
               />
