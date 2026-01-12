@@ -6,34 +6,72 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { NoSearchResults } from '@/components/ui/empty-state';
-import { GraduationCap, Search, Star, ExternalLink, MapPin, Users, BookOpen, Calculator, Wallet, TrendingUp } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  GraduationCap, Search, Star, ExternalLink, MapPin, Users, BookOpen, 
+  Calculator, Wallet, TrendingUp, User, ChevronRight, Check, Info,
+  School, Baby, Building2
+} from 'lucide-react';
 import { useSchools, useChildren } from '@/hooks/useSupabaseData';
 
-const ALLOWANCE_PER_CHILD = 30000; // Demo allowance per child
+const ALLOWANCE_PER_CHILD = 30000;
+
+// Demo children data with more details
+const demoChildren = [
+  { id: '1', name: 'Sarah', age: 6, grade: 'Grade 1', gradeLevel: 'Primary', selectedSchool: null, schoolFee: 0 },
+  { id: '2', name: 'Ahmed', age: 14, grade: 'Grade 9', gradeLevel: 'Secondary', selectedSchool: null, schoolFee: 0 },
+];
+
+interface ChildAllocation {
+  id: string;
+  name: string;
+  age: number;
+  grade: string;
+  gradeLevel: string;
+  selectedSchool: string | null;
+  schoolFee: number;
+}
 
 export default function SchoolingPage() {
   const { data: schools = [] } = useSchools();
-  const { data: children = [] } = useChildren();
+  const { data: dbChildren = [] } = useChildren();
   
+  const [childrenAllocations, setChildrenAllocations] = useState<ChildAllocation[]>(demoChildren);
+  const [activeChildId, setActiveChildId] = useState<string>(demoChildren[0]?.id || '');
   const [searchTerm, setSearchTerm] = useState('');
   const [curriculum, setCurriculum] = useState<string>('all');
-  const [gradeRange, setGradeRange] = useState<string>('all');
   const [maxFee, setMaxFee] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('net_cost');
 
-  const numberOfChildren = children.length || 2; // Default to 2 for demo
+  const numberOfChildren = childrenAllocations.length;
   const totalAllowance = ALLOWANCE_PER_CHILD * numberOfChildren;
-  const utilized = 42000; // Demo
-  const remaining = totalAllowance - utilized;
-  const utilizationPercent = Math.round((utilized / totalAllowance) * 100);
+  
+  // Calculate totals based on selected schools
+  const totalSchoolFees = childrenAllocations.reduce((sum, c) => sum + c.schoolFee, 0);
+  const totalCoveredByAllowance = childrenAllocations.reduce((sum, c) => sum + Math.min(c.schoolFee, ALLOWANCE_PER_CHILD), 0);
+  const totalOutOfPocket = childrenAllocations.reduce((sum, c) => sum + Math.max(0, c.schoolFee - ALLOWANCE_PER_CHILD), 0);
+  const utilizationPercent = totalAllowance > 0 ? Math.round((totalCoveredByAllowance / totalAllowance) * 100) : 0;
+
+  const activeChild = childrenAllocations.find(c => c.id === activeChildId);
 
   const curriculums = useMemo(() => {
     const unique = [...new Set(schools.map(s => s.curriculum))];
     return unique.sort();
   }, [schools]);
 
+  // Filter schools based on active child's grade level
   const filteredSchools = useMemo(() => {
     let filtered = [...schools];
+
+    // Filter by grade level matching child
+    if (activeChild?.gradeLevel) {
+      filtered = filtered.filter(s => 
+        s.grade_range.toLowerCase().includes(activeChild.gradeLevel.toLowerCase()) ||
+        s.grade_range.includes('KG-12') ||
+        s.grade_range.includes('All')
+      );
+    }
 
     if (searchTerm) {
       filtered = filtered.filter(s => 
@@ -47,15 +85,10 @@ export default function SchoolingPage() {
       filtered = filtered.filter(s => s.curriculum === curriculum);
     }
 
-    if (gradeRange !== 'all') {
-      filtered = filtered.filter(s => s.grade_range.includes(gradeRange));
-    }
-
     if (maxFee !== 'all') {
       filtered = filtered.filter(s => s.annual_fee <= parseInt(maxFee));
     }
 
-    // Sort
     switch (sortBy) {
       case 'net_cost':
         filtered.sort((a, b) => {
@@ -67,38 +100,37 @@ export default function SchoolingPage() {
       case 'fee':
         filtered.sort((a, b) => a.annual_fee - b.annual_fee);
         break;
-      case 'fee_desc':
-        filtered.sort((a, b) => b.annual_fee - a.annual_fee);
-        break;
       case 'rating':
         filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         break;
     }
 
     return filtered;
-  }, [schools, searchTerm, curriculum, gradeRange, maxFee, sortBy]);
+  }, [schools, searchTerm, curriculum, maxFee, sortBy, activeChild]);
 
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
 
-  const getNetCost = (fee: number) => {
-    const netCost = Math.max(0, fee - ALLOWANCE_PER_CHILD);
-    return netCost;
-  };
-
-  const getAffordabilityLabel = (fee: number) => {
-    const netCost = getNetCost(fee);
-    if (netCost === 0) {
-      return <Badge className="bg-success/10 text-success border-0">Fully Covered</Badge>;
-    }
-    return <Badge className="bg-warning/10 text-warning border-0">You Pay: {formatCurrency(netCost)}</Badge>;
+  const handleSelectSchool = (schoolId: string, schoolName: string, fee: number) => {
+    setChildrenAllocations(prev => prev.map(c => 
+      c.id === activeChildId 
+        ? { ...c, selectedSchool: schoolName, schoolFee: fee }
+        : c
+    ));
   };
 
   const clearFilters = () => {
     setSearchTerm('');
     setCurriculum('all');
-    setGradeRange('all');
     setMaxFee('all');
     setSortBy('net_cost');
+  };
+
+  const getGradeIcon = (gradeLevel: string) => {
+    switch (gradeLevel) {
+      case 'Primary': return School;
+      case 'Secondary': return Building2;
+      default: return Baby;
+    }
   };
 
   return (
@@ -110,11 +142,52 @@ export default function SchoolingPage() {
           Education Allowance
         </h1>
         <p className="text-muted-foreground mt-1">
-          Find schools for your children and see your net cost after allowance
+          Configure education for each child individually — each child gets their own AED 30,000 allowance
         </p>
       </div>
 
-      {/* Summary Cards with SummaryStatsCard */}
+      {/* How It Works Card */}
+      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <Info className="w-5 h-5 text-accent" />
+            How Your Education Allowance Works
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
+              <div>
+                <p className="font-medium text-sm">Per-Child Allowance</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Each child receives <span className="font-semibold text-accent">AED 30,000</span> per year — allowances are separate and do not combine
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
+              <div>
+                <p className="font-medium text-sm">Different Schools OK</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Each child can attend a different school — you choose what's best for their age and needs
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
+              <div>
+                <p className="font-medium text-sm">Top-Up If Needed</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  If school fees exceed AED 30,000, the extra is deducted from your salary automatically
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <SummaryStatsCard
           variant="info"
@@ -130,39 +203,310 @@ export default function SchoolingPage() {
           label="Total Allowance"
           value={formatCurrency(totalAllowance)}
           icon={Wallet}
-          formula="AED 30,000 × number of children"
+          formula={`AED 30,000 × ${numberOfChildren} children`}
           dataSource="HR Policy"
           index={1}
         />
         <SummaryStatsCard
           variant="utilized"
-          label="Utilized"
-          value={formatCurrency(utilized)}
+          label="School Fees"
+          value={formatCurrency(totalSchoolFees)}
           icon={GraduationCap}
-          formula="School fees paid via allowance"
-          dataSource="Benefits System"
+          formula="Sum of all selected school fees"
+          dataSource="Your Selections"
           index={2}
         />
         <SummaryStatsCard
           variant="remaining"
-          label="Remaining"
-          value={formatCurrency(remaining)}
+          label="You Pay (Out of Pocket)"
+          value={formatCurrency(totalOutOfPocket)}
           icon={Calculator}
-          formula="Total Allowance - Utilized"
+          formula="Fees exceeding AED 30,000 per child"
           dataSource="System"
           index={3}
         />
         <SummaryStatsCard
           variant="utilization"
-          label="Utilization"
+          label="Allowance Used"
           value={`${utilizationPercent}%`}
           icon={TrendingUp}
-          formula="(Utilized / Allowance) × 100"
+          formula="Amount covered by allowance"
           dataSource="System"
           progress={utilizationPercent}
           index={4}
         />
       </div>
+
+      {/* Children Allocation Cards */}
+      <div>
+        <h2 className="text-lg font-display font-semibold mb-4 flex items-center gap-2">
+          <Users className="w-5 h-5 text-accent" />
+          Your Children's Education
+        </h2>
+        <div className="grid md:grid-cols-2 gap-4">
+          {childrenAllocations.map((child, index) => {
+            const GradeIcon = getGradeIcon(child.gradeLevel);
+            const netCost = Math.max(0, child.schoolFee - ALLOWANCE_PER_CHILD);
+            const covered = Math.min(child.schoolFee, ALLOWANCE_PER_CHILD);
+            const isActive = child.id === activeChildId;
+            
+            return (
+              <Card 
+                key={child.id} 
+                className={`cursor-pointer transition-all duration-300 ${
+                  isActive 
+                    ? 'ring-2 ring-accent border-accent shadow-lg' 
+                    : 'hover:border-accent/40 hover:shadow-md'
+                }`}
+                onClick={() => setActiveChildId(child.id)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        isActive ? 'bg-accent text-accent-foreground' : 'bg-accent/10 text-accent'
+                      }`}>
+                        <User className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{child.name}</h3>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <GradeIcon className="w-3.5 h-3.5" />
+                          <span>{child.grade} • {child.age} years old</span>
+                        </div>
+                      </div>
+                    </div>
+                    {isActive && (
+                      <Badge className="bg-accent text-accent-foreground">Editing</Badge>
+                    )}
+                  </div>
+
+                  <div className="mt-4 p-3 rounded-lg bg-muted/30 border">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">Allowance for {child.name}</span>
+                      <span className="text-sm font-bold text-accent">{formatCurrency(ALLOWANCE_PER_CHILD)}</span>
+                    </div>
+                    
+                    {child.selectedSchool ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-success" />
+                          <span className="text-sm font-medium">{child.selectedSchool}</span>
+                        </div>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">School Fee</span>
+                            <span>{formatCurrency(child.schoolFee)}</span>
+                          </div>
+                          <div className="flex justify-between text-success">
+                            <span>Covered by Allowance</span>
+                            <span>−{formatCurrency(covered)}</span>
+                          </div>
+                          <div className="flex justify-between font-medium pt-1 border-t">
+                            <span>You Pay</span>
+                            <span className={netCost > 0 ? 'text-warning' : 'text-success'}>
+                              {netCost > 0 ? formatCurrency(netCost) : 'Nothing!'}
+                            </span>
+                          </div>
+                        </div>
+                        <Progress 
+                          value={Math.min(100, (child.schoolFee / ALLOWANCE_PER_CHILD) * 100)} 
+                          className="h-2 mt-2"
+                        />
+                        <p className="text-[11px] text-muted-foreground text-center">
+                          {child.schoolFee <= ALLOWANCE_PER_CHILD 
+                            ? `${formatCurrency(ALLOWANCE_PER_CHILD - child.schoolFee)} remaining from allowance`
+                            : `${formatCurrency(netCost)} above allowance (salary deduction)`
+                          }
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="text-center py-3">
+                        <p className="text-sm text-muted-foreground">No school selected yet</p>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="mt-2"
+                          onClick={(e) => { e.stopPropagation(); setActiveChildId(child.id); }}
+                        >
+                          Browse Schools for {child.name}
+                          <ChevronRight className="w-4 h-4 ml-1" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* School Selection for Active Child */}
+      {activeChild && (
+        <Card>
+          <CardHeader className="border-b">
+            <CardTitle className="text-base font-display flex items-center gap-2">
+              <School className="w-5 h-5 text-accent" />
+              Find a School for {activeChild.name}
+              <Badge variant="secondary" className="ml-2">{activeChild.gradeLevel}</Badge>
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Showing schools suitable for {activeChild.grade}. "You Pay" shows the amount above the AED 30,000 allowance.
+            </p>
+          </CardHeader>
+          <CardContent className="pt-4">
+            {/* Filters */}
+            <div className="flex flex-col md:flex-row gap-3 mb-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search schools..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              
+              <Select value={curriculum} onValueChange={setCurriculum}>
+                <SelectTrigger className="w-full md:w-40">
+                  <SelectValue placeholder="Curriculum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Curriculums</SelectItem>
+                  {curriculums.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={maxFee} onValueChange={setMaxFee}>
+                <SelectTrigger className="w-full md:w-40">
+                  <SelectValue placeholder="Max Fee" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any Fee</SelectItem>
+                  <SelectItem value="30000">Fully Covered</SelectItem>
+                  <SelectItem value="50000">Up to 50K</SelectItem>
+                  <SelectItem value="80000">Up to 80K</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full md:w-40">
+                  <SelectValue placeholder="Sort By" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="net_cost">Lowest Out-of-Pocket</SelectItem>
+                  <SelectItem value="fee">Fee: Low to High</SelectItem>
+                  <SelectItem value="rating">Top Rated</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Schools Grid */}
+            {filteredSchools.length > 0 ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredSchools.map((school) => {
+                  const netCost = Math.max(0, school.annual_fee - ALLOWANCE_PER_CHILD);
+                  const isSelected = activeChild.selectedSchool === school.name;
+                  const isFullyCovered = school.annual_fee <= ALLOWANCE_PER_CHILD;
+                  
+                  return (
+                    <Card 
+                      key={school.id} 
+                      className={`transition-all duration-200 ${
+                        isSelected 
+                          ? 'ring-2 ring-success border-success' 
+                          : 'hover:border-accent/40 hover:shadow-md cursor-pointer'
+                      }`}
+                      onClick={() => handleSelectSchool(school.id, school.name, school.annual_fee)}
+                    >
+                      <div className="p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="font-medium text-sm line-clamp-2">{school.name}</h3>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {isSelected && <Check className="w-5 h-5 text-success" />}
+                            {school.rating && (
+                              <span className="flex items-center gap-1 text-sm text-warning">
+                                <Star className="w-3.5 h-3.5 fill-current" />
+                                {school.rating}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="secondary">{school.curriculum}</Badge>
+                          <Badge variant="outline">{school.grade_range}</Badge>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <MapPin className="w-3.5 h-3.5" />
+                          {school.location}
+                        </div>
+
+                        <div className="space-y-2 pt-3 border-t border-border/50">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Annual Fee</span>
+                            <span className="font-medium">{formatCurrency(school.annual_fee)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Your Allowance</span>
+                            <span className="text-success">−{formatCurrency(Math.min(school.annual_fee, ALLOWANCE_PER_CHILD))}</span>
+                          </div>
+                          <div className="flex justify-between text-sm font-semibold pt-2 border-t">
+                            <span>You Pay for {activeChild.name}</span>
+                            <span className={isFullyCovered ? 'text-success' : 'text-warning'}>
+                              {isFullyCovered ? 'AED 0' : formatCurrency(netCost)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="pt-2">
+                          {isFullyCovered ? (
+                            <Badge className="w-full justify-center bg-success/10 text-success border-0 py-1.5">
+                              ✓ Fully Covered by Allowance
+                            </Badge>
+                          ) : (
+                            <Badge className="w-full justify-center bg-warning/10 text-warning border-0 py-1.5">
+                              {formatCurrency(netCost)} from salary
+                            </Badge>
+                          )}
+                        </div>
+
+                        <Button 
+                          size="sm" 
+                          variant={isSelected ? "default" : "outline"} 
+                          className="w-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectSchool(school.id, school.name, school.annual_fee);
+                          }}
+                        >
+                          {isSelected ? (
+                            <>
+                              <Check className="w-4 h-4 mr-1" />
+                              Selected for {activeChild.name}
+                            </>
+                          ) : (
+                            <>Select for {activeChild.name}</>
+                          )}
+                        </Button>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            ) : (
+              <NoSearchResults 
+                query={searchTerm}
+                onClear={clearFilters}
+              />
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Policy Highlights */}
       <Card>
@@ -173,11 +517,15 @@ export default function SchoolingPage() {
           <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <span className="text-accent">•</span>
-              AED 30,000 per child per academic year
+              AED 30,000 per child per academic year (not combined)
             </li>
             <li className="flex items-start gap-2">
               <span className="text-accent">•</span>
               Covers children aged 4–18 years
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Each child can attend a different school
             </li>
             <li className="flex items-start gap-2">
               <span className="text-accent">•</span>
@@ -189,187 +537,11 @@ export default function SchoolingPage() {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-accent">•</span>
-              Fee receipts required for processing
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Top-up from salary for excess fees
+              Excess fees deducted from monthly salary
             </li>
           </ul>
         </CardContent>
       </Card>
-
-      {/* Sibling Optimizer (Demo) */}
-      <Card className="bg-accent/5 border-accent/20">
-        <CardHeader>
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <Calculator className="w-5 h-5 text-accent" />
-            Sibling Optimizer (Demo)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            This tool helps you allocate your education allowance optimally across multiple children.
-            Currently showing default allocation: equal split of {formatCurrency(ALLOWANCE_PER_CHILD)} per child.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            {Array.from({ length: numberOfChildren }, (_, i) => (
-              <div key={i} className="flex items-center gap-2 bg-card rounded-lg px-4 py-2 border">
-                <GraduationCap className="w-4 h-4 text-accent" />
-                <span className="text-sm font-medium">Child {i + 1}:</span>
-                <span className="text-sm">{formatCurrency(ALLOWANCE_PER_CHILD)}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search schools..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            
-            <Select value={curriculum} onValueChange={setCurriculum}>
-              <SelectTrigger className="w-full md:w-44">
-                <SelectValue placeholder="Curriculum" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Curriculums</SelectItem>
-                {curriculums.map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={gradeRange} onValueChange={setGradeRange}>
-              <SelectTrigger className="w-full md:w-44">
-                <SelectValue placeholder="Grade Level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Grades</SelectItem>
-                <SelectItem value="KG">Kindergarten</SelectItem>
-                <SelectItem value="Primary">Primary</SelectItem>
-                <SelectItem value="Secondary">Secondary</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={maxFee} onValueChange={setMaxFee}>
-              <SelectTrigger className="w-full md:w-44">
-                <SelectValue placeholder="Max Fee" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Any Fee</SelectItem>
-                <SelectItem value="30000">Within Allowance</SelectItem>
-                <SelectItem value="50000">Up to 50K</SelectItem>
-                <SelectItem value="80000">Up to 80K</SelectItem>
-                <SelectItem value="100000">Up to 100K</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full md:w-44">
-                <SelectValue placeholder="Sort By" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="net_cost">Lowest Net Cost</SelectItem>
-                <SelectItem value="fee">Fee: Low to High</SelectItem>
-                <SelectItem value="fee_desc">Fee: High to Low</SelectItem>
-                <SelectItem value="rating">Top Rated</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Schools Grid */}
-      {filteredSchools.length > 0 ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredSchools.map((school) => (
-            <Card key={school.id} className="benefit-card">
-              <div className="p-4 space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-medium text-sm line-clamp-2">{school.name}</h3>
-                  {school.rating && (
-                    <span className="flex items-center gap-1 text-sm text-warning shrink-0">
-                      <Star className="w-3.5 h-3.5 fill-current" />
-                      {school.rating}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">{school.curriculum}</Badge>
-                  <Badge variant="outline">{school.grade_range}</Badge>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin className="w-3.5 h-3.5" />
-                  {school.location}
-                </div>
-
-                <div className="space-y-2 pt-2 border-t border-border/50">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Annual Fee</span>
-                    <span className="font-medium">{formatCurrency(school.annual_fee)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Allowance Applied</span>
-                    <span className="text-success">−{formatCurrency(Math.min(school.annual_fee, ALLOWANCE_PER_CHILD))}</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-medium">
-                    <span>You Pay</span>
-                    <span>{formatCurrency(getNetCost(school.annual_fee))}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-2">
-                  {getAffordabilityLabel(school.annual_fee)}
-                </div>
-
-                {school.facilities && school.facilities.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {school.facilities.slice(0, 3).map((facility, i) => (
-                      <Badge key={i} variant="secondary" className="text-xs">
-                        {facility}
-                      </Badge>
-                    ))}
-                    {school.facilities.length > 3 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{school.facilities.length - 3}
-                      </Badge>
-                    )}
-                  </div>
-                )}
-
-                <div className="pt-2">
-                  <Button size="sm" variant="outline" className="w-full" asChild>
-                    <a href={school.website_url || '#'} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="w-3.5 h-3.5 mr-1" />
-                      Visit Website
-                    </a>
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <NoSearchResults 
-            query={searchTerm}
-            onClear={clearFilters}
-          />
-        </Card>
-      )}
 
       {/* View Full Policy */}
       <div className="text-center">
