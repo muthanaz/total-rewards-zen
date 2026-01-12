@@ -157,6 +157,47 @@ export default function LearningPage() {
         />
       </div>
 
+      {/* How It Works */}
+      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-accent" />
+            How Your L&D Budget Works
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
+              <div>
+                <p className="font-medium text-sm">Request Approval</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Submit a course request with justification — most under <span className="font-semibold text-accent">AED 2,000</span> auto-approved
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
+              <div>
+                <p className="font-medium text-sm">Complete & Submit</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Finish your course and submit receipts plus completion certificate
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
+              <div>
+                <p className="font-medium text-sm">Get Reimbursed</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Receive reimbursement within 30 days of submission
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Your Learning */}
       <Card>
         <CardHeader>

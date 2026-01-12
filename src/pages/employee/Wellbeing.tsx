@@ -104,6 +104,47 @@ export default function WellbeingPage() {
         />
       </div>
 
+      {/* How It Works */}
+      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <Dumbbell className="w-5 h-5 text-accent" />
+            How Your Wellbeing Program Works
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
+              <div>
+                <p className="font-medium text-sm">Choose Programs</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Activate any combination of programs up to your <span className="font-semibold text-accent">AED 6,000</span> budget
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
+              <div>
+                <p className="font-medium text-sm">Instant Access</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Once activated, access your programs immediately via app or partner locations
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
+              <div>
+                <p className="font-medium text-sm">Confidential Support</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Mental health sessions are 100% confidential — employer sees only utilization
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Programs Grid */}
       <div className="grid md:grid-cols-2 gap-6">
         {programs.map((program) => (

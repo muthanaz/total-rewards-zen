@@ -144,6 +144,47 @@ export default function LeavePage() {
         />
       </div>
 
+      {/* How It Works */}
+      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-accent" />
+            How Leave Requests Work
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
+              <div>
+                <p className="font-medium text-sm">Submit Request</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Select dates and leave type — give at least <span className="font-semibold text-accent">48 hours</span> notice for planned leave
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
+              <div>
+                <p className="font-medium text-sm">Manager Approval</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Your manager reviews and approves — usually within 24 hours
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
+              <div>
+                <p className="font-medium text-sm">Balance Updated</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Your leave balance is automatically updated once approved
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Leave Balances */}
       <Card>
         <CardHeader>

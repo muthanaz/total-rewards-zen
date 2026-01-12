@@ -129,38 +129,44 @@ export default function HousingPage() {
         />
       </div>
 
-      {/* Policy Highlights */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-display">Policy Highlights</CardTitle>
+      {/* How It Works */}
+      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <Home className="w-5 h-5 text-accent" />
+            How Your Housing Allowance Works
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Paid monthly with salary as cash allowance
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Can be used for rent or mortgage payments
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Receipts required for tax-free treatment
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Annual renewal: submit new tenancy contract
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Pro-rated for partial year employment
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Top-up from salary allowed if rent exceeds
-            </li>
-          </ul>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
+              <div>
+                <p className="font-medium text-sm">Monthly Payment</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  <span className="font-semibold text-accent">AED 10,000</span> credited to your salary each month
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
+              <div>
+                <p className="font-medium text-sm">Flexible Use</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Use for rent, mortgage, or accommodation as you prefer
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
+              <div>
+                <p className="font-medium text-sm">Top-Up Option</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Need more? Top up from salary for properties above allowance
+                </p>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -360,6 +366,41 @@ export default function HousingPage() {
           <p className="mt-4 text-muted-foreground">No listings match your filters</p>
         </Card>
       )}
+
+      {/* Policy Highlights */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-display">Policy Highlights</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Paid monthly with salary as cash allowance
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Can be used for rent or mortgage payments
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Receipts required for tax-free treatment
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Annual renewal: submit new tenancy contract
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Pro-rated for partial year employment
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Top-up from salary allowed if rent exceeds
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
 
       {/* View Full Policy */}
       <div className="text-center">
