@@ -1,0 +1,345 @@
+import { useState, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile } from 'lucide-react';
+import { useHealthProviders } from '@/hooks/useSupabaseData';
+
+const ANNUAL_VALUE = 45000;
+const UTILIZED = 12500;
+
+const policyCategories = [
+  {
+    name: 'Inpatient',
+    icon: Heart,
+    coverage: 'Up to AED 1,000,000',
+    items: ['Room & Board (private)', 'ICU coverage', 'Surgery & anesthesia', 'Doctor visits'],
+  },
+  {
+    name: 'Outpatient',
+    icon: Stethoscope,
+    coverage: 'Up to AED 100,000',
+    items: ['Consultations (AED 0 co-pay)', 'Diagnostics & lab tests', 'Physiotherapy', 'Minor procedures'],
+  },
+  {
+    name: 'Dental',
+    icon: Smile,
+    coverage: 'Up to AED 5,000',
+    items: ['Cleanings & check-ups', 'Fillings & extractions', 'X-rays', 'Root canal (80% covered)'],
+  },
+  {
+    name: 'Optical',
+    icon: Eye,
+    coverage: 'Up to AED 2,000',
+    items: ['Eye exams', 'Prescription glasses', 'Contact lenses', 'Frame allowance'],
+  },
+  {
+    name: 'Maternity',
+    icon: Heart,
+    coverage: 'Up to AED 30,000',
+    items: ['Pre-natal care', 'Delivery (normal/C-section)', 'Post-natal care', 'Newborn coverage (first 30 days)'],
+  },
+  {
+    name: 'Pharmacy',
+    icon: Pill,
+    coverage: '80% covered',
+    items: ['Prescription medications', 'Chronic medication', 'Pre-authorized drugs', 'Generic alternatives'],
+  },
+];
+
+const faqs = [
+  { q: 'How do I find a network provider?', a: 'Use the provider directory below. All listed providers are in-network with direct billing.' },
+  { q: 'What is the pre-authorization process?', a: 'For planned procedures, submit a pre-authorization request through your insurer app or call the hotline.' },
+  { q: 'How do I claim for out-of-network services?', a: 'Pay upfront, then submit claim forms with receipts within 60 days for 50% reimbursement.' },
+  { q: 'Are my dependents covered?', a: 'Yes, spouse and children under 18 are covered under your policy at the same benefit levels.' },
+];
+
+export default function HealthPage() {
+  const { data: providers = [] } = useHealthProviders();
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [providerType, setProviderType] = useState<string>('all');
+  const [specialty, setSpecialty] = useState<string>('all');
+  const [area, setArea] = useState<string>('all');
+
+  const remaining = ANNUAL_VALUE - UTILIZED;
+  const utilizationPercent = Math.round((UTILIZED / ANNUAL_VALUE) * 100);
+
+  const providerTypes = useMemo(() => {
+    const unique = [...new Set(providers.map(p => p.provider_type))];
+    return unique.sort();
+  }, [providers]);
+
+  const specialties = useMemo(() => {
+    const unique = [...new Set(providers.map(p => p.specialty).filter(Boolean))];
+    return unique.sort();
+  }, [providers]);
+
+  const areas = useMemo(() => {
+    const unique = [...new Set(providers.map(p => p.area))];
+    return unique.sort();
+  }, [providers]);
+
+  const filteredProviders = useMemo(() => {
+    let filtered = [...providers];
+
+    if (searchTerm) {
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.area.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.specialty && p.specialty.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    if (providerType !== 'all') {
+      filtered = filtered.filter(p => p.provider_type === providerType);
+    }
+
+    if (specialty !== 'all') {
+      filtered = filtered.filter(p => p.specialty === specialty);
+    }
+
+    if (area !== 'all') {
+      filtered = filtered.filter(p => p.area === area);
+    }
+
+    return filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  }, [providers, searchTerm, providerType, specialty, area]);
+
+  const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
+          <Heart className="w-7 h-7 text-accent" />
+          Health Insurance
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Comprehensive coverage for you and your family
+        </p>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid md:grid-cols-4 gap-4">
+        <Card className="metric-card">
+          <div className="flex items-start justify-between">
+            <Heart className="w-5 h-5 text-accent" />
+            <InfoTooltip formula="Total annual premium value" dataSource="Insurance Provider" />
+          </div>
+          <p className="stat-value mt-3">{formatCurrency(ANNUAL_VALUE)}</p>
+          <p className="stat-label">Annual Value</p>
+        </Card>
+
+        <Card className="metric-card">
+          <div className="flex items-start justify-between">
+            <Heart className="w-5 h-5 text-accent" />
+            <InfoTooltip formula="Sum of all claims YTD" dataSource="Claims System" />
+          </div>
+          <p className="stat-value mt-3">{formatCurrency(UTILIZED)}</p>
+          <p className="stat-label">Claims Paid</p>
+        </Card>
+
+        <Card className="metric-card">
+          <div className="flex items-start justify-between">
+            <Heart className="w-5 h-5 text-accent" />
+            <InfoTooltip formula="Annual Value - Claims" dataSource="System" />
+          </div>
+          <p className="stat-value mt-3">{formatCurrency(remaining)}</p>
+          <p className="stat-label">Coverage Available</p>
+        </Card>
+
+        <Card className="metric-card">
+          <div className="flex items-start justify-between">
+            <Heart className="w-5 h-5 text-accent" />
+            <InfoTooltip formula="(Claims / Value) × 100" dataSource="System" />
+          </div>
+          <p className="stat-value mt-3">{utilizationPercent}%</p>
+          <p className="stat-label">Utilization</p>
+          <Progress value={utilizationPercent} className="h-2 mt-2" />
+        </Card>
+      </div>
+
+      {/* Coverage Categories */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-display">Coverage Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {policyCategories.map((category) => (
+              <div key={category.name} className="p-4 rounded-lg border border-border/50 hover:border-accent/30 transition-colors">
+                <div className="flex items-center gap-2 mb-2">
+                  <category.icon className="w-5 h-5 text-accent" />
+                  <h3 className="font-medium">{category.name}</h3>
+                </div>
+                <p className="text-sm font-medium text-accent mb-2">{category.coverage}</p>
+                <ul className="space-y-1">
+                  {category.items.map((item, i) => (
+                    <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
+                      <CheckCircle className="w-3 h-3 text-success mt-0.5 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tabs for Provider Directory and Policy Helper */}
+      <Tabs defaultValue="providers" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="providers">Provider Directory</TabsTrigger>
+          <TabsTrigger value="helper">Policy Helper (Demo)</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="providers" className="space-y-4">
+          {/* Filters */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search providers..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                
+                <Select value={providerType} onValueChange={setProviderType}>
+                  <SelectTrigger className="w-full md:w-40">
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    {providerTypes.map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={specialty} onValueChange={setSpecialty}>
+                  <SelectTrigger className="w-full md:w-44">
+                    <SelectValue placeholder="Specialty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Specialties</SelectItem>
+                    {specialties.map((s) => (
+                      <SelectItem key={s} value={s!}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={area} onValueChange={setArea}>
+                  <SelectTrigger className="w-full md:w-40">
+                    <SelectValue placeholder="Area" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Areas</SelectItem>
+                    {areas.map((a) => (
+                      <SelectItem key={a} value={a}>{a}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Providers Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredProviders.map((provider) => (
+              <Card key={provider.id} className="benefit-card">
+                <div className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-medium text-sm">{provider.name}</h3>
+                    {provider.rating && (
+                      <span className="flex items-center gap-1 text-sm text-warning shrink-0">
+                        <Star className="w-3.5 h-3.5 fill-current" />
+                        {provider.rating}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="secondary">{provider.provider_type}</Badge>
+                    {provider.specialty && <Badge variant="outline">{provider.specialty}</Badge>}
+                    {provider.in_network && (
+                      <Badge className="bg-success/10 text-success border-0">In-Network</Badge>
+                    )}
+                  </div>
+
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    <p className="flex items-center gap-2">
+                      <MapPin className="w-3.5 h-3.5" />
+                      {provider.area}
+                    </p>
+                    {provider.phone && (
+                      <p className="flex items-center gap-2">
+                        <Phone className="w-3.5 h-3.5" />
+                        {provider.phone}
+                      </p>
+                    )}
+                    {provider.address && (
+                      <p className="text-xs line-clamp-1">{provider.address}</p>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {filteredProviders.length === 0 && (
+            <Card className="p-12 text-center">
+              <Heart className="w-12 h-12 mx-auto text-muted-foreground/50" />
+              <p className="mt-4 text-muted-foreground">No providers match your filters</p>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="helper" className="space-y-4">
+          <Card className="bg-accent/5 border-accent/20">
+            <CardHeader>
+              <CardTitle className="text-base font-display flex items-center gap-2">
+                <HelpCircle className="w-5 h-5 text-accent" />
+                Policy Helper (Demo)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-6">
+                Get quick answers about your health insurance coverage. This demo shows common questions - 
+                in the full version, you can ask any question about your policy.
+              </p>
+
+              <div className="space-y-4">
+                {faqs.map((faq, i) => (
+                  <div key={i} className="p-4 rounded-lg bg-card border border-border/50">
+                    <p className="font-medium text-sm mb-2 flex items-start gap-2">
+                      <HelpCircle className="w-4 h-4 text-accent mt-0.5 shrink-0" />
+                      {faq.q}
+                    </p>
+                    <p className="text-sm text-muted-foreground pl-6">{faq.a}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* View Full Policy */}
+      <div className="text-center">
+        <Button variant="outline">View Full Insurance Policy</Button>
+      </div>
+    </div>
+  );
+}
