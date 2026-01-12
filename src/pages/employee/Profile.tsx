@@ -416,10 +416,10 @@ export default function ProfilePage() {
           <Card>
             <CardHeader><CardTitle className="text-base">Basic Information</CardTitle></CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>First Name</Label><Input value={profile.firstName} onChange={(e) => setProfile({...profile, firstName: e.target.value})} /></div>
-              <div className="space-y-2"><Label>Last Name</Label><Input value={profile.lastName} onChange={(e) => setProfile({...profile, lastName: e.target.value})} /></div>
-              <div className="space-y-2"><Label>Date of Birth</Label><Input type="date" value={profile.dateOfBirth} onChange={(e) => setProfile({...profile, dateOfBirth: e.target.value})} /></div>
-              <div className="space-y-2"><Label>Nationality</Label><Input value={profile.nationality} onChange={(e) => setProfile({...profile, nationality: e.target.value})} /></div>
+              <div className="space-y-2"><Label>First Name</Label><Input value={profile.firstName} onChange={(e) => updateProfile({ firstName: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Last Name</Label><Input value={profile.lastName} onChange={(e) => updateProfile({ lastName: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Date of Birth</Label><Input type="date" value={profile.dateOfBirth} onChange={(e) => updateProfile({ dateOfBirth: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Nationality</Label><Input value={profile.nationality} onChange={(e) => updateProfile({ nationality: e.target.value })} /></div>
             </CardContent>
           </Card>
 
@@ -428,9 +428,9 @@ export default function ProfilePage() {
             <CardHeader><CardTitle className="text-base">Contact Information</CardTitle></CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Email Address</Label><Input value={profile.email} disabled /></div>
-              <div className="space-y-2"><Label>Phone Number</Label><Input value={profile.phone} onChange={(e) => setProfile({...profile, phone: e.target.value})} /></div>
+              <div className="space-y-2"><Label>Phone Number</Label><Input value={profile.phone} onChange={(e) => updateProfile({ phone: e.target.value })} /></div>
               <div className="space-y-2"><Label>Preferred Language</Label>
-                <Select value={profile.language} onValueChange={(v) => setProfile({...profile, language: v})}>
+                <Select value={profile.language} onValueChange={(v) => updateProfile({ language: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="en">English</SelectItem>
@@ -445,7 +445,7 @@ export default function ProfilePage() {
           <Card>
             <CardHeader><CardTitle className="text-base">Identity Documents</CardTitle></CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Emirates ID</Label><Input value={profile.emiratesId} onChange={(e) => setProfile({...profile, emiratesId: e.target.value})} /></div>
+              <div className="space-y-2"><Label>Emirates ID</Label><Input value={profile.emiratesId} onChange={(e) => updateProfile({ emiratesId: e.target.value })} /></div>
             </CardContent>
           </Card>
 
@@ -473,7 +473,7 @@ export default function ProfilePage() {
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Area / Neighborhood</Label>
-                <Select value={profile.area} onValueChange={(v) => setProfile({...profile, area: v})} disabled={!profile.city}>
+                <Select value={profile.area} onValueChange={(v) => updateProfile({ area: v })} disabled={!profile.city}>
                   <SelectTrigger><SelectValue placeholder={profile.city ? "Select area" : "Select city first"} /></SelectTrigger>
                   <SelectContent className="max-h-[300px]">
                     {areas.map(area => <SelectItem key={area} value={area}>{area}</SelectItem>)}
@@ -491,18 +491,18 @@ export default function ProfilePage() {
           <div className="space-y-2"><Label>Manager</Label><Input value={profile.manager} disabled /></div>
           <div className="space-y-2"><Label>Employment Date</Label><Input value={profile.employmentDate} disabled /></div>
           <div className="space-y-2"><Label>Monthly Salary (AED)</Label><Input value={profile.salary} disabled /></div>
-          <div className="space-y-2 md:col-span-2"><Label>Work Location</Label><Input value={profile.workLocation} onChange={(e) => setProfile({...profile, workLocation: e.target.value})} /></div>
+          <div className="space-y-2 md:col-span-2"><Label>Work Location</Label><Input value={profile.workLocation} onChange={(e) => updateProfile({ workLocation: e.target.value })} /></div>
         </CardContent></Card></TabsContent>
 
         <TabsContent value="family" className="space-y-4">
           <Card>
             <CardHeader><CardTitle className="text-base">Family Information</CardTitle></CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Marital Status</Label><Select value={profile.maritalStatus} onValueChange={(v) => setProfile({...profile, maritalStatus: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="single">Single</SelectItem><SelectItem value="married">Married</SelectItem><SelectItem value="divorced">Divorced</SelectItem><SelectItem value="widowed">Widowed</SelectItem></SelectContent></Select></div>
-              <div className="space-y-2"><Label>Spouse Name</Label><Input value={profile.spouseName} onChange={(e) => setProfile({...profile, spouseName: e.target.value})} placeholder="Enter spouse name" disabled={profile.maritalStatus !== 'married'} /></div>
-              <div className="space-y-2"><Label>Spouse Date of Birth</Label><Input type="date" value={profile.spouseDateOfBirth} onChange={(e) => setProfile({...profile, spouseDateOfBirth: e.target.value})} disabled={profile.maritalStatus !== 'married'} /></div>
-              <div className="space-y-2"><Label>Emergency Contact Name</Label><Input value={profile.emergencyName} onChange={(e) => setProfile({...profile, emergencyName: e.target.value})} /></div>
-              <div className="space-y-2"><Label>Emergency Contact Phone</Label><Input value={profile.emergencyPhone} onChange={(e) => setProfile({...profile, emergencyPhone: e.target.value})} /></div>
+              <div className="space-y-2"><Label>Marital Status</Label><Select value={profile.maritalStatus} onValueChange={(v) => updateProfile({ maritalStatus: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="single">Single</SelectItem><SelectItem value="married">Married</SelectItem><SelectItem value="divorced">Divorced</SelectItem><SelectItem value="widowed">Widowed</SelectItem></SelectContent></Select></div>
+              <div className="space-y-2"><Label>Spouse Name</Label><Input value={profile.spouseName} onChange={(e) => updateProfile({ spouseName: e.target.value })} placeholder="Enter spouse name" disabled={profile.maritalStatus !== 'married'} /></div>
+              <div className="space-y-2"><Label>Spouse Date of Birth</Label><Input type="date" value={profile.spouseDateOfBirth} onChange={(e) => updateProfile({ spouseDateOfBirth: e.target.value })} disabled={profile.maritalStatus !== 'married'} /></div>
+              <div className="space-y-2"><Label>Emergency Contact Name</Label><Input value={profile.emergencyName} onChange={(e) => updateProfile({ emergencyName: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Emergency Contact Phone</Label><Input value={profile.emergencyPhone} onChange={(e) => updateProfile({ emergencyPhone: e.target.value })} /></div>
             </CardContent>
           </Card>
 
