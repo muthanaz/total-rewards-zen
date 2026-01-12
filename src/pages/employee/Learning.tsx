@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { NoData } from '@/components/ui/empty-state';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { BookOpen, Award, Clock, CheckCircle, Plus, ExternalLink, Calendar } from 'lucide-react';
+import { BookOpen, Award, Clock, CheckCircle, Plus, ExternalLink, Wallet, TrendingUp, Calculator } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const ANNUAL_BUDGET = 12000;
@@ -67,7 +67,7 @@ export default function LearningPage() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
@@ -116,44 +116,45 @@ export default function LearningPage() {
         </Dialog>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid md:grid-cols-4 gap-4">
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <BookOpen className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Annual L&D budget per employee" dataSource="HR Policy" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(ANNUAL_BUDGET)}</p>
-          <p className="stat-label">Annual Budget</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Award className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Approved and paid learning costs" dataSource="L&D System" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(UTILIZED)}</p>
-          <p className="stat-label">Utilized</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <BookOpen className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Budget - Utilized" dataSource="System" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(remaining)}</p>
-          <p className="stat-label">Remaining</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <BookOpen className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="(Utilized / Budget) × 100" dataSource="System" />
-          </div>
-          <p className="stat-value mt-3">{utilizationPercent}%</p>
-          <p className="stat-label">Utilization</p>
-          <Progress value={utilizationPercent} className="h-2 mt-2" />
-        </Card>
+      {/* Summary Cards with SummaryStatsCard */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <SummaryStatsCard
+          variant="primary"
+          label="Annual Budget"
+          value={formatCurrency(ANNUAL_BUDGET)}
+          icon={Wallet}
+          formula="Annual L&D budget per employee"
+          dataSource="HR Policy"
+          index={0}
+        />
+        <SummaryStatsCard
+          variant="utilized"
+          label="Utilized"
+          value={formatCurrency(UTILIZED)}
+          icon={Award}
+          formula="Approved and paid learning costs"
+          dataSource="L&D System"
+          index={1}
+        />
+        <SummaryStatsCard
+          variant="remaining"
+          label="Remaining"
+          value={formatCurrency(remaining)}
+          icon={Calculator}
+          formula="Budget - Utilized"
+          dataSource="System"
+          index={2}
+        />
+        <SummaryStatsCard
+          variant="utilization"
+          label="Utilization"
+          value={`${utilizationPercent}%`}
+          icon={TrendingUp}
+          formula="(Utilized / Budget) × 100"
+          dataSource="System"
+          progress={utilizationPercent}
+          index={3}
+        />
       </div>
 
       {/* Your Learning */}
@@ -162,40 +163,48 @@ export default function LearningPage() {
           <CardTitle className="text-base font-display">Your Learning Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {reimbursements.map((item) => (
-              <div key={item.id} className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-muted/30">
-                <div className="flex items-center gap-4">
-                  <div className={`p-2 rounded-lg ${
-                    item.status === 'completed' ? 'bg-success/10' : 'bg-warning/10'
-                  }`}>
-                    {item.status === 'completed' ? (
-                      <CheckCircle className="w-5 h-5 text-success" />
-                    ) : (
-                      <Clock className="w-5 h-5 text-warning" />
-                    )}
+          {reimbursements.length > 0 ? (
+            <div className="space-y-4">
+              {reimbursements.map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-muted/30">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-2 rounded-lg ${
+                      item.status === 'completed' ? 'bg-success/10' : 'bg-warning/10'
+                    }`}>
+                      {item.status === 'completed' ? (
+                        <CheckCircle className="w-5 h-5 text-success" />
+                      ) : (
+                        <Clock className="w-5 h-5 text-warning" />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-medium">{item.name}</h4>
+                      <p className="text-sm text-muted-foreground">{item.provider} • {item.type}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-medium">{item.name}</h4>
-                    <p className="text-sm text-muted-foreground">{item.provider} • {item.type}</p>
+                  <div className="text-right">
+                    <p className="font-medium">{formatCurrency(item.cost)}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge className={
+                        item.status === 'completed' 
+                          ? 'bg-success/10 text-success border-0'
+                          : 'bg-warning/10 text-warning border-0'
+                      }>
+                        {item.status === 'completed' ? 'Completed' : 'In Progress'}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">{item.date}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium">{formatCurrency(item.cost)}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge className={
-                      item.status === 'completed' 
-                        ? 'bg-success/10 text-success border-0'
-                        : 'bg-warning/10 text-warning border-0'
-                    }>
-                      {item.status === 'completed' ? 'Completed' : 'In Progress'}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">{item.date}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <NoData 
+              title="No learning activity yet"
+              description="Start your learning journey by requesting a course"
+              action={{ label: 'Request Course', onClick: () => setDialogOpen(true) }}
+            />
+          )}
         </CardContent>
       </Card>
 

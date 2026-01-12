@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { InfoTooltip } from '@/components/ui/info-tooltip';
-import { GraduationCap, Search, Star, ExternalLink, MapPin, Users, BookOpen, Filter, Calculator } from 'lucide-react';
+import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { NoSearchResults } from '@/components/ui/empty-state';
+import { GraduationCap, Search, Star, ExternalLink, MapPin, Users, BookOpen, Calculator, Wallet, TrendingUp } from 'lucide-react';
 import { useSchools, useChildren } from '@/hooks/useSupabaseData';
 
 const ALLOWANCE_PER_CHILD = 30000; // Demo allowance per child
@@ -93,8 +93,16 @@ export default function SchoolingPage() {
     return <Badge className="bg-warning/10 text-warning border-0">You Pay: {formatCurrency(netCost)}</Badge>;
   };
 
+  const clearFilters = () => {
+    setSearchTerm('');
+    setCurriculum('all');
+    setGradeRange('all');
+    setMaxFee('all');
+    setSortBy('net_cost');
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
@@ -106,53 +114,54 @@ export default function SchoolingPage() {
         </p>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid md:grid-cols-5 gap-4">
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Users className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Registered children in profile" dataSource="HR System" />
-          </div>
-          <p className="stat-value mt-3">{numberOfChildren}</p>
-          <p className="stat-label">Children</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Calculator className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="AED 30,000 × number of children" dataSource="HR Policy" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(totalAllowance)}</p>
-          <p className="stat-label">Total Allowance</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <GraduationCap className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="School fees paid via allowance" dataSource="Benefits System" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(utilized)}</p>
-          <p className="stat-label">Utilized</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <GraduationCap className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Total Allowance - Utilized" dataSource="System" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(remaining)}</p>
-          <p className="stat-label">Remaining</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <GraduationCap className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="(Utilized / Allowance) × 100" dataSource="System" />
-          </div>
-          <p className="stat-value mt-3">{utilizationPercent}%</p>
-          <p className="stat-label">Utilization</p>
-          <Progress value={utilizationPercent} className="h-2 mt-2" />
-        </Card>
+      {/* Summary Cards with SummaryStatsCard */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <SummaryStatsCard
+          variant="info"
+          label="Children"
+          value={numberOfChildren.toString()}
+          icon={Users}
+          formula="Registered children in profile"
+          dataSource="HR System"
+          index={0}
+        />
+        <SummaryStatsCard
+          variant="primary"
+          label="Total Allowance"
+          value={formatCurrency(totalAllowance)}
+          icon={Wallet}
+          formula="AED 30,000 × number of children"
+          dataSource="HR Policy"
+          index={1}
+        />
+        <SummaryStatsCard
+          variant="utilized"
+          label="Utilized"
+          value={formatCurrency(utilized)}
+          icon={GraduationCap}
+          formula="School fees paid via allowance"
+          dataSource="Benefits System"
+          index={2}
+        />
+        <SummaryStatsCard
+          variant="remaining"
+          label="Remaining"
+          value={formatCurrency(remaining)}
+          icon={Calculator}
+          formula="Total Allowance - Utilized"
+          dataSource="System"
+          index={3}
+        />
+        <SummaryStatsCard
+          variant="utilization"
+          label="Utilization"
+          value={`${utilizationPercent}%`}
+          icon={TrendingUp}
+          formula="(Utilized / Allowance) × 100"
+          dataSource="System"
+          progress={utilizationPercent}
+          index={4}
+        />
       </div>
 
       {/* Policy Highlights */}
@@ -282,81 +291,83 @@ export default function SchoolingPage() {
       </Card>
 
       {/* Schools Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredSchools.map((school) => (
-          <Card key={school.id} className="benefit-card">
-            <div className="p-4 space-y-3">
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="font-medium text-sm line-clamp-2">{school.name}</h3>
-                {school.rating && (
-                  <span className="flex items-center gap-1 text-sm text-warning shrink-0">
-                    <Star className="w-3.5 h-3.5 fill-current" />
-                    {school.rating}
-                  </span>
-                )}
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">{school.curriculum}</Badge>
-                <Badge variant="outline">{school.grade_range}</Badge>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="w-3.5 h-3.5" />
-                {school.location}
-              </div>
-
-              <div className="space-y-2 pt-2 border-t border-border/50">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Annual Fee</span>
-                  <span className="font-medium">{formatCurrency(school.annual_fee)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Allowance Applied</span>
-                  <span className="text-success">−{formatCurrency(Math.min(school.annual_fee, ALLOWANCE_PER_CHILD))}</span>
-                </div>
-                <div className="flex justify-between text-sm font-medium">
-                  <span>You Pay</span>
-                  <span>{formatCurrency(getNetCost(school.annual_fee))}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-2">
-                {getAffordabilityLabel(school.annual_fee)}
-              </div>
-
-              {school.facilities && school.facilities.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {school.facilities.slice(0, 3).map((facility, i) => (
-                    <Badge key={i} variant="secondary" className="text-xs">
-                      {facility}
-                    </Badge>
-                  ))}
-                  {school.facilities.length > 3 && (
-                    <Badge variant="secondary" className="text-xs">
-                      +{school.facilities.length - 3}
-                    </Badge>
+      {filteredSchools.length > 0 ? (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredSchools.map((school) => (
+            <Card key={school.id} className="benefit-card">
+              <div className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-medium text-sm line-clamp-2">{school.name}</h3>
+                  {school.rating && (
+                    <span className="flex items-center gap-1 text-sm text-warning shrink-0">
+                      <Star className="w-3.5 h-3.5 fill-current" />
+                      {school.rating}
+                    </span>
                   )}
                 </div>
-              )}
 
-              <div className="pt-2">
-                <Button size="sm" variant="outline" className="w-full" asChild>
-                  <a href={school.website_url || '#'} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="w-3.5 h-3.5 mr-1" />
-                    Visit Website
-                  </a>
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="secondary">{school.curriculum}</Badge>
+                  <Badge variant="outline">{school.grade_range}</Badge>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <MapPin className="w-3.5 h-3.5" />
+                  {school.location}
+                </div>
+
+                <div className="space-y-2 pt-2 border-t border-border/50">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Annual Fee</span>
+                    <span className="font-medium">{formatCurrency(school.annual_fee)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Allowance Applied</span>
+                    <span className="text-success">−{formatCurrency(Math.min(school.annual_fee, ALLOWANCE_PER_CHILD))}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-medium">
+                    <span>You Pay</span>
+                    <span>{formatCurrency(getNetCost(school.annual_fee))}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  {getAffordabilityLabel(school.annual_fee)}
+                </div>
+
+                {school.facilities && school.facilities.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {school.facilities.slice(0, 3).map((facility, i) => (
+                      <Badge key={i} variant="secondary" className="text-xs">
+                        {facility}
+                      </Badge>
+                    ))}
+                    {school.facilities.length > 3 && (
+                      <Badge variant="secondary" className="text-xs">
+                        +{school.facilities.length - 3}
+                      </Badge>
+                    )}
+                  </div>
+                )}
+
+                <div className="pt-2">
+                  <Button size="sm" variant="outline" className="w-full" asChild>
+                    <a href={school.website_url || '#'} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                      Visit Website
+                    </a>
+                  </Button>
+                </div>
               </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      {filteredSchools.length === 0 && (
-        <Card className="p-12 text-center">
-          <GraduationCap className="w-12 h-12 mx-auto text-muted-foreground/50" />
-          <p className="mt-4 text-muted-foreground">No schools match your filters</p>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <NoSearchResults 
+            query={searchTerm}
+            onClear={clearFilters}
+          />
         </Card>
       )}
 
