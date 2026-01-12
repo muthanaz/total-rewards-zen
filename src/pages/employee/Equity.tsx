@@ -2,8 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { InfoTooltip } from '@/components/ui/info-tooltip';
-import { TrendingUp, Calendar, DollarSign, CheckCircle, Clock, Award } from 'lucide-react';
+import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { TrendingUp, Calendar, DollarSign, CheckCircle, Clock, Award, Gem } from 'lucide-react';
 
 const TOTAL_SHARES = 5000;
 const VESTED_SHARES = 2500;
@@ -28,7 +28,7 @@ export default function EquityPage() {
   const vestedPercent = Math.round((VESTED_SHARES / TOTAL_SHARES) * 100);
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
@@ -40,43 +40,44 @@ export default function EquityPage() {
         </p>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid md:grid-cols-4 gap-4">
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Award className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Sum of all share grants" dataSource="Equity System" />
-          </div>
-          <p className="stat-value mt-3">{TOTAL_SHARES.toLocaleString()}</p>
-          <p className="stat-label">Total Shares</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <CheckCircle className="w-5 h-5 text-success" />
-            <InfoTooltip formula="Shares past vesting date" dataSource="Equity System" />
-          </div>
-          <p className="stat-value mt-3 text-success">{VESTED_SHARES.toLocaleString()}</p>
-          <p className="stat-label">Vested Shares</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <DollarSign className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Vested × share price" dataSource="Latest Valuation" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(vestedValue)}</p>
-          <p className="stat-label">Vested Value</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <TrendingUp className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Total × share price" dataSource="Latest Valuation" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(totalValue)}</p>
-          <p className="stat-label">Total Value</p>
-        </Card>
+      {/* Summary Cards with SummaryStatsCard */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <SummaryStatsCard
+          variant="primary"
+          label="Total Shares"
+          value={TOTAL_SHARES.toLocaleString()}
+          icon={Award}
+          formula="Sum of all share grants"
+          dataSource="Equity System"
+          index={0}
+        />
+        <SummaryStatsCard
+          variant="utilized"
+          label="Vested Shares"
+          value={VESTED_SHARES.toLocaleString()}
+          icon={CheckCircle}
+          formula="Shares past vesting date"
+          dataSource="Equity System"
+          index={1}
+        />
+        <SummaryStatsCard
+          variant="remaining"
+          label="Vested Value"
+          value={formatCurrency(vestedValue)}
+          icon={DollarSign}
+          formula="Vested × share price"
+          dataSource="Latest Valuation"
+          index={2}
+        />
+        <SummaryStatsCard
+          variant="info"
+          label="Total Value"
+          value={formatCurrency(totalValue)}
+          icon={Gem}
+          formula="Total × share price"
+          dataSource="Latest Valuation"
+          index={3}
+        />
       </div>
 
       {/* Vesting Progress */}
