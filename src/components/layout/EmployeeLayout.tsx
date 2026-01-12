@@ -1,3 +1,4 @@
+// Employee Layout Component
 import { Outlet, useLocation } from 'react-router-dom';
 import { EmployeeSidebar } from './EmployeeSidebar';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
