@@ -133,13 +133,26 @@ export default function Auth() {
     }
   };
 
-  // Only show employee/employer for regular users, admin/vendor are special access
-  const publicRoles: UserRole[] = ['employee', 'employer'];
-  const allRoles: UserRole[] = ['employee', 'employer', 'admin', 'vendor'];
+  // Check URL for role-specific access
+  const urlParams = new URLSearchParams(window.location.search);
+  const accessParam = urlParams.get('access');
   
-  // Check if admin/vendor demo is allowed (you can add a secret code or URL param)
-  const showAllRoles = window.location.search.includes('access=full');
-  const availableRoles = showAllRoles ? allRoles : publicRoles;
+  // Determine which roles to show based on access parameter
+  const getAvailableRoles = (): UserRole[] => {
+    if (accessParam === 'admin') return ['admin'];
+    if (accessParam === 'vendor') return ['vendor'];
+    if (accessParam === 'full') return ['employee', 'employer', 'admin', 'vendor'];
+    return ['employee', 'employer'];
+  };
+  
+  const availableRoles = getAvailableRoles();
+  const showAllRoles = accessParam === 'admin' || accessParam === 'vendor' || accessParam === 'full';
+  
+  // Auto-select the role if only one is available
+  const effectiveRole = availableRoles.length === 1 ? availableRoles[0] : selectedRole;
+  if (effectiveRole !== selectedRole && availableRoles.length === 1) {
+    setSelectedRole(effectiveRole);
+  }
 
   return (
     <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
@@ -298,11 +311,22 @@ export default function Auth() {
           </TabsContent>
         </Tabs>
 
-        {/* Admin/Vendor access hint */}
+        {/* Role-specific access hints */}
         {!showAllRoles && (
-          <p className="text-center text-xs text-primary-foreground/40">
-            Platform admin? <a href="/auth?access=full" className="underline">Access here</a>
-          </p>
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-center text-xs text-primary-foreground/50">
+              Platform admin?{' '}
+              <a href="/auth?access=admin" className="underline hover:text-primary-foreground/80 transition-colors">
+                Access here
+              </a>
+            </p>
+            <p className="text-center text-xs text-primary-foreground/50">
+              Vendor partner?{' '}
+              <a href="/auth?access=vendor" className="underline hover:text-primary-foreground/80 transition-colors">
+                Access here
+              </a>
+            </p>
+          </div>
         )}
       </div>
     </div>

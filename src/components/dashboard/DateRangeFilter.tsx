@@ -13,6 +13,7 @@ interface DateRangeFilterProps {
   onExport?: (format: 'csv' | 'pdf') => void;
   showExport?: boolean;
   className?: string;
+  title?: string;
 }
 
 const presets = [
@@ -28,7 +29,8 @@ export function DateRangeFilter({
   onRangeChange, 
   onExport, 
   showExport = true,
-  className 
+  className,
+  title = "Filter by period"
 }: DateRangeFilterProps) {
   const [date, setDate] = useState<DateRange | undefined>({
     from: subMonths(new Date(), 6),
@@ -55,7 +57,12 @@ export function DateRangeFilter({
   };
 
   return (
-    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+    <div className={cn("flex flex-wrap items-center gap-3", className)}>
+      {/* Section label */}
+      <span className="text-xs font-medium text-muted-foreground hidden sm:inline">
+        {title}:
+      </span>
+      
       {/* Preset Selector */}
       <Select value={preset} onValueChange={handlePresetChange}>
         <SelectTrigger className="w-[140px] h-9 text-xs">
@@ -80,6 +87,7 @@ export function DateRangeFilter({
               "h-9 justify-start text-left font-normal text-xs gap-2",
               !date && "text-muted-foreground"
             )}
+            title="Select custom date range"
           >
             <CalendarIcon className="h-3.5 w-3.5" />
             {date?.from ? (
@@ -91,7 +99,7 @@ export function DateRangeFilter({
                 format(date.from, "MMM d, yyyy")
               )
             ) : (
-              <span>Pick dates</span>
+              <span>Custom dates</span>
             )}
           </Button>
         </PopoverTrigger>
@@ -107,26 +115,33 @@ export function DateRangeFilter({
         </PopoverContent>
       </Popover>
 
-      {/* Export Buttons */}
+      {/* Export Buttons with clear labels */}
       {showExport && onExport && (
-        <div className="flex gap-1 ml-auto">
+        <div className="flex items-center gap-1 ml-auto">
+          <span className="text-xs font-medium text-muted-foreground hidden sm:inline mr-1">
+            Export:
+          </span>
           <Button
             variant="outline"
             size="sm"
             className="h-9 text-xs gap-1.5"
             onClick={() => onExport('csv')}
+            title="Download data as spreadsheet"
           >
             <FileSpreadsheet className="h-3.5 w-3.5" />
-            CSV
+            <span className="hidden sm:inline">Spreadsheet</span>
+            <span className="sm:hidden">CSV</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             className="h-9 text-xs gap-1.5"
             onClick={() => onExport('pdf')}
+            title="Download as PDF report"
           >
             <FileText className="h-3.5 w-3.5" />
-            PDF
+            <span className="hidden sm:inline">Report</span>
+            <span className="sm:hidden">PDF</span>
           </Button>
         </div>
       )}
