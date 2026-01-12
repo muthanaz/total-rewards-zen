@@ -104,23 +104,29 @@ export function AdminSidebar() {
   const sidebarContent = (
     <>
       {/* Logo */}
-      <div className={cn(
-        "flex items-center justify-between px-4 py-5 border-b border-sidebar-border",
-        isRTL && "flex-row-reverse"
-      )}>
-        <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
-            <Shield className="w-4 h-4 text-white" />
+      <div className="px-4 py-5 border-b border-sidebar-border">
+        <div className={cn(
+          "flex items-center justify-between",
+          isRTL && "flex-row-reverse"
+        )}>
+          <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shrink-0">
+              <Shield className="w-4 h-4 text-white" />
+            </div>
+            <span className="font-display text-xl font-bold text-sidebar-foreground">bnft.</span>
+            <span className={cn(
+              "px-2 py-0.5 text-xs font-medium rounded-full bg-red-500/20 text-red-400 shrink-0",
+              isRTL ? "mr-1" : "ml-1"
+            )}>
+              Admin
+            </span>
           </div>
-          <span className="font-display text-xl font-bold text-sidebar-foreground">bnft.</span>
-          <span className={cn(
-            "px-2 py-0.5 text-xs font-medium rounded-full bg-red-500/20 text-red-400",
-            isRTL ? "mr-1" : "ml-1"
-          )}>
-            Admin
-          </span>
         </div>
-        <div className={cn("flex items-center gap-1", isRTL && "flex-row-reverse")}>
+        {/* Theme & Language Controls */}
+        <div className={cn(
+          "flex items-center gap-1 mt-3 pt-3 border-t border-sidebar-border/50",
+          isRTL && "flex-row-reverse"
+        )}>
           <LanguageSwitcher />
           <DarkModeToggle />
         </div>

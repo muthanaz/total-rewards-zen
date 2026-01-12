@@ -112,17 +112,23 @@ export function EmployeeSidebar() {
   const sidebarContent = (
     <>
       {/* Logo */}
-      <div className={cn(
-        "flex items-center justify-between px-4 py-5 border-b border-sidebar-border",
-        isRTL && "flex-row-reverse"
-      )}>
-        <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-          <div className="w-8 h-8 rounded-lg bg-gradient-accent flex items-center justify-center">
-            <span className="text-sidebar-background font-bold text-lg">b</span>
+      <div className="px-4 py-5 border-b border-sidebar-border">
+        <div className={cn(
+          "flex items-center justify-between",
+          isRTL && "flex-row-reverse"
+        )}>
+          <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+            <div className="w-8 h-8 rounded-lg bg-gradient-accent flex items-center justify-center shrink-0">
+              <span className="text-sidebar-background font-bold text-lg">b</span>
+            </div>
+            <span className="font-display text-xl font-bold text-sidebar-foreground">bnft.</span>
           </div>
-          <span className="font-display text-xl font-bold text-sidebar-foreground">bnft.</span>
         </div>
-        <div className={cn("flex items-center gap-1", isRTL && "flex-row-reverse")}>
+        {/* Theme & Language Controls */}
+        <div className={cn(
+          "flex items-center gap-1 mt-3 pt-3 border-t border-sidebar-border/50",
+          isRTL && "flex-row-reverse"
+        )}>
           <LanguageSwitcher />
           <DarkModeToggle />
         </div>
