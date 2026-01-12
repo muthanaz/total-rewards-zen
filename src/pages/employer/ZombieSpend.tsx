@@ -87,7 +87,7 @@ export default function ZombieSpendPage() {
               </div>
               <DollarSign className="h-10 w-10 text-amber-500/30" />
             </div>
-            <InfoTooltip content="Sum of allocated but unused benefits across all categories with <75% utilization" />
+            <InfoTooltip formula="Sum of allocated but unused benefits across all categories with <75% utilization" dataSource="Seed data" />
             <p className="text-sm text-muted-foreground mt-2">
               {((totalZombie / totalAllocated) * 100).toFixed(1)}% of tracked allocations
             </p>
@@ -118,7 +118,7 @@ export default function ZombieSpendPage() {
               </div>
               <TrendingDown className="h-10 w-10 text-green-500/20" />
             </div>
-            <InfoTooltip content="Estimated recoverable amount through policy optimization (60% of zombie spend)" />
+            <InfoTooltip formula="Estimated recoverable amount through policy optimization (60% of zombie spend)" dataSource="Seed data" />
           </CardContent>
         </Card>
       </div>

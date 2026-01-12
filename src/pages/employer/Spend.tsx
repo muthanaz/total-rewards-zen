@@ -81,7 +81,7 @@ export default function SpendPage() {
               </div>
               <DollarSign className="h-8 w-8 text-primary/20" />
             </div>
-            <InfoTooltip content="Sum of all benefit allocations for the year" />
+            <InfoTooltip formula="Sum of all benefit allocations for the year" dataSource="Seed data" />
           </CardContent>
         </Card>
 
