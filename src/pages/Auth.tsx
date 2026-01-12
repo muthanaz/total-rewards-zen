@@ -459,9 +459,9 @@ export default function Auth() {
                     </svg>
                   )}
                   <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                    Continue with UAE Pass
+                    Login with UAE Pass
                   </span>
-                  <span className="ml-2 text-xs text-muted-foreground">(Demo)</span>
+                  <span className="ml-1.5 text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">Demo</span>
                 </Button>
 
                 <p className="text-center text-sm text-muted-foreground">
