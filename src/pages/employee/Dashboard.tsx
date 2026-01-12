@@ -1,14 +1,13 @@
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
 import { 
   DollarSign, TrendingUp, Calendar, Zap, Home, GraduationCap, 
   Heart, Car, Dumbbell, PiggyBank, BookOpen, Plane 
 } from 'lucide-react';
 import { BENEFIT_TYPE_COLORS, BENEFIT_TYPE_LABELS } from '@/lib/constants';
 import { RequestClaimWidget } from '@/components/employee/RequestClaimWidget';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { ChartContainer, AnimatedBarChart, AnimatedDonutChart } from '@/components/charts';
 
 // Demo data
 const metrics = {
@@ -32,208 +31,167 @@ const benefits = [
   { name: 'Learning & Development', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', area: 'career', bullets: ['Courses and certifications', 'Pre-approval required'] },
 ];
 
-// Chart data
+// Chart data - transformed for new components
 const utilizationByType = [
-  { name: 'Cash & Allowances', utilized: 195000, total: 219000, fill: 'hsl(var(--chart-1))' },
-  { name: 'Health & Protection', utilized: 12500, total: 45000, fill: 'hsl(var(--chart-2))' },
-  { name: 'Wealth & Ownership', utilized: 18000, total: 36000, fill: 'hsl(var(--chart-3))' },
-  { name: 'Growth & Career', utilized: 4500, total: 12000, fill: 'hsl(var(--chart-4))' },
-  { name: 'Wellbeing', utilized: 3200, total: 6000, fill: 'hsl(var(--chart-5))' },
+  { name: 'Cash & Allowances', value: 195000, secondaryValue: 219000 },
+  { name: 'Health & Protection', value: 12500, secondaryValue: 45000 },
+  { name: 'Wealth & Ownership', value: 18000, secondaryValue: 36000 },
+  { name: 'Growth & Career', value: 4500, secondaryValue: 12000 },
+  { name: 'Wellbeing', value: 3200, secondaryValue: 6000 },
 ];
 
 const allowanceVsUsed = [
-  { name: 'Utilized', value: 233200, color: 'hsl(var(--primary))' },
-  { name: 'Remaining', value: 164800, color: 'hsl(var(--muted))' },
+  { name: 'Utilized', value: 233200, color: 'hsl(174 60% 45%)' },
+  { name: 'Available', value: 164800, color: 'hsl(220 14% 90%)' },
 ];
 
 export default function EmployeeDashboard() {
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
+  const formatCurrencyShort = (value: number) => `${(value / 1000).toFixed(0)}K`;
+  const utilizationPercent = Math.round((233200 / 398000) * 100);
   
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8 animate-fade-in">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground">Dashboard Overview</h1>
+      <div className="space-y-1">
+        <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">Dashboard Overview</h1>
         <p className="text-muted-foreground">Your total rewards at a glance</p>
       </div>
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <DollarSign className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Base salary / 12" dataSource="HR System" lastUpdated="Jan 2026" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(metrics.monthlySalary)}</p>
-          <p className="stat-label">Monthly Salary</p>
-        </Card>
-        
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <DollarSign className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Monthly × 12" dataSource="HR System" lastUpdated="Jan 2026" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(metrics.annualSalary)}</p>
-          <p className="stat-label">Annual Salary</p>
-        </Card>
-        
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <TrendingUp className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Sum of all benefit entitlements" dataSource="Benefits System" lastUpdated="Jan 2026" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(metrics.annualBenefitsValue)}</p>
-          <p className="stat-label">Annual Benefits</p>
-        </Card>
-        
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Zap className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="(Utilized Value / Total Value) × 100" dataSource="Utilization Tracker" lastUpdated="Today" />
-          </div>
-          <p className="stat-value mt-3">{metrics.benefitsUtilization}%</p>
-          <p className="stat-label">Utilization</p>
-        </Card>
-        
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Calendar className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Total - Used" dataSource="Leave System" lastUpdated="Today" />
-          </div>
-          <p className="stat-value mt-3">{metrics.leaveBalance} days</p>
-          <p className="stat-label">Leave Balance</p>
-        </Card>
-        
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Zap className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Count of perk activations" dataSource="Marketplace" lastUpdated="Today" />
-          </div>
-          <p className="stat-value mt-3">{metrics.activatedItems}</p>
-          <p className="stat-label">Activated Perks</p>
-        </Card>
+        {[
+          { icon: DollarSign, value: formatCurrency(metrics.monthlySalary), label: 'Monthly Salary', formula: 'Base salary / 12', source: 'HR System' },
+          { icon: DollarSign, value: formatCurrency(metrics.annualSalary), label: 'Annual Salary', formula: 'Monthly × 12', source: 'HR System' },
+          { icon: TrendingUp, value: formatCurrency(metrics.annualBenefitsValue), label: 'Annual Benefits', formula: 'Sum of all benefit entitlements', source: 'Benefits System' },
+          { icon: Zap, value: `${metrics.benefitsUtilization}%`, label: 'Utilization', formula: '(Utilized / Total) × 100', source: 'Tracker' },
+          { icon: Calendar, value: `${metrics.leaveBalance} days`, label: 'Leave Balance', formula: 'Total - Used', source: 'Leave System' },
+          { icon: Zap, value: `${metrics.activatedItems}`, label: 'Activated Perks', formula: 'Count of activations', source: 'Marketplace' },
+        ].map((metric, index) => (
+          <Card 
+            key={metric.label} 
+            className="metric-card group hover:border-accent/30 transition-all duration-300"
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
+            <div className="flex items-start justify-between">
+              <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/15 transition-colors">
+                <metric.icon className="w-4 h-4 text-accent" />
+              </div>
+              <InfoTooltip formula={metric.formula} dataSource={metric.source} lastUpdated="Jan 2026" />
+            </div>
+            <p className="text-xl font-bold mt-3 tracking-tight">{metric.value}</p>
+            <p className="text-xs text-muted-foreground mt-1">{metric.label}</p>
+          </Card>
+        ))}
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Utilization by Benefit Type */}
-        <Card className="card-elevated lg:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              Utilization by Benefit Type
-              <InfoTooltip formula="Utilized amount / Total allocation per type" dataSource="Benefits System" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={utilizationByType} layout="vertical">
-                  <XAxis type="number" tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
-                  <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 12 }} />
-                  <Tooltip 
-                    formatter={(value: number) => [`AED ${value.toLocaleString()}`, '']}
-                    contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
-                  />
-                  <Legend />
-                  <Bar dataKey="utilized" name="Utilized" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-                  <Bar dataKey="total" name="Total" fill="hsl(var(--muted))" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Utilization by Benefit Type - Takes 3 columns */}
+        <div className="lg:col-span-3">
+          <ChartContainer 
+            title="Utilization by Benefit Type"
+            formula="Utilized amount vs total allocation per category"
+            dataSource="Benefits System"
+          >
+            <AnimatedBarChart
+              data={utilizationByType}
+              layout="vertical"
+              showSecondary={true}
+              primaryLabel="Utilized"
+              secondaryLabel="Total"
+              formatValue={formatCurrencyShort}
+              height={300}
+              gradientId="employeeBar"
+            />
+          </ChartContainer>
+        </div>
 
-        {/* Allowance vs Used Donut */}
-        <Card className="card-elevated">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              Overall Usage
-              <InfoTooltip formula="Total utilized / Total annual benefits" dataSource="Benefits System" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={allowanceVsUsed}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={75}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {allowanceVsUsed.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value: number) => [`AED ${value.toLocaleString()}`, '']}
-                    contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex justify-center gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-primary" />
-                <span>Utilized: AED 233K</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-muted" />
-                <span>Remaining: AED 165K</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Allowance vs Used Donut - Takes 2 columns */}
+        <div className="lg:col-span-2">
+          <ChartContainer 
+            title="Overall Benefits Usage"
+            formula="Total utilized / Total annual benefits"
+            dataSource="Benefits System"
+          >
+            <AnimatedDonutChart
+              data={allowanceVsUsed}
+              height={200}
+              innerRadius={55}
+              outerRadius={80}
+              formatValue={(v) => `AED ${(v / 1000).toFixed(0)}K`}
+              centerContent={
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-accent">{utilizationPercent}%</p>
+                  <p className="text-xs text-muted-foreground">Used</p>
+                </div>
+              }
+            />
+          </ChartContainer>
+        </div>
       </div>
 
       {/* Request Widget + Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="lg:col-span-3">
           <RequestClaimWidget />
         </div>
         
         {/* Quick Stats */}
-        <Card className="card-elevated">
-          <CardHeader>
-            <CardTitle className="text-lg">Benefit Highlights</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-              <p className="text-sm font-medium text-green-600">Fully Utilized</p>
-              <p className="text-xs text-muted-foreground mt-1">Housing Allowance, Flight Tickets</p>
-            </div>
-            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <p className="text-sm font-medium text-amber-600">Room to Use</p>
-              <p className="text-xs text-muted-foreground mt-1">Health Insurance (28%), L&D (38%)</p>
-            </div>
-            <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
-              <p className="text-sm font-medium text-primary">This Month</p>
-              <p className="text-xs text-muted-foreground mt-1">3 perk activations, 2 claims approved</p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="lg:col-span-2">
+          <Card className="h-full border-border/50 bg-gradient-to-b from-card to-card/80">
+            <CardHeader className="pb-3 border-b border-border/30">
+              <CardTitle className="text-base font-display font-semibold">Benefit Highlights</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-3">
+              <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <p className="text-sm font-semibold text-emerald-600">Fully Utilized</p>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">Housing Allowance, Annual Flight Tickets</p>
+              </div>
+              <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-amber-500" />
+                  <p className="text-sm font-semibold text-amber-600">Room to Use</p>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">Health Insurance (28%), Learning & Dev (38%)</p>
+              </div>
+              <div className="p-4 rounded-xl bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-accent" />
+                  <p className="text-sm font-semibold text-accent">This Month</p>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">3 perk activations, 2 claims approved</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Benefits Grid */}
       <div>
         <h2 className="text-lg font-display font-semibold mb-4">Your Benefits</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {benefits.map((benefit) => {
+          {benefits.map((benefit, index) => {
             const utilization = Math.round((benefit.utilized / benefit.value) * 100);
             const remaining = benefit.value - benefit.utilized;
+            const isFullyUsed = utilization >= 100;
             
             return (
-              <Card key={benefit.name} className="benefit-card">
+              <Card 
+                key={benefit.name} 
+                className="benefit-card group"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
                 <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-accent/10">
+                  <div className="p-2.5 rounded-xl bg-accent/10 group-hover:bg-accent/15 transition-colors">
                     <benefit.icon className="w-5 h-5 text-accent" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-sm truncate">{benefit.name}</h3>
-                    <div className="flex gap-2 mt-1">
+                    <div className="flex gap-2 mt-1.5">
                       <span className={BENEFIT_TYPE_COLORS[benefit.type]}>
                         {BENEFIT_TYPE_LABELS[benefit.type]}
                       </span>
@@ -244,19 +202,24 @@ export default function EmployeeDashboard() {
                 <div className="mt-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Utilized</span>
-                    <span className="font-medium">{formatCurrency(benefit.utilized)}</span>
+                    <span className="font-semibold">{formatCurrency(benefit.utilized)}</span>
                   </div>
-                  <Progress value={utilization} className="h-2" />
+                  <div className="relative">
+                    <Progress 
+                      value={utilization} 
+                      className={`h-2 ${isFullyUsed ? '[&>div]:bg-emerald-500' : '[&>div]:bg-accent'}`}
+                    />
+                  </div>
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>Remaining: {formatCurrency(remaining)}</span>
-                    <span>{utilization}%</span>
+                    <span className={isFullyUsed ? 'text-emerald-600 font-medium' : ''}>{utilization}%</span>
                   </div>
                 </div>
                 
-                <ul className="mt-3 space-y-1">
+                <ul className="mt-4 space-y-1.5 pt-3 border-t border-border/50">
                   {benefit.bullets.map((bullet, i) => (
-                    <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
-                      <span className="text-accent mt-0.5">•</span>
+                    <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                      <span className="text-accent mt-0.5 text-[10px]">●</span>
                       {bullet}
                     </li>
                   ))}
