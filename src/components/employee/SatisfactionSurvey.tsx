@@ -215,10 +215,14 @@ export function SatisfactionSurvey({ compact = false }: SatisfactionSurveyProps)
           <Textarea
             placeholder={t('Share any additional feedback (optional)...', 'شارك أي ملاحظات إضافية (اختياري)...')}
             value={feedback}
-            onChange={(e) => setFeedback(e.target.value)}
+            onChange={(e) => setFeedback(e.target.value.slice(0, 1000))}
+            maxLength={1000}
             className="min-h-[80px] resize-none"
             disabled={isSubmitting}
           />
+          <p className="text-xs text-muted-foreground mt-1 text-right">
+            {feedback.length}/1000
+          </p>
         </div>
 
         <Button 
