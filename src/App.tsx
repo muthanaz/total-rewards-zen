@@ -50,7 +50,9 @@ import AdminMarketIntelligence from "./pages/admin/MarketIntelligence";
 import AdminSpendingPatterns from "./pages/admin/SpendingPatterns";
 import AdminSavedReports from "./pages/admin/SavedReports";
 import VendorDashboard from "./pages/vendor/Dashboard";
-
+import VendorOffers from "./pages/vendor/Offers";
+import VendorTransactions from "./pages/vendor/Transactions";
+import VendorEarnings from "./pages/vendor/Earnings";
 const queryClient = new QueryClient();
 
 type UserRole = 'employee' | 'employer' | 'admin' | 'vendor';
@@ -133,7 +135,9 @@ function AppRoutes() {
       {/* Vendor Routes */}
       <Route path="/vendor" element={<ProtectedRoute allowedRoles={['vendor']}><VendorLayout /></ProtectedRoute>}>
         <Route index element={<VendorDashboard />} />
-        {/* Add more vendor routes as needed */}
+        <Route path="offers" element={<VendorOffers />} />
+        <Route path="transactions" element={<VendorTransactions />} />
+        <Route path="earnings" element={<VendorEarnings />} />
       </Route>
       
       <Route path="*" element={<NotFound />} />
