@@ -376,7 +376,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState({
     firstName: 'John', lastName: 'Smith', email: 'john.smith@company.com', phone: '+971 50 123 4567',
     dateOfBirth: '1990-05-15',
-    nationality: 'United Kingdom', emiratesId: '784-1990-1234567-1', bloodType: 'O+', language: 'en',
+    nationality: 'United Kingdom', emiratesId: '784-1990-1234567-1', language: 'en',
     country: 'United Arab Emirates', city: 'Dubai', area: 'Dubai Marina',
     position: 'Senior Product Manager', department: 'Product', grade: 'G7', manager: 'Sarah Johnson', employmentDate: '2023-01-15', salary: '35000',
     workLocation: 'DIFC',
@@ -465,46 +465,78 @@ export default function ProfilePage() {
       <Tabs defaultValue="personal" className="space-y-4">
         <TabsList><TabsTrigger value="personal"><User className="w-4 h-4 mr-2" />Personal</TabsTrigger><TabsTrigger value="work"><Briefcase className="w-4 h-4 mr-2" />Work</TabsTrigger><TabsTrigger value="family"><Users className="w-4 h-4 mr-2" />Family</TabsTrigger><TabsTrigger value="lifestyle"><Heart className="w-4 h-4 mr-2" />Lifestyle</TabsTrigger></TabsList>
         
-        <TabsContent value="personal"><Card><CardHeader><CardTitle className="text-base">Personal Information</CardTitle></CardHeader><CardContent className="grid md:grid-cols-2 gap-4">
-          <div className="space-y-2"><Label>First Name</Label><Input value={profile.firstName} onChange={(e) => setProfile({...profile, firstName: e.target.value})} /></div>
-          <div className="space-y-2"><Label>Last Name</Label><Input value={profile.lastName} onChange={(e) => setProfile({...profile, lastName: e.target.value})} /></div>
-          <div className="space-y-2"><Label>Date of Birth</Label><Input type="date" value={profile.dateOfBirth} onChange={(e) => setProfile({...profile, dateOfBirth: e.target.value})} /></div>
-          <div className="space-y-2"><Label>Email</Label><Input value={profile.email} disabled /></div>
-          <div className="space-y-2"><Label>Phone</Label><Input value={profile.phone} onChange={(e) => setProfile({...profile, phone: e.target.value})} /></div>
-          <div className="space-y-2"><Label>Nationality</Label><Input value={profile.nationality} onChange={(e) => setProfile({...profile, nationality: e.target.value})} /></div>
-          <div className="space-y-2"><Label>Emirates ID</Label><Input value={profile.emiratesId} onChange={(e) => setProfile({...profile, emiratesId: e.target.value})} /></div>
-          <div className="space-y-2"><Label>Blood Type</Label><Select value={profile.bloodType} onValueChange={(v) => setProfile({...profile, bloodType: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['A+','A-','B+','B-','O+','O-','AB+','AB-'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
-          <div className="space-y-2"><Label>Preferred Language</Label><Select value={profile.language} onValueChange={(v) => setProfile({...profile, language: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="en">English</SelectItem><SelectItem value="ar">Arabic</SelectItem></SelectContent></Select></div>
-          
-          {/* Location fields */}
-          <div className="space-y-2">
-            <Label>Country of Residence</Label>
-            <Select value={profile.country} onValueChange={handleCountryChange}>
-              <SelectTrigger><SelectValue placeholder="Select country" /></SelectTrigger>
-              <SelectContent className="max-h-[300px]">
-                {COUNTRIES.map(country => <SelectItem key={country} value={country}>{country}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>City</Label>
-            <Select value={profile.city} onValueChange={handleCityChange} disabled={!profile.country}>
-              <SelectTrigger><SelectValue placeholder={profile.country ? "Select city" : "Select country first"} /></SelectTrigger>
-              <SelectContent className="max-h-[300px]">
-                {cities.map(city => <SelectItem key={city} value={city}>{city}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label>Area / Neighborhood</Label>
-            <Select value={profile.area} onValueChange={(v) => setProfile({...profile, area: v})} disabled={!profile.city}>
-              <SelectTrigger><SelectValue placeholder={profile.city ? "Select area" : "Select city first"} /></SelectTrigger>
-              <SelectContent className="max-h-[300px]">
-                {areas.map(area => <SelectItem key={area} value={area}>{area}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent></Card></TabsContent>
+        <TabsContent value="personal" className="space-y-4">
+          {/* Basic Information */}
+          <Card>
+            <CardHeader><CardTitle className="text-base">Basic Information</CardTitle></CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>First Name</Label><Input value={profile.firstName} onChange={(e) => setProfile({...profile, firstName: e.target.value})} /></div>
+              <div className="space-y-2"><Label>Last Name</Label><Input value={profile.lastName} onChange={(e) => setProfile({...profile, lastName: e.target.value})} /></div>
+              <div className="space-y-2"><Label>Date of Birth</Label><Input type="date" value={profile.dateOfBirth} onChange={(e) => setProfile({...profile, dateOfBirth: e.target.value})} /></div>
+              <div className="space-y-2"><Label>Nationality</Label><Input value={profile.nationality} onChange={(e) => setProfile({...profile, nationality: e.target.value})} /></div>
+            </CardContent>
+          </Card>
+
+          {/* Contact Information */}
+          <Card>
+            <CardHeader><CardTitle className="text-base">Contact Information</CardTitle></CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Email Address</Label><Input value={profile.email} disabled /></div>
+              <div className="space-y-2"><Label>Phone Number</Label><Input value={profile.phone} onChange={(e) => setProfile({...profile, phone: e.target.value})} /></div>
+              <div className="space-y-2"><Label>Preferred Language</Label>
+                <Select value={profile.language} onValueChange={(v) => setProfile({...profile, language: v})}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="ar">Arabic</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Identity Documents */}
+          <Card>
+            <CardHeader><CardTitle className="text-base">Identity Documents</CardTitle></CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Emirates ID</Label><Input value={profile.emiratesId} onChange={(e) => setProfile({...profile, emiratesId: e.target.value})} /></div>
+            </CardContent>
+          </Card>
+
+          {/* Residence */}
+          <Card>
+            <CardHeader><CardTitle className="text-base">Residence</CardTitle></CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Country of Residence</Label>
+                <Select value={profile.country} onValueChange={handleCountryChange}>
+                  <SelectTrigger><SelectValue placeholder="Select country" /></SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {COUNTRIES.map(country => <SelectItem key={country} value={country}>{country}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>City</Label>
+                <Select value={profile.city} onValueChange={handleCityChange} disabled={!profile.country}>
+                  <SelectTrigger><SelectValue placeholder={profile.country ? "Select city" : "Select country first"} /></SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {cities.map(city => <SelectItem key={city} value={city}>{city}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Area / Neighborhood</Label>
+                <Select value={profile.area} onValueChange={(v) => setProfile({...profile, area: v})} disabled={!profile.city}>
+                  <SelectTrigger><SelectValue placeholder={profile.city ? "Select area" : "Select city first"} /></SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {areas.map(area => <SelectItem key={area} value={area}>{area}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="work"><Card><CardHeader><CardTitle className="text-base">Work Information</CardTitle></CardHeader><CardContent className="grid md:grid-cols-2 gap-4">
           <div className="space-y-2"><Label>Position</Label><Input value={profile.position} disabled /></div>
