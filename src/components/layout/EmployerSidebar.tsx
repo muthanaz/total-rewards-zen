@@ -15,30 +15,34 @@ import {
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
+import { LanguageSwitcher } from '@/components/ui/language-switcher';
 
 interface NavItem {
-  label: string;
+  labelKey: string;
   path: string;
   icon: React.ElementType;
 }
 
 const navigation: NavItem[] = [
-  { label: 'Overview', path: '/employer', icon: LayoutDashboard },
-  { label: 'Spend & Utilization', path: '/employer/spend', icon: DollarSign },
-  { label: 'Zombie Spend', path: '/employer/zombie', icon: Ghost },
-  { label: 'Employee Segments', path: '/employer/segments', icon: Users },
-  { label: 'Claims & Approvals', path: '/employer/claims', icon: FileCheck },
-  { label: 'Marketplace Analytics', path: '/employer/marketplace', icon: ShoppingBag },
-  { label: 'Policy Insights', path: '/employer/policies', icon: FileText },
-  { label: 'Recommendations', path: '/employer/recommendations', icon: Lightbulb },
+  { labelKey: 'nav.overview', path: '/employer', icon: LayoutDashboard },
+  { labelKey: 'nav.spendUtilization', path: '/employer/spend', icon: DollarSign },
+  { labelKey: 'nav.zombieSpend', path: '/employer/zombie', icon: Ghost },
+  { labelKey: 'nav.employeeSegments', path: '/employer/segments', icon: Users },
+  { labelKey: 'nav.claimsApprovals', path: '/employer/claims', icon: FileCheck },
+  { labelKey: 'nav.marketplaceAnalytics', path: '/employer/marketplace', icon: ShoppingBag },
+  { labelKey: 'nav.policyInsights', path: '/employer/policies', icon: FileText },
+  { labelKey: 'nav.recommendations', path: '/employer/recommendations', icon: Lightbulb },
 ];
 
 export function EmployerSidebar() {
   const location = useLocation();
   const { signOut } = useAuth();
+  const { t, direction } = useLanguage();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isRTL = direction === 'rtl';
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -51,11 +55,17 @@ export function EmployerSidebar() {
             <span className="text-sidebar-background font-bold text-lg">b</span>
           </div>
           <span className="font-display text-xl font-bold text-sidebar-foreground">bnft.</span>
-          <span className="ml-1 px-2 py-0.5 text-xs font-medium rounded-full bg-sidebar-accent text-sidebar-primary">
-            Employer
+          <span className={cn(
+            "px-2 py-0.5 text-xs font-medium rounded-full bg-sidebar-accent text-sidebar-primary",
+            isRTL ? "mr-1" : "ml-1"
+          )}>
+            {t('common.employer')}
           </span>
         </div>
-        <DarkModeToggle />
+        <div className="flex items-center gap-1">
+          <LanguageSwitcher />
+          <DarkModeToggle />
+        </div>
       </div>
 
       {/* Navigation */}
@@ -67,11 +77,12 @@ export function EmployerSidebar() {
             onClick={() => setMobileOpen(false)}
             className={cn(
               'nav-item',
-              isActive(item.path) && 'nav-item-active'
+              isActive(item.path) && 'nav-item-active',
+              isRTL && 'flex-row-reverse'
             )}
           >
             <item.icon className="w-4 h-4" />
-            <span className="text-sm">{item.label}</span>
+            <span className="text-sm">{t(item.labelKey)}</span>
           </Link>
         ))}
       </nav>
@@ -81,10 +92,13 @@ export function EmployerSidebar() {
         <Button
           variant="ghost"
           onClick={() => signOut()}
-          className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+          className={cn(
+            "w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent",
+            isRTL ? "justify-end flex-row-reverse" : "justify-start"
+          )}
         >
-          <LogOut className="w-4 h-4 mr-3" />
-          Sign Out
+          <LogOut className={cn("w-4 h-4", isRTL ? "ml-3" : "mr-3")} />
+          {t('common.signOut')}
         </Button>
       </div>
     </>
@@ -95,7 +109,10 @@ export function EmployerSidebar() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="fixed top-4 left-4 z-50 p-2 rounded-lg bg-sidebar text-sidebar-foreground lg:hidden"
+        className={cn(
+          "fixed top-4 z-50 p-2 rounded-lg bg-sidebar text-sidebar-foreground lg:hidden",
+          isRTL ? "right-4" : "left-4"
+        )}
       >
         {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
@@ -111,8 +128,11 @@ export function EmployerSidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-40 h-screen w-64 flex flex-col bg-sidebar transition-transform duration-300 lg:translate-x-0',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+          'fixed top-0 z-40 h-screen w-64 flex flex-col bg-sidebar transition-transform duration-300',
+          isRTL ? 'right-0 lg:translate-x-0' : 'left-0 lg:translate-x-0',
+          isRTL 
+            ? (mobileOpen ? 'translate-x-0' : 'translate-x-full')
+            : (mobileOpen ? 'translate-x-0' : '-translate-x-full')
         )}
       >
         {sidebarContent}
