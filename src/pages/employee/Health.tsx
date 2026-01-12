@@ -4,10 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile } from 'lucide-react';
+import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile, Wallet, TrendingDown, Percent } from 'lucide-react';
 import { useHealthProviders } from '@/hooks/useSupabaseData';
 
 const ANNUAL_VALUE = 45000;
@@ -127,43 +126,40 @@ export default function HealthPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid md:grid-cols-4 gap-4">
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Heart className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Total annual premium value" dataSource="Insurance Provider" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(ANNUAL_VALUE)}</p>
-          <p className="stat-label">Annual Value</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Heart className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Sum of all claims YTD" dataSource="Claims System" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(UTILIZED)}</p>
-          <p className="stat-label">Claims Paid</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Heart className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Annual Value - Claims" dataSource="System" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(remaining)}</p>
-          <p className="stat-label">Coverage Available</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Heart className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="(Claims / Value) × 100" dataSource="System" />
-          </div>
-          <p className="stat-value mt-3">{utilizationPercent}%</p>
-          <p className="stat-label">Utilization</p>
-          <Progress value={utilizationPercent} className="h-2 mt-2" />
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <SummaryStatsCard
+          icon={Heart}
+          value={formatCurrency(ANNUAL_VALUE)}
+          label="Annual Value"
+          formula="Total annual premium value"
+          dataSource="Insurance Provider"
+          variant="primary"
+        />
+        <SummaryStatsCard
+          icon={Wallet}
+          value={formatCurrency(UTILIZED)}
+          label="Claims Paid"
+          formula="Sum of all claims YTD"
+          dataSource="Claims System"
+          variant="utilized"
+        />
+        <SummaryStatsCard
+          icon={TrendingDown}
+          value={formatCurrency(remaining)}
+          label="Coverage Available"
+          formula="Annual Value - Claims"
+          dataSource="System"
+          variant="remaining"
+        />
+        <SummaryStatsCard
+          icon={Percent}
+          value={`${utilizationPercent}%`}
+          label="Utilization"
+          formula="(Claims / Value) × 100"
+          dataSource="System"
+          variant="utilization"
+          progress={utilizationPercent}
+        />
       </div>
 
       {/* Coverage Categories */}

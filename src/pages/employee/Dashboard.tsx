@@ -223,7 +223,7 @@ export default function EmployeeDashboard() {
       {/* Benefits Grid - Moved up, clickable */}
       <div>
         <h2 className="text-lg font-display font-semibold mb-4">Your Benefits</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {benefits.map((benefit, index) => {
             const utilization = Math.round((benefit.utilized / benefit.value) * 100);
             const remaining = benefit.value - benefit.utilized;
@@ -232,48 +232,42 @@ export default function EmployeeDashboard() {
             return (
               <Card 
                 key={benefit.name} 
-                className="benefit-card group h-full flex flex-col cursor-pointer hover:border-accent/40 hover:shadow-lg transition-all duration-300"
+                className="benefit-card group cursor-pointer hover:border-accent/40 hover:shadow-md transition-all duration-300 flex flex-col"
                 style={{ animationDelay: `${index * 50}ms` }}
                 onClick={() => handleBenefitClick(benefit.name)}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2.5 rounded-xl bg-accent/10 group-hover:bg-accent/20 transition-colors shrink-0">
-                      <benefit.icon className="w-5 h-5 text-accent" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-sm truncate group-hover:text-accent transition-colors">{benefit.name}</h3>
-                      <div className="flex gap-2 mt-1.5">
-                        <span className={BENEFIT_TYPE_COLORS[benefit.type]}>
-                          {BENEFIT_TYPE_LABELS[benefit.type]}
-                        </span>
-                      </div>
-                    </div>
+                <div className="flex items-start gap-2.5">
+                  <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors shrink-0">
+                    <benefit.icon className="w-4 h-4 text-accent" />
                   </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-sm truncate group-hover:text-accent transition-colors leading-tight">{benefit.name}</h3>
+                    <span className={`${BENEFIT_TYPE_COLORS[benefit.type]} mt-1 inline-block`}>
+                      {BENEFIT_TYPE_LABELS[benefit.type]}
+                    </span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5" />
                 </div>
                 
-                <div className="mt-4 space-y-2 flex-1">
-                  <div className="flex justify-between text-sm">
+                <div className="mt-3 space-y-1.5 flex-1">
+                  <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground">Utilized</span>
                     <span className="font-semibold">{formatCurrency(benefit.utilized)}</span>
                   </div>
-                  <div className="relative">
-                    <Progress 
-                      value={utilization} 
-                      className={`h-2 ${isFullyUsed ? '[&>div]:bg-emerald-500' : '[&>div]:bg-accent'}`}
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Remaining: {formatCurrency(remaining)}</span>
+                  <Progress 
+                    value={utilization} 
+                    className={`h-1.5 ${isFullyUsed ? '[&>div]:bg-emerald-500' : '[&>div]:bg-accent'}`}
+                  />
+                  <div className="flex justify-between text-[10px] text-muted-foreground">
+                    <span>Rem: {formatCurrency(remaining)}</span>
                     <span className={isFullyUsed ? 'text-emerald-600 font-medium' : ''}>{utilization}%</span>
                   </div>
                 </div>
                 
-                <ul className="mt-4 space-y-1.5 pt-3 border-t border-border/50">
+                <ul className="mt-3 space-y-1 pt-2 border-t border-border/50">
                   {benefit.bullets.map((bullet, i) => (
-                    <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                      <span className="text-accent mt-0.5 text-[10px]">●</span>
+                    <li key={i} className="text-[10px] text-muted-foreground flex items-start gap-1.5 leading-tight">
+                      <span className="text-accent mt-0.5 text-[8px]">●</span>
                       {bullet}
                     </li>
                   ))}

@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { InfoTooltip } from '@/components/ui/info-tooltip';
-import { Car, Fuel, Plane, CreditCard, CheckCircle } from 'lucide-react';
+import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { Car, Fuel, Plane, CreditCard, CheckCircle, Wallet, TrendingDown, Percent } from 'lucide-react';
 
 const allowances = [
   {
@@ -65,43 +65,40 @@ export default function TransportPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid md:grid-cols-4 gap-4">
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <CreditCard className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Sum of all transport allowances" dataSource="HR Policy" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(totalAnnual)}</p>
-          <p className="stat-label">Total Annual</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <CreditCard className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Amount paid/used YTD" dataSource="Payroll" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(totalUtilized)}</p>
-          <p className="stat-label">Utilized</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <CreditCard className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Total - Utilized" dataSource="System" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(totalRemaining)}</p>
-          <p className="stat-label">Remaining</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <CreditCard className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="(Utilized / Total) × 100" dataSource="System" />
-          </div>
-          <p className="stat-value mt-3">{totalUtilization}%</p>
-          <p className="stat-label">Utilization</p>
-          <Progress value={totalUtilization} className="h-2 mt-2" />
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <SummaryStatsCard
+          icon={CreditCard}
+          value={formatCurrency(totalAnnual)}
+          label="Total Annual"
+          formula="Sum of all transport allowances"
+          dataSource="HR Policy"
+          variant="primary"
+        />
+        <SummaryStatsCard
+          icon={Wallet}
+          value={formatCurrency(totalUtilized)}
+          label="Utilized"
+          formula="Amount paid/used YTD"
+          dataSource="Payroll"
+          variant="utilized"
+        />
+        <SummaryStatsCard
+          icon={TrendingDown}
+          value={formatCurrency(totalRemaining)}
+          label="Remaining"
+          formula="Total - Utilized"
+          dataSource="System"
+          variant="remaining"
+        />
+        <SummaryStatsCard
+          icon={Percent}
+          value={`${totalUtilization}%`}
+          label="Utilization"
+          formula="(Utilized / Total) × 100"
+          dataSource="System"
+          variant="utilization"
+          progress={totalUtilization}
+        />
       </div>
 
       {/* Allowance Cards */}

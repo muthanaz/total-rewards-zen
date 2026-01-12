@@ -2,8 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { InfoTooltip } from '@/components/ui/info-tooltip';
-import { Dumbbell, Heart, Brain, Leaf, Moon, CheckCircle, ExternalLink } from 'lucide-react';
+import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { Dumbbell, Heart, Brain, Leaf, Moon, CheckCircle, ExternalLink, Wallet, TrendingDown, Percent } from 'lucide-react';
 
 const ANNUAL_VALUE = 6000;
 const UTILIZED = 3200;
@@ -68,43 +68,40 @@ export default function WellbeingPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid md:grid-cols-4 gap-4">
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Dumbbell className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Total wellbeing budget" dataSource="HR Policy" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(ANNUAL_VALUE)}</p>
-          <p className="stat-label">Annual Value</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Dumbbell className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Active subscriptions value" dataSource="Benefits System" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(UTILIZED)}</p>
-          <p className="stat-label">Utilized</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Dumbbell className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Annual - Utilized" dataSource="System" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(remaining)}</p>
-          <p className="stat-label">Available</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Dumbbell className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="(Utilized / Annual) × 100" dataSource="System" />
-          </div>
-          <p className="stat-value mt-3">{utilizationPercent}%</p>
-          <p className="stat-label">Utilization</p>
-          <Progress value={utilizationPercent} className="h-2 mt-2" />
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <SummaryStatsCard
+          icon={Dumbbell}
+          value={formatCurrency(ANNUAL_VALUE)}
+          label="Annual Value"
+          formula="Total wellbeing budget"
+          dataSource="HR Policy"
+          variant="primary"
+        />
+        <SummaryStatsCard
+          icon={Wallet}
+          value={formatCurrency(UTILIZED)}
+          label="Utilized"
+          formula="Active subscriptions value"
+          dataSource="Benefits System"
+          variant="utilized"
+        />
+        <SummaryStatsCard
+          icon={TrendingDown}
+          value={formatCurrency(remaining)}
+          label="Available"
+          formula="Annual - Utilized"
+          dataSource="System"
+          variant="remaining"
+        />
+        <SummaryStatsCard
+          icon={Percent}
+          value={`${utilizationPercent}%`}
+          label="Utilization"
+          formula="(Utilized / Annual) × 100"
+          dataSource="System"
+          variant="utilization"
+          progress={utilizationPercent}
+        />
       </div>
 
       {/* Programs Grid */}
