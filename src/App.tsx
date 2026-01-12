@@ -26,6 +26,7 @@ import MarketplacePage from "./pages/employee/Marketplace";
 import DocumentsPage from "./pages/employee/Documents";
 import GovConnectPage from "./pages/employee/GovConnect";
 import ProfilePage from "./pages/employee/Profile";
+import BenefitsPage from "./pages/employee/Benefits";
 
 import EmployerDashboard from "./pages/employer/Dashboard";
 import SpendPage from "./pages/employer/Spend";
@@ -65,6 +66,7 @@ function AppRoutes() {
       {/* Employee Routes */}
       <Route path="/employee" element={<ProtectedRoute allowedRole="employee"><EmployeeLayout /></ProtectedRoute>}>
         <Route index element={<EmployeeDashboard />} />
+        <Route path="benefits" element={<BenefitsPage />} />
         <Route path="housing" element={<HousingPage />} />
         <Route path="schooling" element={<SchoolingPage />} />
         <Route path="health" element={<HealthPage />} />

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { 
   DollarSign, TrendingUp, Calendar, Zap, Home, GraduationCap, 
@@ -233,7 +234,18 @@ export default function EmployeeDashboard() {
 
       {/* Benefits Grid - Moved up, clickable */}
       <div>
-        <h2 className="text-lg font-display font-semibold mb-4">Your Benefits</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-display font-semibold">Your Benefits</h2>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-accent hover:text-accent/80"
+            onClick={() => navigate('/employee/benefits')}
+          >
+            See All
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
+        </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {benefits.map((benefit, index) => {
             const utilization = Math.round((benefit.utilized / benefit.value) * 100);
