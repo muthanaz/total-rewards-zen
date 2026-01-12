@@ -123,11 +123,14 @@ export default function SchoolingPage() {
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
 
   const handleSelectSchool = (schoolId: string, schoolName: string, fee: number) => {
-    setChildrenAllocations(prev => prev.map(c => 
-      c.id === activeChildId 
-        ? { ...c, selectedSchool: schoolName, schoolFee: fee }
-        : c
-    ));
+    setChildrenAllocations(prev => prev.map(c => {
+      if (c.id !== activeChildId) return c;
+      // Toggle: if same school is clicked, deselect it
+      if (c.selectedSchool === schoolName) {
+        return { ...c, selectedSchool: null, schoolFee: 0 };
+      }
+      return { ...c, selectedSchool: schoolName, schoolFee: fee };
+    }));
   };
 
   const clearFilters = () => {
@@ -249,119 +252,6 @@ export default function SchoolingPage() {
         />
       </div>
 
-      {/* Allowance Overview Summary - Shows when at least one child has a school */}
-      {childrenAllocations.some(c => c.selectedSchool) && (
-        <Card className={`border-2 ${allChildrenHaveSchools ? 'border-success/50 bg-success/5' : 'border-accent/30 bg-accent/5'}`}>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-display flex items-center gap-2">
-              <Calculator className="w-5 h-5 text-accent" />
-              Your Education Allowance Overview
-              {allChildrenHaveSchools && (
-                <Badge className="bg-success text-success-foreground ml-2">
-                  <Check className="w-3 h-3 mr-1" />
-                  Complete
-                </Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Left: Per-child breakdown */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-muted-foreground">Per-Child Breakdown</h4>
-                {childrenAllocations.map(child => {
-                  const covered = Math.min(child.schoolFee, ALLOWANCE_PER_CHILD);
-                  const topUp = Math.max(0, child.schoolFee - ALLOWANCE_PER_CHILD);
-                  const unused = Math.max(0, ALLOWANCE_PER_CHILD - child.schoolFee);
-                  
-                  return (
-                    <div key={child.id} className="p-3 rounded-lg bg-card border">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-sm">{child.name}</span>
-                        {child.selectedSchool ? (
-                          <Badge variant="secondary" className="text-xs">{child.selectedSchool}</Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-xs text-muted-foreground">No school selected</Badge>
-                        )}
-                      </div>
-                      {child.selectedSchool && (
-                        <div className="grid grid-cols-3 gap-2 text-xs">
-                          <div className="text-center p-2 rounded bg-muted/50">
-                            <p className="text-muted-foreground">Allowance</p>
-                            <p className="font-semibold">{formatCurrency(ALLOWANCE_PER_CHILD)}</p>
-                          </div>
-                          <div className="text-center p-2 rounded bg-success/10">
-                            <p className="text-success">Covered</p>
-                            <p className="font-semibold text-success">{formatCurrency(covered)}</p>
-                          </div>
-                          <div className={`text-center p-2 rounded ${topUp > 0 ? 'bg-warning/10' : 'bg-muted/50'}`}>
-                            <p className={topUp > 0 ? 'text-warning' : 'text-muted-foreground'}>
-                              {topUp > 0 ? 'Top-Up' : 'Unused'}
-                            </p>
-                            <p className={`font-semibold ${topUp > 0 ? 'text-warning' : ''}`}>
-                              {topUp > 0 ? formatCurrency(topUp) : formatCurrency(unused)}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Right: Total summary */}
-              <div className="space-y-4">
-                <h4 className="text-sm font-semibold text-muted-foreground">Total Summary</h4>
-                <div className="p-4 rounded-lg bg-card border space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Your Total Allowance</span>
-                    <span className="font-semibold">{formatCurrency(totalAllowance)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Total School Fees</span>
-                    <span className="font-semibold">{formatCurrency(totalSchoolFees)}</span>
-                  </div>
-                  <div className="border-t pt-3 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-success">Covered by Allowance</span>
-                      <span className="font-semibold text-success">{formatCurrency(totalCoveredByAllowance)}</span>
-                    </div>
-                    {totalOutOfPocket > 0 ? (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-warning">Your Salary Top-Up</span>
-                        <span className="font-semibold text-warning">{formatCurrency(totalOutOfPocket)}</span>
-                      </div>
-                    ) : unusedAllowance > 0 ? (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Unused Allowance</span>
-                        <span className="font-semibold">{formatCurrency(unusedAllowance)}</span>
-                      </div>
-                    ) : null}
-                  </div>
-                  <div className="border-t pt-3">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold">Monthly from Salary</span>
-                      <span className={`text-lg font-bold ${totalOutOfPocket > 0 ? 'text-warning' : 'text-success'}`}>
-                        {totalOutOfPocket > 0 ? formatCurrency(Math.round(totalOutOfPocket / 12)) : 'AED 0'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {totalOutOfPocket > 0 
-                        ? `${formatCurrency(totalOutOfPocket)} annual top-up ÷ 12 months`
-                        : 'All fees covered by your allowance!'}
-                    </p>
-                  </div>
-                </div>
-                <Progress value={utilizationPercent} className="h-2" />
-                <p className="text-xs text-muted-foreground text-center">
-                  {utilizationPercent}% of your education allowance utilized
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Children Allocation Cards */}
       <div>
         <h2 className="text-lg font-display font-semibold mb-4 flex items-center gap-2">
@@ -481,7 +371,7 @@ export default function SchoolingPage() {
               </Badge>
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Showing schools in {city} suitable for {activeChild.grade}. "You Pay" shows the amount above the AED 30,000 allowance.
+              Showing schools in {city} suitable for {activeChild.grade}. Click a school to select it, click again to deselect.
             </p>
           </CardHeader>
           <CardContent className="pt-4">
@@ -556,10 +446,10 @@ export default function SchoolingPage() {
                   return (
                     <Card 
                       key={school.id} 
-                      className={`transition-all duration-200 ${
+                      className={`transition-all duration-200 cursor-pointer ${
                         isSelected 
                           ? 'ring-2 ring-success border-success' 
-                          : 'hover:border-accent/40 hover:shadow-md cursor-pointer'
+                          : 'hover:border-accent/40 hover:shadow-md'
                       }`}
                       onClick={() => handleSelectSchool(school.id, school.name, school.annual_fee)}
                     >
@@ -618,18 +508,15 @@ export default function SchoolingPage() {
 
                         <Button 
                           size="sm" 
-                          variant={isSelected ? "default" : "outline"} 
-                          className="w-full"
+                          variant={isSelected ? "outline" : "default"} 
+                          className={`w-full ${isSelected ? 'border-destructive text-destructive hover:bg-destructive/10' : ''}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             handleSelectSchool(school.id, school.name, school.annual_fee);
                           }}
                         >
                           {isSelected ? (
-                            <>
-                              <Check className="w-4 h-4 mr-1" />
-                              Selected for {activeChild.name}
-                            </>
+                            <>Remove Selection</>
                           ) : (
                             <>Select for {activeChild.name}</>
                           )}
@@ -645,6 +532,119 @@ export default function SchoolingPage() {
                 onClear={clearFilters}
               />
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Allowance Overview Summary - Shows when at least one child has a school */}
+      {childrenAllocations.some(c => c.selectedSchool) && (
+        <Card className={`border-2 ${allChildrenHaveSchools ? 'border-success/50 bg-success/5' : 'border-accent/30 bg-accent/5'}`}>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-display flex items-center gap-2">
+              <Calculator className="w-5 h-5 text-accent" />
+              Your Education Allowance Overview
+              {allChildrenHaveSchools && (
+                <Badge className="bg-success text-success-foreground ml-2">
+                  <Check className="w-3 h-3 mr-1" />
+                  Complete
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Left: Per-child breakdown */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-muted-foreground">Per-Child Breakdown</h4>
+                {childrenAllocations.map(child => {
+                  const covered = Math.min(child.schoolFee, ALLOWANCE_PER_CHILD);
+                  const topUp = Math.max(0, child.schoolFee - ALLOWANCE_PER_CHILD);
+                  const unused = Math.max(0, ALLOWANCE_PER_CHILD - child.schoolFee);
+                  
+                  return (
+                    <div key={child.id} className="p-3 rounded-lg bg-card border">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-sm">{child.name}</span>
+                        {child.selectedSchool ? (
+                          <Badge variant="secondary" className="text-xs">{child.selectedSchool}</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs text-muted-foreground">No school selected</Badge>
+                        )}
+                      </div>
+                      {child.selectedSchool && (
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                          <div className="text-center p-2 rounded bg-muted/50">
+                            <p className="text-muted-foreground">Allowance</p>
+                            <p className="font-semibold">{formatCurrency(ALLOWANCE_PER_CHILD)}</p>
+                          </div>
+                          <div className="text-center p-2 rounded bg-success/10">
+                            <p className="text-success">Covered</p>
+                            <p className="font-semibold text-success">{formatCurrency(covered)}</p>
+                          </div>
+                          <div className={`text-center p-2 rounded ${topUp > 0 ? 'bg-warning/10' : 'bg-muted/50'}`}>
+                            <p className={topUp > 0 ? 'text-warning' : 'text-muted-foreground'}>
+                              {topUp > 0 ? 'Top-Up' : 'Unused'}
+                            </p>
+                            <p className={`font-semibold ${topUp > 0 ? 'text-warning' : ''}`}>
+                              {topUp > 0 ? formatCurrency(topUp) : formatCurrency(unused)}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Right: Total summary */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-muted-foreground">Total Summary</h4>
+                <div className="p-4 rounded-lg bg-card border space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Your Total Allowance</span>
+                    <span className="font-semibold">{formatCurrency(totalAllowance)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Total School Fees</span>
+                    <span className="font-semibold">{formatCurrency(totalSchoolFees)}</span>
+                  </div>
+                  <div className="border-t pt-3 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-success">Covered by Allowance</span>
+                      <span className="font-semibold text-success">{formatCurrency(totalCoveredByAllowance)}</span>
+                    </div>
+                    {totalOutOfPocket > 0 ? (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-warning">Your Salary Top-Up</span>
+                        <span className="font-semibold text-warning">{formatCurrency(totalOutOfPocket)}</span>
+                      </div>
+                    ) : unusedAllowance > 0 ? (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Unused Allowance</span>
+                        <span className="font-semibold">{formatCurrency(unusedAllowance)}</span>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="border-t pt-3">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold">Monthly from Salary</span>
+                      <span className={`text-lg font-bold ${totalOutOfPocket > 0 ? 'text-warning' : 'text-success'}`}>
+                        {totalOutOfPocket > 0 ? formatCurrency(Math.round(totalOutOfPocket / 12)) : 'AED 0'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {totalOutOfPocket > 0 
+                        ? `${formatCurrency(totalOutOfPocket)} annual top-up ÷ 12 months`
+                        : 'All fees covered by your allowance!'}
+                    </p>
+                  </div>
+                </div>
+                <Progress value={utilizationPercent} className="h-2" />
+                <p className="text-xs text-muted-foreground text-center">
+                  {utilizationPercent}% of your education allowance utilized
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
