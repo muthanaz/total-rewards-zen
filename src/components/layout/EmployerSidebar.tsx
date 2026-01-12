@@ -14,6 +14,7 @@ import {
   X,
   LogOut,
   Database,
+  BookOpen,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -47,6 +48,7 @@ const navigation: NavItem[] = [
   
   // 5. Settings & Configuration (less frequent)
   { labelKey: 'nav.integrations', path: '/employer/integrations', icon: Database },
+  { labelKey: 'nav.knowledgeCenter', path: '/employer/knowledge', icon: BookOpen },
 ];
 
 export function EmployerSidebar() {

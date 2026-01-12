@@ -72,6 +72,7 @@ const navigation: NavGroup[] = [
     items: [
       { labelKey: 'nav.documents', path: '/employee/documents', icon: FileText },
       { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
+      { labelKey: 'nav.knowledgeHub', path: '/employee/knowledge', icon: BookOpen },
     ],
   },
   {
