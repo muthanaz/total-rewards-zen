@@ -6,6 +6,16 @@ import { Progress } from '@/components/ui/progress';
 import { TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RePieChart, Pie, Cell, Legend } from 'recharts';
 
+// Vibrant color palette
+const COLORS = {
+  primary: 'hsl(160 84% 39%)',
+  secondary: 'hsl(217 91% 60%)',
+  tertiary: 'hsl(271 81% 56%)',
+  quaternary: 'hsl(38 92% 50%)',
+  quinary: 'hsl(330 81% 60%)',
+  muted: 'hsl(220 14% 70%)',
+};
+
 const spendByBenefitType = [
   { name: 'Housing', spend: 2400000, budget: 2800000, utilization: 85.7 },
   { name: 'Schooling', spend: 1200000, budget: 1500000, utilization: 80 },
@@ -31,11 +41,11 @@ const monthlyTrend = [
 ];
 
 const spendDistribution = [
-  { name: 'Cash Allowances', value: 45, color: 'hsl(var(--chart-1))' },
-  { name: 'Health & Protection', value: 20, color: 'hsl(var(--chart-2))' },
-  { name: 'Time Off', value: 15, color: 'hsl(var(--chart-3))' },
-  { name: 'Growth & Career', value: 10, color: 'hsl(var(--chart-4))' },
-  { name: 'Wellbeing', value: 10, color: 'hsl(var(--chart-5))' },
+  { name: 'Cash Allowances', value: 45, color: COLORS.primary },
+  { name: 'Health & Protection', value: 20, color: COLORS.secondary },
+  { name: 'Time Off', value: 15, color: COLORS.tertiary },
+  { name: 'Growth & Career', value: 10, color: COLORS.quaternary },
+  { name: 'Wellbeing', value: 10, color: COLORS.quinary },
 ];
 
 const departmentSpend = [
@@ -45,6 +55,21 @@ const departmentSpend = [
   { department: 'Operations', headcount: 25, totalSpend: 900000, avgPerEmployee: 36000, utilization: 72 },
   { department: 'HR', headcount: 10, totalSpend: 380000, avgPerEmployee: 38000, utilization: 76 },
 ];
+
+// Custom Legend Component
+const CustomLegend = ({ payload }: any) => (
+  <div className="flex flex-wrap justify-center gap-4 mt-4">
+    {payload?.map((entry: any, index: number) => (
+      <div key={index} className="flex items-center gap-2">
+        <div 
+          className="w-3 h-3 rounded-full" 
+          style={{ backgroundColor: entry.color }}
+        />
+        <span className="text-xs text-muted-foreground font-medium">{entry.value}</span>
+      </div>
+    ))}
+  </div>
+);
 
 export default function SpendPage() {
   const totalBudget = 6150000;
@@ -139,21 +164,59 @@ export default function SpendPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="card-elevated">
               <CardHeader>
-                <CardTitle className="text-lg">Spend by Benefit Type</CardTitle>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  Spend by Benefit Type
+                  <InfoTooltip formula="Actual spend vs allocated budget per benefit category" dataSource="Finance System" />
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={spendByBenefitType} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                      <XAxis type="number" tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
-                      <YAxis type="category" dataKey="name" width={80} />
-                      <Tooltip 
-                        formatter={(value: number) => [`AED ${value.toLocaleString()}`, 'Spend']}
-                        contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+                    <BarChart data={spendByBenefitType} layout="vertical" margin={{ left: 10, right: 20 }}>
+                      <defs>
+                        <linearGradient id="spendGradient" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor={COLORS.primary} stopOpacity={1} />
+                          <stop offset="100%" stopColor={COLORS.primary} stopOpacity={0.7} />
+                        </linearGradient>
+                        <linearGradient id="budgetGradient" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor={COLORS.muted} stopOpacity={0.6} />
+                          <stop offset="100%" stopColor={COLORS.muted} stopOpacity={0.3} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                      <XAxis 
+                        type="number" 
+                        tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`}
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                       />
-                      <Bar dataKey="spend" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-                      <Bar dataKey="budget" fill="hsl(var(--muted))" radius={[0, 4, 4, 0]} />
+                      <YAxis 
+                        type="category" 
+                        dataKey="name" 
+                        width={80}
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: 'hsl(var(--foreground))', fontSize: 12, fontWeight: 500 }}
+                      />
+                      <Tooltip 
+                        formatter={(value: number, name: string) => [
+                          `AED ${value.toLocaleString()}`, 
+                          name === 'spend' ? 'Actual Spend' : 'Budget'
+                        ]}
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))', 
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '10px',
+                          boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+                          padding: '12px 16px'
+                        }}
+                        labelStyle={{ fontWeight: 600, marginBottom: 6, color: 'hsl(var(--foreground))' }}
+                        cursor={{ fill: 'hsl(var(--accent)/0.05)' }}
+                      />
+                      <Legend content={<CustomLegend />} />
+                      <Bar dataKey="spend" fill="url(#spendGradient)" radius={[0, 4, 4, 0]} name="Actual Spend" />
+                      <Bar dataKey="budget" fill="url(#budgetGradient)" radius={[0, 4, 4, 0]} name="Budget" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -162,28 +225,61 @@ export default function SpendPage() {
 
             <Card className="card-elevated">
               <CardHeader>
-                <CardTitle className="text-lg">Spend Distribution</CardTitle>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  Spend Distribution
+                  <InfoTooltip formula="Percentage breakdown of total spend by category" dataSource="Finance System" />
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <RePieChart>
+                      <defs>
+                        {spendDistribution.map((entry, index) => (
+                          <linearGradient key={index} id={`pieGradient-${index}`} x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
+                            <stop offset="100%" stopColor={entry.color} stopOpacity={0.7} />
+                          </linearGradient>
+                        ))}
+                      </defs>
                       <Pie
                         data={spendDistribution}
                         cx="50%"
-                        cy="50%"
+                        cy="45%"
                         innerRadius={60}
                         outerRadius={100}
-                        paddingAngle={2}
+                        paddingAngle={3}
                         dataKey="value"
-                        label={({ name, value }) => `${value}%`}
+                        label={({ value }) => `${value}%`}
+                        labelLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1 }}
                       >
                         {spendDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={`url(#pieGradient-${index})`}
+                            stroke="hsl(var(--background))"
+                            strokeWidth={2}
+                          />
                         ))}
                       </Pie>
-                      <Legend />
-                      <Tooltip />
+                      <Legend 
+                        content={<CustomLegend />}
+                        payload={spendDistribution.map((item) => ({
+                          value: item.name,
+                          color: item.color,
+                          type: 'circle'
+                        }))}
+                      />
+                      <Tooltip 
+                        formatter={(value: number) => [`${value}%`, 'Share']}
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))', 
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '10px',
+                          boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+                          padding: '12px 16px'
+                        }}
+                      />
                     </RePieChart>
                   </ResponsiveContainer>
                 </div>
@@ -276,22 +372,67 @@ export default function SpendPage() {
         <TabsContent value="trend" className="space-y-4">
           <Card className="card-elevated">
             <CardHeader>
-              <CardTitle className="text-lg">Monthly Spend Trend</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                Monthly Spend Trend
+                <InfoTooltip formula="Monthly actual spend vs budget allocation" dataSource="Finance System" />
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={monthlyTrend}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
-                    <Tooltip 
-                      formatter={(value: number) => [`AED ${value.toLocaleString()}`, '']}
-                      contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+                  <LineChart data={monthlyTrend} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
+                    <defs>
+                      <linearGradient id="spendLineGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={COLORS.primary} stopOpacity={0.3} />
+                        <stop offset="100%" stopColor={COLORS.primary} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} vertical={false} />
+                    <XAxis 
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                     />
-                    <Line type="monotone" dataKey="spend" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: 'hsl(var(--primary))' }} />
-                    <Line type="monotone" dataKey="budget" stroke="hsl(var(--muted-foreground))" strokeWidth={2} strokeDasharray="5 5" />
-                    <Legend />
+                    <YAxis 
+                      tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                    />
+                    <Tooltip 
+                      formatter={(value: number, name: string) => [
+                        `AED ${value.toLocaleString()}`, 
+                        name === 'spend' ? 'Actual Spend' : 'Budget'
+                      ]}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '10px',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+                        padding: '12px 16px'
+                      }}
+                      labelStyle={{ fontWeight: 600, marginBottom: 6, color: 'hsl(var(--foreground))' }}
+                    />
+                    <Legend content={<CustomLegend />} />
+                    <Line 
+                      type="monotone" 
+                      dataKey="spend" 
+                      stroke={COLORS.primary} 
+                      strokeWidth={3} 
+                      dot={{ fill: COLORS.primary, strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6, strokeWidth: 2 }}
+                      name="Actual Spend"
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="budget" 
+                      stroke={COLORS.muted} 
+                      strokeWidth={2} 
+                      strokeDasharray="6 4"
+                      dot={false}
+                      name="Budget"
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>

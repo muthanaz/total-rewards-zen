@@ -78,11 +78,12 @@ const cumulativeSpendData = [
   { name: 'Dec', cash: 26.0, health: 7.2, transport: 4.6, other: 2.7 },
 ];
 
+// Vibrant color palette for stacked area chart
 const spendStacks = [
-  { key: 'cash', label: 'Cash Allowances', color: 'hsl(174 60% 45%)' },
-  { key: 'health', label: 'Health & Protection', color: 'hsl(220 70% 55%)' },
-  { key: 'transport', label: 'Transport', color: 'hsl(280 65% 55%)' },
-  { key: 'other', label: 'Other Benefits', color: 'hsl(45 80% 55%)' },
+  { key: 'cash', label: 'Cash Allowances', color: 'hsl(160 84% 39%)' },
+  { key: 'health', label: 'Health & Protection', color: 'hsl(217 91% 60%)' },
+  { key: 'transport', label: 'Transport', color: 'hsl(271 81% 56%)' },
+  { key: 'other', label: 'Other Benefits', color: 'hsl(38 92% 50%)' },
 ];
 
 export default function EmployerDashboard() {
@@ -173,6 +174,7 @@ export default function EmployerDashboard() {
               formatValue={(v) => `${v}%`}
               height={240}
               yDomain={[50, 70]}
+              showLegend={true}
             />
           </ChartContainer>
         </div>
@@ -188,11 +190,12 @@ export default function EmployerDashboard() {
               data={spendByType}
               layout="horizontal"
               showSecondary={true}
-              primaryLabel="Spent"
-              secondaryLabel="Budget"
+              primaryLabel="Spent (AED M)"
+              secondaryLabel="Budget (AED M)"
               formatValue={(v) => `AED ${v}M`}
               height={240}
               gradientId="employerBar"
+              showLegend={true}
             />
           </ChartContainer>
         </div>
@@ -213,6 +216,7 @@ export default function EmployerDashboard() {
               showSecondary={true}
               primaryLabel="Tech Teams"
               secondaryLabel="Non-Tech"
+              showLegend={true}
             />
           </ChartContainer>
         </div>
