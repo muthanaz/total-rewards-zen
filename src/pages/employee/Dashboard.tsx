@@ -10,7 +10,7 @@ import {
 import { BENEFIT_TYPE_COLORS, BENEFIT_TYPE_LABELS } from '@/lib/constants';
 import { RequestClaimWidget } from '@/components/employee/RequestClaimWidget';
 import { ChartContainer, AnimatedBarChart, AnimatedDonutChart, AnimatedRadarChart } from '@/components/charts';
-import { DateRangeFilter, DrillDownModal } from '@/components/dashboard';
+import { DateRangeFilter, DrillDownModal, BenefitsDrillDownSheet } from '@/components/dashboard';
 
 // Demo data
 const metrics = {
@@ -36,14 +36,14 @@ const benefitRoutes: Record<string, string> = {
 };
 
 const benefits = [
-  { name: 'Housing Allowance', icon: Home, value: 120000, utilized: 120000, type: 'cash_allowances', area: 'home_living', bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'] },
-  { name: 'Education Allowance', icon: GraduationCap, value: 60000, utilized: 42000, type: 'cash_allowances', area: 'family_parenting', bullets: ['Per child up to 18 years', 'Covers tuition fees only'] },
-  { name: 'Health Insurance', icon: Heart, value: 45000, utilized: 12500, type: 'health_protection', area: 'health', bullets: ['Includes dental and optical', 'Covers spouse and children'] },
-  { name: 'Transport Allowance', icon: Car, value: 24000, utilized: 18000, type: 'cash_allowances', area: 'mobility', bullets: ['Paid monthly with salary', 'Covers fuel and parking'] },
-  { name: 'Annual Flight Tickets', icon: Plane, value: 15000, utilized: 15000, type: 'cash_allowances', area: 'lifestyle', bullets: ['For employee and dependents', 'Economy class tickets'] },
-  { name: 'Financial Planning', icon: PiggyBank, value: 36000, utilized: 18000, type: 'wealth_ownership', area: 'money', bullets: ['5% employer match', 'Multiple fund options'] },
-  { name: 'Wellbeing Program', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', area: 'health', bullets: ['Gym membership covered', 'Wellness app subscription'] },
-  { name: 'Learning & Development', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', area: 'career', bullets: ['Courses and certifications', 'Pre-approval required'] },
+  { name: 'Housing Allowance', icon: Home, value: 120000, utilized: 120000, type: 'cash_allowances', area: 'home_living', route: '/employee/housing', bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'] },
+  { name: 'Education Allowance', icon: GraduationCap, value: 60000, utilized: 42000, type: 'cash_allowances', area: 'family_parenting', route: '/employee/schooling', bullets: ['Per child up to 18 years', 'Covers tuition fees only'] },
+  { name: 'Health Insurance', icon: Heart, value: 45000, utilized: 12500, type: 'health_protection', area: 'health', route: '/employee/health', bullets: ['Includes dental and optical', 'Covers spouse and children'] },
+  { name: 'Transport Allowance', icon: Car, value: 24000, utilized: 18000, type: 'cash_allowances', area: 'mobility', route: '/employee/transport', bullets: ['Paid monthly with salary', 'Covers fuel and parking'] },
+  { name: 'Annual Flight Tickets', icon: Plane, value: 15000, utilized: 15000, type: 'cash_allowances', area: 'lifestyle', route: '/employee/transport', bullets: ['For employee and dependents', 'Economy class tickets'] },
+  { name: 'Financial Planning', icon: PiggyBank, value: 36000, utilized: 18000, type: 'wealth_ownership', area: 'money', route: '/employee/financial', bullets: ['5% employer match', 'Multiple fund options'] },
+  { name: 'Wellbeing Program', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', area: 'health', route: '/employee/wellbeing', bullets: ['Gym membership covered', 'Wellness app subscription'] },
+  { name: 'Learning & Development', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', area: 'career', route: '/employee/learning', bullets: ['Courses and certifications', 'Pre-approval required'] },
 ];
 
 // Chart data
@@ -109,16 +109,23 @@ export default function EmployeeDashboard() {
   const [dateRange, setDateRange] = useState({ from: new Date(), to: new Date() });
   const [drillDownOpen, setDrillDownOpen] = useState(false);
   const [selectedDrillDown, setSelectedDrillDown] = useState<any>(null);
+  const [benefitsSheetOpen, setBenefitsSheetOpen] = useState(false);
+  const [benefitsSheetCategory, setBenefitsSheetCategory] = useState<'fully-utilized' | 'room-to-use' | null>(null);
   
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
   const formatCurrencyShort = (value: number) => `${(value / 1000).toFixed(0)}K`;
   const utilizationPercent = Math.round((233200 / 398000) * 100);
 
   const handleBenefitClick = (benefitName: string) => {
-    const route = benefitRoutes[benefitName];
-    if (route) {
-      navigate(route);
+    const benefit = benefits.find(b => b.name === benefitName);
+    if (benefit?.route) {
+      navigate(benefit.route);
     }
+  };
+
+  const handleHighlightClick = (category: 'fully-utilized' | 'room-to-use') => {
+    setBenefitsSheetCategory(category);
+    setBenefitsSheetOpen(true);
   };
 
   const handleBarClick = (data: any) => {
@@ -184,30 +191,34 @@ export default function EmployeeDashboard() {
         <CardContent className="pt-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div 
-              className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 cursor-pointer hover:border-emerald-500/40 transition-colors group"
-              onClick={() => handleBenefitClick('Housing Allowance')}
+              className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 cursor-pointer hover:border-emerald-500/40 hover:shadow-md transition-all group"
+              onClick={() => handleHighlightClick('fully-utilized')}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   <p className="text-sm font-semibold text-emerald-600">Fully Utilized</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ChevronRight className="w-4 h-4 text-emerald-500 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
               </div>
-              <p className="text-xs text-muted-foreground mt-2">Housing Allowance, Annual Flight Tickets</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                {benefits.filter(b => (b.utilized / b.value) >= 1).length} benefit{benefits.filter(b => (b.utilized / b.value) >= 1).length !== 1 ? 's' : ''} at 100%
+              </p>
             </div>
             <div 
-              className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20 cursor-pointer hover:border-amber-500/40 transition-colors group"
-              onClick={() => handleBenefitClick('Health Insurance')}
+              className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20 cursor-pointer hover:border-amber-500/40 hover:shadow-md transition-all group"
+              onClick={() => handleHighlightClick('room-to-use')}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-amber-500" />
                   <p className="text-sm font-semibold text-amber-600">Room to Use</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ChevronRight className="w-4 h-4 text-amber-500 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
               </div>
-              <p className="text-xs text-muted-foreground mt-2">Health Insurance (28%), Learning & Dev (38%)</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                {benefits.filter(b => (b.utilized / b.value) < 1).length} benefit{benefits.filter(b => (b.utilized / b.value) < 1).length !== 1 ? 's' : ''} with remaining allocation
+              </p>
             </div>
             <div className="p-4 rounded-xl bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20">
               <div className="flex items-center gap-2">
@@ -366,6 +377,14 @@ export default function EmployeeDashboard() {
         onOpenChange={setDrillDownOpen}
         data={selectedDrillDown}
         formatValue={(v) => `AED ${v.toLocaleString()}`}
+      />
+
+      {/* Benefits Drill-down Sheet */}
+      <BenefitsDrillDownSheet
+        open={benefitsSheetOpen}
+        onOpenChange={setBenefitsSheetOpen}
+        category={benefitsSheetCategory}
+        benefits={benefits}
       />
     </div>
   );
