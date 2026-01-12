@@ -65,6 +65,7 @@ const navigationGroups: NavGroup[] = [
     title: 'Platform Management',
     titleAr: 'إدارة المنصة',
     items: [
+      { label: 'Organizations', labelAr: 'المنظمات', path: '/admin/organizations', icon: Building2 },
       { label: 'Saved Reports', labelAr: 'التقارير المحفوظة', path: '/admin/reports', icon: FileBarChart },
     ],
   },
