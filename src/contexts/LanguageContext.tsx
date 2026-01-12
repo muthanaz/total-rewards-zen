@@ -86,6 +86,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.knowledgeCenter': 'Knowledge Center',
     'nav.account': 'Account',
     'nav.profile': 'Smart Profile',
+    'nav.security': 'Security & Privacy',
     
     // Employee Dashboard
     'employee.dashboard.title': 'Dashboard Overview',
@@ -271,6 +272,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.knowledgeCenter': 'مركز المعرفة',
     'nav.account': 'الحساب',
     'nav.profile': 'الملف الذكي',
+    'nav.security': 'الأمان والخصوصية',
     
     // Employee Dashboard
     'employee.dashboard.title': 'نظرة عامة على لوحة التحكم',

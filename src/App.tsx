@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { SecurityProvider } from "@/components/security/SecurityProvider";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -33,6 +34,7 @@ import ProfilePage from "./pages/employee/Profile";
 import BenefitsPage from "./pages/employee/Benefits";
 import OnboardingPage from "./pages/employee/Onboarding";
 import KnowledgeHubPage from "./pages/employee/KnowledgeHub";
+import SecuritySettingsPage from "./pages/employee/SecuritySettings";
 
 import EmployerDashboard from "./pages/employer/Dashboard";
 import SpendPage from "./pages/employer/Spend";
@@ -117,6 +119,7 @@ function AppRoutes() {
         <Route path="profile" element={<ProfilePage />} />
         <Route path="onboarding" element={<OnboardingPage />} />
         <Route path="knowledge" element={<KnowledgeHubPage />} />
+        <Route path="security" element={<SecuritySettingsPage />} />
       </Route>
       
       {/* Employer Routes */}
@@ -167,11 +170,13 @@ const App = () => (
     <BrowserRouter>
       <LanguageProvider>
         <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <AppRoutes />
-          </TooltipProvider>
+          <SecurityProvider enableSessionTimeout={true}>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <AppRoutes />
+            </TooltipProvider>
+          </SecurityProvider>
         </AuthProvider>
       </LanguageProvider>
     </BrowserRouter>
