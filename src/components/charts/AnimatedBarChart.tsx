@@ -1,4 +1,5 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList, Legend } from 'recharts';
+import { cn } from '@/lib/utils';
 
 interface DataPoint {
   name: string;
@@ -17,6 +18,9 @@ interface AnimatedBarChartProps {
   height?: number;
   showLabels?: boolean;
   gradientId?: string;
+  showLegend?: boolean;
+  onBarClick?: (data: DataPoint, index: number) => void;
+  interactive?: boolean;
 }
 
 export function AnimatedBarChart({
@@ -28,27 +32,55 @@ export function AnimatedBarChart({
   formatValue = (v) => v.toLocaleString(),
   height = 280,
   showLabels = false,
-  gradientId = 'barGradient'
+  gradientId = 'barGradient',
+  showLegend = true,
+  onBarClick,
+  interactive = true
 }: AnimatedBarChartProps) {
   const isVertical = layout === 'vertical';
   
+  const handleClick = (data: any, index: number) => {
+    if (onBarClick && data) {
+      onBarClick(data, index);
+    }
+  };
+
+  // Custom legend with better styling
+  const renderLegend = (props: any) => {
+    const { payload } = props;
+    return (
+      <div className="flex flex-wrap justify-center gap-4 mt-4">
+        {payload.map((entry: any, index: number) => (
+          <div key={`legend-${index}`} className="flex items-center gap-2">
+            <div 
+              className="w-3 h-3 rounded-sm" 
+              style={{ backgroundColor: entry.color.includes('url') ? 'hsl(var(--accent))' : entry.color }} 
+            />
+            <span className="text-xs text-muted-foreground font-medium">{entry.value}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+  
   return (
-    <div style={{ height }} className="w-full">
+    <div style={{ height: showLegend ? height + 40 : height }} className="w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart 
           data={data} 
           layout={layout}
-          margin={{ top: 20, right: 30, left: isVertical ? 100 : 10, bottom: 10 }}
-          barGap={8}
+          margin={{ top: 20, right: 30, left: isVertical ? 110 : 10, bottom: showLegend ? 10 : 10 }}
+          barGap={4}
+          barCategoryGap="20%"
         >
           <defs>
-            <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.9} />
-              <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0.6} />
+            <linearGradient id={gradientId} x1="0" y1="0" x2={isVertical ? "1" : "0"} y2={isVertical ? "0" : "1"}>
+              <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={1} />
+              <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0.7} />
             </linearGradient>
-            <linearGradient id={`${gradientId}-secondary`} x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.3} />
-              <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.15} />
+            <linearGradient id={`${gradientId}-secondary`} x1="0" y1="0" x2={isVertical ? "1" : "0"} y2={isVertical ? "0" : "1"}>
+              <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.4} />
+              <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.2} />
             </linearGradient>
           </defs>
           
@@ -60,11 +92,12 @@ export function AnimatedBarChart({
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                tickCount={5}
               />
               <YAxis 
                 type="category" 
                 dataKey="name" 
-                width={90}
+                width={100}
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: 'hsl(var(--foreground))', fontSize: 12, fontWeight: 500 }}
@@ -77,12 +110,18 @@ export function AnimatedBarChart({
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                interval={0}
+                angle={data.length > 5 ? -45 : 0}
+                textAnchor={data.length > 5 ? 'end' : 'middle'}
+                height={data.length > 5 ? 60 : 30}
               />
               <YAxis 
                 tickFormatter={formatValue}
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                tickCount={5}
+                width={50}
               />
             </>
           )}
@@ -92,23 +131,28 @@ export function AnimatedBarChart({
             contentStyle={{ 
               backgroundColor: 'hsl(var(--card))', 
               border: '1px solid hsl(var(--border))',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              padding: '10px 14px'
+              borderRadius: '10px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+              padding: '12px 16px'
             }}
-            labelStyle={{ fontWeight: 600, marginBottom: 4, color: 'hsl(var(--foreground))' }}
-            itemStyle={{ color: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-            cursor={{ fill: 'hsl(var(--accent)/0.05)' }}
+            labelStyle={{ fontWeight: 600, marginBottom: 6, color: 'hsl(var(--foreground))', fontSize: 13 }}
+            itemStyle={{ color: 'hsl(var(--muted-foreground))', fontSize: 12, padding: '2px 0' }}
+            cursor={{ fill: 'hsl(var(--accent)/0.08)', radius: 4 }}
           />
+          
+          {showLegend && showSecondary && (
+            <Legend content={renderLegend} />
+          )}
           
           {showSecondary && (
             <Bar 
               dataKey="secondaryValue" 
               name={secondaryLabel}
               fill={`url(#${gradientId}-secondary)`}
-              radius={isVertical ? [0, 6, 6, 0] : [6, 6, 0, 0]}
+              radius={isVertical ? [0, 4, 4, 0] : [4, 4, 0, 0]}
               animationDuration={800}
               animationEasing="ease-out"
+              maxBarSize={isVertical ? 24 : 40}
             />
           )}
           
@@ -119,11 +163,15 @@ export function AnimatedBarChart({
             radius={isVertical ? [0, 6, 6, 0] : [6, 6, 0, 0]}
             animationDuration={1000}
             animationEasing="ease-out"
+            maxBarSize={isVertical ? 24 : 40}
+            onClick={interactive ? handleClick : undefined}
+            className={cn(interactive && onBarClick && "cursor-pointer")}
           >
             {data.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`} 
                 fill={entry.fill || `url(#${gradientId})`}
+                className={cn(interactive && onBarClick && "hover:opacity-80 transition-opacity")}
               />
             ))}
             {showLabels && (
@@ -132,6 +180,7 @@ export function AnimatedBarChart({
                 position={isVertical ? 'right' : 'top'}
                 formatter={formatValue}
                 style={{ fill: 'hsl(var(--foreground))', fontSize: 11, fontWeight: 500 }}
+                offset={8}
               />
             )}
           </Bar>

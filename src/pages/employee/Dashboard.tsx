@@ -288,21 +288,22 @@ export default function EmployeeDashboard() {
             dataSource="Benefits System"
             className="h-full"
           >
-            <div className="cursor-pointer" onClick={(e) => {
-              // Get clicked bar from chart
-            }}>
-              <AnimatedBarChart
-                data={utilizationByType}
-                layout="vertical"
-                showSecondary={true}
-                primaryLabel="Utilized"
-                secondaryLabel="Total"
-                formatValue={formatCurrencyShort}
-                height={240}
-                gradientId="employeeBar"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground text-center mt-2">Click on any bar to see detailed breakdown</p>
+            <AnimatedBarChart
+              data={utilizationByType}
+              layout="vertical"
+              showSecondary={true}
+              primaryLabel="Utilized"
+              secondaryLabel="Total Allocated"
+              formatValue={formatCurrencyShort}
+              height={280}
+              gradientId="employeeBar"
+              showLegend={true}
+              onBarClick={handleBarClick}
+              interactive={true}
+            />
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              Click any bar to see detailed breakdown
+            </p>
           </ChartContainer>
         </div>
 
@@ -316,13 +317,14 @@ export default function EmployeeDashboard() {
           >
             <AnimatedDonutChart
               data={allowanceVsUsed}
-              height={180}
-              innerRadius={50}
-              outerRadius={72}
+              height={200}
+              innerRadius={55}
+              outerRadius={80}
               formatValue={(v) => `AED ${(v / 1000).toFixed(0)}K`}
+              showLegend={true}
               centerContent={
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-accent">{utilizationPercent}%</p>
+                  <p className="text-3xl font-bold text-accent">{utilizationPercent}%</p>
                   <p className="text-xs text-muted-foreground">Used</p>
                 </div>
               }
@@ -343,10 +345,11 @@ export default function EmployeeDashboard() {
           >
             <AnimatedRadarChart
               data={benefitRadarData}
-              height={260}
+              height={280}
               showSecondary={true}
               primaryLabel="Your Utilization"
               secondaryLabel="Company Avg"
+              showLegend={true}
             />
           </ChartContainer>
         </div>
