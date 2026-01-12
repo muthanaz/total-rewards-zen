@@ -11,6 +11,8 @@ import { User, Building2, Loader2, Shield, Store } from 'lucide-react';
 import { z } from 'zod';
 import { isDevelopment } from '@/lib/env';
 import { supabase } from '@/integrations/supabase/client';
+import { PasswordStrengthIndicator, isPasswordStrong } from '@/components/auth/PasswordStrengthIndicator';
+import { MFAChallenge } from '@/components/auth/MFAChallenge';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -19,7 +21,7 @@ const loginSchema = z.object({
 
 const signUpSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
 });
@@ -47,6 +49,10 @@ export default function Auth() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // MFA state
+  const [showMFAChallenge, setShowMFAChallenge] = useState(false);
+  const [mfaFactorId, setMfaFactorId] = useState<string>('');
 
   const getRedirectPath = (role: UserRole) => {
     const paths: Record<UserRole, string> = {
@@ -66,7 +72,6 @@ export default function Auth() {
       
       if (error) {
         console.error('Rate limit check failed:', error);
-        // Allow the request if rate limiting service is unavailable
         return true;
       }
       
@@ -79,8 +84,65 @@ export default function Auth() {
       return true;
     } catch (err) {
       console.error('Rate limit error:', err);
-      // Allow the request if rate limiting service is unavailable
       return true;
+    }
+  };
+
+  const checkAccountLockout = async (userEmail: string): Promise<{ locked: boolean; message?: string }> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('account-lockout', {
+        body: { action: 'check', email: userEmail }
+      });
+      
+      if (error) {
+        console.error('Lockout check failed:', error);
+        return { locked: false };
+      }
+      
+      if (data?.locked) {
+        return { locked: true, message: data.message };
+      }
+      
+      return { locked: false };
+    } catch (err) {
+      console.error('Lockout error:', err);
+      return { locked: false };
+    }
+  };
+
+  const recordLoginAttempt = async (userEmail: string, success: boolean) => {
+    try {
+      await supabase.functions.invoke('account-lockout', {
+        body: { 
+          action: success ? 'record_success' : 'record_attempt', 
+          email: userEmail 
+        }
+      });
+    } catch (err) {
+      console.error('Failed to record login attempt:', err);
+    }
+  };
+
+  const checkMFARequired = async (): Promise<{ required: boolean; factorId?: string }> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return { required: false };
+
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const verifiedFactor = factors?.totp.find(f => f.status === 'verified');
+      
+      if (verifiedFactor) {
+        // Check if already authenticated at AAL2
+        const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aal?.currentLevel !== 'aal2') {
+          return { required: true, factorId: verifiedFactor.id };
+        }
+      }
+      
+      return { required: false };
+    } catch (err) {
+      console.error('MFA check error:', err);
+      return { required: false };
     }
   };
 
@@ -104,6 +166,14 @@ export default function Auth() {
           return;
         }
 
+        // Check account lockout first
+        const lockout = await checkAccountLockout(email);
+        if (lockout.locked) {
+          toast.error(lockout.message || 'Account temporarily locked');
+          setLoading(false);
+          return;
+        }
+
         // Check rate limit before attempting login
         const allowed = await checkRateLimit('login', email);
         if (!allowed) {
@@ -113,8 +183,22 @@ export default function Auth() {
 
         const { error } = await signIn(email, password);
         if (error) {
+          // Record failed attempt
+          await recordLoginAttempt(email, false);
           toast.error(error.message || 'Failed to sign in');
         } else {
+          // Record successful login
+          await recordLoginAttempt(email, true);
+          
+          // Check if MFA is required
+          const mfa = await checkMFARequired();
+          if (mfa.required && mfa.factorId) {
+            setMfaFactorId(mfa.factorId);
+            setShowMFAChallenge(true);
+            setLoading(false);
+            return;
+          }
+          
           toast.success('Welcome back!');
           navigate(getRedirectPath(selectedRole));
         }
@@ -128,6 +212,13 @@ export default function Auth() {
             }
           });
           setErrors(fieldErrors);
+          setLoading(false);
+          return;
+        }
+
+        // Check password strength for signup
+        if (!isPasswordStrong(password)) {
+          setErrors({ password: 'Please create a stronger password' });
           setLoading(false);
           return;
         }
@@ -156,6 +247,18 @@ export default function Auth() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleMFASuccess = () => {
+    setShowMFAChallenge(false);
+    toast.success('Welcome back!');
+    navigate(getRedirectPath(selectedRole));
+  };
+
+  const handleMFACancel = async () => {
+    setShowMFAChallenge(false);
+    await supabase.auth.signOut();
+    toast.info('Login cancelled');
   };
 
   const handleDemoLogin = async () => {
@@ -194,6 +297,21 @@ export default function Auth() {
   const effectiveRole = availableRoles.length === 1 ? availableRoles[0] : selectedRole;
   if (effectiveRole !== selectedRole && availableRoles.length === 1) {
     setSelectedRole(effectiveRole);
+  }
+
+  // Show MFA challenge screen
+  if (showMFAChallenge) {
+    return (
+      <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
+        <div className="w-full max-w-md animate-fade-in">
+          <MFAChallenge 
+            factorId={mfaFactorId}
+            onSuccess={handleMFASuccess}
+            onCancel={handleMFACancel}
+          />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -302,6 +420,10 @@ export default function Auth() {
                     />
                     {errors.password && (
                       <p className="text-xs text-destructive">{errors.password}</p>
+                    )}
+                    {/* Password strength indicator for signup */}
+                    {!isLogin && (
+                      <PasswordStrengthIndicator password={password} className="mt-3" />
                     )}
                   </div>
 

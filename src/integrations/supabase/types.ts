@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_lockouts: {
+        Row: {
+          email: string
+          failed_attempts: number
+          id: string
+          locked_at: string
+          locked_until: string
+          notification_sent: boolean
+        }
+        Insert: {
+          email: string
+          failed_attempts?: number
+          id?: string
+          locked_at?: string
+          locked_until: string
+          notification_sent?: boolean
+        }
+        Update: {
+          email?: string
+          failed_attempts?: number
+          id?: string
+          locked_at?: string
+          locked_until?: string
+          notification_sent?: boolean
+        }
+        Relationships: []
+      }
       admin_saved_reports: {
         Row: {
           admin_user_id: string
@@ -361,6 +388,30 @@ export type Database = {
         }
         Relationships: []
       }
+      login_attempts: {
+        Row: {
+          attempt_time: string
+          email: string
+          id: string
+          ip_address: string | null
+          success: boolean
+        }
+        Insert: {
+          attempt_time?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+        }
+        Update: {
+          attempt_time?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+        }
+        Relationships: []
+      }
       marketplace_offers: {
         Row: {
           category: string
@@ -416,6 +467,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mfa_settings: {
+        Row: {
+          enrolled_at: string | null
+          id: string
+          mfa_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          enrolled_at?: string | null
+          id?: string
+          mfa_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          enrolled_at?: string | null
+          id?: string
+          mfa_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       organizations: {
         Row: {
