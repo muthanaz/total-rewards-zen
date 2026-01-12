@@ -52,6 +52,7 @@ import AdminSpendingPatterns from "./pages/admin/SpendingPatterns";
 import AdminSavedReports from "./pages/admin/SavedReports";
 import AdminSettings from "./pages/admin/Settings";
 import AdminOrganizations from "./pages/admin/Organizations";
+import AdminOrganizationSettings from "./pages/admin/OrganizationSettings";
 import VendorDashboard from "./pages/vendor/Dashboard";
 import VendorOffers from "./pages/vendor/Offers";
 import VendorTransactions from "./pages/vendor/Transactions";
@@ -140,6 +141,7 @@ function AppRoutes() {
         <Route path="spending" element={<AdminSpendingPatterns />} />
         <Route path="reports" element={<AdminSavedReports />} />
         <Route path="organizations" element={<AdminOrganizations />} />
+        <Route path="organizations/:orgId/settings" element={<AdminOrganizationSettings />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
       

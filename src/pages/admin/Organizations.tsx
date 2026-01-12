@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Building2, 
   Plus, 
@@ -12,6 +13,7 @@ import {
   RefreshCw,
   Globe,
   Mail,
+  Settings,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -71,6 +73,7 @@ interface UserProfile {
 }
 
 export default function OrganizationsPage() {
+  const navigate = useNavigate();
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
   
@@ -462,6 +465,10 @@ export default function OrganizationsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => navigate(`/admin/organizations/${org.id}/settings`)}>
+                            <Settings className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                            {t('Settings', 'الإعدادات')}
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => openAssignUserDialog(org)}>
                             <Users className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
                             {t('Assign User', 'تعيين مستخدم')}
