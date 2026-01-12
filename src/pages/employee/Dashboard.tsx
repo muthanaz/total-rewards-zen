@@ -6,7 +6,9 @@ import {
   DollarSign, TrendingUp, Calendar, Zap, Home, GraduationCap, 
   Heart, Car, Dumbbell, PiggyBank, BookOpen, Plane 
 } from 'lucide-react';
-import { BENEFIT_TYPE_COLORS, BENEFIT_TYPE_LABELS, LIFE_AREA_LABELS } from '@/lib/constants';
+import { BENEFIT_TYPE_COLORS, BENEFIT_TYPE_LABELS } from '@/lib/constants';
+import { RequestClaimWidget } from '@/components/employee/RequestClaimWidget';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 
 // Demo data
 const metrics = {
@@ -28,6 +30,20 @@ const benefits = [
   { name: 'Financial Planning', icon: PiggyBank, value: 36000, utilized: 18000, type: 'wealth_ownership', area: 'money', bullets: ['5% employer match', 'Multiple fund options'] },
   { name: 'Wellbeing Program', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', area: 'health', bullets: ['Gym membership covered', 'Wellness app subscription'] },
   { name: 'Learning & Development', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', area: 'career', bullets: ['Courses and certifications', 'Pre-approval required'] },
+];
+
+// Chart data
+const utilizationByType = [
+  { name: 'Cash & Allowances', utilized: 195000, total: 219000, fill: 'hsl(var(--chart-1))' },
+  { name: 'Health & Protection', utilized: 12500, total: 45000, fill: 'hsl(var(--chart-2))' },
+  { name: 'Wealth & Ownership', utilized: 18000, total: 36000, fill: 'hsl(var(--chart-3))' },
+  { name: 'Growth & Career', utilized: 4500, total: 12000, fill: 'hsl(var(--chart-4))' },
+  { name: 'Wellbeing', utilized: 3200, total: 6000, fill: 'hsl(var(--chart-5))' },
+];
+
+const allowanceVsUsed = [
+  { name: 'Utilized', value: 233200, color: 'hsl(var(--primary))' },
+  { name: 'Remaining', value: 164800, color: 'hsl(var(--muted))' },
 ];
 
 export default function EmployeeDashboard() {
@@ -95,6 +111,109 @@ export default function EmployeeDashboard() {
           </div>
           <p className="stat-value mt-3">{metrics.activatedItems}</p>
           <p className="stat-label">Activated Perks</p>
+        </Card>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Utilization by Benefit Type */}
+        <Card className="card-elevated lg:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              Utilization by Benefit Type
+              <InfoTooltip formula="Utilized amount / Total allocation per type" dataSource="Benefits System" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={utilizationByType} layout="vertical">
+                  <XAxis type="number" tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
+                  <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 12 }} />
+                  <Tooltip 
+                    formatter={(value: number) => [`AED ${value.toLocaleString()}`, '']}
+                    contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+                  />
+                  <Legend />
+                  <Bar dataKey="utilized" name="Utilized" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="total" name="Total" fill="hsl(var(--muted))" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Allowance vs Used Donut */}
+        <Card className="card-elevated">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              Overall Usage
+              <InfoTooltip formula="Total utilized / Total annual benefits" dataSource="Benefits System" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={allowanceVsUsed}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={75}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {allowanceVsUsed.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: number) => [`AED ${value.toLocaleString()}`, '']}
+                    contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex justify-center gap-6 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-primary" />
+                <span>Utilized: AED 233K</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-muted" />
+                <span>Remaining: AED 165K</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Request Widget + Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <RequestClaimWidget />
+        </div>
+        
+        {/* Quick Stats */}
+        <Card className="card-elevated">
+          <CardHeader>
+            <CardTitle className="text-lg">Benefit Highlights</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+              <p className="text-sm font-medium text-green-600">Fully Utilized</p>
+              <p className="text-xs text-muted-foreground mt-1">Housing Allowance, Flight Tickets</p>
+            </div>
+            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <p className="text-sm font-medium text-amber-600">Room to Use</p>
+              <p className="text-xs text-muted-foreground mt-1">Health Insurance (28%), L&D (38%)</p>
+            </div>
+            <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
+              <p className="text-sm font-medium text-primary">This Month</p>
+              <p className="text-xs text-muted-foreground mt-1">3 perk activations, 2 claims approved</p>
+            </div>
+          </CardContent>
         </Card>
       </div>
 
