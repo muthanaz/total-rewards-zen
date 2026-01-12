@@ -80,6 +80,47 @@ export default function FinancialPage() {
         />
       </div>
 
+      {/* How It Works */}
+      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <PiggyBank className="w-5 h-5 text-accent" />
+            How Your Savings Plan Works
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
+              <div>
+                <p className="font-medium text-sm">You Contribute</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Choose 1-20% of your salary to save each month via payroll deduction
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
+              <div>
+                <p className="font-medium text-sm">Employer Matches</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Company matches <span className="font-semibold text-success">100% up to 5%</span> — that's free money!
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
+              <div>
+                <p className="font-medium text-sm">Grow Tax-Free</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Your savings grow tax-efficiently with professional fund management
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Savings Calculator */}
       <Card className="bg-accent/5 border-accent/20">
         <CardHeader>

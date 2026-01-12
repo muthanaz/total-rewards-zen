@@ -162,6 +162,47 @@ export default function HealthPage() {
         />
       </div>
 
+      {/* How It Works */}
+      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <Heart className="w-5 h-5 text-accent" />
+            How Your Health Insurance Works
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
+              <div>
+                <p className="font-medium text-sm">In-Network Care</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Visit any in-network provider for <span className="font-semibold text-accent">direct billing</span> — no upfront payment
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
+              <div>
+                <p className="font-medium text-sm">Family Covered</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Spouse and children under 18 are covered at the same benefit levels
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
+              <div>
+                <p className="font-medium text-sm">Claims Reimbursement</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Out-of-network? Submit receipts within 60 days for 50% reimbursement
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Coverage Categories */}
       <Card>
         <CardHeader>
@@ -331,6 +372,41 @@ export default function HealthPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Policy Highlights */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-display">Policy Highlights</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Comprehensive coverage up to AED 1,000,000
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Spouse and children covered at same levels
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Pre-existing conditions covered after 6 months
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Direct billing at network providers
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              24/7 emergency helpline available
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Annual health check-up included
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
 
       {/* View Full Policy */}
       <div className="text-center">
