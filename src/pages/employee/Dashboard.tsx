@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { BENEFIT_TYPE_COLORS, BENEFIT_TYPE_LABELS } from '@/lib/constants';
 import { RequestClaimWidget } from '@/components/employee/RequestClaimWidget';
-import { ChartContainer, AnimatedBarChart, AnimatedDonutChart } from '@/components/charts';
+import { ChartContainer, AnimatedBarChart, AnimatedDonutChart, AnimatedRadarChart } from '@/components/charts';
 
 // Demo data
 const metrics = {
@@ -31,7 +31,7 @@ const benefits = [
   { name: 'Learning & Development', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', area: 'career', bullets: ['Courses and certifications', 'Pre-approval required'] },
 ];
 
-// Chart data - transformed for new components
+// Chart data
 const utilizationByType = [
   { name: 'Cash & Allowances', value: 195000, secondaryValue: 219000 },
   { name: 'Health & Protection', value: 12500, secondaryValue: 45000 },
@@ -42,7 +42,17 @@ const utilizationByType = [
 
 const allowanceVsUsed = [
   { name: 'Utilized', value: 233200, color: 'hsl(174 60% 45%)' },
-  { name: 'Available', value: 164800, color: 'hsl(220 14% 90%)' },
+  { name: 'Available', value: 164800, color: 'hsl(220 14% 85%)' },
+];
+
+// Radar chart data for benefit comparison
+const benefitRadarData = [
+  { subject: 'Housing', value: 100, secondaryValue: 85, fullMark: 100 },
+  { subject: 'Education', value: 70, secondaryValue: 75, fullMark: 100 },
+  { subject: 'Health', value: 28, secondaryValue: 65, fullMark: 100 },
+  { subject: 'Transport', value: 75, secondaryValue: 70, fullMark: 100 },
+  { subject: 'Wellbeing', value: 53, secondaryValue: 60, fullMark: 100 },
+  { subject: 'Learning', value: 38, secondaryValue: 55, fullMark: 100 },
 ];
 
 export default function EmployeeDashboard() {
@@ -51,15 +61,15 @@ export default function EmployeeDashboard() {
   const utilizationPercent = Math.round((233200 / 398000) * 100);
   
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="space-y-1">
         <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">Dashboard Overview</h1>
         <p className="text-muted-foreground">Your total rewards at a glance</p>
       </div>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      {/* Metrics Grid - Uniform sizing */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
           { icon: DollarSign, value: formatCurrency(metrics.monthlySalary), label: 'Monthly Salary', formula: 'Base salary / 12', source: 'HR System' },
           { icon: DollarSign, value: formatCurrency(metrics.annualSalary), label: 'Annual Salary', formula: 'Monthly × 12', source: 'HR System' },
@@ -70,29 +80,30 @@ export default function EmployeeDashboard() {
         ].map((metric, index) => (
           <Card 
             key={metric.label} 
-            className="metric-card group hover:border-accent/30 transition-all duration-300"
+            className="metric-card group hover:border-accent/30 transition-all duration-300 h-full"
             style={{ animationDelay: `${index * 50}ms` }}
           >
-            <div className="flex items-start justify-between">
-              <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/15 transition-colors">
+            <div className="flex items-start justify-between gap-2">
+              <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/15 transition-colors shrink-0">
                 <metric.icon className="w-4 h-4 text-accent" />
               </div>
               <InfoTooltip formula={metric.formula} dataSource={metric.source} lastUpdated="Jan 2026" />
             </div>
-            <p className="text-xl font-bold mt-3 tracking-tight">{metric.value}</p>
+            <p className="text-lg font-bold mt-3 tracking-tight truncate">{metric.value}</p>
             <p className="text-xs text-muted-foreground mt-1">{metric.label}</p>
           </Card>
         ))}
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Utilization by Benefit Type - Takes 3 columns */}
-        <div className="lg:col-span-3">
+      {/* Charts Section - Row 1 */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* Utilization by Benefit Type - 7 columns */}
+        <div className="lg:col-span-7">
           <ChartContainer 
             title="Utilization by Benefit Type"
             formula="Utilized amount vs total allocation per category"
             dataSource="Benefits System"
+            className="h-full"
           >
             <AnimatedBarChart
               data={utilizationByType}
@@ -101,24 +112,25 @@ export default function EmployeeDashboard() {
               primaryLabel="Utilized"
               secondaryLabel="Total"
               formatValue={formatCurrencyShort}
-              height={300}
+              height={240}
               gradientId="employeeBar"
             />
           </ChartContainer>
         </div>
 
-        {/* Allowance vs Used Donut - Takes 2 columns */}
-        <div className="lg:col-span-2">
+        {/* Allowance vs Used Donut - 5 columns */}
+        <div className="lg:col-span-5">
           <ChartContainer 
             title="Overall Benefits Usage"
             formula="Total utilized / Total annual benefits"
             dataSource="Benefits System"
+            className="h-full"
           >
             <AnimatedDonutChart
               data={allowanceVsUsed}
-              height={200}
-              innerRadius={55}
-              outerRadius={80}
+              height={180}
+              innerRadius={50}
+              outerRadius={72}
               formatValue={(v) => `AED ${(v / 1000).toFixed(0)}K`}
               centerContent={
                 <div className="text-center">
@@ -131,49 +143,68 @@ export default function EmployeeDashboard() {
         </div>
       </div>
 
-      {/* Request Widget + Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-3">
+      {/* Charts Section - Row 2: Radar + Request Widget */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* Radar Chart - 5 columns */}
+        <div className="lg:col-span-5">
+          <ChartContainer 
+            title="Benefit Comparison"
+            formula="Your utilization vs company average per benefit"
+            dataSource="Benefits System"
+            className="h-full"
+          >
+            <AnimatedRadarChart
+              data={benefitRadarData}
+              height={260}
+              showSecondary={true}
+              primaryLabel="Your Utilization"
+              secondaryLabel="Company Avg"
+            />
+          </ChartContainer>
+        </div>
+
+        {/* Request Widget - 7 columns */}
+        <div className="lg:col-span-7">
           <RequestClaimWidget />
         </div>
-        
-        {/* Quick Stats */}
-        <div className="lg:col-span-2">
-          <Card className="h-full border-border/50 bg-gradient-to-b from-card to-card/80">
-            <CardHeader className="pb-3 border-b border-border/30">
-              <CardTitle className="text-base font-display font-semibold">Benefit Highlights</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-3">
-              <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <p className="text-sm font-semibold text-emerald-600">Fully Utilized</p>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">Housing Allowance, Annual Flight Tickets</p>
-              </div>
-              <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-amber-500" />
-                  <p className="text-sm font-semibold text-amber-600">Room to Use</p>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">Health Insurance (28%), Learning & Dev (38%)</p>
-              </div>
-              <div className="p-4 rounded-xl bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-accent" />
-                  <p className="text-sm font-semibold text-accent">This Month</p>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">3 perk activations, 2 claims approved</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
+
+      {/* Benefit Highlights */}
+      <Card className="border-border/50 bg-gradient-to-b from-card to-card/80">
+        <CardHeader className="pb-3 border-b border-border/30">
+          <CardTitle className="text-base font-display font-semibold">Benefit Highlights</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <p className="text-sm font-semibold text-emerald-600">Fully Utilized</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Housing Allowance, Annual Flight Tickets</p>
+            </div>
+            <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-amber-500" />
+                <p className="text-sm font-semibold text-amber-600">Room to Use</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Health Insurance (28%), Learning & Dev (38%)</p>
+            </div>
+            <div className="p-4 rounded-xl bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-accent" />
+                <p className="text-sm font-semibold text-accent">This Month</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">3 perk activations, 2 claims approved</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Benefits Grid */}
       <div>
         <h2 className="text-lg font-display font-semibold mb-4">Your Benefits</h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {benefits.map((benefit, index) => {
             const utilization = Math.round((benefit.utilized / benefit.value) * 100);
             const remaining = benefit.value - benefit.utilized;
@@ -182,11 +213,11 @@ export default function EmployeeDashboard() {
             return (
               <Card 
                 key={benefit.name} 
-                className="benefit-card group"
+                className="benefit-card group h-full flex flex-col"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <div className="flex items-start gap-3">
-                  <div className="p-2.5 rounded-xl bg-accent/10 group-hover:bg-accent/15 transition-colors">
+                  <div className="p-2.5 rounded-xl bg-accent/10 group-hover:bg-accent/15 transition-colors shrink-0">
                     <benefit.icon className="w-5 h-5 text-accent" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -199,7 +230,7 @@ export default function EmployeeDashboard() {
                   </div>
                 </div>
                 
-                <div className="mt-4 space-y-2">
+                <div className="mt-4 space-y-2 flex-1">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Utilized</span>
                     <span className="font-semibold">{formatCurrency(benefit.utilized)}</span>
