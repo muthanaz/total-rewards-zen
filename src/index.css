@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Arabic:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -121,6 +121,16 @@
     font-family: 'Inter', system-ui, sans-serif;
   }
 
+  /* RTL Support */
+  html.rtl {
+    font-family: 'Noto Sans Arabic', 'Inter', system-ui, sans-serif;
+    direction: rtl;
+  }
+
+  html.rtl body {
+    text-align: right;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
   }
@@ -128,6 +138,15 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: 'DM Sans', system-ui, sans-serif;
     @apply font-semibold tracking-tight;
+  }
+
+  html.rtl h1,
+  html.rtl h2,
+  html.rtl h3,
+  html.rtl h4,
+  html.rtl h5,
+  html.rtl h6 {
+    font-family: 'Noto Sans Arabic', 'DM Sans', system-ui, sans-serif;
   }
 }
 
@@ -203,6 +222,36 @@
   .stat-label {
     @apply text-sm text-muted-foreground;
   }
+
+  /* Executive Card Styles */
+  .executive-card {
+    @apply bg-gradient-to-br from-card via-card to-accent/5 rounded-2xl p-6 border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300;
+  }
+
+  .insight-badge {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold;
+  }
+
+  .insight-badge-success {
+    @apply bg-emerald-500/10 text-emerald-600 border border-emerald-500/20;
+  }
+
+  .insight-badge-warning {
+    @apply bg-amber-500/10 text-amber-600 border border-amber-500/20;
+  }
+
+  .insight-badge-info {
+    @apply bg-blue-500/10 text-blue-600 border border-blue-500/20;
+  }
+
+  /* RTL specific component overrides */
+  html.rtl .nav-item {
+    @apply flex-row-reverse;
+  }
+
+  html.rtl .card-elevated {
+    text-align: right;
+  }
 }
 
 @layer utilities {
@@ -259,5 +308,34 @@
       opacity: 1;
       transform: translateX(0);
     }
+  }
+
+  /* RTL slide animation */
+  html.rtl .animate-slide-in {
+    animation: slideInRTL 0.4s ease-out;
+  }
+
+  @keyframes slideInRTL {
+    from {
+      opacity: 0;
+      transform: translateX(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* RTL utility classes */
+  .rtl\:flex-row-reverse:dir(rtl) {
+    flex-direction: row-reverse;
+  }
+
+  .rtl\:text-right:dir(rtl) {
+    text-align: right;
+  }
+
+  .rtl\:space-x-reverse > :not([hidden]) ~ :not([hidden]):dir(rtl) {
+    --tw-space-x-reverse: 1;
   }
 }
