@@ -297,22 +297,20 @@ export default function EmployeeDashboard() {
           formula="Utilized amount vs total allocation per category"
           dataSource="Benefits System"
         >
-          <div className="pt-2">
-            <AnimatedBarChart
-              data={utilizationByType}
-              layout="vertical"
-              showSecondary={true}
-              primaryLabel="Utilized"
-              secondaryLabel="Total Allocated"
-              formatValue={formatCurrencyShort}
-              height={320}
-              gradientId="employeeBar"
-              showLegend={true}
-              onBarClick={handleBarClick}
-              interactive={true}
-            />
-          </div>
-          <p className="text-xs text-muted-foreground text-center mt-3">
+          <AnimatedBarChart
+            data={utilizationByType}
+            layout="horizontal"
+            showSecondary={true}
+            primaryLabel="Utilized"
+            secondaryLabel="Total Allocated"
+            formatValue={formatCurrencyShort}
+            height={280}
+            gradientId="employeeBar"
+            showLegend={true}
+            onBarClick={handleBarClick}
+            interactive={true}
+          />
+          <p className="text-xs text-muted-foreground text-center mt-2">
             Click any bar to see detailed breakdown
           </p>
         </ChartContainer>
