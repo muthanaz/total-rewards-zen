@@ -111,11 +111,11 @@ const engagementMetrics = [
 ];
 
 const perkCategoryDistribution = [
-  { name: 'Lifestyle', value: 35, color: 'hsl(var(--chart-1))' },
-  { name: 'Health & Wellness', value: 25, color: 'hsl(var(--chart-2))' },
-  { name: 'Food & Dining', value: 20, color: 'hsl(var(--chart-3))' },
-  { name: 'Travel', value: 12, color: 'hsl(var(--chart-4))' },
-  { name: 'Entertainment', value: 8, color: 'hsl(var(--chart-5))' },
+  { name: 'Lifestyle', value: 35, color: 'hsl(174 60% 45%)' },
+  { name: 'Health & Wellness', value: 25, color: 'hsl(340 65% 55%)' },
+  { name: 'Food & Dining', value: 20, color: 'hsl(38 92% 50%)' },
+  { name: 'Travel', value: 12, color: 'hsl(199 89% 48%)' },
+  { name: 'Entertainment', value: 8, color: 'hsl(262 52% 55%)' },
 ];
 
 const topPerks = [

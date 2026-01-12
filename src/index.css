@@ -48,6 +48,16 @@
 
     --radius: 0.75rem;
 
+    /* Chart Colors - Vibrant Palette */
+    --chart-1: 174 60% 45%;
+    --chart-2: 199 89% 48%;
+    --chart-3: 262 52% 55%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 340 65% 55%;
+    --chart-6: 160 84% 39%;
+    --chart-7: 24 75% 55%;
+    --chart-8: 280 55% 55%;
+
     /* Sidebar */
     --sidebar-background: 222 47% 8%;
     --sidebar-foreground: 220 14% 96%;
@@ -100,6 +110,16 @@
     --border: 222 47% 18%;
     --input: 222 47% 18%;
     --ring: 174 60% 45%;
+
+    /* Chart Colors - Vibrant Palette (Dark Mode) */
+    --chart-1: 174 65% 50%;
+    --chart-2: 199 89% 55%;
+    --chart-3: 262 60% 62%;
+    --chart-4: 38 95% 55%;
+    --chart-5: 340 70% 60%;
+    --chart-6: 160 84% 45%;
+    --chart-7: 24 80% 60%;
+    --chart-8: 280 60% 60%;
 
     --sidebar-background: 222 47% 5%;
     --sidebar-foreground: 220 14% 96%;

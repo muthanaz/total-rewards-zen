@@ -53,10 +53,10 @@ const offerPerformance = [
 ];
 
 const categoryBreakdown = [
-  { name: 'Fitness', value: 42, color: 'hsl(var(--chart-1))' },
-  { name: 'Wellness', value: 28, color: 'hsl(var(--chart-2))' },
-  { name: 'Health', value: 20, color: 'hsl(var(--chart-3))' },
-  { name: 'Other', value: 10, color: 'hsl(var(--chart-4))' },
+  { name: 'Fitness', value: 42, color: 'hsl(174 60% 45%)' },
+  { name: 'Wellness', value: 28, color: 'hsl(262 52% 55%)' },
+  { name: 'Health', value: 20, color: 'hsl(340 65% 55%)' },
+  { name: 'Other', value: 10, color: 'hsl(38 92% 50%)' },
 ];
 
 const dayOfWeekData = [

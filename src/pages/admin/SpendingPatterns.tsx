@@ -36,12 +36,12 @@ const spendSummary = [
 ];
 
 const spendByCategory = [
-  { name: 'Housing', value: 42, color: 'hsl(var(--chart-1))', amount: 10290000 },
-  { name: 'Education', value: 22, color: 'hsl(var(--chart-2))', amount: 5390000 },
-  { name: 'Health', value: 18, color: 'hsl(var(--chart-3))', amount: 4410000 },
-  { name: 'Transport', value: 10, color: 'hsl(var(--chart-4))', amount: 2450000 },
-  { name: 'Wellness', value: 5, color: 'hsl(var(--chart-5))', amount: 1225000 },
-  { name: 'Other', value: 3, color: 'hsl(var(--muted-foreground))', amount: 735000 },
+  { name: 'Housing', value: 42, color: 'hsl(199 89% 48%)', amount: 10290000 },
+  { name: 'Education', value: 22, color: 'hsl(262 52% 55%)', amount: 5390000 },
+  { name: 'Health', value: 18, color: 'hsl(340 65% 55%)', amount: 4410000 },
+  { name: 'Transport', value: 10, color: 'hsl(38 92% 50%)', amount: 2450000 },
+  { name: 'Wellness', value: 5, color: 'hsl(174 60% 45%)', amount: 1225000 },
+  { name: 'Other', value: 3, color: 'hsl(220 14% 60%)', amount: 735000 },
 ];
 
 const monthlySpendTrend = [
@@ -237,11 +237,11 @@ export default function AdminSpendingPatterns() {
                 data={stackedAreaData}
                 height={300}
                 stacks={[
-                  { key: 'housing', label: 'Housing', color: 'hsl(var(--chart-1))' },
-                  { key: 'education', label: 'Education', color: 'hsl(var(--chart-2))' },
-                  { key: 'health', label: 'Health', color: 'hsl(var(--chart-3))' },
-                  { key: 'transport', label: 'Transport', color: 'hsl(var(--chart-4))' },
-                  { key: 'other', label: 'Other', color: 'hsl(var(--chart-5))' },
+                  { key: 'housing', label: 'Housing', color: 'hsl(199 89% 48%)' },
+                  { key: 'education', label: 'Education', color: 'hsl(262 52% 55%)' },
+                  { key: 'health', label: 'Health', color: 'hsl(340 65% 55%)' },
+                  { key: 'transport', label: 'Transport', color: 'hsl(38 92% 50%)' },
+                  { key: 'other', label: 'Other', color: 'hsl(174 60% 45%)' },
                 ]}
               />
             </CardContent>
