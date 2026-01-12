@@ -49,8 +49,11 @@ export function EmployerSidebar() {
   const sidebarContent = (
     <>
       {/* Logo */}
-      <div className="flex items-center justify-between px-4 py-5 border-b border-sidebar-border">
-        <div className="flex items-center gap-2">
+      <div className={cn(
+        "flex items-center justify-between px-4 py-5 border-b border-sidebar-border",
+        isRTL && "flex-row-reverse"
+      )}>
+        <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
           <div className="w-8 h-8 rounded-lg bg-gradient-accent flex items-center justify-center">
             <span className="text-sidebar-background font-bold text-lg">b</span>
           </div>
@@ -62,14 +65,17 @@ export function EmployerSidebar() {
             {t('common.employer')}
           </span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className={cn("flex items-center gap-1", isRTL && "flex-row-reverse")}>
           <LanguageSwitcher />
           <DarkModeToggle />
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
+      <nav className={cn(
+        "flex-1 overflow-y-auto py-4 px-3 space-y-0.5",
+        isRTL && "text-right"
+      )}>
         {navigation.map((item) => (
           <Link
             key={item.path}
@@ -78,27 +84,27 @@ export function EmployerSidebar() {
             className={cn(
               'nav-item',
               isActive(item.path) && 'nav-item-active',
-              isRTL && 'flex-row-reverse'
+              isRTL && 'flex-row-reverse text-right'
             )}
           >
-            <item.icon className="w-4 h-4" />
-            <span className="text-sm">{t(item.labelKey)}</span>
+            <item.icon className="w-4 h-4 shrink-0" />
+            <span className={cn("text-sm flex-1", isRTL && "text-right")}>{t(item.labelKey)}</span>
           </Link>
         ))}
       </nav>
 
       {/* Sign Out */}
-      <div className="p-4 border-t border-sidebar-border">
+      <div className={cn("p-4 border-t border-sidebar-border", isRTL && "text-right")}>
         <Button
           variant="ghost"
           onClick={() => signOut()}
           className={cn(
             "w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent",
-            isRTL ? "justify-end flex-row-reverse" : "justify-start"
+            isRTL ? "justify-start flex-row-reverse" : "justify-start"
           )}
         >
-          <LogOut className={cn("w-4 h-4", isRTL ? "ml-3" : "mr-3")} />
-          {t('common.signOut')}
+          <LogOut className={cn("w-4 h-4 shrink-0", isRTL ? "ml-3" : "mr-3")} />
+          <span className={isRTL ? "text-right" : "text-left"}>{t('common.signOut')}</span>
         </Button>
       </div>
     </>
