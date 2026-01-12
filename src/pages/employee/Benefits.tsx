@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
   Home, GraduationCap, Heart, Car, Dumbbell, PiggyBank, 
-  BookOpen, Plane, Search, ChevronRight, Filter
+  BookOpen, Plane, Search, ChevronRight, Filter, Gift
 } from 'lucide-react';
 import { BENEFIT_TYPE_COLORS, BENEFIT_TYPE_LABELS } from '@/lib/constants';
 import {
@@ -22,8 +22,8 @@ const benefits = [
   { name: 'Housing Allowance', icon: Home, value: 120000, utilized: 120000, type: 'cash_allowances', area: 'home_living', route: '/employee/housing', description: 'Monthly housing allowance paid with salary', bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'] },
   { name: 'Education Allowance', icon: GraduationCap, value: 60000, utilized: 42000, type: 'cash_allowances', area: 'family_parenting', route: '/employee/schooling', description: 'Education support for dependents', bullets: ['Per child up to 18 years', 'Covers tuition fees only'] },
   { name: 'Health Insurance', icon: Heart, value: 45000, utilized: 12500, type: 'health_protection', area: 'health', route: '/employee/health', description: 'Comprehensive health coverage', bullets: ['Includes dental and optical', 'Covers spouse and children'] },
-  { name: 'Transport Allowance', icon: Car, value: 24000, utilized: 18000, type: 'cash_allowances', area: 'mobility', route: '/employee/transport', description: 'Monthly transport allowance', bullets: ['Paid monthly with salary', 'Covers fuel and parking'] },
-  { name: 'Annual Flight Tickets', icon: Plane, value: 15000, utilized: 15000, type: 'cash_allowances', area: 'lifestyle', route: '/employee/transport', description: 'Annual travel tickets for you and family', bullets: ['For employee and dependents', 'Economy class tickets'] },
+  { name: 'Transport & Mobility', icon: Car, value: 39000, utilized: 33000, type: 'cash_allowances', area: 'mobility', route: '/employee/transport', description: 'Monthly transport and flight tickets', bullets: ['Paid monthly with salary', 'Includes annual flight tickets'] },
+  { name: 'Annual Bonus', icon: Gift, value: 70000, utilized: 0, type: 'cash_allowances', area: 'money', route: '/employee/bonus', description: 'Performance-based annual bonus', bullets: ['Performance-based (0-200%)', 'Target: 2 months salary'] },
   { name: 'Financial Planning', icon: PiggyBank, value: 36000, utilized: 18000, type: 'wealth_ownership', area: 'money', route: '/employee/financial', description: 'Retirement savings with employer match', bullets: ['5% employer match', 'Multiple fund options'] },
   { name: 'Wellbeing Program', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', area: 'health', route: '/employee/wellbeing', description: 'Health and wellness benefits', bullets: ['Gym membership covered', 'Wellness app subscription'] },
   { name: 'Learning & Development', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', area: 'career', route: '/employee/learning', description: 'Professional development budget', bullets: ['Courses and certifications', 'Pre-approval required'] },
