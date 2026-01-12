@@ -41,8 +41,11 @@ export default function SchoolingPage() {
   const [activeChildId, setActiveChildId] = useState<string>(demoChildren[0]?.id || '');
   const [searchTerm, setSearchTerm] = useState('');
   const [curriculum, setCurriculum] = useState<string>('all');
+  const [city, setCity] = useState<string>('Dubai'); // Default from profile
   const [maxFee, setMaxFee] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('net_cost');
+
+  const cities = ['Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman', 'Ras Al Khaimah', 'Fujairah', 'Umm Al Quwain'];
 
   const numberOfChildren = childrenAllocations.length;
   const totalAllowance = ALLOWANCE_PER_CHILD * numberOfChildren;
@@ -51,7 +54,9 @@ export default function SchoolingPage() {
   const totalSchoolFees = childrenAllocations.reduce((sum, c) => sum + c.schoolFee, 0);
   const totalCoveredByAllowance = childrenAllocations.reduce((sum, c) => sum + Math.min(c.schoolFee, ALLOWANCE_PER_CHILD), 0);
   const totalOutOfPocket = childrenAllocations.reduce((sum, c) => sum + Math.max(0, c.schoolFee - ALLOWANCE_PER_CHILD), 0);
+  const unusedAllowance = childrenAllocations.reduce((sum, c) => sum + Math.max(0, ALLOWANCE_PER_CHILD - c.schoolFee), 0);
   const utilizationPercent = totalAllowance > 0 ? Math.round((totalCoveredByAllowance / totalAllowance) * 100) : 0;
+  const allChildrenHaveSchools = childrenAllocations.every(c => c.selectedSchool !== null);
 
   const activeChild = childrenAllocations.find(c => c.id === activeChildId);
 
@@ -85,6 +90,13 @@ export default function SchoolingPage() {
       filtered = filtered.filter(s => s.curriculum === curriculum);
     }
 
+    // Filter by city/location
+    if (city) {
+      filtered = filtered.filter(s => 
+        s.location.toLowerCase().includes(city.toLowerCase())
+      );
+    }
+
     if (maxFee !== 'all') {
       filtered = filtered.filter(s => s.annual_fee <= parseInt(maxFee));
     }
@@ -106,7 +118,7 @@ export default function SchoolingPage() {
     }
 
     return filtered;
-  }, [schools, searchTerm, curriculum, maxFee, sortBy, activeChild]);
+  }, [schools, searchTerm, curriculum, city, maxFee, sortBy, activeChild]);
 
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
 
@@ -237,6 +249,119 @@ export default function SchoolingPage() {
         />
       </div>
 
+      {/* Allowance Overview Summary - Shows when at least one child has a school */}
+      {childrenAllocations.some(c => c.selectedSchool) && (
+        <Card className={`border-2 ${allChildrenHaveSchools ? 'border-success/50 bg-success/5' : 'border-accent/30 bg-accent/5'}`}>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-display flex items-center gap-2">
+              <Calculator className="w-5 h-5 text-accent" />
+              Your Education Allowance Overview
+              {allChildrenHaveSchools && (
+                <Badge className="bg-success text-success-foreground ml-2">
+                  <Check className="w-3 h-3 mr-1" />
+                  Complete
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Left: Per-child breakdown */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-muted-foreground">Per-Child Breakdown</h4>
+                {childrenAllocations.map(child => {
+                  const covered = Math.min(child.schoolFee, ALLOWANCE_PER_CHILD);
+                  const topUp = Math.max(0, child.schoolFee - ALLOWANCE_PER_CHILD);
+                  const unused = Math.max(0, ALLOWANCE_PER_CHILD - child.schoolFee);
+                  
+                  return (
+                    <div key={child.id} className="p-3 rounded-lg bg-card border">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-sm">{child.name}</span>
+                        {child.selectedSchool ? (
+                          <Badge variant="secondary" className="text-xs">{child.selectedSchool}</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs text-muted-foreground">No school selected</Badge>
+                        )}
+                      </div>
+                      {child.selectedSchool && (
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                          <div className="text-center p-2 rounded bg-muted/50">
+                            <p className="text-muted-foreground">Allowance</p>
+                            <p className="font-semibold">{formatCurrency(ALLOWANCE_PER_CHILD)}</p>
+                          </div>
+                          <div className="text-center p-2 rounded bg-success/10">
+                            <p className="text-success">Covered</p>
+                            <p className="font-semibold text-success">{formatCurrency(covered)}</p>
+                          </div>
+                          <div className={`text-center p-2 rounded ${topUp > 0 ? 'bg-warning/10' : 'bg-muted/50'}`}>
+                            <p className={topUp > 0 ? 'text-warning' : 'text-muted-foreground'}>
+                              {topUp > 0 ? 'Top-Up' : 'Unused'}
+                            </p>
+                            <p className={`font-semibold ${topUp > 0 ? 'text-warning' : ''}`}>
+                              {topUp > 0 ? formatCurrency(topUp) : formatCurrency(unused)}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Right: Total summary */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-muted-foreground">Total Summary</h4>
+                <div className="p-4 rounded-lg bg-card border space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Your Total Allowance</span>
+                    <span className="font-semibold">{formatCurrency(totalAllowance)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Total School Fees</span>
+                    <span className="font-semibold">{formatCurrency(totalSchoolFees)}</span>
+                  </div>
+                  <div className="border-t pt-3 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-success">Covered by Allowance</span>
+                      <span className="font-semibold text-success">{formatCurrency(totalCoveredByAllowance)}</span>
+                    </div>
+                    {totalOutOfPocket > 0 ? (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-warning">Your Salary Top-Up</span>
+                        <span className="font-semibold text-warning">{formatCurrency(totalOutOfPocket)}</span>
+                      </div>
+                    ) : unusedAllowance > 0 ? (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Unused Allowance</span>
+                        <span className="font-semibold">{formatCurrency(unusedAllowance)}</span>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="border-t pt-3">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold">Monthly from Salary</span>
+                      <span className={`text-lg font-bold ${totalOutOfPocket > 0 ? 'text-warning' : 'text-success'}`}>
+                        {totalOutOfPocket > 0 ? formatCurrency(Math.round(totalOutOfPocket / 12)) : 'AED 0'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {totalOutOfPocket > 0 
+                        ? `${formatCurrency(totalOutOfPocket)} annual top-up ÷ 12 months`
+                        : 'All fees covered by your allowance!'}
+                    </p>
+                  </div>
+                </div>
+                <Progress value={utilizationPercent} className="h-2" />
+                <p className="text-xs text-muted-foreground text-center">
+                  {utilizationPercent}% of your education allowance utilized
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Children Allocation Cards */}
       <div>
         <h2 className="text-lg font-display font-semibold mb-4 flex items-center gap-2">
@@ -350,9 +475,13 @@ export default function SchoolingPage() {
               <School className="w-5 h-5 text-accent" />
               Find a School for {activeChild.name}
               <Badge variant="secondary" className="ml-2">{activeChild.gradeLevel}</Badge>
+              <Badge variant="outline" className="ml-1 text-muted-foreground">
+                <MapPin className="w-3 h-3 mr-1" />
+                {city}
+              </Badge>
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Showing schools suitable for {activeChild.grade}. "You Pay" shows the amount above the AED 30,000 allowance.
+              Showing schools in {city} suitable for {activeChild.grade}. "You Pay" shows the amount above the AED 30,000 allowance.
             </p>
           </CardHeader>
           <CardContent className="pt-4">
@@ -368,6 +497,18 @@ export default function SchoolingPage() {
                 />
               </div>
               
+              <Select value={city} onValueChange={setCity}>
+                <SelectTrigger className="w-full md:w-36">
+                  <MapPin className="w-4 h-4 mr-1 text-muted-foreground" />
+                  <SelectValue placeholder="City" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cities.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               <Select value={curriculum} onValueChange={setCurriculum}>
                 <SelectTrigger className="w-full md:w-40">
                   <SelectValue placeholder="Curriculum" />
