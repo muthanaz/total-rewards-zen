@@ -511,6 +511,7 @@ export type Database = {
           marital_status: string | null
           monthly_salary: number | null
           nationality: string | null
+          organization_id: string | null
           passport_number: string | null
           pets: string[] | null
           phone: string | null
@@ -544,6 +545,7 @@ export type Database = {
           marital_status?: string | null
           monthly_salary?: number | null
           nationality?: string | null
+          organization_id?: string | null
           passport_number?: string | null
           pets?: string[] | null
           phone?: string | null
@@ -577,6 +579,7 @@ export type Database = {
           marital_status?: string | null
           monthly_salary?: number | null
           nationality?: string | null
+          organization_id?: string | null
           passport_number?: string | null
           pets?: string[] | null
           phone?: string | null
