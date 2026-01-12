@@ -3,8 +3,11 @@ import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Ghost, AlertTriangle, TrendingDown, Lightbulb, DollarSign, Users } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { Ghost, AlertTriangle, TrendingDown, Lightbulb, DollarSign, Users, Target } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
+import { useState } from 'react';
+import { DrillDownModal } from '@/components/dashboard';
 
 const zombieCategories = [
   { 
@@ -50,20 +53,67 @@ const zombieCategories = [
 ];
 
 const chartData = zombieCategories.map(c => ({
-  name: c.benefit.split(' ').slice(0, 2).join(' '),
+  name: c.benefit,
+  shortName: c.benefit.split(' ').slice(0, 2).join(' '),
   zombie: c.zombie,
   utilized: c.utilized,
+  total: c.allocated,
+  utilizationRate: c.utilizationRate,
+  affectedEmployees: c.affectedEmployees,
+  reason: c.reason,
+  recommendation: c.recommendation,
 }));
 
 const riskIndicators = [
-  { label: 'High Risk Benefits', value: 2, description: '<60% utilization', color: 'text-red-500' },
-  { label: 'Medium Risk Benefits', value: 2, description: '60-75% utilization', color: 'text-amber-500' },
-  { label: 'Healthy Benefits', value: 8, description: '>75% utilization', color: 'text-green-500' },
+  { label: 'High Risk', value: 2, description: '<60% utilization', color: 'text-red-500', bgColor: 'bg-red-500/10' },
+  { label: 'Medium Risk', value: 2, description: '60-75% utilization', color: 'text-amber-500', bgColor: 'bg-amber-500/10' },
+  { label: 'Healthy', value: 8, description: '>75% utilization', color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
 ];
 
+// Custom legend component
+const CustomLegend = () => (
+  <div className="flex justify-center gap-6 mt-4">
+    <div className="flex items-center gap-2">
+      <div className="w-3 h-3 rounded-sm bg-accent" />
+      <span className="text-xs text-muted-foreground font-medium">Utilized</span>
+    </div>
+    <div className="flex items-center gap-2">
+      <div className="w-3 h-3 rounded-sm bg-amber-500" />
+      <span className="text-xs text-muted-foreground font-medium">Zombie Spend</span>
+    </div>
+  </div>
+);
+
 export default function ZombieSpendPage() {
+  const [drillDownOpen, setDrillDownOpen] = useState(false);
+  const [selectedData, setSelectedData] = useState<any>(null);
+  
   const totalZombie = zombieCategories.reduce((sum, c) => sum + c.zombie, 0);
   const totalAllocated = zombieCategories.reduce((sum, c) => sum + c.allocated, 0);
+  const totalAffected = zombieCategories.reduce((sum, c) => sum + c.affectedEmployees, 0);
+  const recoveryPotential = totalZombie * 0.6;
+
+  const handleBarClick = (data: any) => {
+    if (data && data.activePayload) {
+      const clickedData = data.activePayload[0]?.payload;
+      if (clickedData) {
+        setSelectedData({
+          title: clickedData.name,
+          category: 'Zombie Spend Analysis',
+          totalValue: clickedData.total,
+          utilized: clickedData.utilized,
+          trend: clickedData.utilizationRate < 60 ? 'down' : 'neutral',
+          trendValue: Math.round(100 - clickedData.utilizationRate),
+          description: clickedData.reason,
+          breakdown: [
+            { name: 'Utilized', value: clickedData.utilized },
+            { name: 'Zombie Spend', value: clickedData.zombie },
+          ],
+        });
+        setDrillDownOpen(true);
+      }
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -71,62 +121,56 @@ export default function ZombieSpendPage() {
       <div>
         <div className="flex items-center gap-3">
           <Ghost className="h-8 w-8 text-amber-500" />
-          <h1 className="text-2xl font-display font-bold text-foreground">Zombie Spend</h1>
+          <h1 className="text-2xl font-display font-bold text-foreground">Zombie Spend Analysis</h1>
         </div>
         <p className="text-muted-foreground mt-1">Identify and recover underutilized benefit allocations</p>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="card-elevated border-amber-500/20 bg-amber-500/5">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Zombie Spend</p>
-                <p className="text-3xl font-bold text-amber-600">AED {(totalZombie / 1000).toFixed(0)}K</p>
-              </div>
-              <DollarSign className="h-10 w-10 text-amber-500/30" />
-            </div>
-            <InfoTooltip formula="Sum of allocated but unused benefits across all categories with <75% utilization" dataSource="Seed data" />
-            <p className="text-sm text-muted-foreground mt-2">
-              {((totalZombie / totalAllocated) * 100).toFixed(1)}% of tracked allocations
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="card-elevated">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Affected Employees</p>
-                <p className="text-3xl font-bold">152</p>
-              </div>
-              <Users className="h-10 w-10 text-primary/20" />
-            </div>
-            <p className="text-sm text-muted-foreground mt-2">
-              Employees with underutilized benefits
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="card-elevated">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Recovery Potential</p>
-                <p className="text-3xl font-bold text-green-600">AED {((totalZombie * 0.6) / 1000).toFixed(0)}K</p>
-              </div>
-              <TrendingDown className="h-10 w-10 text-green-500/20" />
-            </div>
-            <InfoTooltip formula="Estimated recoverable amount through policy optimization (60% of zombie spend)" dataSource="Seed data" />
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <SummaryStatsCard
+          variant="info"
+          label="Total Zombie Spend"
+          value={`AED ${(totalZombie / 1000).toFixed(0)}K`}
+          icon={Ghost}
+          formula="Sum of allocated but unused benefits across all categories with <75% utilization"
+          dataSource="Benefits Analytics"
+          index={0}
+        />
+        <SummaryStatsCard
+          variant="utilized"
+          label="Affected Employees"
+          value={totalAffected.toString()}
+          icon={Users}
+          formula="Count of employees with underutilized benefits"
+          dataSource="HR System"
+          index={1}
+        />
+        <SummaryStatsCard
+          variant="remaining"
+          label="Recovery Potential"
+          value={`AED ${(recoveryPotential / 1000).toFixed(0)}K`}
+          icon={TrendingDown}
+          formula="Estimated recoverable amount (60% of zombie spend)"
+          dataSource="Analytics Model"
+          index={2}
+        />
+        <SummaryStatsCard
+          variant="utilization"
+          label="Zombie Rate"
+          value={`${((totalZombie / totalAllocated) * 100).toFixed(1)}%`}
+          icon={Target}
+          formula="(Zombie Spend / Total Allocated) × 100"
+          dataSource="Benefits Analytics"
+          progress={100 - (totalZombie / totalAllocated) * 100}
+          index={3}
+        />
       </div>
 
       {/* Risk Indicators */}
-      <Card className="card-elevated">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-amber-500" />
             Benefit Health Overview
           </CardTitle>
@@ -134,10 +178,13 @@ export default function ZombieSpendPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {riskIndicators.map((indicator) => (
-              <div key={indicator.label} className="flex items-center gap-4 p-4 rounded-lg bg-muted/30">
+              <div 
+                key={indicator.label} 
+                className={`flex items-center gap-4 p-4 rounded-xl ${indicator.bgColor} border border-transparent hover:border-border/50 transition-colors`}
+              >
                 <div className={`text-4xl font-bold ${indicator.color}`}>{indicator.value}</div>
                 <div>
-                  <p className="font-medium">{indicator.label}</p>
+                  <p className={`font-semibold ${indicator.color}`}>{indicator.label}</p>
                   <p className="text-sm text-muted-foreground">{indicator.description}</p>
                 </div>
               </div>
@@ -146,35 +193,93 @@ export default function ZombieSpendPage() {
         </CardContent>
       </Card>
 
-      {/* Zombie Spend Chart */}
-      <Card className="card-elevated">
-        <CardHeader>
-          <CardTitle className="text-lg">Zombie Spend by Benefit</CardTitle>
-          <CardDescription>Allocated vs utilized amounts for underperforming benefits</CardDescription>
+      {/* Zombie Spend Chart - Enhanced */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            Zombie Spend by Benefit
+            <InfoTooltip formula="Stacked comparison of utilized vs zombie amounts" dataSource="Benefits Analytics" />
+          </CardTitle>
+          <CardDescription>Click on any bar to see detailed breakdown</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-64">
+          <div className="h-[320px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                <XAxis type="number" tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
-                <YAxis type="category" dataKey="name" width={100} />
-                <Tooltip 
-                  formatter={(value: number) => [`AED ${value.toLocaleString()}`, '']}
-                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+              <BarChart 
+                data={chartData} 
+                layout="vertical"
+                margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
+                onClick={handleBarClick}
+                style={{ cursor: 'pointer' }}
+              >
+                <defs>
+                  <linearGradient id="utilizedGradient" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={1} />
+                    <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0.7} />
+                  </linearGradient>
+                  <linearGradient id="zombieGradient" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="hsl(38 92% 50%)" stopOpacity={1} />
+                    <stop offset="100%" stopColor="hsl(38 92% 50%)" stopOpacity={0.7} />
+                  </linearGradient>
+                </defs>
+                <XAxis 
+                  type="number" 
+                  tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                  tickCount={5}
                 />
-                <Bar dataKey="utilized" stackId="a" fill="hsl(var(--primary))" name="Utilized" />
-                <Bar dataKey="zombie" stackId="a" fill="hsl(var(--destructive))" name="Zombie" radius={[0, 4, 4, 0]} />
+                <YAxis 
+                  type="category" 
+                  dataKey="shortName" 
+                  width={110}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: 'hsl(var(--foreground))', fontSize: 12, fontWeight: 500 }}
+                />
+                <Tooltip 
+                  formatter={(value: number, name: string) => [
+                    `AED ${value.toLocaleString()}`,
+                    name === 'utilized' ? 'Utilized' : 'Zombie Spend'
+                  ]}
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--card))', 
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '10px',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+                    padding: '12px 16px'
+                  }}
+                  labelStyle={{ fontWeight: 600, marginBottom: 6, color: 'hsl(var(--foreground))' }}
+                  cursor={{ fill: 'hsl(var(--accent)/0.05)' }}
+                />
+                <Bar 
+                  dataKey="utilized" 
+                  stackId="a" 
+                  fill="url(#utilizedGradient)" 
+                  name="Utilized"
+                  radius={[0, 0, 0, 0]}
+                  maxBarSize={32}
+                />
+                <Bar 
+                  dataKey="zombie" 
+                  stackId="a" 
+                  fill="url(#zombieGradient)" 
+                  name="Zombie Spend" 
+                  radius={[0, 6, 6, 0]}
+                  maxBarSize={32}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
+          <CustomLegend />
         </CardContent>
       </Card>
 
       {/* Detailed Analysis */}
-      <Card className="card-elevated">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
             <Lightbulb className="h-5 w-5 text-accent" />
             Detailed Analysis & Recommendations
           </CardTitle>
@@ -182,47 +287,58 @@ export default function ZombieSpendPage() {
         <CardContent>
           <div className="space-y-4">
             {zombieCategories.map((category, index) => (
-              <div key={index} className="p-4 rounded-lg border border-border bg-card">
+              <div key={index} className="p-4 rounded-xl border border-border bg-card hover:border-border/80 transition-colors">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-3">
                       <h3 className="font-semibold">{category.benefit}</h3>
-                      <Badge variant={category.utilizationRate < 60 ? 'destructive' : 'secondary'}>
+                      <Badge className={
+                        category.utilizationRate < 60 
+                          ? 'bg-red-500/10 text-red-500 border-0'
+                          : 'bg-amber-500/10 text-amber-500 border-0'
+                      }>
                         {category.utilizationRate}% utilized
                       </Badge>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
-                      <div>
-                        <p className="text-muted-foreground">Allocated</p>
-                        <p className="font-medium">AED {category.allocated.toLocaleString()}</p>
+                      <div className="space-y-1">
+                        <p className="text-muted-foreground text-xs">Allocated</p>
+                        <p className="font-semibold">AED {category.allocated.toLocaleString()}</p>
                       </div>
-                      <div>
-                        <p className="text-muted-foreground">Utilized</p>
-                        <p className="font-medium">AED {category.utilized.toLocaleString()}</p>
+                      <div className="space-y-1">
+                        <p className="text-muted-foreground text-xs">Utilized</p>
+                        <p className="font-semibold text-accent">AED {category.utilized.toLocaleString()}</p>
                       </div>
-                      <div>
-                        <p className="text-muted-foreground">Zombie Amount</p>
-                        <p className="font-medium text-amber-600">AED {category.zombie.toLocaleString()}</p>
+                      <div className="space-y-1">
+                        <p className="text-muted-foreground text-xs">Zombie Amount</p>
+                        <p className="font-semibold text-amber-500">AED {category.zombie.toLocaleString()}</p>
                       </div>
-                      <div>
-                        <p className="text-muted-foreground">Affected</p>
-                        <p className="font-medium">{category.affectedEmployees} employees</p>
+                      <div className="space-y-1">
+                        <p className="text-muted-foreground text-xs">Affected</p>
+                        <p className="font-semibold">{category.affectedEmployees} employees</p>
                       </div>
                     </div>
-                    <Progress value={category.utilizationRate} className="h-2 mb-3" />
+                    <Progress 
+                      value={category.utilizationRate} 
+                      className={`h-2 mb-3 ${
+                        category.utilizationRate < 60 
+                          ? '[&>div]:bg-red-500' 
+                          : '[&>div]:bg-amber-500'
+                      }`} 
+                    />
                     <div className="flex flex-col sm:flex-row gap-4 text-sm">
-                      <div className="flex-1">
-                        <span className="text-muted-foreground">Root Cause: </span>
-                        <span>{category.reason}</span>
+                      <div className="flex-1 p-2 rounded-lg bg-muted/30">
+                        <span className="text-muted-foreground text-xs block mb-1">Root Cause</span>
+                        <span className="text-foreground">{category.reason}</span>
                       </div>
-                      <div className="flex-1">
-                        <span className="text-accent font-medium">Recommendation: </span>
-                        <span>{category.recommendation}</span>
+                      <div className="flex-1 p-2 rounded-lg bg-accent/5 border border-accent/20">
+                        <span className="text-accent text-xs block mb-1">Recommendation</span>
+                        <span className="text-foreground">{category.recommendation}</span>
                       </div>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm">
-                    View Details
+                  <Button variant="outline" size="sm" className="shrink-0">
+                    Take Action
                   </Button>
                 </div>
               </div>
@@ -230,6 +346,14 @@ export default function ZombieSpendPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Drill-down Modal */}
+      <DrillDownModal
+        open={drillDownOpen}
+        onOpenChange={setDrillDownOpen}
+        data={selectedData}
+        formatValue={(v) => `AED ${v.toLocaleString()}`}
+      />
     </div>
   );
 }
