@@ -25,6 +25,7 @@ import {
   LogOut,
   ShoppingBag,
   Lightbulb,
+  Shield,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -88,6 +89,7 @@ const navigation: NavGroup[] = [
     labelKey: 'nav.account',
     items: [
       { labelKey: 'nav.profile', path: '/employee/profile', icon: User },
+      { labelKey: 'nav.security', path: '/employee/security', icon: Shield },
     ],
   },
 ];

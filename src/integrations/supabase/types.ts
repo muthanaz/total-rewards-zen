@@ -74,6 +74,42 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: string | null
+          resource_id: string | null
+          resource_type: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          resource_id?: string | null
+          resource_type: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          resource_id?: string | null
+          resource_type?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       benefit_entitlements: {
         Row: {
           annual_allowance: number
@@ -177,6 +213,39 @@ export type Database = {
           id?: string
           name?: string
           school_name?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      data_access_requests: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          processed_at: string | null
+          processed_by: string | null
+          request_type: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          request_type: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          request_type?: string
+          status?: string
           user_id?: string
         }
         Relationships: []
@@ -805,6 +874,45 @@ export type Database = {
         }
         Relationships: []
       }
+      sensitive_employee_data: {
+        Row: {
+          blood_type: string | null
+          created_at: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emirates_id_encrypted: string | null
+          id: string
+          monthly_salary_encrypted: string | null
+          passport_number_encrypted: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blood_type?: string | null
+          created_at?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emirates_id_encrypted?: string | null
+          id?: string
+          monthly_salary_encrypted?: string | null
+          passport_number_encrypted?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blood_type?: string | null
+          created_at?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emirates_id_encrypted?: string | null
+          id?: string
+          monthly_salary_encrypted?: string | null
+          passport_number_encrypted?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -822,6 +930,45 @@ export type Database = {
           created_at?: string | null
           id?: string
           role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          created_at: string
+          device_info: Json | null
+          expires_at: string
+          id: string
+          ip_address: string | null
+          is_active: boolean | null
+          last_activity: string
+          session_token_hash: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_info?: Json | null
+          expires_at: string
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean | null
+          last_activity?: string
+          session_token_hash: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_info?: Json | null
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean | null
+          last_activity?: string
+          session_token_hash?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []
@@ -983,6 +1130,46 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_org_benefit_stats: {
+        Args: { org_id: string }
+        Returns: {
+          avg_utilization_percent: number
+          benefit_name: string
+          total_entitlements: number
+          total_utilized: number
+        }[]
+      }
+      get_org_employee_directory: {
+        Args: { org_id: string }
+        Returns: {
+          emp_department: string
+          emp_email: string
+          emp_first_name: string
+          emp_last_name: string
+          emp_position: string
+          emp_user_id: string
+          emp_work_location: string
+        }[]
+      }
+      get_org_leave_stats: {
+        Args: { org_id: string }
+        Returns: {
+          avg_remaining_days: number
+          avg_used_days: number
+          leave_type: string
+          total_employees: number
+        }[]
+      }
+      get_org_satisfaction_stats: {
+        Args: { org_id: string }
+        Returns: {
+          avg_rating: number
+          category: string
+          period_month: number
+          period_year: number
+          total_responses: number
+        }[]
+      }
       get_user_organization_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -994,6 +1181,18 @@ export type Database = {
       is_same_organization: {
         Args: { _target_user_id: string }
         Returns: boolean
+      }
+      log_audit_event: {
+        Args: {
+          p_action: string
+          p_details?: Json
+          p_ip_address?: string
+          p_resource_id?: string
+          p_resource_type: string
+          p_user_agent?: string
+          p_user_id: string
+        }
+        Returns: string
       }
     }
     Enums: {
