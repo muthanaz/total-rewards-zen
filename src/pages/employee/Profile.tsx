@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,21 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User, Briefcase, Users, Heart, Save, Plus, Trash2, Baby, PawPrint } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface Child {
-  id: string;
-  name: string;
-  dateOfBirth: string;
-  grade: string;
-  schoolName: string;
-}
-
-interface Pet {
-  id: string;
-  name: string;
-  type: string;
-  breed: string;
-}
+import { useProfile, Child, Pet } from '@/contexts/ProfileContext';
 
 // Comprehensive list of countries with their cities and areas
 const COUNTRIES_DATA: Record<string, Record<string, string[]>> = {
@@ -373,26 +359,20 @@ const INTERESTS_OPTIONS = [
 
 export default function ProfilePage() {
   const { toast } = useToast();
-  const [profile, setProfile] = useState({
-    firstName: 'John', lastName: 'Smith', email: 'john.smith@company.com', phone: '+971 50 123 4567',
-    dateOfBirth: '1990-05-15',
-    nationality: 'United Kingdom', emiratesId: '784-1990-1234567-1', language: 'en',
-    country: 'United Arab Emirates', city: 'Dubai', area: 'Dubai Marina',
-    position: 'Senior Product Manager', department: 'Product', grade: 'G7', manager: 'Sarah Johnson', employmentDate: '2023-01-15', salary: '35000',
-    workLocation: 'DIFC',
-    maritalStatus: 'married', spouseName: 'Jane Smith', spouseDateOfBirth: '1992-08-22', emergencyName: 'Jane Smith', emergencyPhone: '+971 50 987 6543',
-  });
-
-  const [selectedInterests, setSelectedInterests] = useState<string[]>(['Travel', 'Fitness', 'Technology', 'Photography']);
-
-  const [children, setChildren] = useState<Child[]>([
-    { id: '1', name: 'Emma Smith', dateOfBirth: '2015-03-15', grade: 'Grade 4', schoolName: 'GEMS Wellington Academy' },
-    { id: '2', name: 'Oliver Smith', dateOfBirth: '2018-07-22', grade: 'Grade 1', schoolName: 'GEMS Wellington Academy' },
-  ]);
-
-  const [pets, setPets] = useState<Pet[]>([
-    { id: '1', name: 'Max', type: 'Dog', breed: 'Golden Retriever' },
-  ]);
+  const {
+    profile,
+    updateProfile,
+    children,
+    addChild,
+    updateChild,
+    removeChild,
+    pets,
+    addPet,
+    updatePet,
+    removePet,
+    selectedInterests,
+    toggleInterest,
+  } = useProfile();
 
   // Get cities based on selected country
   const cities = useMemo(() => {
@@ -407,45 +387,11 @@ export default function ProfilePage() {
   }, [profile.country, profile.city]);
 
   const handleCountryChange = (country: string) => {
-    setProfile({ ...profile, country, city: '', area: '' });
+    updateProfile({ country, city: '', area: '' });
   };
 
   const handleCityChange = (city: string) => {
-    setProfile({ ...profile, city, area: '' });
-  };
-
-  const toggleInterest = (interest: string) => {
-    setSelectedInterests(prev => 
-      prev.includes(interest) 
-        ? prev.filter(i => i !== interest)
-        : [...prev, interest]
-    );
-  };
-
-  const addChild = () => {
-    const newChild: Child = { id: Date.now().toString(), name: '', dateOfBirth: '', grade: '', schoolName: '' };
-    setChildren([...children, newChild]);
-  };
-
-  const updateChild = (id: string, field: keyof Child, value: string) => {
-    setChildren(children.map(c => c.id === id ? { ...c, [field]: value } : c));
-  };
-
-  const removeChild = (id: string) => {
-    setChildren(children.filter(c => c.id !== id));
-  };
-
-  const addPet = () => {
-    const newPet: Pet = { id: Date.now().toString(), name: '', type: 'Dog', breed: '' };
-    setPets([...pets, newPet]);
-  };
-
-  const updatePet = (id: string, field: keyof Pet, value: string) => {
-    setPets(pets.map(p => p.id === id ? { ...p, [field]: value } : p));
-  };
-
-  const removePet = (id: string) => {
-    setPets(pets.filter(p => p.id !== id));
+    updateProfile({ city, area: '' });
   };
 
   const handleSave = () => {
