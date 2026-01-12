@@ -236,8 +236,13 @@ export default function AdminSpendingPatterns() {
               <StackedAreaChart
                 data={stackedAreaData}
                 height={300}
-                categories={['housing', 'education', 'health', 'transport', 'other']}
-                colors={['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))']}
+                stacks={[
+                  { key: 'housing', label: 'Housing', color: 'hsl(var(--chart-1))' },
+                  { key: 'education', label: 'Education', color: 'hsl(var(--chart-2))' },
+                  { key: 'health', label: 'Health', color: 'hsl(var(--chart-3))' },
+                  { key: 'transport', label: 'Transport', color: 'hsl(var(--chart-4))' },
+                  { key: 'other', label: 'Other', color: 'hsl(var(--chart-5))' },
+                ]}
               />
             </CardContent>
           </Card>

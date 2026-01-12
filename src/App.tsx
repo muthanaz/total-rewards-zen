@@ -45,6 +45,10 @@ import KnowledgeCenterPage from "./pages/employer/KnowledgeCenter";
 import RecommendationsPage from "./pages/employer/Recommendations";
 
 import AdminDashboard from "./pages/admin/Dashboard";
+import AdminBenchmarks from "./pages/admin/Benchmarks";
+import AdminMarketIntelligence from "./pages/admin/MarketIntelligence";
+import AdminSpendingPatterns from "./pages/admin/SpendingPatterns";
+import AdminSavedReports from "./pages/admin/SavedReports";
 import VendorDashboard from "./pages/vendor/Dashboard";
 
 const queryClient = new QueryClient();
@@ -120,7 +124,10 @@ function AppRoutes() {
       {/* Admin Routes - Platform owner only */}
       <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout /></ProtectedRoute>}>
         <Route index element={<AdminDashboard />} />
-        {/* Add more admin routes as needed */}
+        <Route path="benchmarks" element={<AdminBenchmarks />} />
+        <Route path="market" element={<AdminMarketIntelligence />} />
+        <Route path="spending" element={<AdminSpendingPatterns />} />
+        <Route path="reports" element={<AdminSavedReports />} />
       </Route>
       
       {/* Vendor Routes */}

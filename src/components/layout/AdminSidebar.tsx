@@ -44,34 +44,28 @@ const navigationGroups: NavGroup[] = [
     titleAr: 'نظرة عامة على المنصة',
     items: [
       { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/admin', icon: LayoutDashboard },
-      { label: 'Real-time Analytics', labelAr: 'التحليلات الفورية', path: '/admin/analytics', icon: TrendingUp },
     ],
   },
   {
     title: 'Benchmarking',
     titleAr: 'المقارنة المعيارية',
     items: [
-      { label: 'Regional Benchmarks', labelAr: 'المعايير الإقليمية', path: '/admin/benchmarks', icon: Globe },
-      { label: 'Industry Analysis', labelAr: 'تحليل الصناعة', path: '/admin/industry', icon: Target },
+      { label: 'Regional & Industry', labelAr: 'إقليمي وصناعي', path: '/admin/benchmarks', icon: Globe },
     ],
   },
   {
     title: 'Market Intelligence',
     titleAr: 'ذكاء السوق',
     items: [
-      { label: 'User Intent Analysis', labelAr: 'تحليل نوايا المستخدمين', path: '/admin/intent', icon: Users },
+      { label: 'User Intent & Segments', labelAr: 'نوايا وشرائح المستخدمين', path: '/admin/market', icon: Users },
       { label: 'Spending Patterns', labelAr: 'أنماط الإنفاق', path: '/admin/spending', icon: Wallet },
-      { label: 'Perk Performance', labelAr: 'أداء الامتيازات', path: '/admin/perks', icon: Store },
     ],
   },
   {
     title: 'Platform Management',
     titleAr: 'إدارة المنصة',
     items: [
-      { label: 'Organizations', labelAr: 'المنظمات', path: '/admin/organizations', icon: Building2 },
-      { label: 'Vendors', labelAr: 'الموردين', path: '/admin/vendors', icon: Store },
       { label: 'Saved Reports', labelAr: 'التقارير المحفوظة', path: '/admin/reports', icon: FileBarChart },
-      { label: 'Data Management', labelAr: 'إدارة البيانات', path: '/admin/data', icon: Database },
     ],
   },
   {
