@@ -27,16 +27,26 @@ interface NavItem {
   icon: React.ElementType;
 }
 
+// Reordered for user-friendly workflow: Overview → Operations → Analytics → Settings
 const navigation: NavItem[] = [
+  // 1. Dashboard - First thing users see
   { labelKey: 'nav.overview', path: '/employer', icon: LayoutDashboard },
+  
+  // 2. Daily Operations - Frequently used
+  { labelKey: 'nav.claimsApprovals', path: '/employer/claims', icon: FileCheck },
+  { labelKey: 'nav.employeeSegments', path: '/employer/segments', icon: Users },
+  
+  // 3. Financial Insights
   { labelKey: 'nav.spendUtilization', path: '/employer/spend', icon: DollarSign },
   { labelKey: 'nav.zombieSpend', path: '/employer/zombie', icon: Ghost },
-  { labelKey: 'nav.employeeSegments', path: '/employer/segments', icon: Users },
-  { labelKey: 'nav.claimsApprovals', path: '/employer/claims', icon: FileCheck },
+  
+  // 4. Analytics & Insights
   { labelKey: 'nav.marketplaceAnalytics', path: '/employer/marketplace', icon: ShoppingBag },
   { labelKey: 'nav.policyInsights', path: '/employer/policies', icon: FileText },
-  { labelKey: 'nav.integrations', path: '/employer/integrations', icon: Database },
   { labelKey: 'nav.recommendations', path: '/employer/recommendations', icon: Lightbulb },
+  
+  // 5. Settings & Configuration (less frequent)
+  { labelKey: 'nav.integrations', path: '/employer/integrations', icon: Database },
 ];
 
 export function EmployerSidebar() {
