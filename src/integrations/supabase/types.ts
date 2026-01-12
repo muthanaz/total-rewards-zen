@@ -417,6 +417,30 @@ export type Database = {
           },
         ]
       }
+      organizations: {
+        Row: {
+          created_at: string | null
+          domain: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          domain?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          domain?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       perk_activations: {
         Row: {
           activated_at: string | null
@@ -591,7 +615,15 @@ export type Database = {
           user_id?: string
           work_location?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       requests: {
         Row: {
@@ -855,11 +887,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_organization_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["user_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_same_organization: {
+        Args: { _target_user_id: string }
         Returns: boolean
       }
     }
