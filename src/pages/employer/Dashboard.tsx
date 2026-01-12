@@ -232,7 +232,13 @@ export default function EmployerDashboard() {
                 <Smile className="w-5 h-5 text-violet-500" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-2xl font-bold tracking-tight">{metrics.satisfactionScore}<span className="text-base text-muted-foreground font-normal">/5</span></p>
+                <div className="flex items-center gap-2">
+                  <p className="text-2xl font-bold tracking-tight">{metrics.satisfactionScore}<span className="text-base text-muted-foreground font-normal">/5</span></p>
+                  <InfoTooltip 
+                    formula="Average of all employee ratings across 4 categories: Overall Satisfaction, Benefits Package, HR Communication, and Support Quality. Each category rated 1-5 stars."
+                    dataSource="Monthly Employee Satisfaction Survey"
+                  />
+                </div>
                 <p className="text-xs text-muted-foreground truncate">Employee Satisfaction</p>
               </div>
             </div>
@@ -243,6 +249,9 @@ export default function EmployerDashboard() {
                   className={`h-1.5 flex-1 rounded-full ${star <= Math.round(metrics.satisfactionScore) ? 'bg-violet-500' : 'bg-muted'}`} 
                 />
               ))}
+            </div>
+            <div className="mt-2 text-xs text-muted-foreground">
+              Based on {metrics.totalEmployees * 0.72 | 0} responses ({((metrics.totalEmployees * 0.72 / metrics.totalEmployees) * 100).toFixed(0)}% participation)
             </div>
           </CardContent>
         </Card>

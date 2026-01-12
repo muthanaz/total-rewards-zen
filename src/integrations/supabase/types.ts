@@ -178,6 +178,39 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_satisfaction_ratings: {
+        Row: {
+          category: string
+          created_at: string
+          feedback: string | null
+          id: string
+          period_month: number
+          period_year: number
+          rating: number
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          period_month?: number
+          period_year?: number
+          rating: number
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          period_month?: number
+          period_year?: number
+          rating?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       health_providers: {
         Row: {
           address: string | null
