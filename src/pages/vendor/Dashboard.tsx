@@ -77,13 +77,23 @@ const myOffers = [
   },
 ];
 
-const monthlyPerformance = [
-  { month: 'Jul', views: 2800, redemptions: 520, earnings: 15200 },
-  { month: 'Aug', views: 3100, redemptions: 580, earnings: 17500 },
-  { month: 'Sep', views: 3400, redemptions: 640, earnings: 19200 },
-  { month: 'Oct', views: 3800, redemptions: 720, earnings: 21800 },
-  { month: 'Nov', views: 4200, redemptions: 790, earnings: 23500 },
-  { month: 'Dec', views: 4562, redemptions: 847, earnings: 24500 },
+// Transformed for AnimatedLineChart (expects name/value/secondaryValue)
+const monthlyPerformanceChart = [
+  { name: 'Jul', value: 2800, secondaryValue: 520 },
+  { name: 'Aug', value: 3100, secondaryValue: 580 },
+  { name: 'Sep', value: 3400, secondaryValue: 640 },
+  { name: 'Oct', value: 3800, secondaryValue: 720 },
+  { name: 'Nov', value: 4200, secondaryValue: 790 },
+  { name: 'Dec', value: 4562, secondaryValue: 847 },
+];
+
+const monthlyEarningsChart = [
+  { name: 'Jul', value: 15.2 },
+  { name: 'Aug', value: 17.5 },
+  { name: 'Sep', value: 19.2 },
+  { name: 'Oct', value: 21.8 },
+  { name: 'Nov', value: 23.5 },
+  { name: 'Dec', value: 24.5 },
 ];
 
 const recentTransactions = [
@@ -246,12 +256,10 @@ export default function VendorDashboard() {
               </CardHeader>
               <CardContent>
                 <AnimatedLineChart
-                  data={monthlyPerformance}
-                  lines={[
-                    { key: 'views', name: t('Views', 'المشاهدات'), color: 'hsl(var(--chart-1))' },
-                    { key: 'redemptions', name: t('Redemptions', 'الاستردادات'), color: 'hsl(var(--chart-2))' },
-                  ]}
-                  xAxisKey="month"
+                  data={monthlyPerformanceChart}
+                  showSecondary={true}
+                  primaryLabel={t('Views', 'المشاهدات')}
+                  secondaryLabel={t('Redemptions', 'الاستردادات')}
                   height={300}
                 />
               </CardContent>
@@ -263,9 +271,9 @@ export default function VendorDashboard() {
               </CardHeader>
               <CardContent>
                 <AnimatedBarChart
-                  data={monthlyPerformance.map(m => ({ name: m.month, value: m.earnings / 1000 }))}
+                  data={monthlyEarningsChart}
                   height={300}
-                  barColor="hsl(var(--chart-3))"
+                  formatValue={(v) => `AED ${v}K`}
                 />
               </CardContent>
             </Card>

@@ -48,13 +48,14 @@ const industryBreakdown = [
   { name: 'Manufacturing', value: 10, color: 'hsl(var(--chart-5))' },
 ];
 
-const monthlyGrowth = [
-  { month: 'Jul', organizations: 32, employees: 8500, gmv: 15.2 },
-  { month: 'Aug', organizations: 35, employees: 9200, gmv: 17.1 },
-  { month: 'Sep', organizations: 38, employees: 10100, gmv: 19.3 },
-  { month: 'Oct', organizations: 42, employees: 11200, gmv: 21.5 },
-  { month: 'Nov', organizations: 45, employees: 12100, gmv: 23.2 },
-  { month: 'Dec', organizations: 47, employees: 12847, gmv: 24.5 },
+// Transformed for AnimatedLineChart (expects name/value)
+const monthlyGrowthChart = [
+  { name: 'Jul', value: 32, secondaryValue: 15.2 },
+  { name: 'Aug', value: 35, secondaryValue: 17.1 },
+  { name: 'Sep', value: 38, secondaryValue: 19.3 },
+  { name: 'Oct', value: 42, secondaryValue: 21.5 },
+  { name: 'Nov', value: 45, secondaryValue: 23.2 },
+  { name: 'Dec', value: 47, secondaryValue: 24.5 },
 ];
 
 const topPerformingBenefits = [
@@ -169,12 +170,10 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <AnimatedLineChart
-                  data={monthlyGrowth}
-                  lines={[
-                    { key: 'organizations', name: t('Organizations', 'المنظمات'), color: 'hsl(var(--chart-1))' },
-                    { key: 'gmv', name: t('GMV (M)', 'القيمة (م)'), color: 'hsl(var(--chart-2))' },
-                  ]}
-                  xAxisKey="month"
+                  data={monthlyGrowthChart}
+                  showSecondary={true}
+                  primaryLabel={t('Organizations', 'المنظمات')}
+                  secondaryLabel={t('GMV (M)', 'القيمة (م)')}
                   height={300}
                 />
               </CardContent>
@@ -294,7 +293,6 @@ export default function AdminDashboard() {
                 <AnimatedBarChart
                   data={regionalBenchmarks.map(r => ({ name: r.region, value: r.avgUtilization }))}
                   height={250}
-                  barColor="hsl(var(--chart-1))"
                 />
               </CardContent>
             </Card>
@@ -307,7 +305,7 @@ export default function AdminDashboard() {
                 <AnimatedBarChart
                   data={regionalBenchmarks.map(r => ({ name: r.region, value: r.avgSpend / 1000 }))}
                   height={250}
-                  barColor="hsl(var(--chart-2))"
+                  formatValue={(v) => `${v}K`}
                 />
               </CardContent>
             </Card>

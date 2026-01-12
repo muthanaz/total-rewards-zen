@@ -15,6 +15,7 @@ import {
   LogOut,
   Database,
   BookOpen,
+  ChevronDown,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -22,33 +23,54 @@ import { Button } from '@/components/ui/button';
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 
+interface NavGroup {
+  titleKey: string;
+  items: NavItem[];
+}
+
 interface NavItem {
   labelKey: string;
   path: string;
   icon: React.ElementType;
 }
 
-// Reordered for user-friendly workflow: Overview → Operations → Analytics → Settings
-const navigation: NavItem[] = [
-  // 1. Dashboard - First thing users see
-  { labelKey: 'nav.overview', path: '/employer', icon: LayoutDashboard },
-  
-  // 2. Daily Operations - Frequently used
-  { labelKey: 'nav.claimsApprovals', path: '/employer/claims', icon: FileCheck },
-  { labelKey: 'nav.employeeSegments', path: '/employer/segments', icon: Users },
-  
-  // 3. Financial Insights
-  { labelKey: 'nav.spendUtilization', path: '/employer/spend', icon: DollarSign },
-  { labelKey: 'nav.zombieSpend', path: '/employer/zombie', icon: Ghost },
-  
-  // 4. Analytics & Insights
-  { labelKey: 'nav.marketplaceAnalytics', path: '/employer/marketplace', icon: ShoppingBag },
-  { labelKey: 'nav.policyInsights', path: '/employer/policies', icon: FileText },
-  { labelKey: 'nav.recommendations', path: '/employer/recommendations', icon: Lightbulb },
-  
-  // 5. Settings & Configuration (less frequent)
-  { labelKey: 'nav.integrations', path: '/employer/integrations', icon: Database },
-  { labelKey: 'nav.knowledgeCenter', path: '/employer/knowledge', icon: BookOpen },
+// Grouped navigation for better organization
+const navigationGroups: NavGroup[] = [
+  {
+    titleKey: 'nav.group.overview',
+    items: [
+      { labelKey: 'nav.overview', path: '/employer', icon: LayoutDashboard },
+    ],
+  },
+  {
+    titleKey: 'nav.group.operations',
+    items: [
+      { labelKey: 'nav.claimsApprovals', path: '/employer/claims', icon: FileCheck },
+      { labelKey: 'nav.employeeSegments', path: '/employer/segments', icon: Users },
+    ],
+  },
+  {
+    titleKey: 'nav.group.financials',
+    items: [
+      { labelKey: 'nav.spendUtilization', path: '/employer/spend', icon: DollarSign },
+      { labelKey: 'nav.zombieSpend', path: '/employer/zombie', icon: Ghost },
+    ],
+  },
+  {
+    titleKey: 'nav.group.analytics',
+    items: [
+      { labelKey: 'nav.marketplaceAnalytics', path: '/employer/marketplace', icon: ShoppingBag },
+      { labelKey: 'nav.policyInsights', path: '/employer/policies', icon: FileText },
+      { labelKey: 'nav.recommendations', path: '/employer/recommendations', icon: Lightbulb },
+    ],
+  },
+  {
+    titleKey: 'nav.group.settings',
+    items: [
+      { labelKey: 'nav.integrations', path: '/employer/integrations', icon: Database },
+      { labelKey: 'nav.knowledgeCenter', path: '/employer/knowledge', icon: BookOpen },
+    ],
+  },
 ];
 
 export function EmployerSidebar() {
@@ -56,9 +78,18 @@ export function EmployerSidebar() {
   const { signOut } = useAuth();
   const { t, direction } = useLanguage();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(navigationGroups.map(g => g.titleKey));
   const isRTL = direction === 'rtl';
 
   const isActive = (path: string) => location.pathname === path;
+  
+  const toggleGroup = (groupTitleKey: string) => {
+    setExpandedGroups(prev => 
+      prev.includes(groupTitleKey) 
+        ? prev.filter(g => g !== groupTitleKey)
+        : [...prev, groupTitleKey]
+    );
+  };
 
   const sidebarContent = (
     <>
@@ -85,25 +116,47 @@ export function EmployerSidebar() {
         </div>
       </div>
 
-      {/* Navigation */}
+      {/* Navigation Groups */}
       <nav className={cn(
-        "flex-1 overflow-y-auto py-4 px-3 space-y-0.5",
+        "flex-1 overflow-y-auto py-4 px-3",
         isRTL && "text-right"
       )}>
-        {navigation.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            onClick={() => setMobileOpen(false)}
-            className={cn(
-              'nav-item',
-              isActive(item.path) && 'nav-item-active',
-              isRTL && 'flex-row-reverse text-right'
+        {navigationGroups.map((group) => (
+          <div key={group.titleKey} className="mb-3">
+            <button
+              onClick={() => toggleGroup(group.titleKey)}
+              className={cn(
+                "flex items-center justify-between w-full px-2 py-2 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider hover:text-sidebar-foreground/70 transition-colors",
+                isRTL && "flex-row-reverse"
+              )}
+            >
+              <span>{t(group.titleKey)}</span>
+              <ChevronDown className={cn(
+                "w-3 h-3 transition-transform",
+                expandedGroups.includes(group.titleKey) ? "rotate-180" : ""
+              )} />
+            </button>
+            
+            {expandedGroups.includes(group.titleKey) && (
+              <div className="space-y-0.5 mt-1">
+                {group.items.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMobileOpen(false)}
+                    className={cn(
+                      'nav-item',
+                      isActive(item.path) && 'nav-item-active',
+                      isRTL && 'flex-row-reverse text-right'
+                    )}
+                  >
+                    <item.icon className="w-4 h-4 shrink-0" />
+                    <span className={cn("text-sm flex-1", isRTL && "text-right")}>{t(item.labelKey)}</span>
+                  </Link>
+                ))}
+              </div>
             )}
-          >
-            <item.icon className="w-4 h-4 shrink-0" />
-            <span className={cn("text-sm flex-1", isRTL && "text-right")}>{t(item.labelKey)}</span>
-          </Link>
+          </div>
         ))}
       </nav>
 

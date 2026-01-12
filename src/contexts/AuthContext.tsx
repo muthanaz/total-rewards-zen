@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-type UserRole = 'employee' | 'employer';
+type UserRole = 'employee' | 'employer' | 'admin' | 'vendor';
 
 interface AuthContextType {
   user: User | null;
@@ -107,7 +107,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const demoLogin = async (demoRole: UserRole) => {
-    const email = demoRole === 'employee' ? 'demo.employee@bnft.ae' : 'demo.employer@bnft.ae';
+    const emailMap: Record<UserRole, string> = {
+      employee: 'demo.employee@bnft.ae',
+      employer: 'demo.employer@bnft.ae',
+      admin: 'demo.admin@bnft.ae',
+      vendor: 'demo.vendor@bnft.ae',
+    };
+    
+    const nameMap: Record<UserRole, { first: string; last: string }> = {
+      employee: { first: 'Demo', last: 'Employee' },
+      employer: { first: 'HR', last: 'Manager' },
+      admin: { first: 'Platform', last: 'Admin' },
+      vendor: { first: 'Vendor', last: 'Partner' },
+    };
+    
+    const email = emailMap[demoRole];
     const password = 'demo123456';
     
     // Try to sign in first
@@ -118,8 +132,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error: signUpError } = await signUp(
         email, 
         password, 
-        demoRole === 'employee' ? 'Demo' : 'HR', 
-        demoRole === 'employee' ? 'Employee' : 'Manager',
+        nameMap[demoRole].first, 
+        nameMap[demoRole].last,
         demoRole
       );
       

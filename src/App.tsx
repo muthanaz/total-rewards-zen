@@ -12,6 +12,8 @@ import NotFound from "./pages/NotFound";
 
 import { EmployeeLayout } from "./components/layout/EmployeeLayout";
 import { EmployerLayout } from "./components/layout/EmployerLayout";
+import { AdminLayout } from "./components/layout/AdminLayout";
+import { VendorLayout } from "./components/layout/VendorLayout";
 
 import EmployeeDashboard from "./pages/employee/Dashboard";
 import HousingPage from "./pages/employee/Housing";
@@ -42,9 +44,14 @@ import IntegrationsPage from "./pages/employer/Integrations";
 import KnowledgeCenterPage from "./pages/employer/KnowledgeCenter";
 import RecommendationsPage from "./pages/employer/Recommendations";
 
+import AdminDashboard from "./pages/admin/Dashboard";
+import VendorDashboard from "./pages/vendor/Dashboard";
+
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children, allowedRole }: { children: React.ReactNode; allowedRole?: 'employee' | 'employer' }) {
+type UserRole = 'employee' | 'employer' | 'admin' | 'vendor';
+
+function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: UserRole[] }) {
   const { user, role, loading } = useAuth();
   
   if (loading) {
@@ -55,8 +62,15 @@ function ProtectedRoute({ children, allowedRole }: { children: React.ReactNode; 
     return <Navigate to="/auth" replace />;
   }
   
-  if (allowedRole && role !== allowedRole) {
-    return <Navigate to={role === 'employer' ? '/employer' : '/employee'} replace />;
+  if (allowedRoles && role && !allowedRoles.includes(role)) {
+    // Redirect to appropriate dashboard based on role
+    const roleRedirects: Record<UserRole, string> = {
+      admin: '/admin',
+      vendor: '/vendor',
+      employer: '/employer',
+      employee: '/employee',
+    };
+    return <Navigate to={roleRedirects[role]} replace />;
   }
   
   return <>{children}</>;
@@ -69,7 +83,7 @@ function AppRoutes() {
       <Route path="/auth" element={<Auth />} />
       
       {/* Employee Routes */}
-      <Route path="/employee" element={<ProtectedRoute allowedRole="employee"><EmployeeLayout /></ProtectedRoute>}>
+      <Route path="/employee" element={<ProtectedRoute allowedRoles={['employee']}><EmployeeLayout /></ProtectedRoute>}>
         <Route index element={<EmployeeDashboard />} />
         <Route path="benefits" element={<BenefitsPage />} />
         <Route path="housing" element={<HousingPage />} />
@@ -90,7 +104,7 @@ function AppRoutes() {
       </Route>
       
       {/* Employer Routes */}
-      <Route path="/employer" element={<ProtectedRoute allowedRole="employer"><EmployerLayout /></ProtectedRoute>}>
+      <Route path="/employer" element={<ProtectedRoute allowedRoles={['employer']}><EmployerLayout /></ProtectedRoute>}>
         <Route index element={<EmployerDashboard />} />
         <Route path="spend" element={<SpendPage />} />
         <Route path="zombie" element={<ZombieSpendPage />} />
@@ -101,6 +115,18 @@ function AppRoutes() {
         <Route path="integrations" element={<IntegrationsPage />} />
         <Route path="knowledge" element={<KnowledgeCenterPage />} />
         <Route path="recommendations" element={<RecommendationsPage />} />
+      </Route>
+      
+      {/* Admin Routes - Platform owner only */}
+      <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout /></ProtectedRoute>}>
+        <Route index element={<AdminDashboard />} />
+        {/* Add more admin routes as needed */}
+      </Route>
+      
+      {/* Vendor Routes */}
+      <Route path="/vendor" element={<ProtectedRoute allowedRoles={['vendor']}><VendorLayout /></ProtectedRoute>}>
+        <Route index element={<VendorDashboard />} />
+        {/* Add more vendor routes as needed */}
       </Route>
       
       <Route path="*" element={<NotFound />} />

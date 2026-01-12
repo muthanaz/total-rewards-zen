@@ -56,6 +56,13 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.integrations': 'Integrations & Data',
     'nav.recommendations': 'Recommendations',
     
+    // Navigation Groups
+    'nav.group.overview': 'Overview',
+    'nav.group.operations': 'Operations',
+    'nav.group.financials': 'Financials',
+    'nav.group.analytics': 'Analytics & Insights',
+    'nav.group.settings': 'Settings',
+    
     // Navigation - Employee
     'nav.dashboard': 'Dashboard',
     'nav.myBenefits': 'My Benefits',
@@ -229,6 +236,13 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.policyInsights': 'رؤى السياسات',
     'nav.integrations': 'التكاملات والبيانات',
     'nav.recommendations': 'التوصيات',
+    
+    // Navigation Groups
+    'nav.group.overview': 'نظرة عامة',
+    'nav.group.operations': 'العمليات',
+    'nav.group.financials': 'المالية',
+    'nav.group.analytics': 'التحليلات والرؤى',
+    'nav.group.settings': 'الإعدادات',
     
     // Navigation - Employee
     'nav.dashboard': 'لوحة التحكم',
