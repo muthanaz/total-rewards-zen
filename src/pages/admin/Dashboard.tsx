@@ -41,11 +41,11 @@ const regionalBenchmarks = [
 ];
 
 const industryBreakdown = [
-  { name: 'Financial Services', value: 35, color: 'hsl(var(--chart-1))' },
-  { name: 'Technology', value: 25, color: 'hsl(var(--chart-2))' },
-  { name: 'Healthcare', value: 18, color: 'hsl(var(--chart-3))' },
-  { name: 'Retail', value: 12, color: 'hsl(var(--chart-4))' },
-  { name: 'Manufacturing', value: 10, color: 'hsl(var(--chart-5))' },
+  { name: 'Financial Services', value: 35, color: 'hsl(160 84% 39%)' },
+  { name: 'Technology', value: 25, color: 'hsl(262 52% 55%)' },
+  { name: 'Healthcare', value: 18, color: 'hsl(340 65% 55%)' },
+  { name: 'Retail', value: 12, color: 'hsl(199 89% 48%)' },
+  { name: 'Manufacturing', value: 10, color: 'hsl(38 92% 50%)' },
 ];
 
 // Transformed for AnimatedLineChart (expects name/value)
