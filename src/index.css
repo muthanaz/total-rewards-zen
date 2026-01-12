@@ -147,6 +147,7 @@
   html.rtl h5,
   html.rtl h6 {
     font-family: 'Noto Sans Arabic', 'DM Sans', system-ui, sans-serif;
+    letter-spacing: 0;
   }
 }
 
@@ -252,6 +253,99 @@
   html.rtl .card-elevated {
     text-align: right;
   }
+
+  /* RTL flex reversals */
+  html.rtl .flex-items-gap {
+    @apply flex-row-reverse;
+  }
+
+  /* RTL icon margins */
+  html.rtl .icon-margin-end {
+    margin-left: 0.75rem;
+    margin-right: 0;
+  }
+
+  html.rtl .icon-margin-start {
+    margin-right: 0.75rem;
+    margin-left: 0;
+  }
+
+  /* RTL Progress bar direction */
+  html.rtl .progress-bar,
+  html.rtl [role="progressbar"] {
+    direction: rtl;
+  }
+
+  /* RTL Chevron auto-flip */
+  html.rtl .chevron-end {
+    transform: scaleX(-1);
+  }
+
+  /* RTL card content alignment */
+  html.rtl .card-content {
+    text-align: right;
+  }
+
+  /* RTL list bullets */
+  html.rtl ul li {
+    text-align: right;
+  }
+
+  /* RTL badge alignment */
+  html.rtl .badge-container {
+    @apply flex-row-reverse;
+  }
+
+  /* RTL spacing adjustments */
+  html.rtl .space-x-reverse > * + * {
+    margin-right: var(--tw-space-x-reverse);
+    margin-left: 0;
+  }
+
+  /* RTL border radius adjustments */
+  html.rtl .rounded-l-lg {
+    border-radius: 0 0.5rem 0.5rem 0;
+  }
+
+  html.rtl .rounded-r-lg {
+    border-radius: 0.5rem 0 0 0.5rem;
+  }
+
+  /* RTL text alignment helpers */
+  html.rtl .text-start {
+    text-align: right;
+  }
+
+  html.rtl .text-end {
+    text-align: left;
+  }
+
+  /* RTL padding adjustments */
+  html.rtl .ps-4 {
+    padding-right: 1rem;
+    padding-left: 0;
+  }
+
+  html.rtl .pe-4 {
+    padding-left: 1rem;
+    padding-right: 0;
+  }
+
+  /* RTL margin adjustments */
+  html.rtl .ms-auto {
+    margin-right: auto;
+    margin-left: 0;
+  }
+
+  html.rtl .me-auto {
+    margin-left: auto;
+    margin-right: 0;
+  }
+
+  /* RTL Grid adjustments */
+  html.rtl .grid {
+    direction: rtl;
+  }
 }
 
 @layer utilities {
@@ -326,16 +420,65 @@
     }
   }
 
-  /* RTL utility classes */
-  .rtl\:flex-row-reverse:dir(rtl) {
+  /* Logical properties for RTL */
+  .start-0 {
+    inset-inline-start: 0;
+  }
+
+  .end-0 {
+    inset-inline-end: 0;
+  }
+
+  .ps-2 {
+    padding-inline-start: 0.5rem;
+  }
+
+  .pe-2 {
+    padding-inline-end: 0.5rem;
+  }
+
+  .ms-2 {
+    margin-inline-start: 0.5rem;
+  }
+
+  .me-2 {
+    margin-inline-end: 0.5rem;
+  }
+
+  .ps-3 {
+    padding-inline-start: 0.75rem;
+  }
+
+  .pe-3 {
+    padding-inline-end: 0.75rem;
+  }
+
+  .ms-3 {
+    margin-inline-start: 0.75rem;
+  }
+
+  .me-3 {
+    margin-inline-end: 0.75rem;
+  }
+
+  .border-s {
+    border-inline-start-width: 1px;
+  }
+
+  .border-e {
+    border-inline-end-width: 1px;
+  }
+
+  /* RTL-aware flex utilities */
+  .flex-row-rtl {
+    flex-direction: row;
+  }
+
+  html.rtl .flex-row-rtl {
     flex-direction: row-reverse;
   }
 
-  .rtl\:text-right:dir(rtl) {
-    text-align: right;
-  }
-
-  .rtl\:space-x-reverse > :not([hidden]) ~ :not([hidden]):dir(rtl) {
-    --tw-space-x-reverse: 1;
+  .gap-rtl-3 > * + * {
+    margin-inline-start: 0.75rem;
   }
 }
