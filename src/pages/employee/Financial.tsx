@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { Slider } from '@/components/ui/slider';
-import { PiggyBank, TrendingUp, Wallet, Target, Calculator, CheckCircle } from 'lucide-react';
+import { PiggyBank, TrendingUp, Wallet, Target, Calculator, CheckCircle, Gift } from 'lucide-react';
 
 const MONTHLY_SALARY = 35000;
 const EMPLOYER_MATCH_PERCENT = 5;
@@ -46,42 +45,39 @@ export default function FinancialPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid md:grid-cols-4 gap-4">
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Wallet className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Total contributions YTD" dataSource="Savings Plan" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(totalContributed)}</p>
-          <p className="stat-label">Total Saved (YTD)</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <TrendingUp className="w-5 h-5 text-success" />
-            <InfoTooltip formula="Employer matching up to 5%" dataSource="HR Policy" />
-          </div>
-          <p className="stat-value mt-3 text-success">{formatCurrency(totalEmployerMatch)}</p>
-          <p className="stat-label">Free Money (Match)</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Target className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Your + employer monthly total" dataSource="System" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(totalMonthly)}</p>
-          <p className="stat-label">Monthly Total</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <PiggyBank className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Monthly × 12" dataSource="Projection" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(annualSavings)}</p>
-          <p className="stat-label">Annual Savings</p>
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <SummaryStatsCard
+          icon={Wallet}
+          value={formatCurrency(totalContributed)}
+          label="Total Saved (YTD)"
+          formula="Total contributions YTD"
+          dataSource="Savings Plan"
+          variant="primary"
+        />
+        <SummaryStatsCard
+          icon={Gift}
+          value={formatCurrency(totalEmployerMatch)}
+          label="Free Money (Match)"
+          formula="Employer matching up to 5%"
+          dataSource="HR Policy"
+          variant="remaining"
+        />
+        <SummaryStatsCard
+          icon={Target}
+          value={formatCurrency(totalMonthly)}
+          label="Monthly Total"
+          formula="Your + employer monthly total"
+          dataSource="System"
+          variant="utilized"
+        />
+        <SummaryStatsCard
+          icon={PiggyBank}
+          value={formatCurrency(annualSavings)}
+          label="Annual Savings"
+          formula="Monthly × 12"
+          dataSource="Projection"
+          variant="info"
+        />
       </div>
 
       {/* Savings Calculator */}

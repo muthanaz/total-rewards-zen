@@ -155,15 +155,15 @@ export default function MarketplacePage() {
         <h2 className="text-lg font-display font-semibold mb-4">All Offers</h2>
         
         {viewMode === 'grid' ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {filteredOffers.map((offer, index) => (
               <Card 
                 key={offer.id} 
-                className="benefit-card overflow-hidden group hover:shadow-lg transition-all duration-300"
+                className="benefit-card overflow-hidden group hover:shadow-md transition-all duration-300 flex flex-col"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 {offer.image_url && (
-                  <div className="h-36 bg-muted overflow-hidden">
+                  <div className="h-28 bg-muted overflow-hidden shrink-0">
                     <img 
                       src={offer.image_url} 
                       alt={offer.title} 
@@ -171,42 +171,42 @@ export default function MarketplacePage() {
                     />
                   </div>
                 )}
-                <div className="p-4 space-y-3">
-                  <div className="flex items-start justify-between gap-2">
+                <div className="p-3 space-y-2 flex flex-col flex-1">
+                  <div className="flex items-start justify-between gap-1">
                     <h3 className="font-medium text-sm line-clamp-2 group-hover:text-accent transition-colors">
                       {offer.title}
                     </h3>
                     {offer.discount_percent && (
-                      <Badge className="bg-accent/10 text-accent border-0 shrink-0">
-                        {offer.discount_percent}% OFF
+                      <Badge className="bg-accent/10 text-accent border-0 shrink-0 text-[10px] px-1.5 py-0">
+                        {offer.discount_percent}%
                       </Badge>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">{offer.merchant}</p>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="secondary" className="text-xs">{offer.category}</Badge>
+                  <p className="text-xs text-muted-foreground line-clamp-1">{offer.merchant}</p>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{offer.category}</Badge>
                     {offer.rating && (
-                      <span className="flex items-center gap-1 text-xs text-amber-500">
-                        <Star className="w-3 h-3 fill-current" />
+                      <span className="flex items-center gap-0.5 text-[10px] text-amber-500">
+                        <Star className="w-2.5 h-2.5 fill-current" />
                         {offer.rating}
                       </span>
                     )}
                   </div>
                   {offer.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2">{offer.description}</p>
+                    <p className="text-[10px] text-muted-foreground line-clamp-2">{offer.description}</p>
                   )}
                   {offer.tags && offer.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {offer.tags.slice(0, 3).map((tag, i) => (
-                        <Badge key={i} variant="outline" className="text-[10px] py-0">
+                      {offer.tags.slice(0, 2).map((tag, i) => (
+                        <Badge key={i} variant="outline" className="text-[9px] py-0 px-1">
                           {tag}
                         </Badge>
                       ))}
                     </div>
                   )}
-                  <Button size="sm" className="w-full" onClick={() => handleActivate(offer)}>
-                    <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                    Activate Offer
+                  <Button size="sm" className="w-full h-7 text-xs mt-auto" onClick={() => handleActivate(offer)}>
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Activate
                   </Button>
                 </div>
               </Card>

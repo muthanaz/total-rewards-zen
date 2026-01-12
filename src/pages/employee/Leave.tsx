@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -117,33 +117,31 @@ export default function LeavePage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid md:grid-cols-3 gap-4">
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Calendar className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Sum of all remaining leave days" dataSource="Leave System" />
-          </div>
-          <p className="stat-value mt-3">{totalBalance} days</p>
-          <p className="stat-label">Total Balance</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <CheckCircle className="w-5 h-5 text-success" />
-            <InfoTooltip formula="Days used this year" dataSource="Leave System" />
-          </div>
-          <p className="stat-value mt-3">{totalUsed} days</p>
-          <p className="stat-label">Used This Year</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Clock className="w-5 h-5 text-warning" />
-            <InfoTooltip formula="Pending leave requests" dataSource="Leave System" />
-          </div>
-          <p className="stat-value mt-3">{recentRequests.filter(r => r.status === 'pending').length}</p>
-          <p className="stat-label">Pending Requests</p>
-        </Card>
+      <div className="grid grid-cols-3 gap-3">
+        <SummaryStatsCard
+          icon={Calendar}
+          value={`${totalBalance} days`}
+          label="Total Balance"
+          formula="Sum of all remaining leave days"
+          dataSource="Leave System"
+          variant="primary"
+        />
+        <SummaryStatsCard
+          icon={CheckCircle}
+          value={`${totalUsed} days`}
+          label="Used This Year"
+          formula="Days used this year"
+          dataSource="Leave System"
+          variant="utilized"
+        />
+        <SummaryStatsCard
+          icon={Clock}
+          value={`${recentRequests.filter(r => r.status === 'pending').length}`}
+          label="Pending Requests"
+          formula="Pending leave requests"
+          dataSource="Leave System"
+          variant="info"
+        />
       </div>
 
       {/* Leave Balances */}

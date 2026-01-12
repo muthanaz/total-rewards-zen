@@ -90,31 +90,31 @@ export function CuratedPerks({ onActivate }: CuratedPerksProps) {
 
   return (
     <Card className="overflow-hidden bg-gradient-to-r from-accent/5 via-card to-card border-accent/20">
-      <CardContent className="p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="p-2 rounded-lg bg-accent/10">
+      <CardContent className="p-5">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="p-2.5 rounded-xl bg-accent/10">
             <Sparkles className="w-5 h-5 text-accent" />
           </div>
           <div>
-            <h3 className="font-display font-semibold">Curated For You</h3>
+            <h3 className="font-display font-semibold text-base">Curated For You</h3>
             <p className="text-xs text-muted-foreground">
               Personalized picks based on your profile
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {curatedOffers.map((offer, index) => (
             <div 
               key={offer.id}
-              className="group relative bg-card border border-border/50 rounded-xl overflow-hidden hover:border-accent/30 hover:shadow-lg transition-all duration-300"
+              className="group relative bg-card border border-border/50 rounded-xl overflow-hidden hover:border-accent/30 hover:shadow-md transition-all duration-300 flex flex-col"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Personalization badge */}
               <div className="absolute top-2 left-2 z-10">
                 <Badge 
                   variant="secondary" 
-                  className="bg-accent/90 text-accent-foreground text-[10px] gap-1 shadow-sm"
+                  className="bg-accent/90 text-accent-foreground text-[10px] gap-1 shadow-sm px-1.5 py-0.5"
                 >
                   <Sparkles className="w-2.5 h-2.5" />
                   For You
@@ -123,7 +123,7 @@ export function CuratedPerks({ onActivate }: CuratedPerksProps) {
 
               {/* Image */}
               {offer.image_url && (
-                <div className="h-28 bg-muted overflow-hidden">
+                <div className="h-24 bg-muted overflow-hidden shrink-0">
                   <img 
                     src={offer.image_url} 
                     alt={offer.title} 
@@ -133,40 +133,40 @@ export function CuratedPerks({ onActivate }: CuratedPerksProps) {
               )}
 
               {/* Content */}
-              <div className="p-3 space-y-2">
-                <div className="flex items-start justify-between gap-2">
+              <div className="p-3 space-y-2 flex flex-col flex-1">
+                <div className="flex items-start justify-between gap-1">
                   <h4 className="font-medium text-sm line-clamp-1 group-hover:text-accent transition-colors">
                     {offer.title}
                   </h4>
                   {offer.discount_percent && (
-                    <Badge className="bg-emerald-500/10 text-emerald-600 border-0 shrink-0 text-[10px]">
-                      {offer.discount_percent}% OFF
+                    <Badge className="bg-emerald-500/10 text-emerald-600 border-0 shrink-0 text-[10px] px-1.5 py-0">
+                      {offer.discount_percent}%
                     </Badge>
                   )}
                 </div>
 
-                <p className="text-xs text-muted-foreground">{offer.merchant}</p>
+                <p className="text-xs text-muted-foreground line-clamp-1">{offer.merchant}</p>
 
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-[10px] py-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Badge variant="outline" className="text-[10px] py-0 px-1.5">
                     {offer.category}
                   </Badge>
                   {offer.rating && (
-                    <span className="flex items-center gap-0.5 text-xs text-amber-500">
-                      <Star className="w-3 h-3 fill-current" />
+                    <span className="flex items-center gap-0.5 text-[10px] text-amber-500">
+                      <Star className="w-2.5 h-2.5 fill-current" />
                       {offer.rating}
                     </span>
                   )}
                 </div>
 
                 {/* Curation reason */}
-                <p className="text-[10px] text-accent/80 italic">
+                <p className="text-[10px] text-accent/80 italic line-clamp-1 mt-auto pt-1">
                   ✨ {getCurationReason(offer)}
                 </p>
 
                 <Button 
                   size="sm" 
-                  className="w-full h-8 text-xs mt-2"
+                  className="w-full h-7 text-xs"
                   onClick={() => onActivate(offer)}
                 >
                   <CheckCircle className="w-3 h-3 mr-1" />

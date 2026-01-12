@@ -4,9 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { InfoTooltip } from '@/components/ui/info-tooltip';
-import { Home, Search, Star, Clock, ExternalLink, MapPin, Bath, Bed, Filter } from 'lucide-react';
+import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { Home, Search, Star, Clock, ExternalLink, MapPin, Bath, Bed, Filter, Wallet, TrendingDown, Percent } from 'lucide-react';
 import { useHousingAreas, useHousingListings } from '@/hooks/useSupabaseData';
 
 const HOUSING_ALLOWANCE = 120000; // Demo annual allowance
@@ -94,43 +93,40 @@ export default function HousingPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid md:grid-cols-4 gap-4">
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Home className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Annual housing allowance based on grade" dataSource="HR Policy" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(HOUSING_ALLOWANCE)}</p>
-          <p className="stat-label">Annual Allowance</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Home className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Total housing payments made" dataSource="Payroll" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(utilized)}</p>
-          <p className="stat-label">Utilized</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Home className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="Allowance - Utilized" dataSource="Benefits System" />
-          </div>
-          <p className="stat-value mt-3">{formatCurrency(remaining)}</p>
-          <p className="stat-label">Remaining</p>
-        </Card>
-
-        <Card className="metric-card">
-          <div className="flex items-start justify-between">
-            <Home className="w-5 h-5 text-accent" />
-            <InfoTooltip formula="(Utilized / Allowance) × 100" dataSource="System" />
-          </div>
-          <p className="stat-value mt-3">{utilizationPercent}%</p>
-          <p className="stat-label">Utilization</p>
-          <Progress value={utilizationPercent} className="h-2 mt-2" />
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <SummaryStatsCard
+          icon={Home}
+          value={formatCurrency(HOUSING_ALLOWANCE)}
+          label="Annual Allowance"
+          formula="Annual housing allowance based on grade"
+          dataSource="HR Policy"
+          variant="primary"
+        />
+        <SummaryStatsCard
+          icon={Wallet}
+          value={formatCurrency(utilized)}
+          label="Utilized"
+          formula="Total housing payments made"
+          dataSource="Payroll"
+          variant="utilized"
+        />
+        <SummaryStatsCard
+          icon={TrendingDown}
+          value={formatCurrency(remaining)}
+          label="Remaining"
+          formula="Allowance - Utilized"
+          dataSource="Benefits System"
+          variant="remaining"
+        />
+        <SummaryStatsCard
+          icon={Percent}
+          value={`${utilizationPercent}%`}
+          label="Utilization"
+          formula="(Utilized / Allowance) × 100"
+          dataSource="System"
+          variant="utilization"
+          progress={utilizationPercent}
+        />
       </div>
 
       {/* Policy Highlights */}
