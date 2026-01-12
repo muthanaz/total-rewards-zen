@@ -126,11 +126,14 @@ const translations: Record<Language, Record<string, string>> = {
     'benefit.housing': 'Housing Allowance',
     'benefit.education': 'Education Allowance',
     'benefit.health': 'Health Insurance',
-    'benefit.transport': 'Transport Allowance',
-    'benefit.flights': 'Annual Flight Tickets',
+    'benefit.transportMobility': 'Transport & Mobility',
+    'benefit.annualBonus': 'Annual Bonus',
     'benefit.financial': 'Financial Planning',
     'benefit.wellbeingProgram': 'Wellbeing Program',
     'benefit.learning': 'Learning & Development',
+    
+    // Navigation additions
+    'nav.annualBonus': 'Annual Bonus',
     
     // Employer Dashboard
     'employer.dashboard.title': 'Executive Dashboard',
@@ -307,11 +310,14 @@ const translations: Record<Language, Record<string, string>> = {
     'benefit.housing': 'بدل السكن',
     'benefit.education': 'بدل التعليم',
     'benefit.health': 'التأمين الصحي',
-    'benefit.transport': 'بدل النقل',
-    'benefit.flights': 'تذاكر الطيران السنوية',
+    'benefit.transportMobility': 'النقل والتنقل',
+    'benefit.annualBonus': 'المكافأة السنوية',
     'benefit.financial': 'التخطيط المالي',
     'benefit.wellbeingProgram': 'برنامج الرفاهية',
     'benefit.learning': 'التعلم والتطوير',
+    
+    // Navigation additions
+    'nav.annualBonus': 'المكافأة السنوية',
     
     // Employer Dashboard
     'employer.dashboard.title': 'لوحة التحكم التنفيذية',

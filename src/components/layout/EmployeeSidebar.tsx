@@ -54,6 +54,7 @@ const navigation: NavGroup[] = [
       { labelKey: 'nav.schooling', path: '/employee/schooling', icon: GraduationCap },
       { labelKey: 'nav.healthInsurance', path: '/employee/health', icon: Heart },
       { labelKey: 'nav.transport', path: '/employee/transport', icon: Car },
+      { labelKey: 'nav.annualBonus', path: '/employee/financial', icon: Gift },
       { labelKey: 'nav.wellbeing', path: '/employee/wellbeing', icon: Dumbbell },
       { labelKey: 'nav.financial', path: '/employee/financial', icon: PiggyBank },
       { labelKey: 'nav.equity', path: '/employee/equity', icon: TrendingUp },
