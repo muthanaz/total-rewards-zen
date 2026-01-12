@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Badge } from '@/components/ui/badge';
-import { Users, DollarSign, TrendingUp, TrendingDown, Smile, Ghost, FileCheck, Target, ArrowRight, AlertTriangle, CheckCircle2, Sparkles } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Users, DollarSign, TrendingUp, TrendingDown, Smile, Ghost, FileCheck, Target, ArrowRight, AlertTriangle, CheckCircle2, Sparkles, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
@@ -15,14 +16,18 @@ import {
 
 const metrics = {
   totalEmployees: 156,
+  employeeChange: 8,
   annualBudget: 62000000,
+  budgetUsed: 39680000,
   utilizationRate: 64,
   utilizationChange: 3.2,
   satisfactionScore: 4.2,
   retentionRate: 92,
+  retentionChange: 2.1,
   zombieSpend: 8500000,
   zombieChange: -12,
   pendingClaims: 12,
+  avgProcessingDays: 2.3,
   roi: 3.2,
 };
 
@@ -94,6 +99,7 @@ const spendStacks = [
 
 export default function EmployerDashboard() {
   const formatCurrency = (value: number) => `AED ${(value / 1000000).toFixed(1)}M`;
+  const budgetUtilization = (metrics.budgetUsed / metrics.annualBudget) * 100;
   
   return (
     <div className="space-y-6 animate-fade-in">
@@ -101,20 +107,209 @@ export default function EmployerDashboard() {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">Executive Dashboard</h1>
-          <p className="text-muted-foreground">Benefits program performance • December 2024</p>
+          <p className="text-muted-foreground flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            Benefits program performance • December 2024
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-            <TrendingUp className="w-3 h-3 mr-1" />
+          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 px-3 py-1">
+            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
             Program Health: Good
           </Badge>
         </div>
       </div>
 
+      {/* Executive KPI Cards - Primary Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Employees */}
+        <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-accent/5 hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 rounded-xl bg-accent/10">
+                <Users className="w-5 h-5 text-accent" />
+              </div>
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-0 text-[10px] font-semibold">
+                <TrendingUp className="w-3 h-3 mr-1" />
+                +{metrics.employeeChange} YTD
+              </Badge>
+            </div>
+            <div className="space-y-1">
+              <p className="text-3xl font-bold tracking-tight">{metrics.totalEmployees}</p>
+              <p className="text-sm font-medium text-muted-foreground">Total Employees</p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-border/50">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Active headcount</span>
+                <span className="font-medium text-accent">100%</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Annual Budget */}
+        <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-blue-500/5 hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 rounded-xl bg-blue-500/10">
+                <DollarSign className="w-5 h-5 text-blue-500" />
+              </div>
+              <InfoTooltip formula="Sum of all benefit budgets for FY2024" dataSource="Finance System" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-3xl font-bold tracking-tight">{formatCurrency(metrics.annualBudget)}</p>
+              <p className="text-sm font-medium text-muted-foreground">Annual Budget</p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-border/50 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Spent to date</span>
+                <span className="font-medium">{formatCurrency(metrics.budgetUsed)}</span>
+              </div>
+              <Progress value={budgetUtilization} className="h-1.5" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Utilization Rate */}
+        <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-emerald-500/5 hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 rounded-xl bg-emerald-500/10">
+                <TrendingUp className="w-5 h-5 text-emerald-500" />
+              </div>
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-0 text-[10px] font-semibold">
+                <TrendingUp className="w-3 h-3 mr-1" />
+                +{metrics.utilizationChange}%
+              </Badge>
+            </div>
+            <div className="space-y-1">
+              <p className="text-3xl font-bold tracking-tight text-emerald-600">{metrics.utilizationRate}%</p>
+              <p className="text-sm font-medium text-muted-foreground">Utilization Rate</p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-border/50">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Target: 75%</span>
+                <span className="font-medium text-amber-600">11% below</span>
+              </div>
+              <Progress value={metrics.utilizationRate} className="h-1.5 mt-2" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Zombie Spend */}
+        <Card className="relative overflow-hidden border-amber-500/20 bg-gradient-to-br from-card to-amber-500/5 hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 rounded-xl bg-amber-500/10">
+                <Ghost className="w-5 h-5 text-amber-500" />
+              </div>
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-0 text-[10px] font-semibold">
+                <TrendingDown className="w-3 h-3 mr-1" />
+                {metrics.zombieChange}% vs Q3
+              </Badge>
+            </div>
+            <div className="space-y-1">
+              <p className="text-3xl font-bold tracking-tight text-amber-600">{formatCurrency(metrics.zombieSpend)}</p>
+              <p className="text-sm font-medium text-muted-foreground">Zombie Spend</p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-amber-500/20">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Recovery potential</span>
+                <span className="font-medium text-amber-600">AED 5.1M</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Secondary KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Satisfaction */}
+        <Card className="border-border/50 hover:shadow-md transition-all duration-300">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-4">
+              <div className="p-2.5 rounded-xl bg-violet-500/10 shrink-0">
+                <Smile className="w-5 h-5 text-violet-500" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-2xl font-bold tracking-tight">{metrics.satisfactionScore}<span className="text-base text-muted-foreground font-normal">/5</span></p>
+                <p className="text-xs text-muted-foreground truncate">Employee Satisfaction</p>
+              </div>
+            </div>
+            <div className="mt-3 flex gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <div 
+                  key={star} 
+                  className={`h-1.5 flex-1 rounded-full ${star <= Math.round(metrics.satisfactionScore) ? 'bg-violet-500' : 'bg-muted'}`} 
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Retention */}
+        <Card className="border-border/50 hover:shadow-md transition-all duration-300">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-4">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 shrink-0">
+                <Target className="w-5 h-5 text-emerald-500" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline gap-2">
+                  <p className="text-2xl font-bold tracking-tight text-emerald-600">{metrics.retentionRate}%</p>
+                  <span className="text-xs text-emerald-600 font-medium">+{metrics.retentionChange}%</span>
+                </div>
+                <p className="text-xs text-muted-foreground truncate">Retention Rate</p>
+              </div>
+            </div>
+            <div className="mt-3">
+              <Progress value={metrics.retentionRate} className="h-1.5 [&>div]:bg-emerald-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Pending Claims */}
+        <Card className="border-border/50 hover:shadow-md transition-all duration-300">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-4">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 shrink-0">
+                <FileCheck className="w-5 h-5 text-amber-500" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-2xl font-bold tracking-tight text-amber-600">{metrics.pendingClaims}</p>
+                <p className="text-xs text-muted-foreground truncate">Pending Claims</p>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Avg processing</span>
+              <span className="font-medium">{metrics.avgProcessingDays} days</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ROI */}
+        <Card className="border-border/50 hover:shadow-md transition-all duration-300">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-4">
+              <div className="p-2.5 rounded-xl bg-blue-500/10 shrink-0">
+                <TrendingUp className="w-5 h-5 text-blue-500" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-2xl font-bold tracking-tight text-blue-600">{metrics.roi}x</p>
+                <p className="text-xs text-muted-foreground truncate">ROI Indicator</p>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Benchmark</span>
+              <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-0">Above avg</Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Executive Summary Card */}
-      <Card className="executive-card border-accent/20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-primary/5 pointer-events-none" />
-        <CardContent className="p-6 relative">
+      <Card className="border-accent/20 overflow-hidden bg-gradient-to-r from-card via-card to-accent/5">
+        <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Sparkles className="w-5 h-5 text-accent" />
             <h2 className="font-display font-semibold text-lg">Key Insights This Month</h2>
@@ -123,14 +318,14 @@ export default function EmployerDashboard() {
             {executiveInsights.map((insight, index) => (
               <div 
                 key={index}
-                className={`p-4 rounded-xl border ${
-                  insight.type === 'success' ? 'bg-emerald-500/5 border-emerald-500/20' :
-                  insight.type === 'warning' ? 'bg-amber-500/5 border-amber-500/20' :
-                  'bg-blue-500/5 border-blue-500/20'
+                className={`p-4 rounded-xl border transition-all duration-300 hover:scale-[1.02] cursor-pointer ${
+                  insight.type === 'success' ? 'bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40' :
+                  insight.type === 'warning' ? 'bg-amber-500/5 border-amber-500/20 hover:border-amber-500/40' :
+                  'bg-blue-500/5 border-blue-500/20 hover:border-blue-500/40'
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <insight.icon className={`w-5 h-5 mt-0.5 ${
+                  <insight.icon className={`w-5 h-5 mt-0.5 shrink-0 ${
                     insight.type === 'success' ? 'text-emerald-500' :
                     insight.type === 'warning' ? 'text-amber-500' :
                     'text-blue-500'
@@ -145,90 +340,6 @@ export default function EmployerDashboard() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Primary KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="metric-card group hover:border-accent/30 transition-all duration-300">
-          <div className="flex items-start justify-between">
-            <div className="p-2.5 rounded-xl bg-accent/10 group-hover:scale-105 transition-transform">
-              <Users className="w-5 h-5 text-accent" />
-            </div>
-            <InfoTooltip formula="Active employees count" dataSource="HR System" />
-          </div>
-          <p className="text-2xl font-bold mt-4 tracking-tight">{metrics.totalEmployees}</p>
-          <p className="text-xs text-muted-foreground mt-1">Total Employees</p>
-        </Card>
-
-        <Card className="metric-card group hover:border-accent/30 transition-all duration-300">
-          <div className="flex items-start justify-between">
-            <div className="p-2.5 rounded-xl bg-accent/10 group-hover:scale-105 transition-transform">
-              <DollarSign className="w-5 h-5 text-accent" />
-            </div>
-            <InfoTooltip formula="Sum of all benefit budgets" dataSource="Finance" />
-          </div>
-          <p className="text-2xl font-bold mt-4 tracking-tight">{formatCurrency(metrics.annualBudget)}</p>
-          <p className="text-xs text-muted-foreground mt-1">Annual Budget</p>
-        </Card>
-
-        <Card className="metric-card group hover:border-accent/30 transition-all duration-300">
-          <div className="flex items-start justify-between">
-            <div className="p-2.5 rounded-xl bg-emerald-500/10 group-hover:scale-105 transition-transform">
-              <TrendingUp className="w-5 h-5 text-emerald-500" />
-            </div>
-            <div className="flex items-center gap-1 text-xs text-emerald-600">
-              <TrendingUp className="w-3 h-3" />
-              +{metrics.utilizationChange}%
-            </div>
-          </div>
-          <p className="text-2xl font-bold mt-4 tracking-tight">{metrics.utilizationRate}%</p>
-          <p className="text-xs text-muted-foreground mt-1">Utilization Rate</p>
-        </Card>
-
-        <Card className="metric-card group hover:border-amber-500/30 transition-all duration-300 border-amber-500/20">
-          <div className="flex items-start justify-between">
-            <div className="p-2.5 rounded-xl bg-amber-500/10 group-hover:scale-105 transition-transform">
-              <Ghost className="w-5 h-5 text-amber-500" />
-            </div>
-            <div className="flex items-center gap-1 text-xs text-emerald-600">
-              <TrendingDown className="w-3 h-3" />
-              {metrics.zombieChange}%
-            </div>
-          </div>
-          <p className="text-2xl font-bold mt-4 tracking-tight text-amber-600">{formatCurrency(metrics.zombieSpend)}</p>
-          <p className="text-xs text-muted-foreground mt-1">Zombie Spend</p>
-        </Card>
-      </div>
-
-      {/* Secondary Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { icon: Smile, value: `${metrics.satisfactionScore}/5`, label: 'Satisfaction', color: 'accent' },
-          { icon: Target, value: `${metrics.retentionRate}%`, label: 'Retention', color: 'accent' },
-          { icon: FileCheck, value: metrics.pendingClaims.toString(), label: 'Pending Claims', color: 'warning' },
-          { icon: TrendingUp, value: `${metrics.roi}x`, label: 'ROI Indicator', color: 'success' },
-        ].map((metric, index) => (
-          <Card key={metric.label} className="metric-card">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg shrink-0 ${
-                metric.color === 'warning' ? 'bg-amber-500/10' : 
-                metric.color === 'success' ? 'bg-emerald-500/10' : 'bg-accent/10'
-              }`}>
-                <metric.icon className={`w-4 h-4 ${
-                  metric.color === 'warning' ? 'text-amber-500' : 
-                  metric.color === 'success' ? 'text-emerald-500' : 'text-accent'
-                }`} />
-              </div>
-              <div>
-                <p className={`text-lg font-bold ${
-                  metric.color === 'warning' ? 'text-amber-500' : 
-                  metric.color === 'success' ? 'text-emerald-500' : ''
-                }`}>{metric.value}</p>
-                <p className="text-xs text-muted-foreground">{metric.label}</p>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
