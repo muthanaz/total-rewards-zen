@@ -452,16 +452,23 @@ export default function Auth() {
                   {demoLoading ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
-                    <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#00B074"/>
-                      <path d="M2 17L12 22L22 17" stroke="#00B074" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M2 12L12 17L22 12" stroke="#00B074" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
+                    <>
+                      {/* UAE PASS Fingerprint Logo */}
+                      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C9.5 2 7.5 4 7.5 6.5C7.5 9 9 11 9 13C9 15 8 17 8 17" stroke="#00B074" strokeWidth="1.5" strokeLinecap="round"/>
+                        <path d="M12 4C10.5 4 9.5 5.5 9.5 7C9.5 8.5 10 10 10 12C10 14 9.5 15.5 9.5 15.5" stroke="#00B074" strokeWidth="1.5" strokeLinecap="round"/>
+                        <path d="M12 6C11.5 6 11 7 11 8C11 9 11.5 10.5 11.5 12C11.5 13.5 11 14.5 11 14.5" stroke="#00B074" strokeWidth="1.5" strokeLinecap="round"/>
+                        <path d="M12 2C14.5 2 16.5 4 16.5 6.5C16.5 9 15 11 15 13C15 15 16 17 16 17" stroke="#00B074" strokeWidth="1.5" strokeLinecap="round"/>
+                        <path d="M12 4C13.5 4 14.5 5.5 14.5 7C14.5 8.5 14 10 14 12C14 14 14.5 15.5 14.5 15.5" stroke="#00B074" strokeWidth="1.5" strokeLinecap="round"/>
+                        <path d="M12 6C12.5 6 13 7 13 8C13 9 12.5 10.5 12.5 12C12.5 13.5 13 14.5 13 14.5" stroke="#00B074" strokeWidth="1.5" strokeLinecap="round"/>
+                        <circle cx="12" cy="20" r="2" fill="#00B074"/>
+                      </svg>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                        Sign in with UAE PASS
+                      </span>
+                      <span className="ml-1.5 text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">Demo</span>
+                    </>
                   )}
-                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                    Login with UAE Pass
-                  </span>
-                  <span className="ml-1.5 text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">Demo</span>
                 </Button>
 
                 <p className="text-center text-sm text-muted-foreground">
