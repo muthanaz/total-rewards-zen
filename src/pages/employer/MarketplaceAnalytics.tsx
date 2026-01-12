@@ -1,24 +1,35 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ShoppingBag, TrendingUp, Users, Star, Coffee, Dumbbell, ShoppingCart, Plane } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { ShoppingBag, TrendingUp, Users, Star, Coffee, Dumbbell, ShoppingCart, Plane, BookOpen, Baby } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend, Area, AreaChart } from 'recharts';
+
+// Vibrant color palette
+const COLORS = {
+  emerald: 'hsl(160 84% 39%)',
+  blue: 'hsl(217 91% 60%)',
+  violet: 'hsl(271 81% 56%)',
+  amber: 'hsl(38 92% 50%)',
+  rose: 'hsl(330 81% 60%)',
+  cyan: 'hsl(190 90% 50%)',
+};
 
 const categoryPerformance = [
-  { category: 'Food & Coffee', activations: 245, employees: 89, avgSavings: 120 },
-  { category: 'Health & Fitness', activations: 156, employees: 65, avgSavings: 280 },
-  { category: 'Lifestyle & Shopping', activations: 189, employees: 72, avgSavings: 450 },
-  { category: 'Travel & Experiences', activations: 78, employees: 34, avgSavings: 850 },
-  { category: 'Learning & Skills', activations: 92, employees: 45, avgSavings: 320 },
-  { category: 'Family & Parenting', activations: 67, employees: 28, avgSavings: 380 },
+  { category: 'Food & Coffee', activations: 245, employees: 89, avgSavings: 120, color: COLORS.amber, icon: Coffee },
+  { category: 'Health & Fitness', activations: 156, employees: 65, avgSavings: 280, color: COLORS.emerald, icon: Dumbbell },
+  { category: 'Lifestyle & Shopping', activations: 189, employees: 72, avgSavings: 450, color: COLORS.rose, icon: ShoppingCart },
+  { category: 'Travel & Experiences', activations: 78, employees: 34, avgSavings: 850, color: COLORS.blue, icon: Plane },
+  { category: 'Learning & Skills', activations: 92, employees: 45, avgSavings: 320, color: COLORS.violet, icon: BookOpen },
+  { category: 'Family & Parenting', activations: 67, employees: 28, avgSavings: 380, color: COLORS.cyan, icon: Baby },
 ];
 
 const topOffers = [
-  { merchant: 'Starbucks', offer: '20% off all beverages', activations: 89, rating: 4.8 },
-  { merchant: 'Fitness First', offer: '30% off annual membership', activations: 45, rating: 4.6 },
-  { merchant: 'Carrefour', offer: '15% off groceries', activations: 72, rating: 4.2 },
-  { merchant: 'Emirates', offer: '10% off flights', activations: 34, rating: 4.9 },
-  { merchant: 'Coursera', offer: '25% off courses', activations: 38, rating: 4.5 },
+  { merchant: 'Starbucks', offer: '20% off all beverages', activations: 89, rating: 4.8, color: COLORS.amber },
+  { merchant: 'Fitness First', offer: '30% off annual membership', activations: 45, rating: 4.6, color: COLORS.emerald },
+  { merchant: 'Carrefour', offer: '15% off groceries', activations: 72, rating: 4.2, color: COLORS.rose },
+  { merchant: 'Emirates', offer: '10% off flights', activations: 34, rating: 4.9, color: COLORS.blue },
+  { merchant: 'Coursera', offer: '25% off courses', activations: 38, rating: 4.5, color: COLORS.violet },
 ];
 
 const monthlyTrend = [
@@ -31,11 +42,26 @@ const monthlyTrend = [
 ];
 
 const engagementBySegment = [
-  { name: 'Young Professionals', value: 35, color: 'hsl(var(--chart-1))' },
-  { name: 'Parents', value: 28, color: 'hsl(var(--chart-2))' },
-  { name: 'Senior Staff', value: 22, color: 'hsl(var(--chart-3))' },
-  { name: 'Remote Workers', value: 15, color: 'hsl(var(--chart-4))' },
+  { name: 'Young Professionals', value: 35, color: COLORS.blue },
+  { name: 'Parents', value: 28, color: COLORS.emerald },
+  { name: 'Senior Staff', value: 22, color: COLORS.violet },
+  { name: 'Remote Workers', value: 15, color: COLORS.amber },
 ];
+
+// Custom Legend Component
+const CustomLegend = ({ payload }: any) => (
+  <div className="flex flex-wrap justify-center gap-3 mt-4">
+    {payload?.map((entry: any, index: number) => (
+      <div key={index} className="flex items-center gap-2">
+        <div 
+          className="w-3 h-3 rounded-full" 
+          style={{ backgroundColor: entry.color }}
+        />
+        <span className="text-xs text-muted-foreground font-medium">{entry.value}</span>
+      </div>
+    ))}
+  </div>
+);
 
 export default function MarketplaceAnalyticsPage() {
   const totalActivations = categoryPerformance.reduce((sum, c) => sum + c.activations, 0);
@@ -55,13 +81,15 @@ export default function MarketplaceAnalyticsPage() {
         <Card className="card-elevated">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <ShoppingBag className="h-8 w-8 text-primary" />
+              <div className="p-2.5 rounded-xl" style={{ backgroundColor: `${COLORS.violet}15` }}>
+                <ShoppingBag className="h-6 w-6" style={{ color: COLORS.violet }} />
+              </div>
               <div>
                 <p className="text-2xl font-bold">{totalActivations}</p>
                 <p className="text-sm text-muted-foreground">Total Activations</p>
               </div>
             </div>
-            <div className="flex items-center gap-1 mt-2 text-xs text-green-600">
+            <div className="flex items-center gap-1 mt-2 text-xs" style={{ color: COLORS.emerald }}>
               <TrendingUp className="h-3 w-3" />
               <span>33% vs last month</span>
             </div>
@@ -71,7 +99,9 @@ export default function MarketplaceAnalyticsPage() {
         <Card className="card-elevated">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <Users className="h-8 w-8 text-accent" />
+              <div className="p-2.5 rounded-xl" style={{ backgroundColor: `${COLORS.blue}15` }}>
+                <Users className="h-6 w-6" style={{ color: COLORS.blue }} />
+              </div>
               <div>
                 <p className="text-2xl font-bold">{engagementRate}%</p>
                 <p className="text-sm text-muted-foreground">Engagement Rate</p>
@@ -84,7 +114,9 @@ export default function MarketplaceAnalyticsPage() {
         <Card className="card-elevated">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <Star className="h-8 w-8 text-amber-500" />
+              <div className="p-2.5 rounded-xl" style={{ backgroundColor: `${COLORS.amber}15` }}>
+                <Star className="h-6 w-6" style={{ color: COLORS.amber }} />
+              </div>
               <div>
                 <p className="text-2xl font-bold">4.6</p>
                 <p className="text-sm text-muted-foreground">Avg Offer Rating</p>
@@ -96,9 +128,11 @@ export default function MarketplaceAnalyticsPage() {
         <Card className="card-elevated">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <TrendingUp className="h-8 w-8 text-green-500" />
+              <div className="p-2.5 rounded-xl" style={{ backgroundColor: `${COLORS.emerald}15` }}>
+                <TrendingUp className="h-6 w-6" style={{ color: COLORS.emerald }} />
+              </div>
               <div>
-                <p className="text-2xl font-bold text-green-600">AED {(totalSavings / 1000).toFixed(0)}K</p>
+                <p className="text-2xl font-bold" style={{ color: COLORS.emerald }}>AED {(totalSavings / 1000).toFixed(0)}K</p>
                 <p className="text-sm text-muted-foreground">Total Savings</p>
               </div>
             </div>
@@ -110,22 +144,70 @@ export default function MarketplaceAnalyticsPage() {
         {/* Activations by Category */}
         <Card className="card-elevated">
           <CardHeader>
-            <CardTitle className="text-lg">Activations by Category</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              Activations by Category
+              <InfoTooltip formula="Number of perk activations per category" dataSource="Marketplace System" />
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={categoryPerformance} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                  <XAxis type="number" />
-                  <YAxis type="category" dataKey="category" width={120} tick={{ fontSize: 12 }} />
+                <BarChart data={categoryPerformance} layout="vertical" margin={{ left: 20, right: 20 }}>
+                  <defs>
+                    {categoryPerformance.map((entry, index) => (
+                      <linearGradient key={index} id={`catGradient-${index}`} x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
+                        <stop offset="100%" stopColor={entry.color} stopOpacity={0.6} />
+                      </linearGradient>
+                    ))}
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                  <XAxis 
+                    type="number"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                  />
+                  <YAxis 
+                    type="category" 
+                    dataKey="category" 
+                    width={130}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'hsl(var(--foreground))', fontSize: 11, fontWeight: 500 }}
+                  />
                   <Tooltip 
                     formatter={(value: number) => [value, 'Activations']}
-                    contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '10px',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+                      padding: '12px 16px'
+                    }}
+                    labelStyle={{ fontWeight: 600, marginBottom: 6, color: 'hsl(var(--foreground))' }}
+                    cursor={{ fill: 'hsl(var(--accent)/0.05)' }}
                   />
-                  <Bar dataKey="activations" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                  <Bar 
+                    dataKey="activations" 
+                    radius={[0, 6, 6, 0]}
+                    maxBarSize={28}
+                  >
+                    {categoryPerformance.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={`url(#catGradient-${index})`} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
+            </div>
+            {/* Custom Legend */}
+            <div className="flex flex-wrap justify-center gap-3 mt-2">
+              {categoryPerformance.map((item, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span className="text-xs text-muted-foreground font-medium">{item.category.split(' ')[0]}</span>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -133,26 +215,84 @@ export default function MarketplaceAnalyticsPage() {
         {/* Monthly Trend */}
         <Card className="card-elevated">
           <CardHeader>
-            <CardTitle className="text-lg">Monthly Activation Trend</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              Monthly Activation Trend
+              <InfoTooltip formula="Activations and savings over time" dataSource="Marketplace System" />
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyTrend}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis yAxisId="left" />
-                  <YAxis yAxisId="right" orientation="right" tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
+                <AreaChart data={monthlyTrend} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
+                  <defs>
+                    <linearGradient id="activationsGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={COLORS.violet} stopOpacity={0.4} />
+                      <stop offset="100%" stopColor={COLORS.violet} stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="savingsGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={COLORS.emerald} stopOpacity={0.4} />
+                      <stop offset="100%" stopColor={COLORS.emerald} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} vertical={false} />
+                  <XAxis 
+                    dataKey="month"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                  />
+                  <YAxis 
+                    yAxisId="left"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                  />
+                  <YAxis 
+                    yAxisId="right" 
+                    orientation="right" 
+                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                  />
                   <Tooltip 
                     formatter={(value: number, name: string) => [
                       name === 'activations' ? value : `AED ${value.toLocaleString()}`,
                       name === 'activations' ? 'Activations' : 'Savings'
                     ]}
-                    contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '10px',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+                      padding: '12px 16px'
+                    }}
+                    labelStyle={{ fontWeight: 600, marginBottom: 6, color: 'hsl(var(--foreground))' }}
                   />
-                  <Line yAxisId="left" type="monotone" dataKey="activations" stroke="hsl(var(--primary))" strokeWidth={2} />
-                  <Line yAxisId="right" type="monotone" dataKey="savings" stroke="hsl(var(--accent))" strokeWidth={2} />
-                </LineChart>
+                  <Legend content={<CustomLegend />} />
+                  <Area 
+                    yAxisId="left" 
+                    type="monotone" 
+                    dataKey="activations" 
+                    stroke={COLORS.violet} 
+                    strokeWidth={3}
+                    fill="url(#activationsGradient)"
+                    name="Activations"
+                    dot={{ fill: COLORS.violet, strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, strokeWidth: 2 }}
+                  />
+                  <Area 
+                    yAxisId="right" 
+                    type="monotone" 
+                    dataKey="savings" 
+                    stroke={COLORS.emerald} 
+                    strokeWidth={3}
+                    fill="url(#savingsGradient)"
+                    name="Savings"
+                    dot={{ fill: COLORS.emerald, strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, strokeWidth: 2 }}
+                  />
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
@@ -169,21 +309,27 @@ export default function MarketplaceAnalyticsPage() {
           <CardContent>
             <div className="space-y-3">
               {topOffers.map((offer, index) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                <div 
+                  key={index} 
+                  className="flex items-center justify-between p-4 rounded-xl border border-border bg-gradient-to-r from-muted/30 to-transparent hover:border-border/80 transition-all duration-300"
+                >
+                  <div className="flex items-center gap-4">
+                    <div 
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold"
+                      style={{ backgroundColor: `${offer.color}15`, color: offer.color }}
+                    >
                       {index + 1}
                     </div>
                     <div>
-                      <p className="font-medium">{offer.merchant}</p>
+                      <p className="font-semibold">{offer.merchant}</p>
                       <p className="text-sm text-muted-foreground">{offer.offer}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">{offer.activations} activations</p>
-                    <div className="flex items-center gap-1 text-sm text-amber-500">
-                      <Star className="h-3 w-3 fill-current" />
-                      <span>{offer.rating}</span>
+                    <p className="font-bold" style={{ color: offer.color }}>{offer.activations} activations</p>
+                    <div className="flex items-center justify-end gap-1 text-sm text-amber-500">
+                      <Star className="h-3.5 w-3.5 fill-current" />
+                      <span className="font-medium">{offer.rating}</span>
                     </div>
                   </div>
                 </div>
@@ -195,26 +341,51 @@ export default function MarketplaceAnalyticsPage() {
         {/* Engagement by Segment */}
         <Card className="card-elevated">
           <CardHeader>
-            <CardTitle className="text-lg">Engagement by Segment</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              Engagement by Segment
+              <InfoTooltip formula="% of marketplace engagement per employee segment" dataSource="Analytics" />
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
+                  <defs>
+                    {engagementBySegment.map((entry, index) => (
+                      <linearGradient key={index} id={`engageGradient-${index}`} x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
+                        <stop offset="100%" stopColor={entry.color} stopOpacity={0.7} />
+                      </linearGradient>
+                    ))}
+                  </defs>
                   <Pie
                     data={engagementBySegment}
                     cx="50%"
                     cy="50%"
                     innerRadius={40}
                     outerRadius={70}
-                    paddingAngle={2}
+                    paddingAngle={3}
                     dataKey="value"
                   >
                     {engagementBySegment.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={`url(#engageGradient-${index})`}
+                        stroke="hsl(var(--background))"
+                        strokeWidth={2}
+                      />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip 
+                    formatter={(value: number) => [`${value}%`, 'Share']}
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '10px',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+                      padding: '12px 16px'
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -223,9 +394,9 @@ export default function MarketplaceAnalyticsPage() {
                 <div key={index} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: segment.color }} />
-                    <span>{segment.name}</span>
+                    <span className="font-medium">{segment.name}</span>
                   </div>
-                  <span className="font-medium">{segment.value}%</span>
+                  <span className="font-bold" style={{ color: segment.color }}>{segment.value}%</span>
                 </div>
               ))}
             </div>
@@ -251,25 +422,30 @@ export default function MarketplaceAnalyticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {categoryPerformance.map((category, index) => (
-                  <tr key={index} className="border-b border-border/50">
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        {category.category === 'Food & Coffee' && <Coffee className="h-4 w-4 text-muted-foreground" />}
-                        {category.category === 'Health & Fitness' && <Dumbbell className="h-4 w-4 text-muted-foreground" />}
-                        {category.category === 'Lifestyle & Shopping' && <ShoppingCart className="h-4 w-4 text-muted-foreground" />}
-                        {category.category === 'Travel & Experiences' && <Plane className="h-4 w-4 text-muted-foreground" />}
-                        <span className="font-medium">{category.category}</span>
-                      </div>
-                    </td>
-                    <td className="text-right py-3 px-4">{category.activations}</td>
-                    <td className="text-right py-3 px-4">{category.employees}</td>
-                    <td className="text-right py-3 px-4">AED {category.avgSavings}</td>
-                    <td className="text-right py-3 px-4 font-medium text-green-600">
-                      AED {(category.activations * category.avgSavings).toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
+                {categoryPerformance.map((category, index) => {
+                  const Icon = category.icon;
+                  return (
+                    <tr key={index} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="p-2 rounded-lg"
+                            style={{ backgroundColor: `${category.color}15` }}
+                          >
+                            <Icon className="h-4 w-4" style={{ color: category.color }} />
+                          </div>
+                          <span className="font-medium">{category.category}</span>
+                        </div>
+                      </td>
+                      <td className="text-right py-3 px-4 font-semibold">{category.activations}</td>
+                      <td className="text-right py-3 px-4">{category.employees}</td>
+                      <td className="text-right py-3 px-4">AED {category.avgSavings}</td>
+                      <td className="text-right py-3 px-4 font-bold" style={{ color: COLORS.emerald }}>
+                        AED {(category.activations * category.avgSavings).toLocaleString()}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
