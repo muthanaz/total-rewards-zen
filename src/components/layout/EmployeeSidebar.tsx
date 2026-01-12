@@ -150,21 +150,24 @@ export function EmployeeSidebar() {
         "flex-1 overflow-y-auto py-4 px-3 space-y-1",
         isRTL && "text-right"
       )}>
-        {navigation.map((group) => (
-          <div key={group.labelKey} className="mb-2">
+        {navigation.map((group, index) => (
+          <div key={group.labelKey} className={cn("mb-1", index > 0 && "mt-6")}>
             <button
               onClick={() => toggleGroup(group.labelKey)}
               className={cn(
-                "flex items-center justify-between w-full px-3 py-2.5 text-[11px] font-extrabold uppercase tracking-widest transition-colors rounded-md",
-                "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10",
+                "flex items-center justify-between w-full px-3 py-2 text-[11px] font-bold uppercase tracking-[0.15em] transition-colors rounded-md group",
+                "text-sidebar-primary hover:bg-sidebar-primary/10",
                 isRTL && "flex-row-reverse text-right"
               )}
             >
-              <span className={isRTL ? "text-right" : "text-left"}>{t(group.labelKey)}</span>
+              <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
+                <span>{t(group.labelKey)}</span>
+              </div>
               {expandedGroups.includes(group.labelKey) ? (
-                <ChevronDown className="w-3.5 h-3.5 shrink-0" />
+                <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
               ) : (
-                <ChevronCollapsed className="w-3.5 h-3.5 shrink-0" />
+                <ChevronCollapsed className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
               )}
             </button>
             
