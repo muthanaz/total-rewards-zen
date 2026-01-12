@@ -49,6 +49,7 @@ import AdminBenchmarks from "./pages/admin/Benchmarks";
 import AdminMarketIntelligence from "./pages/admin/MarketIntelligence";
 import AdminSpendingPatterns from "./pages/admin/SpendingPatterns";
 import AdminSavedReports from "./pages/admin/SavedReports";
+import AdminSettings from "./pages/admin/Settings";
 import VendorDashboard from "./pages/vendor/Dashboard";
 import VendorOffers from "./pages/vendor/Offers";
 import VendorTransactions from "./pages/vendor/Transactions";
@@ -135,6 +136,7 @@ function AppRoutes() {
         <Route path="market" element={<AdminMarketIntelligence />} />
         <Route path="spending" element={<AdminSpendingPatterns />} />
         <Route path="reports" element={<AdminSavedReports />} />
+        <Route path="settings" element={<AdminSettings />} />
       </Route>
       
       {/* Vendor Routes */}
