@@ -28,6 +28,7 @@ import DocumentsPage from "./pages/employee/Documents";
 import GovConnectPage from "./pages/employee/GovConnect";
 import ProfilePage from "./pages/employee/Profile";
 import BenefitsPage from "./pages/employee/Benefits";
+import OnboardingPage from "./pages/employee/Onboarding";
 
 import EmployerDashboard from "./pages/employer/Dashboard";
 import SpendPage from "./pages/employer/Spend";
@@ -82,6 +83,7 @@ function AppRoutes() {
         <Route path="documents" element={<DocumentsPage />} />
         <Route path="gov-connect" element={<GovConnectPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="onboarding" element={<OnboardingPage />} />
       </Route>
       
       {/* Employer Routes */}
