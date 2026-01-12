@@ -89,10 +89,10 @@ export function CuratedPerks({ onActivate }: CuratedPerksProps) {
   if (curatedOffers.length === 0) return null;
 
   return (
-    <Card className="overflow-hidden bg-gradient-to-r from-accent/5 via-card to-card border-accent/20">
+    <Card className="overflow-hidden bg-gradient-to-r from-accent/5 via-card to-card dark:from-accent/15 dark:via-card dark:to-card border-accent/20 dark:border-accent/30">
       <CardContent className="p-5">
         <div className="flex items-center gap-3 mb-5">
-          <div className="p-2.5 rounded-xl bg-accent/10">
+          <div className="p-2.5 rounded-xl bg-accent/10 dark:bg-accent/20">
             <Sparkles className="w-5 h-5 text-accent" />
           </div>
           <div>
@@ -107,39 +107,40 @@ export function CuratedPerks({ onActivate }: CuratedPerksProps) {
           {curatedOffers.map((offer, index) => (
             <div 
               key={offer.id}
-              className="group relative bg-card border border-border/50 rounded-xl overflow-hidden hover:border-accent/30 hover:shadow-md transition-all duration-300 flex flex-col"
+              className="group relative bg-card dark:bg-card/80 border border-border/50 dark:border-border/30 rounded-xl overflow-hidden hover:border-accent/30 hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-black/20 transition-all duration-300 flex flex-col"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              {/* Personalization badge */}
-              <div className="absolute top-2 left-2 z-10">
-                <Badge 
-                  variant="secondary" 
-                  className="bg-accent/90 text-accent-foreground text-[10px] gap-1 shadow-sm px-1.5 py-0.5"
-                >
-                  <Sparkles className="w-2.5 h-2.5" />
-                  For You
-                </Badge>
-              </div>
-
-              {/* Image */}
+              {/* Image with overlay badge */}
               {offer.image_url && (
-                <div className="h-24 bg-muted overflow-hidden shrink-0">
+                <div className="relative h-28 bg-muted overflow-hidden shrink-0">
                   <img 
                     src={offer.image_url} 
                     alt={offer.title} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                   />
+                  {/* Gradient overlay for badge visibility */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
+                  {/* Personalization badge - positioned on image */}
+                  <div className="absolute top-2 left-2 z-10">
+                    <Badge 
+                      variant="secondary" 
+                      className="bg-accent text-accent-foreground text-[10px] gap-1 shadow-lg px-1.5 py-0.5 backdrop-blur-sm"
+                    >
+                      <Sparkles className="w-2.5 h-2.5" />
+                      For You
+                    </Badge>
+                  </div>
                 </div>
               )}
 
               {/* Content */}
               <div className="p-3 space-y-2 flex flex-col flex-1">
-                <div className="flex items-start justify-between gap-1">
-                  <h4 className="font-medium text-sm line-clamp-1 group-hover:text-accent transition-colors">
+                <div className="flex items-start justify-between gap-2">
+                  <h4 className="font-medium text-sm line-clamp-2 group-hover:text-accent transition-colors leading-tight">
                     {offer.title}
                   </h4>
                   {offer.discount_percent && (
-                    <Badge className="bg-emerald-500/10 text-emerald-600 border-0 shrink-0 text-[10px] px-1.5 py-0">
+                    <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-0 shrink-0 text-[10px] px-1.5 py-0.5">
                       {offer.discount_percent}%
                     </Badge>
                   )}

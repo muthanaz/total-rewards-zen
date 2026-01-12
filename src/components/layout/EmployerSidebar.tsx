@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
 
 interface NavItem {
   label: string;
@@ -44,14 +45,17 @@ export function EmployerSidebar() {
   const sidebarContent = (
     <>
       {/* Logo */}
-      <div className="flex items-center gap-2 px-4 py-5 border-b border-sidebar-border">
-        <div className="w-8 h-8 rounded-lg bg-gradient-accent flex items-center justify-center">
-          <span className="text-sidebar-background font-bold text-lg">b</span>
+      <div className="flex items-center justify-between px-4 py-5 border-b border-sidebar-border">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-accent flex items-center justify-center">
+            <span className="text-sidebar-background font-bold text-lg">b</span>
+          </div>
+          <span className="font-display text-xl font-bold text-sidebar-foreground">bnft.</span>
+          <span className="ml-1 px-2 py-0.5 text-xs font-medium rounded-full bg-sidebar-accent text-sidebar-primary">
+            Employer
+          </span>
         </div>
-        <span className="font-display text-xl font-bold text-sidebar-foreground">bnft.</span>
-        <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-sidebar-accent text-sidebar-primary">
-          Employer
-        </span>
+        <DarkModeToggle />
       </div>
 
       {/* Navigation */}
