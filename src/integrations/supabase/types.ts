@@ -645,7 +645,7 @@ export type Database = {
         | "mobility"
       request_status: "pending" | "approved" | "rejected"
       request_type: "claim" | "request" | "question"
-      user_role: "employee" | "employer"
+      user_role: "employee" | "employer" | "admin" | "vendor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -792,7 +792,7 @@ export const Constants = {
       ],
       request_status: ["pending", "approved", "rejected"],
       request_type: ["claim", "request", "question"],
-      user_role: ["employee", "employer"],
+      user_role: ["employee", "employer", "admin", "vendor"],
     },
   },
 } as const
