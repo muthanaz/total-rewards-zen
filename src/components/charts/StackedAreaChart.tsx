@@ -17,6 +17,7 @@ interface StackedAreaChartProps {
   height?: number;
   formatValue?: (value: number) => string;
   showGrid?: boolean;
+  showLegend?: boolean;
   yDomain?: [number, number];
 }
 
@@ -26,20 +27,38 @@ export function StackedAreaChart({
   height = 300,
   formatValue = (v) => v.toLocaleString(),
   showGrid = true,
+  showLegend = true,
   yDomain
 }: StackedAreaChartProps) {
+  // Custom legend with better styling
+  const renderLegend = () => {
+    return (
+      <div className="flex flex-wrap justify-center gap-4 mt-4">
+        {stacks.map((stack, index) => (
+          <div key={stack.key} className="flex items-center gap-2">
+            <div 
+              className="w-3 h-3 rounded-sm" 
+              style={{ backgroundColor: stack.color }} 
+            />
+            <span className="text-xs text-muted-foreground font-medium">{stack.label}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <div style={{ height }} className="w-full">
+    <div style={{ height: showLegend ? height + 40 : height }} className="w-full">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={data}
-          margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+          margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
         >
           <defs>
             {stacks.map((stack, index) => (
-              <linearGradient key={stack.key} id={`stackGradient-${index}`} x1="0" y1="0" x2="0" y2="1">
+              <linearGradient key={stack.key} id={`stackGradient-${stack.key}`} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={stack.color} stopOpacity={0.8} />
-                <stop offset="100%" stopColor={stack.color} stopOpacity={0.2} />
+                <stop offset="100%" stopColor={stack.color} stopOpacity={0.15} />
               </linearGradient>
             ))}
           </defs>
@@ -74,8 +93,8 @@ export function StackedAreaChart({
             contentStyle={{
               backgroundColor: 'hsl(var(--card))',
               border: '1px solid hsl(var(--border))',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              borderRadius: '10px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
               padding: '12px 16px'
             }}
             labelStyle={{ fontWeight: 600, color: 'hsl(var(--foreground))', marginBottom: 8 }}
@@ -86,15 +105,9 @@ export function StackedAreaChart({
             cursor={{ stroke: 'hsl(var(--accent))', strokeWidth: 1, strokeDasharray: '4 4' }}
           />
           
-          <Legend 
-            wrapperStyle={{ paddingTop: 16 }}
-            formatter={(value) => {
-              const stack = stacks.find(s => s.key === value);
-              return <span className="text-xs text-muted-foreground ml-1">{stack?.label || value}</span>;
-            }}
-            iconType="circle"
-            iconSize={8}
-          />
+          {showLegend && (
+            <Legend content={renderLegend} />
+          )}
           
           {stacks.map((stack, index) => (
             <Area
@@ -104,7 +117,7 @@ export function StackedAreaChart({
               stackId="1"
               stroke={stack.color}
               strokeWidth={2}
-              fill={`url(#stackGradient-${index})`}
+              fill={`url(#stackGradient-${stack.key})`}
               animationDuration={1000 + index * 200}
               animationEasing="ease-out"
             />
