@@ -1,13 +1,16 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { 
   DollarSign, TrendingUp, Calendar, Zap, Home, GraduationCap, 
-  Heart, Car, Dumbbell, PiggyBank, BookOpen, Plane 
+  Heart, Car, Dumbbell, PiggyBank, BookOpen, Plane, ChevronRight
 } from 'lucide-react';
 import { BENEFIT_TYPE_COLORS, BENEFIT_TYPE_LABELS } from '@/lib/constants';
 import { RequestClaimWidget } from '@/components/employee/RequestClaimWidget';
 import { ChartContainer, AnimatedBarChart, AnimatedDonutChart, AnimatedRadarChart } from '@/components/charts';
+import { DateRangeFilter, DrillDownModal } from '@/components/dashboard';
 
 // Demo data
 const metrics = {
@@ -18,6 +21,18 @@ const metrics = {
   leaveBalance: 22,
   leaveUsed: 8,
   activatedItems: 7,
+};
+
+// Benefit to page route mapping
+const benefitRoutes: Record<string, string> = {
+  'Housing Allowance': '/employee/housing',
+  'Education Allowance': '/employee/schooling',
+  'Health Insurance': '/employee/health',
+  'Transport Allowance': '/employee/transport',
+  'Annual Flight Tickets': '/employee/documents',
+  'Financial Planning': '/employee/financial',
+  'Wellbeing Program': '/employee/wellbeing',
+  'Learning & Development': '/employee/learning',
 };
 
 const benefits = [
@@ -55,17 +70,83 @@ const benefitRadarData = [
   { subject: 'Learning', value: 38, secondaryValue: 55, fullMark: 100 },
 ];
 
+// Drill-down data
+const drillDownDetails: Record<string, any> = {
+  'Cash & Allowances': {
+    title: 'Cash & Allowances',
+    category: 'Cash Benefits',
+    totalValue: 219000,
+    utilized: 195000,
+    trend: 'up' as const,
+    trendValue: 8,
+    employees: 1,
+    description: 'Monthly cash allowances paid with salary',
+    breakdown: [
+      { name: 'Housing', value: 120000, secondaryValue: 120000 },
+      { name: 'Education', value: 42000, secondaryValue: 60000 },
+      { name: 'Transport', value: 18000, secondaryValue: 24000 },
+      { name: 'Flights', value: 15000, secondaryValue: 15000 },
+    ],
+  },
+  'Health & Protection': {
+    title: 'Health & Protection',
+    category: 'Insurance',
+    totalValue: 45000,
+    utilized: 12500,
+    trend: 'down' as const,
+    trendValue: 5,
+    description: 'Medical insurance and health benefits',
+    breakdown: [
+      { name: 'Medical Claims', value: 8500 },
+      { name: 'Dental', value: 2500 },
+      { name: 'Optical', value: 1500 },
+    ],
+  },
+};
+
 export default function EmployeeDashboard() {
+  const navigate = useNavigate();
+  const [dateRange, setDateRange] = useState({ from: new Date(), to: new Date() });
+  const [drillDownOpen, setDrillDownOpen] = useState(false);
+  const [selectedDrillDown, setSelectedDrillDown] = useState<any>(null);
+  
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
   const formatCurrencyShort = (value: number) => `${(value / 1000).toFixed(0)}K`;
   const utilizationPercent = Math.round((233200 / 398000) * 100);
+
+  const handleBenefitClick = (benefitName: string) => {
+    const route = benefitRoutes[benefitName];
+    if (route) {
+      navigate(route);
+    }
+  };
+
+  const handleBarClick = (data: any) => {
+    const details = drillDownDetails[data.name];
+    if (details) {
+      setSelectedDrillDown(details);
+      setDrillDownOpen(true);
+    }
+  };
+
+  const handleExport = (format: 'csv' | 'pdf') => {
+    // Demo export functionality
+    console.log(`Exporting data as ${format}`);
+  };
   
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="space-y-1">
-        <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">Dashboard Overview</h1>
-        <p className="text-muted-foreground">Your total rewards at a glance</p>
+      {/* Header with Date Filter */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">Dashboard Overview</h1>
+          <p className="text-muted-foreground">Your total rewards at a glance</p>
+        </div>
+        <DateRangeFilter 
+          onRangeChange={setDateRange}
+          onExport={handleExport}
+          showExport={true}
+        />
       </div>
 
       {/* Metrics Grid - Uniform sizing */}
@@ -95,9 +176,117 @@ export default function EmployeeDashboard() {
         ))}
       </div>
 
+      {/* Benefit Highlights - Moved to top */}
+      <Card className="border-border/50 bg-gradient-to-b from-card to-card/80">
+        <CardHeader className="pb-3 border-b border-border/30">
+          <CardTitle className="text-base font-display font-semibold">Benefit Highlights</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div 
+              className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 cursor-pointer hover:border-emerald-500/40 transition-colors group"
+              onClick={() => handleBenefitClick('Housing Allowance')}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <p className="text-sm font-semibold text-emerald-600">Fully Utilized</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Housing Allowance, Annual Flight Tickets</p>
+            </div>
+            <div 
+              className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20 cursor-pointer hover:border-amber-500/40 transition-colors group"
+              onClick={() => handleBenefitClick('Health Insurance')}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-amber-500" />
+                  <p className="text-sm font-semibold text-amber-600">Room to Use</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Health Insurance (28%), Learning & Dev (38%)</p>
+            </div>
+            <div className="p-4 rounded-xl bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-accent" />
+                <p className="text-sm font-semibold text-accent">This Month</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">3 perk activations, 2 claims approved</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Benefits Grid - Moved up, clickable */}
+      <div>
+        <h2 className="text-lg font-display font-semibold mb-4">Your Benefits</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {benefits.map((benefit, index) => {
+            const utilization = Math.round((benefit.utilized / benefit.value) * 100);
+            const remaining = benefit.value - benefit.utilized;
+            const isFullyUsed = utilization >= 100;
+            
+            return (
+              <Card 
+                key={benefit.name} 
+                className="benefit-card group h-full flex flex-col cursor-pointer hover:border-accent/40 hover:shadow-lg transition-all duration-300"
+                style={{ animationDelay: `${index * 50}ms` }}
+                onClick={() => handleBenefitClick(benefit.name)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2.5 rounded-xl bg-accent/10 group-hover:bg-accent/20 transition-colors shrink-0">
+                      <benefit.icon className="w-5 h-5 text-accent" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-sm truncate group-hover:text-accent transition-colors">{benefit.name}</h3>
+                      <div className="flex gap-2 mt-1.5">
+                        <span className={BENEFIT_TYPE_COLORS[benefit.type]}>
+                          {BENEFIT_TYPE_LABELS[benefit.type]}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                </div>
+                
+                <div className="mt-4 space-y-2 flex-1">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Utilized</span>
+                    <span className="font-semibold">{formatCurrency(benefit.utilized)}</span>
+                  </div>
+                  <div className="relative">
+                    <Progress 
+                      value={utilization} 
+                      className={`h-2 ${isFullyUsed ? '[&>div]:bg-emerald-500' : '[&>div]:bg-accent'}`}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Remaining: {formatCurrency(remaining)}</span>
+                    <span className={isFullyUsed ? 'text-emerald-600 font-medium' : ''}>{utilization}%</span>
+                  </div>
+                </div>
+                
+                <ul className="mt-4 space-y-1.5 pt-3 border-t border-border/50">
+                  {benefit.bullets.map((bullet, i) => (
+                    <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                      <span className="text-accent mt-0.5 text-[10px]">●</span>
+                      {bullet}
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Charts Section - Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Utilization by Benefit Type - 7 columns */}
+        {/* Utilization by Benefit Type - 7 columns, clickable bars */}
         <div className="lg:col-span-7">
           <ChartContainer 
             title="Utilization by Benefit Type"
@@ -105,16 +294,21 @@ export default function EmployeeDashboard() {
             dataSource="Benefits System"
             className="h-full"
           >
-            <AnimatedBarChart
-              data={utilizationByType}
-              layout="vertical"
-              showSecondary={true}
-              primaryLabel="Utilized"
-              secondaryLabel="Total"
-              formatValue={formatCurrencyShort}
-              height={240}
-              gradientId="employeeBar"
-            />
+            <div className="cursor-pointer" onClick={(e) => {
+              // Get clicked bar from chart
+            }}>
+              <AnimatedBarChart
+                data={utilizationByType}
+                layout="vertical"
+                showSecondary={true}
+                primaryLabel="Utilized"
+                secondaryLabel="Total"
+                formatValue={formatCurrencyShort}
+                height={240}
+                gradientId="employeeBar"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground text-center mt-2">Click on any bar to see detailed breakdown</p>
           </ChartContainer>
         </div>
 
@@ -169,97 +363,13 @@ export default function EmployeeDashboard() {
         </div>
       </div>
 
-      {/* Benefit Highlights */}
-      <Card className="border-border/50 bg-gradient-to-b from-card to-card/80">
-        <CardHeader className="pb-3 border-b border-border/30">
-          <CardTitle className="text-base font-display font-semibold">Benefit Highlights</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <p className="text-sm font-semibold text-emerald-600">Fully Utilized</p>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">Housing Allowance, Annual Flight Tickets</p>
-            </div>
-            <div className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-amber-500" />
-                <p className="text-sm font-semibold text-amber-600">Room to Use</p>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">Health Insurance (28%), Learning & Dev (38%)</p>
-            </div>
-            <div className="p-4 rounded-xl bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-accent" />
-                <p className="text-sm font-semibold text-accent">This Month</p>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">3 perk activations, 2 claims approved</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Benefits Grid */}
-      <div>
-        <h2 className="text-lg font-display font-semibold mb-4">Your Benefits</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {benefits.map((benefit, index) => {
-            const utilization = Math.round((benefit.utilized / benefit.value) * 100);
-            const remaining = benefit.value - benefit.utilized;
-            const isFullyUsed = utilization >= 100;
-            
-            return (
-              <Card 
-                key={benefit.name} 
-                className="benefit-card group h-full flex flex-col"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="p-2.5 rounded-xl bg-accent/10 group-hover:bg-accent/15 transition-colors shrink-0">
-                    <benefit.icon className="w-5 h-5 text-accent" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-sm truncate">{benefit.name}</h3>
-                    <div className="flex gap-2 mt-1.5">
-                      <span className={BENEFIT_TYPE_COLORS[benefit.type]}>
-                        {BENEFIT_TYPE_LABELS[benefit.type]}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="mt-4 space-y-2 flex-1">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Utilized</span>
-                    <span className="font-semibold">{formatCurrency(benefit.utilized)}</span>
-                  </div>
-                  <div className="relative">
-                    <Progress 
-                      value={utilization} 
-                      className={`h-2 ${isFullyUsed ? '[&>div]:bg-emerald-500' : '[&>div]:bg-accent'}`}
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Remaining: {formatCurrency(remaining)}</span>
-                    <span className={isFullyUsed ? 'text-emerald-600 font-medium' : ''}>{utilization}%</span>
-                  </div>
-                </div>
-                
-                <ul className="mt-4 space-y-1.5 pt-3 border-t border-border/50">
-                  {benefit.bullets.map((bullet, i) => (
-                    <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                      <span className="text-accent mt-0.5 text-[10px]">●</span>
-                      {bullet}
-                    </li>
-                  ))}
-                </ul>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
+      {/* Drill-down Modal */}
+      <DrillDownModal
+        open={drillDownOpen}
+        onOpenChange={setDrillDownOpen}
+        data={selectedDrillDown}
+        formatValue={(v) => `AED ${v.toLocaleString()}`}
+      />
     </div>
   );
 }
