@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { User, Building2, Loader2, Shield, Store } from 'lucide-react';
 import { z } from 'zod';
+import { isDevelopment } from '@/lib/env';
+import { supabase } from '@/integrations/supabase/client';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -56,6 +58,32 @@ export default function Auth() {
     return paths[role];
   };
 
+  const checkRateLimit = async (action: 'login' | 'signup', userEmail: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('rate-limit-auth', {
+        body: { action, email: userEmail }
+      });
+      
+      if (error) {
+        console.error('Rate limit check failed:', error);
+        // Allow the request if rate limiting service is unavailable
+        return true;
+      }
+      
+      if (!data?.allowed) {
+        const retryAfter = data?.retryAfter || 60;
+        toast.error(`Too many attempts. Please try again in ${retryAfter} seconds.`);
+        return false;
+      }
+      
+      return true;
+    } catch (err) {
+      console.error('Rate limit error:', err);
+      // Allow the request if rate limiting service is unavailable
+      return true;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
@@ -72,6 +100,13 @@ export default function Auth() {
             }
           });
           setErrors(fieldErrors);
+          setLoading(false);
+          return;
+        }
+
+        // Check rate limit before attempting login
+        const allowed = await checkRateLimit('login', email);
+        if (!allowed) {
           setLoading(false);
           return;
         }
@@ -93,6 +128,13 @@ export default function Auth() {
             }
           });
           setErrors(fieldErrors);
+          setLoading(false);
+          return;
+        }
+
+        // Check rate limit before attempting signup
+        const allowed = await checkRateLimit('signup', email);
+        if (!allowed) {
           setLoading(false);
           return;
         }
@@ -278,23 +320,25 @@ export default function Auth() {
                   </div>
                 </div>
 
-                {/* Demo Login Button */}
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleDemoLogin}
-                  disabled={demoLoading}
-                >
-                  {demoLoading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Shield className="w-4 h-4 mr-2" />
-                  )}
-                  {selectedRole === 'admin' || selectedRole === 'vendor' 
-                    ? `Demo ${roleConfig[selectedRole].label} Access`
-                    : 'Continue with UAE Pass (Demo)'
-                  }
-                </Button>
+                {/* Demo Login Button - Only shown in development */}
+                {isDevelopment() && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleDemoLogin}
+                    disabled={demoLoading}
+                  >
+                    {demoLoading ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Shield className="w-4 h-4 mr-2" />
+                    )}
+                    {selectedRole === 'admin' || selectedRole === 'vendor' 
+                      ? `Demo ${roleConfig[selectedRole].label} Access`
+                      : 'Continue with UAE Pass (Demo)'
+                    }
+                  </Button>
+                )}
 
                 <p className="text-center text-sm text-muted-foreground">
                   {isLogin ? "Don't have an account? " : 'Already have an account? '}

@@ -107,6 +107,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const demoLogin = async (demoRole: UserRole) => {
+    // Block demo login in production environment
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+    const devHostnames = ['localhost', '127.0.0.1', 'lovableproject.com'];
+    const isDevHost = devHostnames.some(dev => hostname.includes(dev) || hostname === dev);
+    
+    if (!isDevHost) {
+      return { error: new Error('Demo login is not available in production') };
+    }
+
     const emailMap: Record<UserRole, string> = {
       employee: 'demo.employee@bnft.ae',
       employer: 'demo.employer@bnft.ae',
