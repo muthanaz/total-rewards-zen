@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -79,11 +79,17 @@ const navigationGroups: NavGroup[] = [
 
 export function AdminSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { signOut } = useAuth();
   const { language, direction } = useLanguage();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<string[]>(navigationGroups.map(g => g.title));
   const isRTL = direction === 'rtl';
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
 
   const isActive = (path: string) => location.pathname === path;
   
@@ -170,7 +176,7 @@ export function AdminSidebar() {
       <div className={cn("p-4 border-t border-sidebar-border", isRTL && "text-right")}>
         <Button
           variant="ghost"
-          onClick={() => signOut()}
+          onClick={handleSignOut}
           className={cn(
             "w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent",
             isRTL ? "justify-start flex-row-reverse" : "justify-start"
