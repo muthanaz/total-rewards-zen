@@ -53,6 +53,11 @@ import VendorDashboard from "./pages/vendor/Dashboard";
 import VendorOffers from "./pages/vendor/Offers";
 import VendorTransactions from "./pages/vendor/Transactions";
 import VendorEarnings from "./pages/vendor/Earnings";
+import VendorAnalytics from "./pages/vendor/Analytics";
+import VendorCreateOffer from "./pages/vendor/CreateOffer";
+import VendorProfile from "./pages/vendor/Profile";
+import VendorSettings from "./pages/vendor/Settings";
+
 const queryClient = new QueryClient();
 
 type UserRole = 'employee' | 'employer' | 'admin' | 'vendor';
@@ -136,8 +141,12 @@ function AppRoutes() {
       <Route path="/vendor" element={<ProtectedRoute allowedRoles={['vendor']}><VendorLayout /></ProtectedRoute>}>
         <Route index element={<VendorDashboard />} />
         <Route path="offers" element={<VendorOffers />} />
+        <Route path="offers/new" element={<VendorCreateOffer />} />
+        <Route path="analytics" element={<VendorAnalytics />} />
         <Route path="transactions" element={<VendorTransactions />} />
         <Route path="earnings" element={<VendorEarnings />} />
+        <Route path="profile" element={<VendorProfile />} />
+        <Route path="settings" element={<VendorSettings />} />
       </Route>
       
       <Route path="*" element={<NotFound />} />
