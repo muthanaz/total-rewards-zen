@@ -67,6 +67,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Navigation - Employee
     'nav.dashboard': 'Dashboard',
     'nav.myBenefits': 'My Benefits',
+    'nav.financialRewards': 'Financial & Rewards',
     'nav.housing': 'Housing',
     'nav.schooling': 'Schooling',
     'nav.healthInsurance': 'Health Insurance',
@@ -251,6 +252,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Navigation - Employee
     'nav.dashboard': 'لوحة التحكم',
     'nav.myBenefits': 'مزاياي',
+    'nav.financialRewards': 'المالية والمكافآت',
     'nav.housing': 'السكن',
     'nav.schooling': 'التعليم',
     'nav.healthInsurance': 'التأمين الصحي',

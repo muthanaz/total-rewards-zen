@@ -13,6 +13,7 @@ import {
   BookOpen,
   Calendar,
   Gift,
+  Award,
   FileText,
   Building2,
   User,
@@ -22,6 +23,8 @@ import {
   Menu,
   X,
   LogOut,
+  ShoppingBag,
+  Lightbulb,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -55,17 +58,22 @@ const navigation: NavGroup[] = [
       { labelKey: 'nav.healthInsurance', path: '/employee/health', icon: Heart },
       { labelKey: 'nav.transport', path: '/employee/transport', icon: Car },
       { labelKey: 'nav.wellbeing', path: '/employee/wellbeing', icon: Dumbbell },
-      { labelKey: 'nav.financial', path: '/employee/financial', icon: PiggyBank },
-      { labelKey: 'nav.annualBonus', path: '/employee/bonus', icon: Gift },
-      { labelKey: 'nav.equity', path: '/employee/equity', icon: TrendingUp },
       { labelKey: 'nav.learning', path: '/employee/learning', icon: BookOpen },
       { labelKey: 'nav.leave', path: '/employee/leave', icon: Calendar },
     ],
   },
   {
+    labelKey: 'nav.financialRewards',
+    items: [
+      { labelKey: 'nav.financial', path: '/employee/financial', icon: PiggyBank },
+      { labelKey: 'nav.annualBonus', path: '/employee/bonus', icon: Award },
+      { labelKey: 'nav.equity', path: '/employee/equity', icon: TrendingUp },
+    ],
+  },
+  {
     labelKey: 'nav.marketplace',
     items: [
-      { labelKey: 'nav.perks', path: '/employee/marketplace', icon: Gift },
+      { labelKey: 'nav.perks', path: '/employee/marketplace', icon: ShoppingBag },
     ],
   },
   {
@@ -73,7 +81,7 @@ const navigation: NavGroup[] = [
     items: [
       { labelKey: 'nav.documents', path: '/employee/documents', icon: FileText },
       { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
-      { labelKey: 'nav.knowledgeHub', path: '/employee/knowledge', icon: BookOpen },
+      { labelKey: 'nav.knowledgeHub', path: '/employee/knowledge', icon: Lightbulb },
     ],
   },
   {
@@ -89,7 +97,7 @@ export function EmployeeSidebar() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { t, direction } = useLanguage();
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['nav.dashboard', 'nav.myBenefits']);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['nav.dashboard', 'nav.myBenefits', 'nav.financialRewards']);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isRTL = direction === 'rtl';
 
