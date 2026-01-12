@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -85,11 +85,17 @@ const navigation: NavGroup[] = [
 
 export function EmployeeSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { signOut } = useAuth();
   const { t, direction } = useLanguage();
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['nav.dashboard', 'nav.myBenefits']);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isRTL = direction === 'rtl';
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
 
   const toggleGroup = (labelKey: string) => {
     setExpandedGroups(prev =>
@@ -171,7 +177,7 @@ export function EmployeeSidebar() {
       <div className={cn("p-4 border-t border-sidebar-border", isRTL && "text-right")}>
         <Button
           variant="ghost"
-          onClick={() => signOut()}
+          onClick={handleSignOut}
           className={cn(
             "w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent",
             isRTL ? "justify-start flex-row-reverse" : "justify-start"
