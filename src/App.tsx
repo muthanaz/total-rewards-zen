@@ -29,6 +29,7 @@ import GovConnectPage from "./pages/employee/GovConnect";
 import ProfilePage from "./pages/employee/Profile";
 import BenefitsPage from "./pages/employee/Benefits";
 import OnboardingPage from "./pages/employee/Onboarding";
+import KnowledgeHubPage from "./pages/employee/KnowledgeHub";
 
 import EmployerDashboard from "./pages/employer/Dashboard";
 import SpendPage from "./pages/employer/Spend";
@@ -38,6 +39,7 @@ import ClaimsPage from "./pages/employer/Claims";
 import MarketplaceAnalyticsPage from "./pages/employer/MarketplaceAnalytics";
 import PoliciesPage from "./pages/employer/Policies";
 import IntegrationsPage from "./pages/employer/Integrations";
+import KnowledgeCenterPage from "./pages/employer/KnowledgeCenter";
 import RecommendationsPage from "./pages/employer/Recommendations";
 
 const queryClient = new QueryClient();
@@ -84,6 +86,7 @@ function AppRoutes() {
         <Route path="gov-connect" element={<GovConnectPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="onboarding" element={<OnboardingPage />} />
+        <Route path="knowledge" element={<KnowledgeHubPage />} />
       </Route>
       
       {/* Employer Routes */}
@@ -96,6 +99,7 @@ function AppRoutes() {
         <Route path="marketplace" element={<MarketplaceAnalyticsPage />} />
         <Route path="policies" element={<PoliciesPage />} />
         <Route path="integrations" element={<IntegrationsPage />} />
+        <Route path="knowledge" element={<KnowledgeCenterPage />} />
         <Route path="recommendations" element={<RecommendationsPage />} />
       </Route>
       

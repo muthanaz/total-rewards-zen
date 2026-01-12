@@ -73,6 +73,8 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.services': 'Services',
     'nav.documents': 'HR Documents',
     'nav.govConnect': 'Gov Connect',
+    'nav.knowledgeHub': 'Knowledge Hub',
+    'nav.knowledgeCenter': 'Knowledge Center',
     'nav.account': 'Account',
     'nav.profile': 'Smart Profile',
     
@@ -245,6 +247,8 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.services': 'الخدمات',
     'nav.documents': 'مستندات الموارد البشرية',
     'nav.govConnect': 'الخدمات الحكومية',
+    'nav.knowledgeHub': 'مركز المعرفة',
+    'nav.knowledgeCenter': 'مركز المعرفة',
     'nav.account': 'الحساب',
     'nav.profile': 'الملف الذكي',
     
