@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { User, Building2, Loader2, Shield } from 'lucide-react';
+import { User, Building2, Loader2, Shield, Store } from 'lucide-react';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -22,7 +22,14 @@ const signUpSchema = z.object({
   lastName: z.string().min(1, 'Last name is required'),
 });
 
-type UserRole = 'employee' | 'employer';
+type UserRole = 'employee' | 'employer' | 'admin' | 'vendor';
+
+const roleConfig: Record<UserRole, { label: string; icon: React.ElementType; color: string }> = {
+  employee: { label: 'Employee', icon: User, color: 'text-blue-500' },
+  employer: { label: 'Employer', icon: Building2, color: 'text-green-500' },
+  admin: { label: 'Admin', icon: Shield, color: 'text-red-500' },
+  vendor: { label: 'Vendor', icon: Store, color: 'text-purple-500' },
+};
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -38,6 +45,16 @@ export default function Auth() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const getRedirectPath = (role: UserRole) => {
+    const paths: Record<UserRole, string> = {
+      employee: '/employee',
+      employer: '/employer',
+      admin: '/admin',
+      vendor: '/vendor',
+    };
+    return paths[role];
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +81,7 @@ export default function Auth() {
           toast.error(error.message || 'Failed to sign in');
         } else {
           toast.success('Welcome back!');
-          navigate(selectedRole === 'employee' ? '/employee' : '/employer');
+          navigate(getRedirectPath(selectedRole));
         }
       } else {
         const result = signUpSchema.safeParse({ email, password, firstName, lastName });
@@ -89,7 +106,7 @@ export default function Auth() {
           }
         } else {
           toast.success('Account created! Signing you in...');
-          navigate(selectedRole === 'employee' ? '/employee' : '/employer');
+          navigate(getRedirectPath(selectedRole));
         }
       }
     } catch (err) {
@@ -107,7 +124,7 @@ export default function Auth() {
         toast.error(error.message || 'Failed to login with demo account');
       } else {
         toast.success(`Welcome to bnft. as a demo ${selectedRole}!`);
-        navigate(selectedRole === 'employee' ? '/employee' : '/employer');
+        navigate(getRedirectPath(selectedRole));
       }
     } catch (err) {
       toast.error('An unexpected error occurred');
@@ -115,6 +132,14 @@ export default function Auth() {
       setDemoLoading(false);
     }
   };
+
+  // Only show employee/employer for regular users, admin/vendor are special access
+  const publicRoles: UserRole[] = ['employee', 'employer'];
+  const allRoles: UserRole[] = ['employee', 'employer', 'admin', 'vendor'];
+  
+  // Check if admin/vendor demo is allowed (you can add a secret code or URL param)
+  const showAllRoles = window.location.search.includes('access=full');
+  const availableRoles = showAllRoles ? allRoles : publicRoles;
 
   return (
     <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
@@ -132,21 +157,21 @@ export default function Auth() {
 
         {/* Role Selection */}
         <Tabs value={selectedRole} onValueChange={(v) => setSelectedRole(v as UserRole)}>
-          <TabsList className="grid w-full grid-cols-2 h-12 bg-primary-foreground/10 backdrop-blur">
-            <TabsTrigger 
-              value="employee" 
-              className="data-[state=active]:bg-card data-[state=active]:text-foreground text-primary-foreground/80"
-            >
-              <User className="w-4 h-4 mr-2" />
-              Employee
-            </TabsTrigger>
-            <TabsTrigger 
-              value="employer"
-              className="data-[state=active]:bg-card data-[state=active]:text-foreground text-primary-foreground/80"
-            >
-              <Building2 className="w-4 h-4 mr-2" />
-              Employer
-            </TabsTrigger>
+          <TabsList className={`grid w-full h-12 bg-primary-foreground/10 backdrop-blur ${availableRoles.length === 4 ? 'grid-cols-4' : 'grid-cols-2'}`}>
+            {availableRoles.map((role) => {
+              const config = roleConfig[role];
+              const Icon = config.icon;
+              return (
+                <TabsTrigger 
+                  key={role}
+                  value={role} 
+                  className="data-[state=active]:bg-card data-[state=active]:text-foreground text-primary-foreground/80"
+                >
+                  <Icon className="w-4 h-4 mr-2" />
+                  {config.label}
+                </TabsTrigger>
+              );
+            })}
           </TabsList>
 
           <TabsContent value={selectedRole} className="mt-4">
@@ -158,7 +183,7 @@ export default function Auth() {
                 <CardDescription>
                   {isLogin 
                     ? `Sign in to your ${selectedRole} account` 
-                    : `Register as ${selectedRole === 'employee' ? 'an employee' : 'an employer'}`
+                    : `Register as ${selectedRole === 'employee' ? 'an employee' : selectedRole === 'admin' ? 'an admin' : `a ${selectedRole}`}`
                   }
                 </CardDescription>
               </CardHeader>
@@ -240,7 +265,7 @@ export default function Auth() {
                   </div>
                 </div>
 
-                {/* UAE Pass Demo Button */}
+                {/* Demo Login Button */}
                 <Button
                   variant="outline"
                   className="w-full"
@@ -252,7 +277,10 @@ export default function Auth() {
                   ) : (
                     <Shield className="w-4 h-4 mr-2" />
                   )}
-                  Continue with UAE Pass (Demo)
+                  {selectedRole === 'admin' || selectedRole === 'vendor' 
+                    ? `Demo ${roleConfig[selectedRole].label} Access`
+                    : 'Continue with UAE Pass (Demo)'
+                  }
                 </Button>
 
                 <p className="text-center text-sm text-muted-foreground">
@@ -269,6 +297,13 @@ export default function Auth() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Admin/Vendor access hint */}
+        {!showAllRoles && (
+          <p className="text-center text-xs text-primary-foreground/40">
+            Platform admin? <a href="/auth?access=full" className="underline">Access here</a>
+          </p>
+        )}
       </div>
     </div>
   );
