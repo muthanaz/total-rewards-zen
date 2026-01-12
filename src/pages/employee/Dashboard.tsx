@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { BENEFIT_TYPE_COLORS, BENEFIT_TYPE_LABELS } from '@/lib/constants';
 import { RequestClaimWidget } from '@/components/employee/RequestClaimWidget';
+import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
 import { ChartContainer, AnimatedBarChart, AnimatedDonutChart, AnimatedRadarChart } from '@/components/charts';
 import { DateRangeFilter, DrillDownModal, BenefitsDrillDownSheet } from '@/components/dashboard';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -430,8 +431,14 @@ export default function EmployeeDashboard() {
         </ChartContainer>
 
         {/* Request Widget */}
-        <RequestClaimWidget />
+        <div className="space-y-4">
+          <RequestClaimWidget />
+          <SatisfactionSurvey compact={true} />
+        </div>
       </div>
+
+      {/* Full Satisfaction Survey */}
+      <SatisfactionSurvey />
 
       {/* Drill-down Modal */}
       <DrillDownModal
