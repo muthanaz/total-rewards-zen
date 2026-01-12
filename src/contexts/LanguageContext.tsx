@@ -53,6 +53,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.claimsApprovals': 'Claims & Approvals',
     'nav.marketplaceAnalytics': 'Marketplace Analytics',
     'nav.policyInsights': 'Policy Insights',
+    'nav.integrations': 'Integrations & Data',
     'nav.recommendations': 'Recommendations',
     
     // Navigation - Employee
@@ -224,6 +225,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.claimsApprovals': 'المطالبات والموافقات',
     'nav.marketplaceAnalytics': 'تحليلات السوق',
     'nav.policyInsights': 'رؤى السياسات',
+    'nav.integrations': 'التكاملات والبيانات',
     'nav.recommendations': 'التوصيات',
     
     // Navigation - Employee
