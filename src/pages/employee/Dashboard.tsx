@@ -290,15 +290,14 @@ export default function EmployeeDashboard() {
       </div>
 
       {/* Charts Section - Row 1 */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Utilization by Benefit Type - 7 columns, clickable bars */}
-        <div className="lg:col-span-7">
-          <ChartContainer 
-            title="Utilization by Benefit Type"
-            formula="Utilized amount vs total allocation per category"
-            dataSource="Benefits System"
-            className="h-full"
-          >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Utilization by Benefit Type - clickable bars */}
+        <ChartContainer 
+          title="Utilization by Benefit Type"
+          formula="Utilized amount vs total allocation per category"
+          dataSource="Benefits System"
+        >
+          <div className="pt-2">
             <AnimatedBarChart
               data={utilizationByType}
               layout="vertical"
@@ -306,31 +305,30 @@ export default function EmployeeDashboard() {
               primaryLabel="Utilized"
               secondaryLabel="Total Allocated"
               formatValue={formatCurrencyShort}
-              height={280}
+              height={320}
               gradientId="employeeBar"
               showLegend={true}
               onBarClick={handleBarClick}
               interactive={true}
             />
-            <p className="text-xs text-muted-foreground text-center mt-2">
-              Click any bar to see detailed breakdown
-            </p>
-          </ChartContainer>
-        </div>
+          </div>
+          <p className="text-xs text-muted-foreground text-center mt-3">
+            Click any bar to see detailed breakdown
+          </p>
+        </ChartContainer>
 
-        {/* Allowance vs Used Donut - 5 columns */}
-        <div className="lg:col-span-5">
-          <ChartContainer 
-            title="Overall Benefits Usage"
-            formula="Total utilized / Total annual benefits"
-            dataSource="Benefits System"
-            className="h-full"
-          >
+        {/* Allowance vs Used Donut */}
+        <ChartContainer 
+          title="Overall Benefits Usage"
+          formula="Total utilized / Total annual benefits"
+          dataSource="Benefits System"
+        >
+          <div className="flex items-center justify-center py-4">
             <AnimatedDonutChart
               data={allowanceVsUsed}
-              height={200}
-              innerRadius={55}
-              outerRadius={80}
+              height={260}
+              innerRadius={70}
+              outerRadius={100}
               formatValue={(v) => `AED ${(v / 1000).toFixed(0)}K`}
               showLegend={true}
               centerContent={
@@ -340,35 +338,32 @@ export default function EmployeeDashboard() {
                 </div>
               }
             />
-          </ChartContainer>
-        </div>
+          </div>
+        </ChartContainer>
       </div>
 
       {/* Charts Section - Row 2: Radar + Request Widget */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Radar Chart - 5 columns */}
-        <div className="lg:col-span-5">
-          <ChartContainer 
-            title="Benefit Comparison"
-            formula="Your utilization vs company average per benefit"
-            dataSource="Benefits System"
-            className="h-full"
-          >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Radar Chart */}
+        <ChartContainer 
+          title="Benefit Comparison"
+          formula="Your utilization vs company average per benefit"
+          dataSource="Benefits System"
+        >
+          <div className="pt-2">
             <AnimatedRadarChart
               data={benefitRadarData}
-              height={280}
+              height={320}
               showSecondary={true}
               primaryLabel="Your Utilization"
               secondaryLabel="Company Avg"
               showLegend={true}
             />
-          </ChartContainer>
-        </div>
+          </div>
+        </ChartContainer>
 
-        {/* Request Widget - 7 columns */}
-        <div className="lg:col-span-7">
-          <RequestClaimWidget />
-        </div>
+        {/* Request Widget */}
+        <RequestClaimWidget />
       </div>
 
       {/* Drill-down Modal */}
