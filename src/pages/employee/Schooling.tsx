@@ -123,11 +123,14 @@ export default function SchoolingPage() {
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
 
   const handleSelectSchool = (schoolId: string, schoolName: string, fee: number) => {
-    setChildrenAllocations(prev => prev.map(c => 
-      c.id === activeChildId 
-        ? { ...c, selectedSchool: schoolName, schoolFee: fee }
-        : c
-    ));
+    setChildrenAllocations(prev => prev.map(c => {
+      if (c.id !== activeChildId) return c;
+      // Toggle: if same school is selected, deselect it
+      if (c.selectedSchool === schoolName) {
+        return { ...c, selectedSchool: null, schoolFee: 0 };
+      }
+      return { ...c, selectedSchool: schoolName, schoolFee: fee };
+    }));
   };
 
   const clearFilters = () => {
@@ -249,6 +252,111 @@ export default function SchoolingPage() {
         />
       </div>
 
+      {/* Children Allocation Cards */}
+      <div>
+        <h2 className="text-lg font-display font-semibold mb-4 flex items-center gap-2">
+          <Users className="w-5 h-5 text-accent" />
+          Your Children's Education
+        </h2>
+        <div className="grid md:grid-cols-2 gap-4">
+          {childrenAllocations.map((child, index) => {
+            const GradeIcon = getGradeIcon(child.gradeLevel);
+            const netCost = Math.max(0, child.schoolFee - ALLOWANCE_PER_CHILD);
+            const covered = Math.min(child.schoolFee, ALLOWANCE_PER_CHILD);
+            const isActive = child.id === activeChildId;
+            
+            return (
+              <Card 
+                key={child.id} 
+                className={`cursor-pointer transition-all duration-300 ${
+                  isActive 
+                    ? 'ring-2 ring-accent border-accent shadow-lg' 
+                    : 'hover:border-accent/40 hover:shadow-md'
+                }`}
+                onClick={() => setActiveChildId(child.id)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        isActive ? 'bg-accent text-accent-foreground' : 'bg-accent/10 text-accent'
+                      }`}>
+                        <User className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{child.name}</h3>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <GradeIcon className="w-3.5 h-3.5" />
+                          <span>{child.grade} • {child.age} years old</span>
+                        </div>
+                      </div>
+                    </div>
+                    {isActive && (
+                      <Badge className="bg-accent text-accent-foreground">Editing</Badge>
+                    )}
+                  </div>
+
+                  <div className="mt-4 p-3 rounded-lg bg-muted/30 border">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">Allowance for {child.name}</span>
+                      <span className="text-sm font-bold text-accent">{formatCurrency(ALLOWANCE_PER_CHILD)}</span>
+                    </div>
+                    
+                    {child.selectedSchool ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-success" />
+                          <span className="text-sm font-medium">{child.selectedSchool}</span>
+                        </div>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">School Fee</span>
+                            <span>{formatCurrency(child.schoolFee)}</span>
+                          </div>
+                          <div className="flex justify-between text-success">
+                            <span>Covered by Allowance</span>
+                            <span>−{formatCurrency(covered)}</span>
+                          </div>
+                          <div className="flex justify-between font-medium pt-1 border-t">
+                            <span>You Pay</span>
+                            <span className={netCost > 0 ? 'text-warning' : 'text-success'}>
+                              {netCost > 0 ? formatCurrency(netCost) : 'Nothing!'}
+                            </span>
+                          </div>
+                        </div>
+                        <Progress 
+                          value={Math.min(100, (child.schoolFee / ALLOWANCE_PER_CHILD) * 100)} 
+                          className="h-2 mt-2"
+                        />
+                        <p className="text-[11px] text-muted-foreground text-center">
+                          {child.schoolFee <= ALLOWANCE_PER_CHILD 
+                            ? `${formatCurrency(ALLOWANCE_PER_CHILD - child.schoolFee)} remaining from allowance`
+                            : `${formatCurrency(netCost)} above allowance (salary deduction)`
+                          }
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="text-center py-3">
+                        <p className="text-sm text-muted-foreground">No school selected yet</p>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="mt-2"
+                          onClick={(e) => { e.stopPropagation(); setActiveChildId(child.id); }}
+                        >
+                          Browse Schools for {child.name}
+                          <ChevronRight className="w-4 h-4 ml-1" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Allowance Overview Summary - Shows when at least one child has a school */}
       {childrenAllocations.some(c => c.selectedSchool) && (
         <Card className={`border-2 ${allChildrenHaveSchools ? 'border-success/50 bg-success/5' : 'border-accent/30 bg-accent/5'}`}>
@@ -361,111 +469,6 @@ export default function SchoolingPage() {
           </CardContent>
         </Card>
       )}
-
-      {/* Children Allocation Cards */}
-      <div>
-        <h2 className="text-lg font-display font-semibold mb-4 flex items-center gap-2">
-          <Users className="w-5 h-5 text-accent" />
-          Your Children's Education
-        </h2>
-        <div className="grid md:grid-cols-2 gap-4">
-          {childrenAllocations.map((child, index) => {
-            const GradeIcon = getGradeIcon(child.gradeLevel);
-            const netCost = Math.max(0, child.schoolFee - ALLOWANCE_PER_CHILD);
-            const covered = Math.min(child.schoolFee, ALLOWANCE_PER_CHILD);
-            const isActive = child.id === activeChildId;
-            
-            return (
-              <Card 
-                key={child.id} 
-                className={`cursor-pointer transition-all duration-300 ${
-                  isActive 
-                    ? 'ring-2 ring-accent border-accent shadow-lg' 
-                    : 'hover:border-accent/40 hover:shadow-md'
-                }`}
-                onClick={() => setActiveChildId(child.id)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        isActive ? 'bg-accent text-accent-foreground' : 'bg-accent/10 text-accent'
-                      }`}>
-                        <User className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">{child.name}</h3>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <GradeIcon className="w-3.5 h-3.5" />
-                          <span>{child.grade} • {child.age} years old</span>
-                        </div>
-                      </div>
-                    </div>
-                    {isActive && (
-                      <Badge className="bg-accent text-accent-foreground">Editing</Badge>
-                    )}
-                  </div>
-
-                  <div className="mt-4 p-3 rounded-lg bg-muted/30 border">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Allowance for {child.name}</span>
-                      <span className="text-sm font-bold text-accent">{formatCurrency(ALLOWANCE_PER_CHILD)}</span>
-                    </div>
-                    
-                    {child.selectedSchool ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Check className="w-4 h-4 text-success" />
-                          <span className="text-sm font-medium">{child.selectedSchool}</span>
-                        </div>
-                        <div className="space-y-1 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">School Fee</span>
-                            <span>{formatCurrency(child.schoolFee)}</span>
-                          </div>
-                          <div className="flex justify-between text-success">
-                            <span>Covered by Allowance</span>
-                            <span>−{formatCurrency(covered)}</span>
-                          </div>
-                          <div className="flex justify-between font-medium pt-1 border-t">
-                            <span>You Pay</span>
-                            <span className={netCost > 0 ? 'text-warning' : 'text-success'}>
-                              {netCost > 0 ? formatCurrency(netCost) : 'Nothing!'}
-                            </span>
-                          </div>
-                        </div>
-                        <Progress 
-                          value={Math.min(100, (child.schoolFee / ALLOWANCE_PER_CHILD) * 100)} 
-                          className="h-2 mt-2"
-                        />
-                        <p className="text-[11px] text-muted-foreground text-center">
-                          {child.schoolFee <= ALLOWANCE_PER_CHILD 
-                            ? `${formatCurrency(ALLOWANCE_PER_CHILD - child.schoolFee)} remaining from allowance`
-                            : `${formatCurrency(netCost)} above allowance (salary deduction)`
-                          }
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="text-center py-3">
-                        <p className="text-sm text-muted-foreground">No school selected yet</p>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="mt-2"
-                          onClick={(e) => { e.stopPropagation(); setActiveChildId(child.id); }}
-                        >
-                          Browse Schools for {child.name}
-                          <ChevronRight className="w-4 h-4 ml-1" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
 
       {/* School Selection for Active Child */}
       {activeChild && (
