@@ -13,6 +13,20 @@ import { EmployeeLayout } from "./components/layout/EmployeeLayout";
 import { EmployerLayout } from "./components/layout/EmployerLayout";
 
 import EmployeeDashboard from "./pages/employee/Dashboard";
+import HousingPage from "./pages/employee/Housing";
+import SchoolingPage from "./pages/employee/Schooling";
+import HealthPage from "./pages/employee/Health";
+import TransportPage from "./pages/employee/Transport";
+import WellbeingPage from "./pages/employee/Wellbeing";
+import FinancialPage from "./pages/employee/Financial";
+import EquityPage from "./pages/employee/Equity";
+import LearningPage from "./pages/employee/Learning";
+import LeavePage from "./pages/employee/Leave";
+import MarketplacePage from "./pages/employee/Marketplace";
+import DocumentsPage from "./pages/employee/Documents";
+import GovConnectPage from "./pages/employee/GovConnect";
+import ProfilePage from "./pages/employee/Profile";
+
 import EmployerDashboard from "./pages/employer/Dashboard";
 
 const queryClient = new QueryClient();
@@ -44,19 +58,19 @@ function AppRoutes() {
       {/* Employee Routes */}
       <Route path="/employee" element={<ProtectedRoute allowedRole="employee"><EmployeeLayout /></ProtectedRoute>}>
         <Route index element={<EmployeeDashboard />} />
-        <Route path="housing" element={<EmployeeDashboard />} />
-        <Route path="schooling" element={<EmployeeDashboard />} />
-        <Route path="health" element={<EmployeeDashboard />} />
-        <Route path="transport" element={<EmployeeDashboard />} />
-        <Route path="wellbeing" element={<EmployeeDashboard />} />
-        <Route path="financial" element={<EmployeeDashboard />} />
-        <Route path="equity" element={<EmployeeDashboard />} />
-        <Route path="learning" element={<EmployeeDashboard />} />
-        <Route path="leave" element={<EmployeeDashboard />} />
-        <Route path="marketplace" element={<EmployeeDashboard />} />
-        <Route path="documents" element={<EmployeeDashboard />} />
-        <Route path="gov-connect" element={<EmployeeDashboard />} />
-        <Route path="profile" element={<EmployeeDashboard />} />
+        <Route path="housing" element={<HousingPage />} />
+        <Route path="schooling" element={<SchoolingPage />} />
+        <Route path="health" element={<HealthPage />} />
+        <Route path="transport" element={<TransportPage />} />
+        <Route path="wellbeing" element={<WellbeingPage />} />
+        <Route path="financial" element={<FinancialPage />} />
+        <Route path="equity" element={<EquityPage />} />
+        <Route path="learning" element={<LearningPage />} />
+        <Route path="leave" element={<LeavePage />} />
+        <Route path="marketplace" element={<MarketplacePage />} />
+        <Route path="documents" element={<DocumentsPage />} />
+        <Route path="gov-connect" element={<GovConnectPage />} />
+        <Route path="profile" element={<ProfilePage />} />
       </Route>
       
       {/* Employer Routes */}
