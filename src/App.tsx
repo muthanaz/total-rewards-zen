@@ -36,6 +36,7 @@ import SegmentsPage from "./pages/employer/Segments";
 import ClaimsPage from "./pages/employer/Claims";
 import MarketplaceAnalyticsPage from "./pages/employer/MarketplaceAnalytics";
 import PoliciesPage from "./pages/employer/Policies";
+import IntegrationsPage from "./pages/employer/Integrations";
 import RecommendationsPage from "./pages/employer/Recommendations";
 
 const queryClient = new QueryClient();
@@ -92,6 +93,7 @@ function AppRoutes() {
         <Route path="claims" element={<ClaimsPage />} />
         <Route path="marketplace" element={<MarketplaceAnalyticsPage />} />
         <Route path="policies" element={<PoliciesPage />} />
+        <Route path="integrations" element={<IntegrationsPage />} />
         <Route path="recommendations" element={<RecommendationsPage />} />
       </Route>
       

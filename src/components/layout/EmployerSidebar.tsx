@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   LogOut,
+  Database,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -34,6 +35,7 @@ const navigation: NavItem[] = [
   { labelKey: 'nav.claimsApprovals', path: '/employer/claims', icon: FileCheck },
   { labelKey: 'nav.marketplaceAnalytics', path: '/employer/marketplace', icon: ShoppingBag },
   { labelKey: 'nav.policyInsights', path: '/employer/policies', icon: FileText },
+  { labelKey: 'nav.integrations', path: '/employer/integrations', icon: Database },
   { labelKey: 'nav.recommendations', path: '/employer/recommendations', icon: Lightbulb },
 ];
 
