@@ -125,23 +125,24 @@ const translations: Record<Language, Record<string, string>> = {
     'employee.dashboard.used': 'Used',
     'employee.dashboard.remaining': 'Rem',
     
-    // Benefit Types
+    // Benefit Types (legacy)
     'benefit.cash_allowances': 'Cash & Allowances',
     'benefit.health_protection': 'Health & Protection',
     'benefit.time_off_flex': 'Time Off & Flex',
     'benefit.growth_career': 'Growth & Career',
     'benefit.wealth_ownership': 'Wealth & Ownership',
-    'benefit.wellbeing': 'Wellbeing',
     
-    // Benefits
+    // Benefits - Unified naming (use these consistently across all pages)
     'benefit.housing': 'Housing Allowance',
     'benefit.education': 'Education Allowance',
     'benefit.health': 'Health Insurance',
-    'benefit.transportMobility': 'Transport & Mobility',
-    'benefit.annualBonus': 'Annual Bonus',
+    'benefit.transport': 'Transport & Mobility',
+    'benefit.bonus': 'Annual Bonus',
     'benefit.financial': 'Financial Planning',
-    'benefit.wellbeingProgram': 'Wellbeing Program',
+    'benefit.wellbeing': 'Wellbeing Program',
     'benefit.learning': 'Learning & Development',
+    'benefit.equity': 'Equity & Options',
+    'benefit.leave': 'Leave Management',
     
     // Navigation additions
     'nav.annualBonus': 'Annual Bonus',
@@ -319,23 +320,24 @@ const translations: Record<Language, Record<string, string>> = {
     'employee.dashboard.used': 'المستخدم',
     'employee.dashboard.remaining': 'المتبقي',
     
-    // Benefit Types
+    // Benefit Types (legacy)
     'benefit.cash_allowances': 'البدلات النقدية',
     'benefit.health_protection': 'الصحة والحماية',
     'benefit.time_off_flex': 'الإجازات والمرونة',
     'benefit.growth_career': 'النمو والمسار المهني',
     'benefit.wealth_ownership': 'الثروة والملكية',
-    'benefit.wellbeing': 'الرفاهية',
     
-    // Benefits
+    // Benefits - Unified naming (use these consistently across all pages)
     'benefit.housing': 'بدل السكن',
     'benefit.education': 'بدل التعليم',
     'benefit.health': 'التأمين الصحي',
-    'benefit.transportMobility': 'النقل والتنقل',
-    'benefit.annualBonus': 'المكافأة السنوية',
+    'benefit.transport': 'النقل والتنقل',
+    'benefit.bonus': 'المكافأة السنوية',
     'benefit.financial': 'التخطيط المالي',
-    'benefit.wellbeingProgram': 'برنامج الرفاهية',
+    'benefit.wellbeing': 'برنامج الرفاهية',
     'benefit.learning': 'التعلم والتطوير',
+    'benefit.equity': 'الأسهم والخيارات',
+    'benefit.leave': 'إدارة الإجازات',
     
     // Navigation additions
     'nav.annualBonus': 'المكافأة السنوية',
