@@ -151,70 +151,25 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
                 </p>
               </div>
               
-              {/* Right side - Visual breakdown */}
-              <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
-                {/* Donut chart */}
-                <div className="relative w-20 h-20">
-                  <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                    {/* Background circle */}
-                    <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="3.5" className="text-muted/15" />
-                    {/* Salary arc (60%) */}
-                    <circle 
-                      cx="18" cy="18" r="14" fill="none" 
-                      stroke="url(#salaryGradientTeal)" 
-                      strokeWidth="3.5" 
-                      strokeDasharray="52.8 87.96" 
-                      strokeLinecap="round"
-                      className="drop-shadow-sm"
-                    />
-                    {/* Benefits arc (40%) */}
-                    <circle 
-                      cx="18" cy="18" r="14" fill="none" 
-                      stroke="url(#benefitsGradientAmber)" 
-                      strokeWidth="3.5" 
-                      strokeDasharray="35.2 87.96" 
-                      strokeDashoffset="-52.8"
-                      strokeLinecap="round"
-                      className="drop-shadow-sm"
-                    />
-                    <defs>
-                      <linearGradient id="salaryGradientTeal" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#14b8a6" />
-                        <stop offset="100%" stopColor="#10b981" />
-                      </linearGradient>
-                      <linearGradient id="benefitsGradientAmber" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#f59e0b" />
-                        <stop offset="100%" stopColor="#fbbf24" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <span className="text-xs font-bold text-foreground block">100%</span>
-                      <span className="text-[8px] text-muted-foreground">{isRTL ? 'مجموع' : 'Total'}</span>
-                    </div>
-                  </div>
+              {/* Right side - Stacked bar breakdown */}
+              <div className={cn("flex flex-col gap-2", isRTL && "items-end")}>
+                {/* Stacked horizontal bar */}
+                <div className="w-48 h-6 rounded-full overflow-hidden flex shadow-inner bg-muted/20">
+                  <div className="h-full bg-gradient-to-r from-accent to-emerald-500" style={{ width: '60%' }} />
+                  <div className="h-full bg-gradient-to-r from-amber-400 to-amber-500" style={{ width: '40%' }} />
                 </div>
                 
-                {/* Legend */}
-                <div className="flex flex-col gap-2.5">
-                  <div className={cn("flex items-center gap-2.5 p-2 rounded-lg bg-accent/10 border border-accent/20", isRTL && "flex-row-reverse")}>
-                    <div className="w-3 h-3 rounded-full bg-gradient-to-r from-accent to-emerald-500 shadow-sm shadow-accent/50" />
-                    <div className={cn("flex items-baseline gap-1.5", isRTL && "flex-row-reverse")}>
-                      <span className="text-sm font-bold text-accent">60%</span>
-                      <span className="text-[10px] font-medium text-muted-foreground">
-                        {isRTL ? 'الراتب' : 'Salary'}
-                      </span>
-                    </div>
+                {/* Legend items */}
+                <div className={cn("flex items-center gap-4 mt-1", isRTL && "flex-row-reverse")}>
+                  <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
+                    <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-accent to-emerald-500" />
+                    <span className="text-xs font-semibold text-accent">60%</span>
+                    <span className="text-[10px] text-muted-foreground">{isRTL ? 'الراتب' : 'Salary'}</span>
                   </div>
-                  <div className={cn("flex items-center gap-2.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20", isRTL && "flex-row-reverse")}>
-                    <div className="w-3 h-3 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 shadow-sm shadow-amber-500/50" />
-                    <div className={cn("flex items-baseline gap-1.5", isRTL && "flex-row-reverse")}>
-                      <span className="text-sm font-bold text-amber-500">40%</span>
-                      <span className="text-[10px] font-medium text-muted-foreground">
-                        {isRTL ? 'المزايا' : 'Benefits'}
-                      </span>
-                    </div>
+                  <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
+                    <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500" />
+                    <span className="text-xs font-semibold text-amber-500">40%</span>
+                    <span className="text-[10px] text-muted-foreground">{isRTL ? 'المزايا' : 'Benefits'}</span>
                   </div>
                 </div>
               </div>
@@ -229,11 +184,11 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25, duration: 0.3 }}
       >
-        <Card className="relative border border-border/50 bg-card p-4">
+        <Card className="relative border border-amber-200/50 bg-gradient-to-r from-amber-50/50 to-yellow-50/30 dark:from-amber-900/10 dark:to-yellow-900/5 dark:border-amber-500/20 p-4">
           <div className={cn("flex items-center justify-between mb-3", isRTL && "flex-row-reverse")}>
             <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-              <div className="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-accent" />
+              <div className="w-6 h-6 rounded-lg bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-amber-500" />
               </div>
               <h3 className="text-sm font-semibold text-foreground">{isRTL ? 'استخدام المزايا' : 'Benefits Utilization'}</h3>
             </div>
@@ -241,9 +196,9 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
           </div>
           
           {/* Progress bar */}
-          <div className="relative h-2.5 bg-muted rounded-full overflow-hidden mb-3">
+          <div className="relative h-2.5 bg-amber-100 dark:bg-amber-900/30 rounded-full overflow-hidden mb-3">
             <motion.div 
-              className="absolute inset-y-0 left-0 bg-accent rounded-full"
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-400 to-amber-500 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${utilization.usedPercent}%` }}
               transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
@@ -253,20 +208,20 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
           {/* Used and Remaining */}
           <div className={cn("grid grid-cols-2 gap-4", isRTL && "direction-rtl")}>
             <div className={cn("flex items-center gap-2.5", isRTL && "flex-row-reverse")}>
-              <div className="w-2.5 h-2.5 rounded-full bg-accent" />
+              <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
               <div>
                 <p className="text-sm font-bold text-foreground">{utilization.used}</p>
                 <p className="text-[10px] text-muted-foreground">
-                  {isRTL ? 'مستخدم' : 'Used'} <span className="font-semibold text-accent">({utilization.usedPercent}%)</span>
+                  {isRTL ? 'مستخدم' : 'Used'} <span className="font-semibold text-amber-600 dark:text-amber-400">({utilization.usedPercent}%)</span>
                 </p>
               </div>
             </div>
             <div className={cn("flex items-center gap-2.5", isRTL && "flex-row-reverse text-right")}>
-              <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30" />
+              <div className="w-2.5 h-2.5 rounded-full bg-amber-200 dark:bg-amber-700/50" />
               <div>
                 <p className="text-sm font-bold text-foreground">{utilization.remaining}</p>
                 <p className="text-[10px] text-muted-foreground">
-                  {isRTL ? 'متاح' : 'Available'} <span className="font-semibold text-muted-foreground">({utilization.remainingPercent}%)</span>
+                  {isRTL ? 'متاح' : 'Available'} <span className="font-semibold text-amber-500/70">({utilization.remainingPercent}%)</span>
                 </p>
               </div>
             </div>

@@ -112,10 +112,11 @@ export default function EmployeeDashboard() {
   };
 
   // 4 Key Metrics with info tooltips
+  const hiddenValue = `${isRTL ? '' : 'AED '}•••,•••${isRTL ? ' درهم' : ''}`;
   const keyMetrics = [
     { 
       icon: Banknote, 
-      value: salaryHidden ? `${isRTL ? '' : 'AED '}•••,•••${isRTL ? ' درهم' : ''}` : formatCurrency(salaryData.monthlySalary), 
+      value: salaryHidden ? hiddenValue : formatCurrency(salaryData.monthlySalary), 
       label: isRTL ? 'الراتب الشهري' : 'Monthly Salary',
       formula: isRTL ? 'الراتب الأساسي الشهري قبل الخصومات' : 'Base monthly salary before deductions',
       dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR Payroll System',
@@ -124,7 +125,7 @@ export default function EmployeeDashboard() {
     },
     { 
       icon: DollarSign, 
-      value: salaryHidden ? `${isRTL ? '' : 'AED '}•••,•••${isRTL ? ' درهم' : ''}` : formatCurrency(salaryData.annualSalary), 
+      value: salaryHidden ? hiddenValue : formatCurrency(salaryData.annualSalary), 
       label: isRTL ? 'الراتب السنوي' : 'Annual Salary',
       formula: isRTL ? 'الراتب الشهري × ١٢ شهر' : 'Monthly Salary × 12 months',
       dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR Payroll System',
@@ -133,19 +134,21 @@ export default function EmployeeDashboard() {
     },
     { 
       icon: Gift, 
-      value: formatCurrency(calculatedMetrics.totalBenefitValue), 
+      value: salaryHidden ? hiddenValue : formatCurrency(calculatedMetrics.totalBenefitValue), 
       label: isRTL ? 'قيمة المزايا السنوية' : 'Annual Benefits Value',
       formula: isRTL ? 'مجموع جميع المزايا والبدلات السنوية' : 'Sum of all annual benefits & allowances',
       dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
       variant: 'benefits' as const,
+      isSensitive: true,
     },
     { 
       icon: Wallet, 
-      value: `${calculatedMetrics.benefitsAsPercentOfComp}%`, 
+      value: salaryHidden ? '••%' : `${calculatedMetrics.benefitsAsPercentOfComp}%`, 
       label: isRTL ? 'المزايا من التعويضات' : 'Benefits % of Package',
       formula: isRTL ? '(قيمة المزايا ÷ إجمالي التعويضات) × ١٠٠' : '(Benefits Value ÷ Total Compensation) × 100',
       dataSource: isRTL ? 'محسوب' : 'Calculated',
       variant: 'benefits' as const,
+      isSensitive: true,
     },
   ];
 
