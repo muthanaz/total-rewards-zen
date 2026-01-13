@@ -246,7 +246,6 @@ export function CuratedPerks({ onActivate }: CuratedPerksProps) {
                     "gap-1 text-xs w-fit",
                     categoryColor.bgLight,
                     categoryColor.text,
-                    `dark:${categoryColor.textDark}`,
                     categoryColor.border
                   )}
                 >
@@ -273,7 +272,6 @@ export function CuratedPerks({ onActivate }: CuratedPerksProps) {
                       "text-xs px-2 py-0.5",
                       categoryColor.bgLight,
                       categoryColor.text,
-                      `dark:${categoryColor.textDark}`,
                       categoryColor.border
                     )}
                   >
@@ -289,7 +287,7 @@ export function CuratedPerks({ onActivate }: CuratedPerksProps) {
 
                 {/* Personalization Reason */}
                 <div className="pt-2 border-t border-border/30">
-                  <p className={cn("text-xs flex items-center gap-1.5", categoryColor.text, `dark:${categoryColor.textDark}`)}>
+                  <p className={cn("text-xs flex items-center gap-1.5", categoryColor.text)}>
                     <Sparkles className="w-3 h-3" />
                     {offer.curationReason}
                   </p>
