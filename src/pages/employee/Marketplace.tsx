@@ -4,13 +4,29 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Gift, Search, Star, CheckCircle, Filter, Grid3X3, List, Sparkles, ArrowRight } from 'lucide-react';
+import { 
+  Gift, Search, Star, CheckCircle, Grid3X3, List, Sparkles, ArrowRight,
+  ShoppingBag, Coffee, Activity, Users, BookOpen, Home, Car, Plane
+} from 'lucide-react';
 import { useMarketplaceOffers } from '@/hooks/useSupabaseData';
 import { useToast } from '@/hooks/use-toast';
 import { MARKETPLACE_CATEGORIES } from '@/lib/constants';
 import { CuratedPerks } from '@/components/dashboard/CuratedPerks';
-import { getMarketplaceColor } from '@/lib/colorSystem';
+import { getMarketplaceCategoryColor } from '@/lib/colorUtils';
 import { cn } from '@/lib/utils';
+
+// Category icons mapping
+const CATEGORY_ICONS: Record<string, React.ElementType> = {
+  'Everyday Essentials': ShoppingBag,
+  'Food & Coffee': Coffee,
+  'Health & Fitness': Activity,
+  'Family & Parenting': Users,
+  'Learning & Skills': BookOpen,
+  'Home & Living': Home,
+  'Mobility': Car,
+  'Lifestyle & Shopping': Sparkles,
+  'Travel & Experiences': Plane,
+};
 
 export default function MarketplacePage() {
   const { data: offers = [] } = useMarketplaceOffers();
@@ -46,6 +62,15 @@ export default function MarketplacePage() {
     return filtered;
   }, [offers, searchTerm, category, sortBy]);
 
+  // Count offers per category
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    offers.forEach(o => {
+      counts[o.category] = (counts[o.category] || 0) + 1;
+    });
+    return counts;
+  }, [offers]);
+
   const handleActivate = (offer: any) => {
     toast({ 
       title: "Offer Activated! 🎉", 
@@ -55,17 +80,11 @@ export default function MarketplacePage() {
 
   // Get category badge styling
   const getCategoryBadge = (categoryName: string) => {
-    const color = getMarketplaceColor(categoryName);
+    const color = getMarketplaceCategoryColor(categoryName);
     return (
       <Badge 
         variant="outline" 
-        className={cn(
-          "text-xs px-2 border",
-          color.bgLight,
-          color.text,
-          `dark:${color.textDark}`,
-          color.border
-        )}
+        className={cn("text-xs px-2 border", color.bgLight, color.text, color.border)}
       >
         {categoryName}
       </Badge>
@@ -94,13 +113,61 @@ export default function MarketplacePage() {
       {/* Curated Perks Section */}
       <CuratedPerks onActivate={handleActivate} />
 
+      {/* Category Boxes */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium text-muted-foreground">Browse by Category</h3>
+        <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2">
+          {MARKETPLACE_CATEGORIES.map((cat) => {
+            const color = getMarketplaceCategoryColor(cat);
+            const Icon = CATEGORY_ICONS[cat] || ShoppingBag;
+            const count = categoryCounts[cat] || 0;
+            const isSelected = category === cat;
+            
+            return (
+              <button
+                key={cat}
+                onClick={() => setCategory(isSelected ? 'all' : cat)}
+                className={cn(
+                  "flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all duration-200",
+                  "hover:shadow-md hover:-translate-y-0.5",
+                  isSelected 
+                    ? `${color.bgLight} ${color.border} border-2` 
+                    : "bg-card border-border/50 hover:border-border"
+                )}
+              >
+                <div className={cn(
+                  "p-2 rounded-lg transition-colors",
+                  isSelected ? color.bg : color.bgLight
+                )}>
+                  <Icon className={cn("w-4 h-4", isSelected ? "text-white" : color.text)} />
+                </div>
+                <span className={cn(
+                  "text-[10px] font-medium text-center leading-tight",
+                  isSelected ? color.text : "text-muted-foreground"
+                )}>
+                  {cat.split(' & ')[0]}
+                </span>
+                <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">
+                  {count}
+                </Badge>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Browse All Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-display font-semibold flex items-center gap-2">
-            Browse All Offers
+            {category === 'all' ? 'All Offers' : category}
             <ArrowRight className="w-4 h-4 text-muted-foreground" />
           </h2>
+          {category !== 'all' && (
+            <Button variant="ghost" size="sm" onClick={() => setCategory('all')}>
+              Clear Filter
+            </Button>
+          )}
         </div>
 
         {/* Search & Filter Bar */}
@@ -118,19 +185,6 @@ export default function MarketplacePage() {
               </div>
               
               <div className="flex flex-wrap gap-2">
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger className="w-full md:w-44 bg-background">
-                    <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {MARKETPLACE_CATEGORIES.map((c) => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-full md:w-36 bg-background">
                     <SelectValue placeholder="Sort By" />
@@ -169,18 +223,19 @@ export default function MarketplacePage() {
         {viewMode === 'grid' ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {filteredOffers.map((offer, index) => {
-              const categoryColor = getMarketplaceColor(offer.category);
+              const categoryColor = getMarketplaceCategoryColor(offer.category);
               return (
                 <Card 
                   key={offer.id} 
                   className={cn(
                     "benefit-card overflow-hidden group hover:shadow-lg transition-all duration-300 flex flex-col",
-                    `hover:${categoryColor.border}`
                   )}
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
+                  {/* Category color bar */}
+                  <div className={cn("h-1", categoryColor.bg)} />
                   {offer.image_url && (
-                    <div className="h-32 bg-muted overflow-hidden shrink-0 relative">
+                    <div className="h-28 bg-muted overflow-hidden shrink-0 relative">
                       <img 
                         src={offer.image_url} 
                         alt={offer.title} 
@@ -196,10 +251,7 @@ export default function MarketplacePage() {
                     </div>
                   )}
                   <div className="p-4 space-y-2.5 flex flex-col flex-1">
-                    <h3 className={cn(
-                      "font-medium text-sm leading-snug line-clamp-2 transition-colors",
-                      `group-hover:${categoryColor.text}`
-                    )}>
+                    <h3 className="font-medium text-sm leading-snug line-clamp-2 group-hover:text-accent transition-colors">
                       {offer.title}
                     </h3>
                     <p className="text-sm text-muted-foreground">{offer.merchant}</p>
@@ -226,56 +278,61 @@ export default function MarketplacePage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredOffers.map((offer, index) => (
-              <Card 
-                key={offer.id} 
-                className="overflow-hidden group hover:border-accent/30 transition-all"
-                style={{ animationDelay: `${index * 30}ms` }}
-              >
-                <div className="flex items-center gap-4 p-4">
-                  {offer.image_url && (
-                    <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden shrink-0 relative">
-                      <img 
-                        src={offer.image_url} 
-                        alt={offer.title} 
-                        className="w-full h-full object-cover" 
-                      />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className="font-medium text-sm group-hover:text-accent transition-colors">
-                          {offer.title}
-                        </h3>
-                        <p className="text-xs text-muted-foreground mt-0.5">{offer.merchant}</p>
+            {filteredOffers.map((offer, index) => {
+              const categoryColor = getMarketplaceCategoryColor(offer.category);
+              return (
+                <Card 
+                  key={offer.id} 
+                  className="overflow-hidden group hover:border-accent/30 transition-all"
+                  style={{ animationDelay: `${index * 30}ms` }}
+                >
+                  {/* Category color bar */}
+                  <div className={cn("h-1", categoryColor.bg)} />
+                  <div className="flex items-center gap-4 p-4">
+                    {offer.image_url && (
+                      <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden shrink-0 relative">
+                        <img 
+                          src={offer.image_url} 
+                          alt={offer.title} 
+                          className="w-full h-full object-cover" 
+                        />
                       </div>
-                      {offer.discount_percent && (
-                        <Badge className="bg-emerald-500 text-white border-0 shrink-0 font-bold">
-                          {offer.discount_percent}% OFF
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      {getCategoryBadge(offer.category)}
-                      {offer.rating && (
-                        <span className="flex items-center gap-1 text-xs text-amber-500">
-                          <Star className="w-3 h-3 fill-current" />
-                          {offer.rating}
-                        </span>
-                      )}
-                    </div>
-                    {offer.description && (
-                      <p className="text-xs text-muted-foreground mt-2 line-clamp-1">{offer.description}</p>
                     )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <h3 className="font-medium text-sm group-hover:text-accent transition-colors">
+                            {offer.title}
+                          </h3>
+                          <p className="text-xs text-muted-foreground mt-0.5">{offer.merchant}</p>
+                        </div>
+                        {offer.discount_percent && (
+                          <Badge className="bg-emerald-500 text-white border-0 shrink-0 font-bold">
+                            {offer.discount_percent}% OFF
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-2">
+                        {getCategoryBadge(offer.category)}
+                        {offer.rating && (
+                          <span className="flex items-center gap-1 text-xs text-amber-500">
+                            <Star className="w-3 h-3 fill-current" />
+                            {offer.rating}
+                          </span>
+                        )}
+                      </div>
+                      {offer.description && (
+                        <p className="text-xs text-muted-foreground mt-2 line-clamp-1">{offer.description}</p>
+                      )}
+                    </div>
+                    <Button size="sm" className="shrink-0" onClick={() => handleActivate(offer)}>
+                      <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                      Activate
+                    </Button>
                   </div>
-                  <Button size="sm" className="shrink-0" onClick={() => handleActivate(offer)}>
-                    <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                    Activate
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         )}
 

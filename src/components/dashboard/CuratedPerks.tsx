@@ -8,7 +8,7 @@ import {
 import { useProfile, useMarketplaceOffers } from '@/hooks/useSupabaseData';
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { getMarketplaceColor } from '@/lib/colorSystem';
+import { getMarketplaceCategoryColor } from '@/lib/colorUtils';
 
 interface CuratedPerksProps {
   onActivate: (offer: any) => void;
@@ -204,7 +204,7 @@ export function CuratedPerks({ onActivate }: CuratedPerksProps) {
       {/* Curated Offers Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {curatedOffers.map((offer, index) => {
-          const categoryColor = getMarketplaceColor(offer.category);
+          const categoryColor = getMarketplaceCategoryColor(offer.category);
           
           return (
             <Card 
