@@ -591,6 +591,103 @@ export const gradeStructureTemplate: TemplateSection = {
   ],
 };
 
+// Benefit Grade Eligibility Template - for grade-specific benefit configurations
+export const benefitGradeEligibilityTemplate: TemplateSection = {
+  id: 'benefit_grade_eligibility',
+  title: 'Benefit Grade Eligibility',
+  description: 'Configure which benefits are available to which grades, with grade-specific allowances',
+  icon: Shield,
+  tableName: 'benefit_grade_eligibility',
+  category: 'benefits',
+  fields: [
+    { name: 'benefit_code', type: 'String', required: true, description: 'Benefit code', example: 'HOUSING_ALLOW', validation: 'Must exist in benefits' },
+    { name: 'grade', type: 'String', required: true, description: 'Employee grade', example: 'G7', validation: 'Must match grade structure' },
+    { name: 'is_eligible', type: 'Boolean', required: true, description: 'Is this grade eligible for this benefit?', example: 'true', validation: 'true/false - set false to exclude grade' },
+    { name: 'annual_allowance', type: 'Decimal', required: false, description: 'Grade-specific annual allowance (null = use default)', example: '120000.00', validation: 'Positive number or empty' },
+    { name: 'max_claim_per_transaction', type: 'Decimal', required: false, description: 'Max amount per claim for this grade', example: '10000.00', validation: 'Positive number or empty' },
+    { name: 'coverage_percent', type: 'Decimal', required: false, description: 'Coverage percentage for this grade', example: '100', validation: '0-100' },
+    { name: 'waiting_period_days', type: 'Integer', required: false, description: 'Days to wait before eligible', example: '0', validation: 'Positive integer' },
+    { name: 'requires_documentation', type: 'Boolean', required: false, description: 'Requires supporting docs', example: 'true', validation: 'true/false' },
+    { name: 'dependent_coverage', type: 'Enum', required: false, description: 'Family coverage level', example: 'full_family', validation: 'employee_only, employee_spouse, employee_children, full_family' },
+    { name: 'max_dependents', type: 'Integer', required: false, description: 'Max dependents covered', example: '4', validation: 'Positive integer or empty' },
+    { name: 'notes', type: 'Text', required: false, description: 'Special notes for this grade/benefit combo', example: 'Executive housing with relocation support', validation: 'Max 500 chars' },
+  ],
+  notes: [
+    'Use is_eligible=false to exclude specific grades from a benefit',
+    'Leave annual_allowance empty to use the default from benefit policy',
+    'Different grades can have different coverage levels (e.g., G8 gets 100%, G5 gets 80%)',
+    'Some benefits like housing may only be available to senior grades',
+    'Dependent coverage can vary by grade (e.g., only G7+ gets full family coverage)',
+  ],
+};
+
+// Per Diem Rates Template
+export const perDiemRatesTemplate: TemplateSection = {
+  id: 'per_diem_rates',
+  title: 'Per Diem Rates',
+  description: 'Daily travel allowances by destination and grade',
+  icon: Plane,
+  tableName: 'per_diem_rates',
+  category: 'compensation',
+  fields: [
+    { name: 'destination_type', type: 'Enum', required: true, description: 'Type of travel', example: 'international', validation: 'domestic, international' },
+    { name: 'region', type: 'String', required: true, description: 'Destination region', example: 'Europe', validation: 'UAE, GCC, Europe, North America, Asia Pacific, etc.' },
+    { name: 'country', type: 'String', required: false, description: 'Specific country (optional)', example: 'United Kingdom', validation: 'ISO country name' },
+    { name: 'city', type: 'String', required: false, description: 'Specific city for city-specific rates', example: 'London', validation: 'City name' },
+    { name: 'grade', type: 'String', required: true, description: 'Employee grade this rate applies to', example: 'G7', validation: 'Must match grade structure' },
+    { name: 'daily_accommodation', type: 'Decimal', required: true, description: 'Daily accommodation allowance', example: '1000.00', validation: 'Positive number' },
+    { name: 'daily_meals', type: 'Decimal', required: true, description: 'Daily meals allowance', example: '500.00', validation: 'Positive number' },
+    { name: 'daily_incidentals', type: 'Decimal', required: true, description: 'Daily incidentals allowance', example: '250.00', validation: 'Positive number' },
+    { name: 'daily_transport', type: 'Decimal', required: true, description: 'Daily local transport allowance', example: '300.00', validation: 'Positive number' },
+    { name: 'currency', type: 'String', required: true, description: 'Currency for rates', example: 'AED', validation: 'ISO currency code' },
+    { name: 'effective_from', type: 'Date', required: true, description: 'Rate effective from date', example: '2024-01-01', validation: 'YYYY-MM-DD' },
+    { name: 'effective_until', type: 'Date', required: false, description: 'Rate effective until date', example: '2024-12-31', validation: 'YYYY-MM-DD or empty for indefinite' },
+    { name: 'is_active', type: 'Boolean', required: true, description: 'Is rate currently active', example: 'true', validation: 'true/false' },
+    { name: 'notes', type: 'Text', required: false, description: 'Special conditions or notes', example: 'Premium hotels only for client-facing travel', validation: 'Max 500 chars' },
+  ],
+  notes: [
+    'Per diem rates vary by employee grade and destination',
+    'Senior grades typically get higher allowances for premium accommodation',
+    'City-specific rates override regional rates when applicable',
+    'Domestic travel typically has lower or no accommodation allowance',
+    'Rates should be reviewed and updated annually based on cost of living',
+  ],
+};
+
+// Per Diem Claims Template
+export const perDiemClaimsTemplate: TemplateSection = {
+  id: 'per_diem_claims',
+  title: 'Per Diem Claims',
+  description: 'Employee per diem claim submissions for business travel',
+  icon: Plane,
+  tableName: 'per_diem_claims',
+  category: 'compensation',
+  fields: [
+    { name: 'employee_id', type: 'String', required: true, description: 'Employee ID', example: 'EMP-001234', validation: 'Must exist in employees' },
+    { name: 'trip_purpose', type: 'String', required: true, description: 'Business purpose of travel', example: 'Client meeting in London', validation: 'Max 200 chars' },
+    { name: 'destination_type', type: 'Enum', required: true, description: 'Type of travel', example: 'international', validation: 'domestic, international' },
+    { name: 'destination_country', type: 'String', required: true, description: 'Destination country', example: 'United Kingdom', validation: 'ISO country name' },
+    { name: 'destination_city', type: 'String', required: false, description: 'Destination city', example: 'London', validation: 'City name' },
+    { name: 'departure_date', type: 'Date', required: true, description: 'Trip departure date', example: '2024-03-15', validation: 'YYYY-MM-DD' },
+    { name: 'return_date', type: 'Date', required: true, description: 'Trip return date', example: '2024-03-20', validation: 'YYYY-MM-DD, must be >= departure' },
+    { name: 'accommodation_amount', type: 'Decimal', required: true, description: 'Total accommodation claim', example: '5000.00', validation: 'Calculated from rate x days' },
+    { name: 'meals_amount', type: 'Decimal', required: true, description: 'Total meals claim', example: '2500.00', validation: 'Calculated from rate x days' },
+    { name: 'incidentals_amount', type: 'Decimal', required: true, description: 'Total incidentals claim', example: '1250.00', validation: 'Calculated from rate x days' },
+    { name: 'transport_amount', type: 'Decimal', required: true, description: 'Total local transport claim', example: '1500.00', validation: 'Calculated from rate x days' },
+    { name: 'currency', type: 'String', required: true, description: 'Claim currency', example: 'AED', validation: 'ISO currency code' },
+    { name: 'status', type: 'Enum', required: true, description: 'Claim status', example: 'pending', validation: 'pending, approved, rejected, paid' },
+    { name: 'trip_reference', type: 'String', required: false, description: 'Reference to travel booking', example: 'TRV-2024-001234', validation: 'Alphanumeric' },
+    { name: 'receipts_attached', type: 'Boolean', required: false, description: 'Supporting receipts attached', example: 'true', validation: 'true/false' },
+  ],
+  notes: [
+    'Per diem claims are calculated based on employee grade and destination',
+    'Claims can be submitted before or after travel',
+    'Approved claims are typically paid with next salary cycle',
+    'Receipts may be required for audit purposes',
+    'Trip reference links to corporate travel booking system',
+  ],
+};
+
 // All templates organized by category
 export const allTemplates: TemplateSection[] = [
   organizationSetupTemplate,
@@ -601,7 +698,10 @@ export const allTemplates: TemplateSection[] = [
   dependentsDataTemplate,
   benefitsPolicyTemplate,
   benefitEntitlementTemplate,
+  benefitGradeEligibilityTemplate,
   leaveBalanceTemplate,
+  perDiemRatesTemplate,
+  perDiemClaimsTemplate,
   vendorDataTemplate,
   marketplaceOffersTemplate,
   healthProvidersTemplate,
@@ -612,8 +712,8 @@ export const allTemplates: TemplateSection[] = [
 export const templateCategories = {
   organization: { label: 'Organization', templates: ['organization_setup', 'grade_structure'] },
   employees: { label: 'Employees', templates: ['employee_data', 'employment_data', 'dependents_data'] },
-  compensation: { label: 'Compensation', templates: ['salary_data'] },
-  benefits: { label: 'Benefits Policy', templates: ['benefits_policy', 'benefit_entitlement'] },
+  compensation: { label: 'Compensation', templates: ['salary_data', 'per_diem_rates', 'per_diem_claims'] },
+  benefits: { label: 'Benefits Policy', templates: ['benefits_policy', 'benefit_entitlement', 'benefit_grade_eligibility'] },
   leave: { label: 'Leave & Time Off', templates: ['leave_balance'] },
   vendors: { label: 'Vendors', templates: ['vendor_data'] },
   marketplace: { label: 'Marketplace', templates: ['marketplace_offers'] },

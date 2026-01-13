@@ -10,6 +10,7 @@ import {
 import { BENEFIT_TYPE_COLORS } from '@/lib/constants';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
 import { BenefitActionButtons } from '@/components/employee/BenefitActionButtons';
+import PerDiemWidget from '@/components/employee/PerDiemWidget';
 import { DateRangeFilter, BenefitsDrillDownSheet } from '@/components/dashboard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CompensationGrid } from '@/components/ui/compensation-summary-card';
@@ -321,6 +322,9 @@ export default function EmployeeDashboard() {
         </div>
       </div>
       )}
+
+      {/* Per Diem Claims Widget */}
+      <PerDiemWidget />
 
       {/* Satisfaction Survey Section */}
       {showSatisfactionSurvey && (
