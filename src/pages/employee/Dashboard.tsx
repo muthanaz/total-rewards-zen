@@ -8,8 +8,7 @@ import {
   DollarSign, Home, GraduationCap, 
   Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote, AlertCircle, CheckCircle2, Clock, Award
 } from 'lucide-react';
-import { BENEFIT_CATEGORIES, getRAGStatus } from '@/lib/benefitCategories';
-import { getRAGIndicator, getProgressColorClass } from '@/lib/colorUtils';
+import { BENEFIT_CATEGORIES, getRAGStatus, BenefitCategoryKey } from '@/lib/benefitCategories';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
 import { BenefitActionButtons } from '@/components/employee/BenefitActionButtons';
 import { BenefitsDrillDownSheet, SmartInsights } from '@/components/dashboard';
@@ -38,14 +37,14 @@ const salaryData = {
 type BenefitValueType = 'guaranteed' | 'employer_cost' | 'performance' | 'budget';
 
 const benefits = [
-  { name: 'Housing Allowance', nameKey: 'benefit.housing', icon: Home, value: 120000, utilized: 120000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'home_living', route: '/employee/housing', category: 'housing', group: 'allowances' as BenefitGroupKey, claimable: true, bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'], bulletsAr: ['يُدفع شهرياً مع الراتب', 'يمكن استخدامه للإيجار أو الرهن العقاري'] },
-  { name: 'Education Allowance', nameKey: 'benefit.education', icon: GraduationCap, value: 60000, utilized: 42000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'family_parenting', route: '/employee/schooling', category: 'education', group: 'allowances' as BenefitGroupKey, claimable: true, bullets: ['Per child up to 18 years', 'Covers tuition fees only'], bulletsAr: ['لكل طفل حتى ١٨ عاماً', 'يغطي الرسوم الدراسية فقط'] },
-  { name: 'Transport & Mobility', nameKey: 'benefit.transport', icon: Car, value: 39000, utilized: 33000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'mobility', route: '/employee/transport', category: 'transport', group: 'allowances' as BenefitGroupKey, claimable: true, bullets: ['Monthly allowance: AED 2,000', 'Annual flight tickets included', 'Covers fuel, parking & tickets'], bulletsAr: ['بدل شهري: ٢٠٠٠ درهم', 'تذاكر الطيران السنوية مشمولة', 'يغطي الوقود والمواقف والتذاكر'] },
-  { name: 'Health Insurance', nameKey: 'benefit.health', icon: Heart, value: 45000, utilized: 12500, type: 'health_protection', valueType: 'employer_cost' as BenefitValueType, area: 'health', route: '/employee/health', category: 'health', group: 'health_protection' as BenefitGroupKey, claimable: true, bullets: ['Includes dental and optical', 'Covers spouse and children'], bulletsAr: ['يشمل طب الأسنان والبصريات', 'يغطي الزوج/الزوجة والأطفال'] },
-  { name: 'Wellbeing Program', nameKey: 'benefit.wellbeing', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', valueType: 'budget' as BenefitValueType, area: 'health', route: '/employee/wellbeing', category: 'wellbeing', group: 'health_protection' as BenefitGroupKey, claimable: true, bullets: ['Gym membership covered', 'Wellness app subscription'], bulletsAr: ['عضوية النادي الرياضي مغطاة', 'اشتراك تطبيق العافية'] },
-  { name: 'Financial Planning', nameKey: 'benefit.financial', icon: PiggyBank, value: 36000, utilized: 18000, type: 'wealth_ownership', valueType: 'budget' as BenefitValueType, area: 'money', route: '/employee/financial', category: 'financial', group: 'financial_rewards' as BenefitGroupKey, claimable: false, bullets: ['5% employer match', 'Multiple fund options'], bulletsAr: ['مطابقة ٥٪ من صاحب العمل', 'خيارات صناديق متعددة'] },
-  { name: 'Annual Bonus', nameKey: 'benefit.bonus', icon: Award, value: 70000, utilized: 0, type: 'cash_allowances', valueType: 'performance' as BenefitValueType, area: 'money', route: '/employee/bonus', category: 'rewards', group: 'financial_rewards' as BenefitGroupKey, claimable: false, bullets: ['Performance-based (0-200%)', 'Paid annually in March', 'Target: 2 months base salary'], bulletsAr: ['مبني على الأداء (٠-٢٠٠٪)', 'يُدفع سنوياً في مارس', 'الهدف: راتب شهرين أساسي'] },
-  { name: 'Learning & Development', nameKey: 'benefit.learning', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', valueType: 'budget' as BenefitValueType, area: 'career', route: '/employee/learning', category: 'learning', group: 'financial_rewards' as BenefitGroupKey, claimable: true, bullets: ['Courses and certifications', 'Pre-approval required'], bulletsAr: ['الدورات والشهادات', 'يتطلب موافقة مسبقة'] },
+  { name: 'Housing Allowance', nameKey: 'benefit.housing', icon: Home, value: 120000, utilized: 120000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'home_living', route: '/employee/housing', category: 'housing' as const, claimable: true, bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'], bulletsAr: ['يُدفع شهرياً مع الراتب', 'يمكن استخدامه للإيجار أو الرهن العقاري'] },
+  { name: 'Education Allowance', nameKey: 'benefit.education', icon: GraduationCap, value: 60000, utilized: 42000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'family_parenting', route: '/employee/schooling', category: 'education' as const, claimable: true, bullets: ['Per child up to 18 years', 'Covers tuition fees only'], bulletsAr: ['لكل طفل حتى ١٨ عاماً', 'يغطي الرسوم الدراسية فقط'] },
+  { name: 'Transport & Mobility', nameKey: 'benefit.transport', icon: Car, value: 39000, utilized: 33000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'mobility', route: '/employee/transport', category: 'transport' as const, claimable: true, bullets: ['Monthly allowance: AED 2,000', 'Annual flight tickets included', 'Covers fuel, parking & tickets'], bulletsAr: ['بدل شهري: ٢٠٠٠ درهم', 'تذاكر الطيران السنوية مشمولة', 'يغطي الوقود والمواقف والتذاكر'] },
+  { name: 'Health Insurance', nameKey: 'benefit.health', icon: Heart, value: 45000, utilized: 12500, type: 'health_protection', valueType: 'employer_cost' as BenefitValueType, area: 'health', route: '/employee/health', category: 'health' as const, claimable: true, bullets: ['Includes dental and optical', 'Covers spouse and children'], bulletsAr: ['يشمل طب الأسنان والبصريات', 'يغطي الزوج/الزوجة والأطفال'] },
+  { name: 'Wellbeing Program', nameKey: 'benefit.wellbeing', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', valueType: 'budget' as BenefitValueType, area: 'health', route: '/employee/wellbeing', category: 'wellbeing' as const, claimable: true, bullets: ['Gym membership covered', 'Wellness app subscription'], bulletsAr: ['عضوية النادي الرياضي مغطاة', 'اشتراك تطبيق العافية'] },
+  { name: 'Financial Planning', nameKey: 'benefit.financial', icon: PiggyBank, value: 36000, utilized: 18000, type: 'wealth_ownership', valueType: 'budget' as BenefitValueType, area: 'money', route: '/employee/financial', category: 'financial' as const, claimable: false, bullets: ['5% employer match', 'Multiple fund options'], bulletsAr: ['مطابقة ٥٪ من صاحب العمل', 'خيارات صناديق متعددة'] },
+  { name: 'Annual Bonus', nameKey: 'benefit.bonus', icon: Award, value: 70000, utilized: 0, type: 'cash_allowances', valueType: 'performance' as BenefitValueType, area: 'money', route: '/employee/bonus', category: 'rewards' as const, claimable: false, bullets: ['Performance-based (0-200%)', 'Paid annually in March', 'Target: 2 months base salary'], bulletsAr: ['مبني على الأداء (٠-٢٠٠٪)', 'يُدفع سنوياً في مارس', 'الهدف: راتب شهرين أساسي'] },
+  { name: 'Learning & Development', nameKey: 'benefit.learning', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', valueType: 'budget' as BenefitValueType, area: 'career', route: '/employee/learning', category: 'learning' as const, claimable: true, bullets: ['Courses and certifications', 'Pre-approval required'], bulletsAr: ['الدورات والشهادات', 'يتطلب موافقة مسبقة'] },
 ];
 
 export default function EmployeeDashboard() {
@@ -136,8 +135,8 @@ export default function EmployeeDashboard() {
 
   // Helper to get RAG badge for utilization
   const getRAGBadge = (utilization: number) => {
-    const rag = getRAGIndicator(utilization);
-    const Icon = rag.icon === 'check' ? CheckCircle2 : rag.icon === 'clock' ? Clock : AlertCircle;
+    const rag = getRAGStatus(utilization);
+    const Icon = rag.status === 'green' ? CheckCircle2 : rag.status === 'amber' ? Clock : AlertCircle;
     return (
       <Badge 
         variant="outline" 
@@ -273,8 +272,8 @@ export default function EmployeeDashboard() {
             {benefits.map((benefit, index) => {
               const utilization = Math.round((benefit.utilized / benefit.value) * 100);
               const remaining = benefit.value - benefit.utilized;
-              const group = BENEFIT_GROUPS[benefit.group];
-              const rag = getRAGIndicator(utilization);
+              const cat = BENEFIT_CATEGORIES[benefit.category];
+              const rag = getRAGStatus(utilization);
               
               return (
                 <Card 
@@ -283,30 +282,18 @@ export default function EmployeeDashboard() {
                   style={{ animationDelay: `${index * 30}ms` }}
                   onClick={() => handleBenefitClick(benefit.name)}
                 >
-                  {/* Group color bar at top */}
-                  <div className={cn("h-1", group.bgClass)} />
+                  {/* Benefit color bar at top */}
+                  <div className={cn("h-1", cat.bgClass)} />
                   
                   <div className="p-3 flex flex-col flex-1">
                     <div className={cn("flex items-start gap-2", isRTL && "flex-row-reverse")}>
-                      <div className={cn("p-1.5 rounded-lg shrink-0", group.bgLightClass)}>
-                        <benefit.icon className={cn("w-4 h-4", group.textClass)} />
+                      <div className={cn("p-1.5 rounded-lg shrink-0", cat.bgLightClass)}>
+                        <benefit.icon className={cn("w-4 h-4", cat.textClass)} />
                       </div>
                       <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
                         <h3 className="font-medium text-xs truncate group-hover:text-accent transition-colors leading-tight">
                           {t(benefit.nameKey)}
                         </h3>
-                        {/* Group badge */}
-                        <Badge 
-                          variant="outline" 
-                          className={cn(
-                            "text-[9px] px-1.5 py-0 h-4 mt-1",
-                            group.bgLightClass, 
-                            group.textClass, 
-                            group.borderClass
-                          )}
-                        >
-                          {isRTL ? BENEFIT_GROUPS[benefit.group].labelAr : BENEFIT_GROUPS[benefit.group].label}
-                        </Badge>
                       </div>
                     </div>
                     
@@ -320,7 +307,7 @@ export default function EmployeeDashboard() {
                       {/* Progress bar with RAG color */}
                       <Progress 
                         value={utilization} 
-                        className={cn("h-1.5", getProgressColorClass(utilization))}
+                        className={cn("h-1.5", rag.progressClass)}
                       />
                       
                       {/* Remaining */}

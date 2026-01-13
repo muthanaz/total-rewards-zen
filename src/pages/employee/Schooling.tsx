@@ -151,17 +151,17 @@ export default function SchoolingPage() {
     }
   };
 
-  const allowancesGroup = BENEFIT_GROUPS.allowances;
-  const rag = getRAGIndicator(utilizationPercent);
+  const educationCat = BENEFIT_CATEGORIES.education;
+  const rag = getRAGStatus(utilizationPercent);
 
   return (
     <div className="space-y-6">
-      {/* Header with group color */}
+      {/* Header with benefit color */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-            <div className={cn("p-2 rounded-xl", allowancesGroup.bgLightClass)}>
-              <GraduationCap className={cn("w-6 h-6", allowancesGroup.textClass)} />
+            <div className={cn("p-2 rounded-xl", educationCat.bgLightClass)}>
+              <GraduationCap className={cn("w-6 h-6", educationCat.textClass)} />
             </div>
             Education Allowance
           </h1>
@@ -176,8 +176,8 @@ export default function SchoolingPage() {
         </Badge>
       </div>
       
-      {/* Group color bar */}
-      <div className={cn("h-1 rounded-full", allowancesGroup.bgClass)} />
+      {/* Benefit color bar */}
+      <div className={cn("h-1 rounded-full", educationCat.bgClass)} />
 
       {/* How It Works Card */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
