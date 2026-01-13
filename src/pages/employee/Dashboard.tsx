@@ -198,8 +198,26 @@ export default function EmployeeDashboard() {
     console.log(`Exporting data as ${format}`);
   };
 
-  // Primary insight stats for the top section - streamlined to avoid redundancy
-  const insightStats = [
+// All 8 metrics in specified order - compact design
+  const allMetrics = [
+    { 
+      icon: DollarSign, 
+      value: formatCurrency(salaryData.monthlySalary), 
+      label: isRTL ? 'الراتب الشهري' : 'Monthly Salary',
+      formula: isRTL ? 'الراتب الأساسي / ١٢' : 'Base salary / 12',
+      dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR System',
+      variant: 'primary' as const,
+      secondaryValue: `${isRTL ? 'سنوي: ' : 'Annual: '}${formatCurrency(salaryData.annualSalary)}`,
+    },
+    { 
+      icon: Gift, 
+      value: formatCurrency(calculatedMetrics.totalBenefitValue), 
+      label: isRTL ? 'قيمة المزايا السنوية' : 'Annual Benefits Value',
+      formula: isRTL ? 'مجموع جميع قيم المزايا' : 'Sum of all benefit values',
+      dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
+      variant: 'info' as const,
+      secondaryValue: `${benefits.length} ${isRTL ? 'مزايا' : 'benefits'}`,
+    },
     { 
       icon: Wallet, 
       value: formatCurrency(calculatedMetrics.totalCompensation), 
@@ -207,8 +225,6 @@ export default function EmployeeDashboard() {
       formula: isRTL ? 'الراتب السنوي + قيمة المزايا' : 'Annual Salary + Benefits Value',
       dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR System',
       variant: 'primary' as const,
-      progress: 100,
-      trend: { current: calculatedMetrics.totalCompensation, previous: calculatedMetrics.totalCompensation * 0.97 },
       secondaryValue: null,
     },
     { 
@@ -218,9 +234,7 @@ export default function EmployeeDashboard() {
       formula: isRTL ? 'مجموع جميع المزايا المستخدمة' : 'Sum of all utilized benefits',
       dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
       variant: 'utilized' as const,
-      progress: calculatedMetrics.utilizationPercent,
-      trend: { current: calculatedMetrics.totalUtilized, previous: calculatedMetrics.lastMonthUtilized },
-      secondaryValue: `${calculatedMetrics.utilizationPercent}${isRTL ? '٪' : '%'} ${isRTL ? 'نسبة الاستخدام' : 'utilized'}`,
+      secondaryValue: `${calculatedMetrics.utilizationPercent}${isRTL ? '٪' : '%'} ${isRTL ? 'مستخدم' : 'utilized'}`,
     },
     { 
       icon: Sparkles, 
@@ -229,8 +243,6 @@ export default function EmployeeDashboard() {
       formula: isRTL ? 'إجمالي المزايا - المستخدم' : 'Total Benefits - Utilized',
       dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
       variant: 'remaining' as const,
-      progress: 100 - calculatedMetrics.utilizationPercent,
-      trend: { current: calculatedMetrics.totalRemaining, previous: calculatedMetrics.totalRemaining * 1.05 },
       secondaryValue: `${100 - calculatedMetrics.utilizationPercent}${isRTL ? '٪' : '%'} ${isRTL ? 'متبقي' : 'remaining'}`,
     },
     { 
@@ -240,17 +252,26 @@ export default function EmployeeDashboard() {
       formula: isRTL ? 'المزايا / إجمالي التعويضات' : 'Benefits Value / Total Compensation',
       dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR System',
       variant: 'utilization' as const,
-      progress: calculatedMetrics.benefitsAsPercentOfComp,
-      trend: { current: calculatedMetrics.benefitsAsPercentOfComp, previous: calculatedMetrics.benefitsAsPercentOfComp - 2 },
-      secondaryValue: null,
+      secondaryValue: isRTL ? 'مقياس رئيسي' : 'Key metric',
     },
-  ];
-
-  // Secondary metrics - streamlined (removed redundant fully utilized / opportunities)
-  const secondaryMetrics = [
-    { icon: DollarSign, value: formatCurrency(salaryData.monthlySalary), label: t('employee.dashboard.monthlySalary'), formula: isRTL ? 'الراتب الأساسي / ١٢' : 'Base salary / 12', source: isRTL ? 'نظام الموارد البشرية' : 'HR System', trend: null },
-    { icon: Calendar, value: `${salaryData.leaveBalance} ${t('common.days')}`, label: t('employee.dashboard.leaveBalance'), formula: isRTL ? 'الإجمالي - المستخدم' : 'Total - Used', source: isRTL ? 'نظام الإجازات' : 'Leave System', trend: { current: salaryData.leaveBalance, previous: 24 } },
-    { icon: Zap, value: `${salaryData.activatedItems}`, label: t('employee.dashboard.activatedPerks'), formula: isRTL ? 'عدد التفعيلات' : 'Count of activations', source: isRTL ? 'السوق' : 'Marketplace', trend: { current: salaryData.activatedItems, previous: 4 } },
+    { 
+      icon: Calendar, 
+      value: `${salaryData.leaveBalance} ${isRTL ? 'يوم' : 'days'}`, 
+      label: isRTL ? 'رصيد الإجازات' : 'Leave Balance',
+      formula: isRTL ? 'الإجمالي - المستخدم' : 'Total - Used',
+      dataSource: isRTL ? 'نظام الإجازات' : 'Leave System',
+      variant: 'remaining' as const,
+      secondaryValue: `${salaryData.leaveUsed} ${isRTL ? 'مستخدم' : 'used'}`,
+    },
+    { 
+      icon: Zap, 
+      value: `${salaryData.activatedItems}`, 
+      label: isRTL ? 'الامتيازات المفعّلة' : 'Activated Perks',
+      formula: isRTL ? 'عدد التفعيلات' : 'Count of activations',
+      dataSource: isRTL ? 'السوق' : 'Marketplace',
+      variant: 'info' as const,
+      secondaryValue: isRTL ? 'هذا الشهر' : 'This month',
+    },
   ];
   
   return (
@@ -271,9 +292,9 @@ export default function EmployeeDashboard() {
         />
       </div>
 
-      {/* Primary Insight Stats - New Enhanced Design */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {insightStats.map((stat, index) => (
+      {/* All 8 Metrics Grid - Compact Design */}
+      <div className="grid grid-cols-4 lg:grid-cols-8 gap-2">
+        {allMetrics.map((stat, index) => (
           <SummaryStatsCard
             key={stat.label}
             icon={stat.icon}
@@ -282,171 +303,127 @@ export default function EmployeeDashboard() {
             formula={stat.formula}
             dataSource={stat.dataSource}
             variant={stat.variant}
-            progress={stat.progress}
             index={index}
             secondaryValue={stat.secondaryValue}
+            compact
           />
         ))}
       </div>
 
-      {/* Secondary Metrics Grid */}
-      <div className="grid grid-cols-3 gap-3">
-        {secondaryMetrics.map((metric, index) => (
-          <Card 
-            key={metric.label} 
-            className="metric-card group hover:border-accent/30 transition-all duration-300 h-full"
-            style={{ animationDelay: `${index * 50}ms` }}
-          >
-            <div className={cn(
-              "flex items-start justify-between gap-2",
-              isRTL && "flex-row-reverse"
-            )}>
-              <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/15 transition-colors shrink-0">
-                <metric.icon className="w-4 h-4 text-accent" />
-              </div>
-              <InfoTooltip formula={metric.formula} dataSource={metric.source} lastUpdated={isRTL ? 'يناير ٢٠٢٦' : 'Jan 2026'} />
-            </div>
-            <p className={cn("text-lg font-bold mt-3 tracking-tight truncate", isRTL && "text-right")}>{metric.value}</p>
-            <p className={cn("text-xs text-muted-foreground mt-1", isRTL && "text-right")}>{metric.label}</p>
-          </Card>
-        ))}
-      </div>
-
-      {/* Benefit Highlights - Moved to top */}
-      <Card className="border-border/50 bg-gradient-to-b from-card to-card/80">
-        <CardHeader className={cn("pb-3 border-b border-border/30", isRTL && "text-right")}>
-          <CardTitle className="text-base font-display font-semibold">{t('employee.dashboard.benefitHighlights')}</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div 
-              className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 cursor-pointer hover:border-emerald-500/40 hover:shadow-md transition-all group"
-              onClick={() => handleHighlightClick('fully-utilized')}
-            >
-              <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <p className="text-sm font-semibold text-emerald-600">{t('employee.dashboard.fullyUtilized')}</p>
-                </div>
-                <ChevronIcon className={cn(
-                  "w-4 h-4 text-emerald-500 opacity-0 group-hover:opacity-100 transition-all",
-                  !isRTL && "group-hover:translate-x-0.5",
-                  isRTL && "group-hover:-translate-x-0.5"
-                )} />
-              </div>
-              <p className={cn("text-xs text-muted-foreground mt-2", isRTL && "text-right")}>
-                {benefits.filter(b => (b.utilized / b.value) >= 1).length} {t('employee.dashboard.benefitsAt100')}
-              </p>
-            </div>
-            <div 
-              className="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20 cursor-pointer hover:border-amber-500/40 hover:shadow-md transition-all group"
-              onClick={() => handleHighlightClick('room-to-use')}
-            >
-              <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                  <div className="w-2 h-2 rounded-full bg-amber-500" />
-                  <p className="text-sm font-semibold text-amber-600">{t('employee.dashboard.roomToUse')}</p>
-                </div>
-                <ChevronIcon className={cn(
-                  "w-4 h-4 text-amber-500 opacity-0 group-hover:opacity-100 transition-all",
-                  !isRTL && "group-hover:translate-x-0.5",
-                  isRTL && "group-hover:-translate-x-0.5"
-                )} />
-              </div>
-              <p className={cn("text-xs text-muted-foreground mt-2", isRTL && "text-right")}>
-                {benefits.filter(b => (b.utilized / b.value) < 1).length} {t('employee.dashboard.benefitsWithRemaining')}
-              </p>
-            </div>
-            <div className="p-4 rounded-xl bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20">
-              <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                <div className="w-2 h-2 rounded-full bg-accent" />
-                <p className="text-sm font-semibold text-accent">{t('employee.dashboard.thisMonth')}</p>
-              </div>
-              <p className={cn("text-xs text-muted-foreground mt-2", isRTL && "text-right")}>
-                {isRTL ? '٣ تفعيلات امتيازات، ٢ مطالبات تمت الموافقة عليها' : '3 perk activations, 2 claims approved'}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Benefits Grid - Moved up, clickable */}
+      {/* Benefits Grid - Your Benefits */}
       <div>
-        <div className={cn("flex items-center justify-between mb-4", isRTL && "flex-row-reverse")}>
-          <h2 className="text-lg font-display font-semibold">{t('employee.dashboard.yourBenefits')}</h2>
+        <div className={cn("flex items-center justify-between mb-3", isRTL && "flex-row-reverse")}>
+          <h2 className="text-base font-display font-semibold">{t('employee.dashboard.yourBenefits')}</h2>
           <Button 
             variant="ghost" 
             size="sm" 
-            className={cn("text-accent hover:text-accent/80", isRTL && "flex-row-reverse")}
+            className={cn("text-accent hover:text-accent/80 h-7 text-xs", isRTL && "flex-row-reverse")}
             onClick={() => navigate('/employee/benefits')}
           >
             {t('common.seeAll')}
-            <ChevronIcon className={cn("w-4 h-4", isRTL ? "mr-1" : "ml-1")} />
+            <ChevronIcon className={cn("w-3 h-3", isRTL ? "mr-1" : "ml-1")} />
           </Button>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
           {benefits.map((benefit, index) => {
             const utilization = Math.round((benefit.utilized / benefit.value) * 100);
             const remaining = benefit.value - benefit.utilized;
             const isFullyUsed = utilization >= 100;
-            const bulletList = isRTL ? benefit.bulletsAr : benefit.bullets;
             
             return (
               <Card 
                 key={benefit.name} 
-                className="benefit-card group cursor-pointer hover:border-accent/40 hover:shadow-md transition-all duration-300 flex flex-col"
-                style={{ animationDelay: `${index * 50}ms` }}
+                className="benefit-card group cursor-pointer hover:border-accent/40 hover:shadow-sm transition-all duration-200 flex flex-col p-2.5"
+                style={{ animationDelay: `${index * 30}ms` }}
                 onClick={() => handleBenefitClick(benefit.name)}
               >
-                <div className={cn("flex items-start gap-2.5", isRTL && "flex-row-reverse")}>
-                  <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors shrink-0">
-                    <benefit.icon className="w-4 h-4 text-accent" />
+                <div className={cn("flex items-start gap-2", isRTL && "flex-row-reverse")}>
+                  <div className="p-1.5 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors shrink-0">
+                    <benefit.icon className="w-3 h-3 text-accent" />
                   </div>
                   <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
-                    <h3 className="font-medium text-sm truncate group-hover:text-accent transition-colors leading-tight">
+                    <h3 className="font-medium text-xs truncate group-hover:text-accent transition-colors leading-tight">
                       {t(benefit.nameKey)}
                     </h3>
-                    <span className={`${BENEFIT_TYPE_COLORS[benefit.type]} mt-1 inline-block`}>
+                    <span className={`${BENEFIT_TYPE_COLORS[benefit.type]} text-[9px]`}>
                       {t(`benefit.${benefit.type}`)}
                     </span>
                   </div>
-                  <ChevronIcon className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5" />
+                  <ChevronIcon className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                 </div>
                 
-                <div className="mt-3 space-y-1.5 flex-1">
-                  <div className={cn("flex justify-between text-xs", isRTL && "flex-row-reverse")}>
-                    <span className="text-muted-foreground">{t('common.utilized')}</span>
-                    <span className="font-semibold">{formatCurrency(benefit.utilized)}</span>
+                <div className="mt-2 space-y-1 flex-1">
+                  <div className={cn("flex justify-between text-[10px]", isRTL && "flex-row-reverse")}>
+                    <span className="text-muted-foreground">{formatCurrency(benefit.utilized)}</span>
+                    <span className={isFullyUsed ? 'text-emerald-600 font-semibold' : 'font-medium'}>{utilization}%</span>
                   </div>
                   <Progress 
                     value={utilization} 
-                    className={`h-1.5 ${isFullyUsed ? '[&>div]:bg-emerald-500' : '[&>div]:bg-accent'}`}
+                    className={`h-1 ${isFullyUsed ? '[&>div]:bg-emerald-500' : '[&>div]:bg-accent'}`}
                   />
-                  <div className={cn("flex justify-between text-[10px] text-muted-foreground", isRTL && "flex-row-reverse")}>
-                    <span>{t('employee.dashboard.remaining')}: {formatCurrency(remaining)}</span>
-                    <span className={isFullyUsed ? 'text-emerald-600 font-medium' : ''}>{utilization}{isRTL ? '٪' : '%'}</span>
-                  </div>
+                  <p className={cn("text-[9px] text-muted-foreground", isRTL && "text-right")}>
+                    {t('employee.dashboard.remaining')}: {formatCurrency(remaining)}
+                  </p>
                 </div>
-                
-                <ul className={cn("mt-3 space-y-1 pt-2 border-t border-border/50", isRTL && "text-right")}>
-                  {bulletList.map((bullet, i) => (
-                    <li key={i} className={cn(
-                      "text-[10px] text-muted-foreground flex items-start gap-1.5 leading-tight",
-                      isRTL && "flex-row-reverse"
-                    )}>
-                      <span className="text-accent mt-0.5 text-[8px]">●</span>
-                      {bullet}
-                    </li>
-                  ))}
-                </ul>
               </Card>
             );
           })}
         </div>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* Benefit Highlights - Now below Your Benefits */}
+      <div className="grid grid-cols-3 gap-2">
+        <div 
+          className="p-3 rounded-lg bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 cursor-pointer hover:border-emerald-500/40 hover:shadow-sm transition-all group"
+          onClick={() => handleHighlightClick('fully-utilized')}
+        >
+          <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+            <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <p className="text-xs font-semibold text-emerald-600">{t('employee.dashboard.fullyUtilized')}</p>
+            </div>
+            <ChevronIcon className={cn(
+              "w-3 h-3 text-emerald-500 opacity-0 group-hover:opacity-100 transition-all",
+              !isRTL && "group-hover:translate-x-0.5",
+              isRTL && "group-hover:-translate-x-0.5"
+            )} />
+          </div>
+          <p className={cn("text-[10px] text-muted-foreground mt-1", isRTL && "text-right")}>
+            {benefits.filter(b => (b.utilized / b.value) >= 1).length} {t('employee.dashboard.benefitsAt100')}
+          </p>
+        </div>
+        <div 
+          className="p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20 cursor-pointer hover:border-amber-500/40 hover:shadow-sm transition-all group"
+          onClick={() => handleHighlightClick('room-to-use')}
+        >
+          <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+            <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+              <p className="text-xs font-semibold text-amber-600">{t('employee.dashboard.roomToUse')}</p>
+            </div>
+            <ChevronIcon className={cn(
+              "w-3 h-3 text-amber-500 opacity-0 group-hover:opacity-100 transition-all",
+              !isRTL && "group-hover:translate-x-0.5",
+              isRTL && "group-hover:-translate-x-0.5"
+            )} />
+          </div>
+          <p className={cn("text-[10px] text-muted-foreground mt-1", isRTL && "text-right")}>
+            {benefits.filter(b => (b.utilized / b.value) < 1).length} {t('employee.dashboard.benefitsWithRemaining')}
+          </p>
+        </div>
+        <div className="p-3 rounded-lg bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20">
+          <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
+            <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+            <p className="text-xs font-semibold text-accent">{t('employee.dashboard.thisMonth')}</p>
+          </div>
+          <p className={cn("text-[10px] text-muted-foreground mt-1", isRTL && "text-right")}>
+            {isRTL ? '٣ تفعيلات، ٢ مطالبات' : '3 activations, 2 claims'}
+          </p>
+        </div>
+      </div>
+
+      {/* Charts Section - More compact */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Utilization by Benefit Type - clickable bars */}
         <ChartContainer 
           title={t('employee.dashboard.utilizationByType')}
@@ -460,33 +437,31 @@ export default function EmployeeDashboard() {
             primaryLabel={isRTL ? 'المستخدم' : 'Utilized'}
             secondaryLabel={isRTL ? 'الإجمالي المخصص' : 'Total Allocated'}
             formatValue={formatCurrencyShort}
-            height={280}
+            height={220}
             gradientId="employeeBar"
             showLegend={true}
             onBarClick={handleBarClick}
             interactive={true}
           />
-          <p className={cn("text-xs text-muted-foreground text-center mt-2", isRTL && "text-right")}>
+          <p className={cn("text-[10px] text-muted-foreground text-center mt-1", isRTL && "text-right")}>
             {t('employee.dashboard.clickBarDetails')}
           </p>
         </ChartContainer>
 
-        {/* Radar Chart - Moved here to replace donut */}
+        {/* Radar Chart */}
         <ChartContainer 
           title={t('employee.dashboard.benefitComparison')}
           formula={isRTL ? 'استخدامك مقابل متوسط الشركة لكل مزايا' : 'Your utilization vs company average per benefit'}
           dataSource={isRTL ? 'نظام المزايا' : 'Benefits System'}
         >
-          <div className="pt-2">
-            <AnimatedRadarChart
-              data={benefitRadarData}
-              height={280}
-              showSecondary={true}
-              primaryLabel={t('employee.dashboard.yourUtilization')}
-              secondaryLabel={t('employee.dashboard.companyAvg')}
-              showLegend={true}
-            />
-          </div>
+          <AnimatedRadarChart
+            data={benefitRadarData}
+            height={220}
+            showSecondary={true}
+            primaryLabel={t('employee.dashboard.yourUtilization')}
+            secondaryLabel={t('employee.dashboard.companyAvg')}
+            showLegend={true}
+          />
         </ChartContainer>
       </div>
 

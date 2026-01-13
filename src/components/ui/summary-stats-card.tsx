@@ -18,6 +18,7 @@ interface SummaryStatsCardProps {
   className?: string;
   index?: number;
   secondaryValue?: string | null;
+  compact?: boolean;
 }
 
 const variantStyles: Record<CardVariant, { bg: string; iconBg: string; iconColor: string; valueColor: string; border: string; glow: string }> = {
@@ -82,22 +83,24 @@ export function SummaryStatsCard({
   className,
   index = 0,
   secondaryValue,
+  compact = false,
 }: SummaryStatsCardProps) {
   const styles = variantStyles[variant];
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      initial={{ opacity: 0, y: 10, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ 
-        duration: 0.4, 
-        delay: index * 0.1,
+        duration: 0.3, 
+        delay: index * 0.03,
         ease: [0.25, 0.46, 0.45, 0.94]
       }}
     >
       <Card
         className={cn(
-          'relative overflow-hidden rounded-xl p-5 transition-all duration-300 shadow-sm hover:shadow-lg dark:shadow-none dark:hover:shadow-lg dark:hover:shadow-black/20',
+          'relative overflow-hidden rounded-lg transition-all duration-300 shadow-sm hover:shadow-md dark:shadow-none dark:hover:shadow-md dark:hover:shadow-black/20',
+          compact ? 'p-2.5' : 'p-4',
           styles.bg,
           styles.border,
           className
@@ -105,61 +108,72 @@ export function SummaryStatsCard({
       >
         {/* Decorative corner accent with glow effect */}
         <div className={cn(
-          'absolute top-0 right-0 w-24 h-24 opacity-[0.08] dark:opacity-[0.15] -translate-y-1/2 translate-x-1/2 rounded-full blur-2xl',
-          styles.glow,
-        )} />
-        <div className={cn(
-          'absolute top-0 right-0 w-16 h-16 opacity-[0.04] dark:opacity-[0.08] -translate-y-1/3 translate-x-1/3 rounded-full',
+          'absolute top-0 right-0 opacity-[0.06] dark:opacity-[0.12] -translate-y-1/2 translate-x-1/2 rounded-full blur-xl',
+          compact ? 'w-12 h-12' : 'w-20 h-20',
           styles.glow,
         )} />
 
-        <div className="flex items-start justify-between relative z-10">
+        <div className="flex items-start justify-between relative z-10 gap-1">
           <motion.div 
-            className={cn('p-2.5 rounded-xl', styles.iconBg)}
-            whileHover={{ scale: 1.1, rotate: 5 }}
+            className={cn(
+              'rounded-lg shrink-0',
+              compact ? 'p-1.5' : 'p-2',
+              styles.iconBg
+            )}
+            whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
           >
-            <Icon className={cn('w-4 h-4', styles.iconColor)} />
+            <Icon className={cn(compact ? 'w-3 h-3' : 'w-4 h-4', styles.iconColor)} />
           </motion.div>
-          {formula && (
+          {formula && !compact && (
             <InfoTooltip formula={formula} dataSource={dataSource} />
           )}
         </div>
         
-        <div className="mt-3">
+        <div className={compact ? 'mt-1.5' : 'mt-2'}>
           <motion.p 
-            className={cn('text-2xl font-bold tracking-tight', styles.valueColor)}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 + 0.2, duration: 0.3 }}
+            className={cn(
+              'font-bold tracking-tight truncate',
+              compact ? 'text-sm' : 'text-xl',
+              styles.valueColor
+            )}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: index * 0.03 + 0.1, duration: 0.2 }}
           >
             {value}
           </motion.p>
           {secondaryValue && (
             <motion.p
-              className="text-xs text-muted-foreground/80 mt-0.5 font-medium"
+              className={cn(
+                'text-muted-foreground/70 font-medium truncate',
+                compact ? 'text-[9px] mt-0.5' : 'text-[10px] mt-0.5'
+              )}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: index * 0.1 + 0.3, duration: 0.3 }}
+              transition={{ delay: index * 0.03 + 0.15, duration: 0.2 }}
             >
               {secondaryValue}
             </motion.p>
           )}
         </div>
-        <p className="text-xs text-muted-foreground mt-1 font-medium uppercase tracking-wide">
+        <p className={cn(
+          'text-muted-foreground font-medium uppercase tracking-wide truncate',
+          compact ? 'text-[8px] mt-1 leading-tight' : 'text-[10px] mt-1'
+        )}>
           {label}
         </p>
         
-        {progress !== undefined && (
+        {progress !== undefined && !compact && (
           <motion.div
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
-            transition={{ delay: index * 0.1 + 0.3, duration: 0.5, ease: "easeOut" }}
+            transition={{ delay: index * 0.03 + 0.2, duration: 0.4, ease: "easeOut" }}
             style={{ transformOrigin: 'left' }}
           >
             <Progress 
               value={progress} 
-              className={cn('h-1.5 mt-3', progressColors[variant])} 
+              className={cn('h-1 mt-2', progressColors[variant])} 
             />
           </motion.div>
         )}
