@@ -139,25 +139,50 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
                   </p>
                 </div>
                 
-                {/* Right side - Stacked bar breakdown */}
-                <div className={cn("flex flex-col gap-2", isRTL && "items-end")}>
-                  {/* Stacked horizontal bar */}
-                  <div className="w-44 h-5 rounded-full overflow-hidden flex bg-muted/30">
-                    <div className="h-full bg-accent" style={{ width: '60%' }} />
-                    <div className="h-full bg-amber-400" style={{ width: '40%' }} />
+                {/* Right side - Visual breakdown */}
+                <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
+                  {/* Dual arc visualization */}
+                  <div className="relative w-24 h-12">
+                    <svg className="w-full h-full" viewBox="0 0 96 48">
+                      {/* Background track */}
+                      <path 
+                        d="M 8 44 A 40 40 0 0 1 88 44" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="6" 
+                        strokeLinecap="round"
+                        className="text-muted/20"
+                      />
+                      {/* Salary arc (60%) */}
+                      <path 
+                        d="M 8 44 A 40 40 0 0 1 48 4" 
+                        fill="none" 
+                        stroke="hsl(var(--accent))" 
+                        strokeWidth="6" 
+                        strokeLinecap="round"
+                        className="opacity-60"
+                      />
+                      {/* Benefits arc (40%) */}
+                      <path 
+                        d="M 48 4 A 40 40 0 0 1 88 44" 
+                        fill="none" 
+                        stroke="#fbbf24" 
+                        strokeWidth="6" 
+                        strokeLinecap="round"
+                        className="opacity-50"
+                      />
+                    </svg>
                   </div>
                   
-                  {/* Legend items */}
-                  <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
-                    <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
-                      <div className="w-2 h-2 rounded-full bg-accent" />
-                      <span className="text-xs font-semibold text-accent">60%</span>
-                      <span className="text-[10px] text-muted-foreground">{isRTL ? 'الراتب' : 'Salary'}</span>
+                  {/* Legend */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                      <div className="w-3 h-1.5 rounded-full bg-accent/60" />
+                      <span className="text-[11px] font-medium text-foreground/80">60% <span className="text-muted-foreground font-normal">{isRTL ? 'راتب' : 'Salary'}</span></span>
                     </div>
-                    <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
-                      <div className="w-2 h-2 rounded-full bg-amber-400" />
-                      <span className="text-xs font-semibold text-amber-500">40%</span>
-                      <span className="text-[10px] text-muted-foreground">{isRTL ? 'المزايا' : 'Benefits'}</span>
+                    <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                      <div className="w-3 h-1.5 rounded-full bg-amber-300/70" />
+                      <span className="text-[11px] font-medium text-foreground/80">40% <span className="text-muted-foreground font-normal">{isRTL ? 'مزايا' : 'Benefits'}</span></span>
                     </div>
                   </div>
                 </div>
@@ -187,9 +212,9 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
           </div>
           
           {/* Progress bar */}
-          <div className="relative h-2.5 bg-amber-100/40 dark:bg-amber-900/20 rounded-full overflow-hidden mb-3">
+          <div className="relative h-2 bg-amber-100/30 dark:bg-amber-900/15 rounded-full overflow-hidden mb-3">
             <motion.div 
-              className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-300 to-amber-400 rounded-full"
+              className="absolute inset-y-0 left-0 bg-amber-300/80 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${utilization.usedPercent}%` }}
               transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
