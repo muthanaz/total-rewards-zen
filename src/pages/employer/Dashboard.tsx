@@ -13,6 +13,7 @@ import {
   StackedAreaChart,
   ProgressBarList 
 } from '@/components/charts';
+import { EmployerBenefitRecommendations, TrendIndicator } from '@/components/dashboard';
 
 const metrics = {
   totalEmployees: 156,
@@ -407,6 +408,9 @@ export default function EmployerDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Benefit Recommendations for Employers */}
+      <EmployerBenefitRecommendations employeeCount={metrics.totalEmployees} />
     </div>
   );
 }
