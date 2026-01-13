@@ -13,6 +13,7 @@ import { BenefitActionButtons } from '@/components/employee/BenefitActionButtons
 import { DateRangeFilter, BenefitsDrillDownSheet } from '@/components/dashboard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CompensationGrid } from '@/components/ui/compensation-summary-card';
+import { BenefitsUtilizationCard } from '@/components/ui/benefits-utilization-card';
 import { useUIVisibility } from '@/contexts/UIVisibilityContext';
 import { usePrivacy } from '@/components/ui/privacy-toggle';
 import { cn } from '@/lib/utils';
@@ -239,7 +240,6 @@ export default function EmployeeDashboard() {
           <CompensationGrid 
             metrics={keyMetrics}
             totalCompensation={totalCompensationData}
-            utilization={utilizationData}
             isRTL={isRTL}
           />
         </div>
@@ -317,6 +317,20 @@ export default function EmployeeDashboard() {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* Benefits Utilization Section */}
+      {showCompensationSummary && (
+        <div>
+          <h2 className={cn("text-base font-display font-semibold mb-3", isRTL && "text-right")}>
+            {isRTL ? 'استخدام المزايا' : 'Benefits Utilization'}
+          </h2>
+          <BenefitsUtilizationCard
+            utilization={utilizationData}
+            isRTL={isRTL}
+            salaryHidden={salaryHidden}
+          />
         </div>
       )}
 
