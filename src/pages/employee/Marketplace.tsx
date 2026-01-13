@@ -1,14 +1,14 @@
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Gift, Search, Star, Tag, CheckCircle, Filter, Grid3X3, List } from 'lucide-react';
+import { Gift, Search, Star, CheckCircle, Filter, Grid3X3, List } from 'lucide-react';
 import { useMarketplaceOffers } from '@/hooks/useSupabaseData';
 import { useToast } from '@/hooks/use-toast';
 import { MARKETPLACE_CATEGORIES } from '@/lib/constants';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CuratedPerks } from '@/components/dashboard/CuratedPerks';
 
 export default function MarketplacePage() {
   const { data: offers = [] } = useMarketplaceOffers();
@@ -81,7 +81,8 @@ export default function MarketplacePage() {
         </div>
       </div>
 
-      {/* Filter Bar */}
+      {/* Curated Perks Section */}
+      <CuratedPerks onActivate={handleActivate} />
       <Card className="border-border/50">
         <CardContent className="pt-4 pb-4">
           <div className="flex flex-col lg:flex-row gap-4">

@@ -24,7 +24,6 @@ import {
   X,
   LogOut,
   ShoppingBag,
-  Lightbulb,
   Shield,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,6 +32,7 @@ import { Button } from '@/components/ui/button';
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
+import { BENEFIT_CATEGORIES, getSidebarIconColor } from '@/lib/benefitCategories';
 
 interface NavGroup {
   labelKey: string;
@@ -43,46 +43,62 @@ interface NavItem {
   labelKey: string;
   path: string;
   icon: React.ElementType;
+  colorClass?: string; // Benefit category color
 }
 
-// Restructured navigation with logical groupings
+// 9-Group Navigation Structure with Benefit Category Colors
 const navigation: NavGroup[] = [
   {
-    labelKey: 'nav.overview',
+    labelKey: 'nav.dashboard',
     items: [
-      { labelKey: 'nav.dashboard', path: '/employee', icon: LayoutDashboard },
+      { labelKey: 'nav.overview', path: '/employee', icon: LayoutDashboard },
       { labelKey: 'nav.allBenefits', path: '/employee/benefits', icon: Gift },
       { labelKey: 'nav.benefitsAnalysis', path: '/employee/benefits-analysis', icon: TrendingUp },
     ],
   },
   {
-    labelKey: 'nav.myBenefits',
+    labelKey: 'nav.allowances',
     items: [
-      { labelKey: 'nav.housing', path: '/employee/housing', icon: Home },
-      { labelKey: 'nav.transport', path: '/employee/transport', icon: Car },
-      { labelKey: 'nav.schooling', path: '/employee/schooling', icon: GraduationCap },
-      { labelKey: 'nav.healthInsurance', path: '/employee/health', icon: Heart },
-      { labelKey: 'nav.wellbeing', path: '/employee/wellbeing', icon: Dumbbell },
-      { labelKey: 'nav.annualBonus', path: '/employee/bonus', icon: Award },
-      { labelKey: 'nav.financial', path: '/employee/financial', icon: PiggyBank },
-      { labelKey: 'nav.equity', path: '/employee/equity', icon: TrendingUp },
-      { labelKey: 'nav.learning', path: '/employee/learning', icon: BookOpen },
+      { labelKey: 'nav.housing', path: '/employee/housing', icon: Home, colorClass: BENEFIT_CATEGORIES.housing.textClass },
+      { labelKey: 'nav.transport', path: '/employee/transport', icon: Car, colorClass: BENEFIT_CATEGORIES.transport.textClass },
+      { labelKey: 'nav.schooling', path: '/employee/schooling', icon: GraduationCap, colorClass: BENEFIT_CATEGORIES.education.textClass },
     ],
   },
   {
-    labelKey: 'nav.timeOff',
+    labelKey: 'nav.healthWellbeing',
     items: [
-      { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
+      { labelKey: 'nav.healthInsurance', path: '/employee/health', icon: Heart, colorClass: BENEFIT_CATEGORIES.health.textClass },
+      { labelKey: 'nav.wellbeing', path: '/employee/wellbeing', icon: Dumbbell, colorClass: BENEFIT_CATEGORIES.wellbeing.textClass },
+    ],
+  },
+  {
+    labelKey: 'nav.financialRewards',
+    items: [
+      { labelKey: 'nav.annualBonus', path: '/employee/bonus', icon: Award, colorClass: BENEFIT_CATEGORIES.rewards.textClass },
+      { labelKey: 'nav.financial', path: '/employee/financial', icon: PiggyBank, colorClass: BENEFIT_CATEGORIES.financial.textClass },
+      { labelKey: 'nav.equity', path: '/employee/equity', icon: TrendingUp, colorClass: BENEFIT_CATEGORIES.equity.textClass },
+    ],
+  },
+  {
+    labelKey: 'nav.leave',
+    items: [
+      { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar, colorClass: BENEFIT_CATEGORIES.timeoff.textClass },
+    ],
+  },
+  {
+    labelKey: 'nav.learningDevelopment',
+    items: [
+      { labelKey: 'nav.learning', path: '/employee/learning', icon: BookOpen, colorClass: BENEFIT_CATEGORIES.learning.textClass },
     ],
   },
   {
     labelKey: 'nav.marketplace',
     items: [
-      { labelKey: 'nav.perks', path: '/employee/marketplace', icon: ShoppingBag },
+      { labelKey: 'nav.perksPartners', path: '/employee/marketplace', icon: ShoppingBag },
     ],
   },
   {
-    labelKey: 'nav.servicesSupport',
+    labelKey: 'nav.documentsClaims',
     items: [
       { labelKey: 'nav.documents', path: '/employee/documents', icon: FileText },
       { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
@@ -188,7 +204,10 @@ export function EmployeeSidebar() {
                       isRTL && 'flex-row-reverse text-right'
                     )}
                   >
-                    <item.icon className="w-4 h-4 shrink-0" />
+                    <item.icon className={cn(
+                      "w-4 h-4 shrink-0",
+                      !isActive(item.path) && item.colorClass
+                    )} />
                     <span className={cn("text-sm flex-1", isRTL && "text-right")}>{t(item.labelKey)}</span>
                   </Link>
                 ))}
