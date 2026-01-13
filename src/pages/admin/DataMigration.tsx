@@ -4,274 +4,40 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Progress } from '@/components/ui/progress';
 import { 
   Download, 
   Upload, 
   FileSpreadsheet, 
-  Users, 
-  Building2, 
-  DollarSign, 
-  Heart, 
-  Calendar,
-  FileText,
   CheckCircle2,
   AlertCircle,
   Info,
   Copy,
-  ExternalLink,
-  Briefcase,
-  GraduationCap,
-  Home,
-  Car,
-  Dumbbell,
-  PiggyBank,
-  Shield,
-  Clock,
   Database,
+  Wand2,
+  Settings,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-
-interface FieldSpec {
-  name: string;
-  type: string;
-  required: boolean;
-  description: string;
-  example: string;
-  validation?: string;
-}
-
-interface TemplateSection {
-  id: string;
-  title: string;
-  description: string;
-  icon: React.ElementType;
-  fields: FieldSpec[];
-  notes?: string[];
-}
-
-const employeeDataTemplate: TemplateSection = {
-  id: 'employee_data',
-  title: 'Employee Master Data',
-  description: 'Core employee information required for user profiles and benefits assignment',
-  icon: Users,
-  fields: [
-    { name: 'employee_id', type: 'String', required: true, description: 'Unique employee identifier from HR system', example: 'EMP-001234', validation: 'Must be unique across organization' },
-    { name: 'email', type: 'Email', required: true, description: 'Corporate email address (used for login)', example: 'john.smith@company.com', validation: 'Valid email format' },
-    { name: 'first_name', type: 'String', required: true, description: 'Employee first name', example: 'John', validation: 'Max 50 characters' },
-    { name: 'last_name', type: 'String', required: true, description: 'Employee last name', example: 'Smith', validation: 'Max 50 characters' },
-    { name: 'phone', type: 'String', required: false, description: 'Mobile phone number with country code', example: '+971501234567', validation: 'International format' },
-    { name: 'nationality', type: 'String', required: true, description: 'Country of citizenship', example: 'United Kingdom', validation: 'ISO country name' },
-    { name: 'date_of_birth', type: 'Date', required: true, description: 'Birth date for age-related benefits', example: '1985-06-15', validation: 'YYYY-MM-DD format' },
-    { name: 'emirates_id', type: 'String', required: true, description: 'UAE Emirates ID number', example: '784-1985-1234567-1', validation: '15 digits with hyphens' },
-    { name: 'passport_number', type: 'String', required: true, description: 'Passport number', example: 'AB1234567', validation: 'Alphanumeric' },
-    { name: 'blood_type', type: 'Enum', required: false, description: 'Blood type for medical emergencies', example: 'O+', validation: 'A+, A-, B+, B-, AB+, AB-, O+, O-' },
-    { name: 'marital_status', type: 'Enum', required: true, description: 'Marital status (affects family benefits)', example: 'Married', validation: 'Single, Married, Divorced, Widowed' },
-    { name: 'spouse_name', type: 'String', required: false, description: 'Spouse name if married', example: 'Jane Smith', validation: 'Required if married' },
-    { name: 'spouse_employer', type: 'String', required: false, description: 'Spouse employer (for duplicate benefit check)', example: 'ABC Corporation', validation: 'Optional' },
-    { name: 'emergency_contact_name', type: 'String', required: true, description: 'Emergency contact full name', example: 'Mary Smith', validation: 'Max 100 characters' },
-    { name: 'emergency_contact_phone', type: 'String', required: true, description: 'Emergency contact phone', example: '+971501234568', validation: 'International format' },
-    { name: 'home_location', type: 'String', required: false, description: 'Residential area for transport calculation', example: 'Dubai Marina', validation: 'Free text' },
-    { name: 'preferred_language', type: 'Enum', required: false, description: 'UI language preference', example: 'en', validation: 'en, ar' },
-    { name: 'avatar_url', type: 'URL', required: false, description: 'Profile photo URL', example: 'https://...', validation: 'Valid URL' },
-  ],
-  notes: [
-    'All personal data is encrypted at rest and in transit',
-    'Emirates ID and Passport are stored in encrypted format',
-    'Marital status determines eligibility for family benefits',
-  ],
-};
-
-const employmentDataTemplate: TemplateSection = {
-  id: 'employment_data',
-  title: 'Employment Details',
-  description: 'Job-related information for organizational structure and benefit tiers',
-  icon: Briefcase,
-  fields: [
-    { name: 'employment_date', type: 'Date', required: true, description: 'Date of joining the organization', example: '2023-01-15', validation: 'YYYY-MM-DD format' },
-    { name: 'department', type: 'String', required: true, description: 'Department name', example: 'Technology', validation: 'Must match org structure' },
-    { name: 'position', type: 'String', required: true, description: 'Job title', example: 'Senior Product Manager', validation: 'Max 100 characters' },
-    { name: 'grade', type: 'String', required: true, description: 'Employee grade/level for benefit tiers', example: 'G7', validation: 'Must match grade structure' },
-    { name: 'work_location', type: 'String', required: true, description: 'Office location', example: 'DIFC Tower 2', validation: 'Must match location list' },
-    { name: 'manager_name', type: 'String', required: false, description: 'Direct manager name', example: 'Sarah Johnson', validation: 'Max 100 characters' },
-    { name: 'manager_email', type: 'Email', required: false, description: 'Manager email for approvals', example: 'sarah.johnson@company.com', validation: 'Valid email' },
-    { name: 'contract_type', type: 'Enum', required: true, description: 'Employment contract type', example: 'Permanent', validation: 'Permanent, Fixed-term, Probation' },
-    { name: 'probation_end_date', type: 'Date', required: false, description: 'Probation period end date', example: '2023-04-15', validation: 'YYYY-MM-DD format' },
-  ],
-  notes: [
-    'Grade determines benefit tier and allowance amounts',
-    'Department is used for segment analytics',
-    'Manager email enables approval workflows',
-  ],
-};
-
-const salaryDataTemplate: TemplateSection = {
-  id: 'salary_data',
-  title: 'Salary & Compensation',
-  description: 'Compensation data for salary display and benefit calculations',
-  icon: DollarSign,
-  fields: [
-    { name: 'monthly_basic_salary', type: 'Decimal', required: true, description: 'Monthly basic salary in AED', example: '25000.00', validation: 'Positive number' },
-    { name: 'housing_allowance_monthly', type: 'Decimal', required: true, description: 'Monthly housing allowance in AED', example: '10000.00', validation: 'Positive number' },
-    { name: 'transport_allowance_monthly', type: 'Decimal', required: true, description: 'Monthly transport allowance in AED', example: '2000.00', validation: 'Positive number' },
-    { name: 'other_allowances_monthly', type: 'Decimal', required: false, description: 'Other monthly allowances in AED', example: '1500.00', validation: 'Positive number' },
-    { name: 'annual_bonus_target', type: 'Decimal', required: false, description: 'Target annual bonus (% of salary)', example: '20', validation: '0-200' },
-    { name: 'currency', type: 'String', required: true, description: 'Salary currency code', example: 'AED', validation: 'ISO currency code' },
-    { name: 'payment_frequency', type: 'Enum', required: true, description: 'Salary payment frequency', example: 'Monthly', validation: 'Monthly, Bi-weekly' },
-    { name: 'bank_name', type: 'String', required: false, description: 'Salary bank name', example: 'Emirates NBD', validation: 'Free text' },
-    { name: 'effective_date', type: 'Date', required: true, description: 'Salary effective date', example: '2024-01-01', validation: 'YYYY-MM-DD format' },
-  ],
-  notes: [
-    'Salary data is encrypted and only visible to authorized users',
-    'Housing allowance affects eligibility for housing benefit',
-    'Annual bonus target is used for total compensation display',
-  ],
-};
-
-const dependentsDataTemplate: TemplateSection = {
-  id: 'dependents_data',
-  title: 'Dependents & Family',
-  description: 'Family member data for education, health, and family benefits',
-  icon: GraduationCap,
-  fields: [
-    { name: 'employee_id', type: 'String', required: true, description: 'Parent employee ID (foreign key)', example: 'EMP-001234', validation: 'Must exist in employees' },
-    { name: 'dependent_type', type: 'Enum', required: true, description: 'Relationship to employee', example: 'Child', validation: 'Spouse, Child, Parent' },
-    { name: 'name', type: 'String', required: true, description: 'Dependent full name', example: 'Emily Smith', validation: 'Max 100 characters' },
-    { name: 'date_of_birth', type: 'Date', required: true, description: 'Dependent birth date', example: '2015-03-20', validation: 'YYYY-MM-DD format' },
-    { name: 'gender', type: 'Enum', required: true, description: 'Dependent gender', example: 'Female', validation: 'Male, Female' },
-    { name: 'school_name', type: 'String', required: false, description: 'Current school name (for children)', example: 'GEMS Wellington', validation: 'For school-age children' },
-    { name: 'grade_level', type: 'String', required: false, description: 'Current school grade', example: 'Grade 5', validation: 'KG1-Grade 12' },
-    { name: 'annual_tuition', type: 'Decimal', required: false, description: 'Annual school tuition in AED', example: '55000.00', validation: 'Positive number' },
-    { name: 'health_insurance_included', type: 'Boolean', required: true, description: 'Include in health insurance', example: 'true', validation: 'true/false' },
-    { name: 'emirates_id', type: 'String', required: false, description: 'Dependent Emirates ID', example: '784-2015-1234568-1', validation: '15 digits' },
-  ],
-  notes: [
-    'Children over 18 may not be eligible for education benefits',
-    'Spouse employment status affects duplicate benefit checks',
-    'Health insurance coverage depends on policy tier',
-  ],
-};
-
-const benefitsPolicyTemplate: TemplateSection = {
-  id: 'benefits_policy',
-  title: 'Benefits Policy Structure',
-  description: 'Define benefit types, tiers, and eligibility rules',
-  icon: Heart,
-  fields: [
-    { name: 'benefit_code', type: 'String', required: true, description: 'Unique benefit identifier', example: 'HOUSING_ALLOW', validation: 'Uppercase, underscores' },
-    { name: 'benefit_name', type: 'String', required: true, description: 'Display name', example: 'Housing Allowance', validation: 'Max 100 characters' },
-    { name: 'benefit_name_ar', type: 'String', required: true, description: 'Arabic display name', example: 'بدل السكن', validation: 'Arabic text' },
-    { name: 'benefit_type', type: 'Enum', required: true, description: 'Benefit category', example: 'cash_allowances', validation: 'cash_allowances, health_protection, time_off_flex, growth_career, wealth_ownership, wellbeing' },
-    { name: 'life_area', type: 'Enum', required: true, description: 'Life area category', example: 'home_living', validation: 'home_living, family_parenting, health, money, career, lifestyle, mobility' },
-    { name: 'description', type: 'Text', required: true, description: 'Benefit description', example: 'Monthly housing support...', validation: 'Max 500 characters' },
-    { name: 'is_taxable', type: 'Boolean', required: true, description: 'Subject to taxation', example: 'false', validation: 'true/false' },
-    { name: 'requires_approval', type: 'Boolean', required: true, description: 'Requires manager approval', example: 'false', validation: 'true/false' },
-    { name: 'requires_documentation', type: 'Boolean', required: true, description: 'Requires supporting documents', example: 'true', validation: 'true/false' },
-    { name: 'claim_frequency', type: 'Enum', required: true, description: 'How often can be claimed', example: 'Monthly', validation: 'One-time, Monthly, Quarterly, Annual' },
-    { name: 'proration_rule', type: 'Enum', required: true, description: 'Proration for new joiners', example: 'Monthly', validation: 'None, Monthly, Quarterly' },
-  ],
-  notes: [
-    'Each benefit type maps to a life area for dashboard grouping',
-    'Proration rules apply to mid-year joiners',
-    'Approval workflows are configured separately',
-  ],
-};
-
-const benefitEntitlementTemplate: TemplateSection = {
-  id: 'benefit_entitlement',
-  title: 'Benefit Entitlements by Grade',
-  description: 'Map employee grades to specific benefit amounts',
-  icon: Shield,
-  fields: [
-    { name: 'grade', type: 'String', required: true, description: 'Employee grade level', example: 'G7', validation: 'Must match grade structure' },
-    { name: 'benefit_code', type: 'String', required: true, description: 'Benefit code (foreign key)', example: 'HOUSING_ALLOW', validation: 'Must exist in benefits' },
-    { name: 'annual_allowance', type: 'Decimal', required: true, description: 'Annual entitlement in AED', example: '120000.00', validation: 'Positive number' },
-    { name: 'max_claim_per_transaction', type: 'Decimal', required: false, description: 'Max single claim amount', example: '10000.00', validation: 'Positive number' },
-    { name: 'rollover_allowed', type: 'Boolean', required: true, description: 'Unused balance rolls over', example: 'false', validation: 'true/false' },
-    { name: 'rollover_max_percent', type: 'Decimal', required: false, description: 'Max % that can roll over', example: '25', validation: '0-100' },
-    { name: 'eligibility_start', type: 'Enum', required: true, description: 'When benefit becomes active', example: 'Immediately', validation: 'Immediately, After_Probation, After_1_Year' },
-    { name: 'dependent_coverage', type: 'Enum', required: false, description: 'Family coverage level', example: 'Employee_Spouse_Children', validation: 'Employee_Only, Employee_Spouse, Employee_Spouse_Children, Full_Family' },
-  ],
-  notes: [
-    'Grade-based entitlements override default benefit values',
-    'Rollover rules are processed at fiscal year end',
-    'Eligibility conditions are checked automatically',
-  ],
-};
-
-const leaveBalanceTemplate: TemplateSection = {
-  id: 'leave_balance',
-  title: 'Leave Balances',
-  description: 'Initial leave balances and accrual rules',
-  icon: Calendar,
-  fields: [
-    { name: 'employee_id', type: 'String', required: true, description: 'Employee ID (foreign key)', example: 'EMP-001234', validation: 'Must exist in employees' },
-    { name: 'leave_type', type: 'Enum', required: true, description: 'Type of leave', example: 'Annual', validation: 'Annual, Sick, Maternity, Paternity, Compassionate, Hajj, Study' },
-    { name: 'year', type: 'Integer', required: true, description: 'Leave year', example: '2026', validation: 'YYYY format' },
-    { name: 'total_days', type: 'Integer', required: true, description: 'Total entitled days', example: '30', validation: 'Positive integer' },
-    { name: 'used_days', type: 'Integer', required: true, description: 'Days already used', example: '5', validation: '0 or positive integer' },
-    { name: 'carried_over', type: 'Integer', required: false, description: 'Days carried from previous year', example: '5', validation: '0 or positive integer' },
-    { name: 'accrual_rate', type: 'Enum', required: true, description: 'How leave accrues', example: 'Monthly', validation: 'Upfront, Monthly, Quarterly' },
-    { name: 'encashment_allowed', type: 'Boolean', required: true, description: 'Can encash unused leave', example: 'true', validation: 'true/false' },
-    { name: 'max_encashment_days', type: 'Integer', required: false, description: 'Max days that can be encashed', example: '10', validation: 'Positive integer' },
-  ],
-  notes: [
-    'UAE Labor Law mandates minimum 30 days annual leave after 1 year',
-    'Sick leave requires medical certificate after 2 days',
-    'Maternity leave is 60 days (45 full pay, 15 half pay)',
-  ],
-};
-
-const organizationSetupTemplate: TemplateSection = {
-  id: 'organization_setup',
-  title: 'Organization Configuration',
-  description: 'Company-level settings and branding',
-  icon: Building2,
-  fields: [
-    { name: 'organization_name', type: 'String', required: true, description: 'Legal company name', example: 'Demo Company LLC', validation: 'Max 200 characters' },
-    { name: 'organization_name_ar', type: 'String', required: false, description: 'Arabic company name', example: 'شركة ديمو ذ.م.م', validation: 'Arabic text' },
-    { name: 'domain', type: 'String', required: true, description: 'Email domain for SSO', example: 'company.com', validation: 'Valid domain' },
-    { name: 'logo_url', type: 'URL', required: false, description: 'Company logo URL', example: 'https://...', validation: 'Valid URL, PNG/SVG' },
-    { name: 'primary_color', type: 'String', required: false, description: 'Brand primary color', example: '#0f766e', validation: 'Hex color code' },
-    { name: 'secondary_color', type: 'String', required: false, description: 'Brand secondary color', example: '#115e59', validation: 'Hex color code' },
-    { name: 'accent_color', type: 'String', required: false, description: 'Brand accent color', example: '#2dd4bf', validation: 'Hex color code' },
-    { name: 'fiscal_year_start', type: 'String', required: true, description: 'Fiscal year start month', example: '01', validation: '01-12' },
-    { name: 'default_currency', type: 'String', required: true, description: 'Default currency', example: 'AED', validation: 'ISO currency' },
-    { name: 'timezone', type: 'String', required: true, description: 'Organization timezone', example: 'Asia/Dubai', validation: 'IANA timezone' },
-    { name: 'welcome_message', type: 'Text', required: false, description: 'Dashboard welcome text', example: 'Welcome to your benefits portal', validation: 'Max 500 chars' },
-    { name: 'footer_text', type: 'String', required: false, description: 'Footer copyright text', example: '© 2026 Company LLC', validation: 'Max 200 chars' },
-  ],
-  notes: [
-    'Domain is used for automatic user provisioning via SSO',
-    'Colors should meet WCAG contrast requirements',
-    'Fiscal year affects benefit period calculations',
-  ],
-};
-
-const allTemplates: TemplateSection[] = [
-  organizationSetupTemplate,
-  employeeDataTemplate,
-  employmentDataTemplate,
-  salaryDataTemplate,
-  dependentsDataTemplate,
-  benefitsPolicyTemplate,
-  benefitEntitlementTemplate,
-  leaveBalanceTemplate,
-];
+import { allTemplates, templateCategories, TemplateSection } from '@/components/admin/MigrationTemplates';
+import { downloadTemplate, downloadCompleteMigrationPackage } from '@/components/admin/ExcelGenerator';
+import SampleDataGenerator from '@/components/admin/SampleDataGenerator';
+import DataImportWizard from '@/components/admin/DataImportWizard';
 
 export default function DataMigrationPage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('overview');
+  const [activeCategory, setActiveCategory] = useState('organization');
 
-  const handleDownloadTemplate = (templateId: string) => {
+  const handleDownloadTemplate = (template: TemplateSection) => {
+    downloadTemplate(template);
     toast({
       title: 'Template Downloaded',
-      description: `${templateId}.xlsx has been downloaded.`,
+      description: `${template.title} template has been downloaded.`,
     });
   };
 
   const handleDownloadAll = () => {
+    downloadCompleteMigrationPackage();
     toast({
       title: 'All Templates Downloaded',
       description: 'Complete migration package has been downloaded.',
@@ -286,6 +52,11 @@ export default function DataMigrationPage() {
     });
   };
 
+  const getCategoryTemplates = (categoryKey: string) => {
+    const category = templateCategories[categoryKey as keyof typeof templateCategories];
+    return allTemplates.filter(t => category?.templates.includes(t.id));
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
@@ -296,7 +67,7 @@ export default function DataMigrationPage() {
             Data Migration & Onboarding
           </h1>
           <p className="text-muted-foreground mt-1">
-            Comprehensive templates and guidance for platform setup
+            Comprehensive templates, import tools, and sample data generation
           </p>
         </div>
         <Button onClick={handleDownloadAll} className="gap-2">
@@ -308,7 +79,7 @@ export default function DataMigrationPage() {
       {/* Progress Overview */}
       <Card className="border-accent/20 bg-gradient-to-r from-card to-accent/5">
         <CardContent className="p-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="text-center p-4 rounded-lg bg-background/50">
               <p className="text-3xl font-bold text-accent">{allTemplates.length}</p>
               <p className="text-sm text-muted-foreground">Data Templates</p>
@@ -326,8 +97,14 @@ export default function DataMigrationPage() {
               <p className="text-sm text-muted-foreground">Required Fields</p>
             </div>
             <div className="text-center p-4 rounded-lg bg-background/50">
+              <p className="text-3xl font-bold text-accent">
+                {Object.keys(templateCategories).length}
+              </p>
+              <p className="text-sm text-muted-foreground">Categories</p>
+            </div>
+            <div className="text-center p-4 rounded-lg bg-background/50">
               <p className="text-3xl font-bold text-emerald-500">100%</p>
-              <p className="text-sm text-muted-foreground">Documentation</p>
+              <p className="text-sm text-muted-foreground">Coverage</p>
             </div>
           </div>
         </CardContent>
@@ -336,16 +113,25 @@ export default function DataMigrationPage() {
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="w-full justify-start overflow-x-auto">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="organization">Organization</TabsTrigger>
-          <TabsTrigger value="employees">Employees</TabsTrigger>
-          <TabsTrigger value="compensation">Compensation</TabsTrigger>
-          <TabsTrigger value="benefits">Benefits Policy</TabsTrigger>
-          <TabsTrigger value="leave">Leave & Time Off</TabsTrigger>
-          <TabsTrigger value="validation">Validation Rules</TabsTrigger>
+          <TabsTrigger value="overview" className="gap-2">
+            <FileSpreadsheet className="w-4 h-4" />
+            Templates
+          </TabsTrigger>
+          <TabsTrigger value="import" className="gap-2">
+            <Upload className="w-4 h-4" />
+            Import Wizard
+          </TabsTrigger>
+          <TabsTrigger value="generator" className="gap-2">
+            <Wand2 className="w-4 h-4" />
+            Sample Data
+          </TabsTrigger>
+          <TabsTrigger value="validation" className="gap-2">
+            <Settings className="w-4 h-4" />
+            Validation Rules
+          </TabsTrigger>
         </TabsList>
 
-        {/* Overview Tab */}
+        {/* Templates Tab */}
         <TabsContent value="overview" className="space-y-4">
           <Card>
             <CardHeader>
@@ -377,70 +163,74 @@ export default function DataMigrationPage() {
             </CardContent>
           </Card>
 
-          {/* Quick Links to All Templates */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {allTemplates.map((template) => (
-              <Card key={template.id} className="hover:border-accent/40 transition-colors cursor-pointer group">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors">
-                      <template.icon className="w-5 h-5 text-accent" />
-                    </div>
-                    <Badge variant="outline" className="text-[10px]">
-                      {template.fields.length} fields
-                    </Badge>
-                  </div>
-                  <h3 className="font-semibold text-sm mt-3">{template.title}</h3>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{template.description}</p>
-                  <div className="flex items-center gap-2 mt-3">
-                    <Badge variant="secondary" className="text-[10px]">
-                      {template.fields.filter(f => f.required).length} required
-                    </Badge>
-                    <Badge variant="outline" className="text-[10px]">
-                      {template.fields.filter(f => !f.required).length} optional
-                    </Badge>
-                  </div>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className="w-full mt-3 gap-2"
-                    onClick={() => handleDownloadTemplate(template.id)}
-                  >
-                    <Download className="w-3 h-3" />
-                    Download Template
-                  </Button>
-                </CardContent>
-              </Card>
+          {/* Category Tabs */}
+          <Tabs value={activeCategory} onValueChange={setActiveCategory}>
+            <TabsList className="flex-wrap">
+              {Object.entries(templateCategories).map(([key, cat]) => (
+                <TabsTrigger key={key} value={key} className="text-xs">
+                  {cat.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            {Object.entries(templateCategories).map(([key, cat]) => (
+              <TabsContent key={key} value={key} className="space-y-4 mt-4">
+                {getCategoryTemplates(key).map((template) => (
+                  <TemplateDetails 
+                    key={template.id} 
+                    template={template} 
+                    onDownload={handleDownloadTemplate} 
+                    onCopy={handleCopyExample} 
+                  />
+                ))}
+              </TabsContent>
             ))}
-          </div>
+          </Tabs>
+
+          {/* Quick Links to All Templates */}
+          <Card>
+            <CardHeader>
+              <CardTitle>All Templates</CardTitle>
+              <CardDescription>Quick download links for all available templates</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {allTemplates.map((template) => (
+                  <div key={template.id} className="p-4 rounded-lg border hover:border-accent/40 transition-colors">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="p-2 rounded-lg bg-accent/10">
+                        <template.icon className="w-4 h-4 text-accent" />
+                      </div>
+                      <Badge variant="outline" className="text-[10px]">
+                        {template.fields.length} fields
+                      </Badge>
+                    </div>
+                    <h3 className="font-semibold text-sm">{template.title}</h3>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{template.description}</p>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="w-full mt-3 gap-2"
+                      onClick={() => handleDownloadTemplate(template)}
+                    >
+                      <Download className="w-3 h-3" />
+                      Download
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        {/* Organization Tab */}
-        <TabsContent value="organization" className="space-y-4">
-          <TemplateDetails template={organizationSetupTemplate} onDownload={handleDownloadTemplate} onCopy={handleCopyExample} />
+        {/* Import Wizard Tab */}
+        <TabsContent value="import">
+          <DataImportWizard />
         </TabsContent>
 
-        {/* Employees Tab */}
-        <TabsContent value="employees" className="space-y-4">
-          <TemplateDetails template={employeeDataTemplate} onDownload={handleDownloadTemplate} onCopy={handleCopyExample} />
-          <TemplateDetails template={employmentDataTemplate} onDownload={handleDownloadTemplate} onCopy={handleCopyExample} />
-          <TemplateDetails template={dependentsDataTemplate} onDownload={handleDownloadTemplate} onCopy={handleCopyExample} />
-        </TabsContent>
-
-        {/* Compensation Tab */}
-        <TabsContent value="compensation" className="space-y-4">
-          <TemplateDetails template={salaryDataTemplate} onDownload={handleDownloadTemplate} onCopy={handleCopyExample} />
-        </TabsContent>
-
-        {/* Benefits Tab */}
-        <TabsContent value="benefits" className="space-y-4">
-          <TemplateDetails template={benefitsPolicyTemplate} onDownload={handleDownloadTemplate} onCopy={handleCopyExample} />
-          <TemplateDetails template={benefitEntitlementTemplate} onDownload={handleDownloadTemplate} onCopy={handleCopyExample} />
-        </TabsContent>
-
-        {/* Leave Tab */}
-        <TabsContent value="leave" className="space-y-4">
-          <TemplateDetails template={leaveBalanceTemplate} onDownload={handleDownloadTemplate} onCopy={handleCopyExample} />
+        {/* Sample Data Generator Tab */}
+        <TabsContent value="generator">
+          <SampleDataGenerator />
         </TabsContent>
 
         {/* Validation Rules Tab */}
@@ -452,24 +242,107 @@ export default function DataMigrationPage() {
                 Data Validation Rules
               </CardTitle>
               <CardDescription>
-                Common validation checks performed during import
+                Validation checks performed during import
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
                 {[
-                  { category: 'Employee Data', rules: ['Unique employee IDs', 'Valid email format', 'Emirates ID format (784-XXXX-XXXXXXX-X)', 'Date of birth must be in the past', 'Phone numbers in international format'] },
-                  { category: 'Salary Data', rules: ['Positive values for all amounts', 'Valid currency codes', 'Effective date not in the future', 'Basic salary within defined ranges'] },
-                  { category: 'Benefits', rules: ['Valid benefit codes', 'Entitlement amounts within policy limits', 'Grade codes match defined structure', 'No duplicate benefit assignments'] },
-                  { category: 'Dependents', rules: ['Parent employee must exist', 'Children age < 26 for education benefits', 'Valid relationship types', 'Unique Emirates ID per dependent'] },
-                  { category: 'Leave', rules: ['Total days within policy limits', 'Used days <= Total days', 'Valid leave types', 'Year in valid range'] },
+                  { 
+                    category: 'Employee Data', 
+                    rules: [
+                      'Unique employee IDs across organization',
+                      'Valid email format (user@domain.com)',
+                      'Emirates ID format (784-XXXX-XXXXXXX-X)',
+                      'Date of birth must be in the past',
+                      'Phone numbers in international format (+971...)',
+                      'Passport expiry must be future date',
+                    ] 
+                  },
+                  { 
+                    category: 'Employment Details', 
+                    rules: [
+                      'Employment date not in the future',
+                      'Grade code must match grade structure',
+                      'Valid contract type (Permanent, Fixed-term, etc.)',
+                      'Manager employee ID must exist',
+                      'Visa expiry must be future date',
+                      'Cost center format validation',
+                    ] 
+                  },
+                  { 
+                    category: 'Salary & Compensation', 
+                    rules: [
+                      'Positive values for all amounts',
+                      'Valid currency codes (ISO 4217)',
+                      'Effective date required',
+                      'Basic salary within defined ranges',
+                      'Bonus target between 0-200%',
+                      'Valid IBAN format for bank accounts',
+                    ] 
+                  },
+                  { 
+                    category: 'Benefits Policy', 
+                    rules: [
+                      'Unique benefit codes',
+                      'Valid benefit_type enum values',
+                      'Valid life_area enum values',
+                      'Icon name from Lucide icons',
+                      'Claim frequency validation',
+                      'Proration rule validation',
+                    ] 
+                  },
+                  { 
+                    category: 'Benefit Entitlements', 
+                    rules: [
+                      'Grade code must exist',
+                      'Benefit code must exist',
+                      'Annual allowance positive number',
+                      'Rollover percentage 0-100',
+                      'Coverage level validation',
+                      'Co-pay percentage 0-100',
+                    ] 
+                  },
+                  { 
+                    category: 'Dependents', 
+                    rules: [
+                      'Parent employee must exist',
+                      'Children age calculation for eligibility',
+                      'Valid relationship types',
+                      'Unique Emirates ID per dependent',
+                      'School name for school-age children',
+                      'Tuition amount validation',
+                    ] 
+                  },
+                  { 
+                    category: 'Leave Balances', 
+                    rules: [
+                      'Total days within policy limits',
+                      'Used days <= Total days',
+                      'Valid leave types',
+                      'Year in valid range (current/next)',
+                      'Accrual rate validation',
+                      'Encashment limits validation',
+                    ] 
+                  },
+                  { 
+                    category: 'Vendors & Marketplace', 
+                    rules: [
+                      'Unique vendor codes',
+                      'Valid trade license number',
+                      'Commission rate 0-50%',
+                      'Valid IBAN for settlements',
+                      'Offer dates validation',
+                      'Discount percentage validation',
+                    ] 
+                  },
                 ].map((section) => (
                   <div key={section.category} className="p-4 rounded-lg border">
-                    <h3 className="font-semibold text-sm mb-2">{section.category}</h3>
-                    <ul className="space-y-1">
+                    <h3 className="font-semibold text-sm mb-3">{section.category}</h3>
+                    <ul className="space-y-2">
                       {section.rules.map((rule, i) => (
-                        <li key={i} className="text-xs text-muted-foreground flex items-center gap-2">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+                        <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0 mt-0.5" />
                           {rule}
                         </li>
                       ))}
@@ -492,7 +365,7 @@ function TemplateDetails({
   onCopy 
 }: { 
   template: TemplateSection; 
-  onDownload: (id: string) => void;
+  onDownload: (template: TemplateSection) => void;
   onCopy: (text: string) => void;
 }) {
   return (
@@ -505,10 +378,15 @@ function TemplateDetails({
             </div>
             <div>
               <CardTitle className="text-lg">{template.title}</CardTitle>
-              <CardDescription>{template.description}</CardDescription>
+              <CardDescription className="flex items-center gap-2">
+                {template.description}
+                <Badge variant="outline" className="text-[10px]">
+                  Table: {template.tableName}
+                </Badge>
+              </CardDescription>
             </div>
           </div>
-          <Button onClick={() => onDownload(template.id)} className="gap-2">
+          <Button onClick={() => onDownload(template)} className="gap-2">
             <Download className="w-4 h-4" />
             Download
           </Button>
@@ -548,8 +426,8 @@ function TemplateDetails({
                       onClick={() => onCopy(field.example)}
                       className="flex items-center gap-1 text-xs font-mono bg-muted px-2 py-1 rounded hover:bg-muted/80 transition-colors"
                     >
-                      {field.example}
-                      <Copy className="w-3 h-3 text-muted-foreground" />
+                      <span className="max-w-[150px] truncate">{field.example}</span>
+                      <Copy className="w-3 h-3 text-muted-foreground shrink-0" />
                     </button>
                   </td>
                   <td className="py-2 px-3 text-xs text-muted-foreground max-w-xs">{field.validation}</td>
