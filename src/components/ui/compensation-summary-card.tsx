@@ -1,7 +1,8 @@
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { cn } from '@/lib/utils';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface MetricItem {
@@ -11,6 +12,7 @@ interface MetricItem {
   formula?: string;
   dataSource?: string;
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'benefits';
+  isSensitive?: boolean;
 }
 
 interface CompensationGridProps {
@@ -19,6 +21,8 @@ interface CompensationGridProps {
     value: string;
     formula: string;
     dataSource: string;
+    salaryHidden?: boolean;
+    onTogglePrivacy?: () => void;
   };
   utilization: {
     used: string;
@@ -72,7 +76,12 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
                 )}
               </div>
               <div className="mt-2">
-                <p className="text-lg font-bold text-foreground tracking-tight">{metric.value}</p>
+                <p className={cn(
+                  "text-lg font-bold text-foreground tracking-tight transition-all duration-200",
+                  metric.isSensitive && totalCompensation.salaryHidden && "blur-[4px] select-none"
+                )}>
+                  {metric.value}
+                </p>
                 <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mt-0.5">{metric.label}</p>
               </div>
             </Card>
@@ -114,10 +123,30 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
                     </span>
                   </div>
                   <InfoTooltip formula={totalCompensation.formula} dataSource={totalCompensation.dataSource} />
+                  
+                  {/* Privacy Toggle Button */}
+                  {totalCompensation.onTogglePrivacy && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent/10"
+                      onClick={totalCompensation.onTogglePrivacy}
+                      aria-label={totalCompensation.salaryHidden ? 'Show salary' : 'Hide salary'}
+                    >
+                      {totalCompensation.salaryHidden ? (
+                        <Eye className="h-4 w-4" />
+                      ) : (
+                        <EyeOff className="h-4 w-4" />
+                      )}
+                    </Button>
+                  )}
                 </div>
                 
                 {/* Main value */}
-                <p className="text-3xl md:text-4xl font-bold text-foreground tracking-tight leading-none">
+                <p className={cn(
+                  "text-3xl md:text-4xl font-bold text-foreground tracking-tight leading-none transition-all duration-200",
+                  totalCompensation.salaryHidden && "blur-[6px] select-none"
+                )}>
                   {totalCompensation.value}
                 </p>
               </div>
