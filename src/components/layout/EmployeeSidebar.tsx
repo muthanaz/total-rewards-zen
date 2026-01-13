@@ -49,6 +49,7 @@ const navigation: NavGroup[] = [
     labelKey: 'nav.dashboard',
     items: [
       { labelKey: 'nav.overview', path: '/employee', icon: LayoutDashboard },
+      { labelKey: 'nav.benefitsAnalysis', path: '/employee/benefits-analysis', icon: TrendingUp },
     ],
   },
   {

@@ -1,18 +1,16 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { InfoTooltip } from '@/components/ui/info-tooltip';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { 
-  DollarSign, TrendingUp, Home, GraduationCap, 
+  DollarSign, Home, GraduationCap, 
   Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote
 } from 'lucide-react';
-import { BENEFIT_TYPE_COLORS, BENEFIT_TYPE_LABELS } from '@/lib/constants';
+import { BENEFIT_TYPE_COLORS } from '@/lib/constants';
 import { RequestClaimWidget } from '@/components/employee/RequestClaimWidget';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
-import { ChartContainer, AnimatedBarChart, AnimatedRadarChart } from '@/components/charts';
-import { DateRangeFilter, DrillDownModal, BenefitsDrillDownSheet } from '@/components/dashboard';
+import { DateRangeFilter, BenefitsDrillDownSheet } from '@/components/dashboard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CompensationGrid } from '@/components/ui/compensation-summary-card';
 import { cn } from '@/lib/utils';
@@ -26,18 +24,6 @@ const salaryData = {
   activatedItems: 7,
 };
 
-// Benefit to page route mapping
-const benefitRoutes: Record<string, string> = {
-  'Housing Allowance': '/employee/housing',
-  'Education Allowance': '/employee/schooling',
-  'Health Insurance': '/employee/health',
-  'Transport Allowance': '/employee/transport',
-  'Annual Flight Tickets': '/employee/documents',
-  'Financial Planning': '/employee/financial',
-  'Wellbeing Program': '/employee/wellbeing',
-  'Learning & Development': '/employee/learning',
-};
-
 const benefits = [
   { name: 'Housing Allowance', nameKey: 'benefit.housing', icon: Home, value: 120000, utilized: 120000, type: 'cash_allowances', area: 'home_living', route: '/employee/housing', bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'], bulletsAr: ['يُدفع شهرياً مع الراتب', 'يمكن استخدامه للإيجار أو الرهن العقاري'] },
   { name: 'Education Allowance', nameKey: 'benefit.education', icon: GraduationCap, value: 60000, utilized: 42000, type: 'cash_allowances', area: 'family_parenting', route: '/employee/schooling', bullets: ['Per child up to 18 years', 'Covers tuition fees only'], bulletsAr: ['لكل طفل حتى ١٨ عاماً', 'يغطي الرسوم الدراسية فقط'] },
@@ -48,77 +34,6 @@ const benefits = [
   { name: 'Wellbeing Program', nameKey: 'benefit.wellbeingProgram', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', area: 'health', route: '/employee/wellbeing', bullets: ['Gym membership covered', 'Wellness app subscription'], bulletsAr: ['عضوية النادي الرياضي مغطاة', 'اشتراك تطبيق العافية'] },
   { name: 'Learning & Development', nameKey: 'benefit.learning', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', area: 'career', route: '/employee/learning', bullets: ['Courses and certifications', 'Pre-approval required'], bulletsAr: ['الدورات والشهادات', 'يتطلب موافقة مسبقة'] },
 ];
-
-// Chart data with translations
-const utilizationByTypeEn = [
-  { name: 'Cash', value: 195000, secondaryValue: 219000 },
-  { name: 'Health', value: 12500, secondaryValue: 45000 },
-  { name: 'Wealth', value: 18000, secondaryValue: 36000 },
-  { name: 'Growth', value: 4500, secondaryValue: 12000 },
-  { name: 'Wellbeing', value: 3200, secondaryValue: 6000 },
-];
-
-const utilizationByTypeAr = [
-  { name: 'النقدية', value: 195000, secondaryValue: 219000 },
-  { name: 'الصحة', value: 12500, secondaryValue: 45000 },
-  { name: 'الثروة', value: 18000, secondaryValue: 36000 },
-  { name: 'النمو', value: 4500, secondaryValue: 12000 },
-  { name: 'الرفاهية', value: 3200, secondaryValue: 6000 },
-];
-
-
-// Radar chart data for benefit comparison
-const benefitRadarDataEn = [
-  { subject: 'Housing', value: 100, secondaryValue: 85, fullMark: 100 },
-  { subject: 'Education', value: 70, secondaryValue: 75, fullMark: 100 },
-  { subject: 'Health', value: 28, secondaryValue: 65, fullMark: 100 },
-  { subject: 'Transport', value: 75, secondaryValue: 70, fullMark: 100 },
-  { subject: 'Wellbeing', value: 53, secondaryValue: 60, fullMark: 100 },
-  { subject: 'Learning', value: 38, secondaryValue: 55, fullMark: 100 },
-];
-
-const benefitRadarDataAr = [
-  { subject: 'السكن', value: 100, secondaryValue: 85, fullMark: 100 },
-  { subject: 'التعليم', value: 70, secondaryValue: 75, fullMark: 100 },
-  { subject: 'الصحة', value: 28, secondaryValue: 65, fullMark: 100 },
-  { subject: 'النقل', value: 75, secondaryValue: 70, fullMark: 100 },
-  { subject: 'الرفاهية', value: 53, secondaryValue: 60, fullMark: 100 },
-  { subject: 'التعلم', value: 38, secondaryValue: 55, fullMark: 100 },
-];
-
-// Drill-down data
-const drillDownDetails: Record<string, any> = {
-  'Cash & Allowances': {
-    title: 'Cash & Allowances',
-    category: 'Cash Benefits',
-    totalValue: 219000,
-    utilized: 195000,
-    trend: 'up' as const,
-    trendValue: 8,
-    employees: 1,
-    description: 'Monthly cash allowances paid with salary',
-    breakdown: [
-      { name: 'Housing', value: 120000, secondaryValue: 120000 },
-      { name: 'Education', value: 42000, secondaryValue: 60000 },
-      { name: 'Transport', value: 18000, secondaryValue: 24000 },
-      { name: 'Flights', value: 15000, secondaryValue: 15000 },
-    ],
-  },
-  'Health & Protection': {
-    title: 'Health & Protection',
-    category: 'Insurance',
-    totalValue: 45000,
-    utilized: 12500,
-    trend: 'down' as const,
-    trendValue: 5,
-    description: 'Medical insurance and health benefits',
-    breakdown: [
-      { name: 'Medical Claims', value: 8500 },
-      { name: 'Dental', value: 2500 },
-      { name: 'Optical', value: 1500 },
-    ],
-  },
-};
 
 export default function EmployeeDashboard() {
   const navigate = useNavigate();
@@ -166,9 +81,6 @@ export default function EmployeeDashboard() {
   const formatCurrency = (value: number) => `${isRTL ? '' : 'AED '}${value.toLocaleString(isRTL ? 'ar-AE' : 'en-AE')}${isRTL ? ' درهم' : ''}`;
   const formatCurrencyShort = (value: number) => `${(value / 1000).toFixed(0)}${isRTL ? 'ألف' : 'K'}`;
 
-  // Get localized data
-  const utilizationByType = isRTL ? utilizationByTypeAr : utilizationByTypeEn;
-  const benefitRadarData = isRTL ? benefitRadarDataAr : benefitRadarDataEn;
 
   const ChevronIcon = isRTL ? ChevronLeft : ChevronRight;
 
@@ -182,14 +94,6 @@ export default function EmployeeDashboard() {
   const handleHighlightClick = (category: 'fully-utilized' | 'room-to-use') => {
     setBenefitsSheetCategory(category);
     setBenefitsSheetOpen(true);
-  };
-
-  const handleBarClick = (data: any) => {
-    const details = drillDownDetails[data.name];
-    if (details) {
-      setSelectedDrillDown(details);
-      setDrillDownOpen(true);
-    }
   };
 
   const handleExport = (format: 'csv' | 'pdf') => {
@@ -393,63 +297,11 @@ export default function EmployeeDashboard() {
         </div>
       </div>
 
-      {/* Charts Section - More compact */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        {/* Utilization by Benefit Type - clickable bars */}
-        <ChartContainer 
-          title={t('employee.dashboard.utilizationByType')}
-          formula={isRTL ? 'المبلغ المستخدم مقابل الإجمالي المخصص لكل فئة' : 'Utilized amount vs total allocation per category'}
-          dataSource={isRTL ? 'نظام المزايا' : 'Benefits System'}
-        >
-          <AnimatedBarChart
-            data={utilizationByType}
-            layout="horizontal"
-            showSecondary={true}
-            primaryLabel={isRTL ? 'المستخدم' : 'Utilized'}
-            secondaryLabel={isRTL ? 'الإجمالي المخصص' : 'Total Allocated'}
-            formatValue={formatCurrencyShort}
-            height={220}
-            gradientId="employeeBar"
-            showLegend={true}
-            onBarClick={handleBarClick}
-            interactive={true}
-          />
-          <p className={cn("text-[10px] text-muted-foreground text-center mt-1", isRTL && "text-right")}>
-            {t('employee.dashboard.clickBarDetails')}
-          </p>
-        </ChartContainer>
-
-        {/* Radar Chart */}
-        <ChartContainer 
-          title={t('employee.dashboard.benefitComparison')}
-          formula={isRTL ? 'استخدامك مقابل متوسط الشركة لكل مزايا' : 'Your utilization vs company average per benefit'}
-          dataSource={isRTL ? 'نظام المزايا' : 'Benefits System'}
-        >
-          <AnimatedRadarChart
-            data={benefitRadarData}
-            height={220}
-            showSecondary={true}
-            primaryLabel={t('employee.dashboard.yourUtilization')}
-            secondaryLabel={t('employee.dashboard.companyAvg')}
-            showLegend={true}
-          />
-        </ChartContainer>
-      </div>
-
-
       {/* Request Widget Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <RequestClaimWidget />
         <SatisfactionSurvey compact={true} />
       </div>
-
-      {/* Drill-down Modal */}
-      <DrillDownModal
-        open={drillDownOpen}
-        onOpenChange={setDrillDownOpen}
-        data={selectedDrillDown}
-        formatValue={(v) => `AED ${v.toLocaleString()}`}
-      />
 
       {/* Benefits Drill-down Sheet */}
       <BenefitsDrillDownSheet
