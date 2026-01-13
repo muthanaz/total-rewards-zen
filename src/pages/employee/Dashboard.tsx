@@ -191,12 +191,17 @@ export default function EmployeeDashboard() {
 
       {/* Compensation Summary Grid */}
       {showCompensationSummary && (
-        <CompensationGrid 
-          metrics={keyMetrics}
-          totalCompensation={totalCompensationData}
-          utilization={utilizationData}
-          isRTL={isRTL}
-        />
+        <div>
+          <h2 className={cn("text-base font-display font-semibold mb-3", isRTL && "text-right")}>
+            {isRTL ? 'ملخص التعويضات' : 'Compensation Summary'}
+          </h2>
+          <CompensationGrid 
+            metrics={keyMetrics}
+            totalCompensation={totalCompensationData}
+            utilization={utilizationData}
+            isRTL={isRTL}
+          />
+        </div>
       )}
 
       {/* Benefits Grid - Your Benefits */}
