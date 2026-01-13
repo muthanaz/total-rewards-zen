@@ -13,6 +13,7 @@ interface MetricItem {
   dataSource?: string;
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'benefits';
   isSensitive?: boolean;
+  subtitle?: string;
 }
 
 interface CompensationGridProps {
@@ -21,8 +22,11 @@ interface CompensationGridProps {
     value: string;
     formula: string;
     dataSource: string;
+    subtitle?: string;
     salaryHidden?: boolean;
     onTogglePrivacy?: () => void;
+    salaryPercent?: number;
+    benefitsPercent?: number;
   };
   utilization: {
     used: string;
@@ -52,6 +56,9 @@ const iconVariantStyles = {
 };
 
 export function CompensationGrid({ metrics, totalCompensation, utilization, isRTL = false }: CompensationGridProps) {
+  const salaryPercent = totalCompensation.salaryPercent ?? 66;
+  const benefitsPercent = totalCompensation.benefitsPercent ?? 34;
+  
   return (
     <div className="space-y-3">
       {/* Total Compensation Row - Now at Top */}
@@ -60,11 +67,14 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.3 }}
       >
-        <div className="relative rounded-xl p-[1px] bg-gradient-to-r from-accent/40 via-border/30 to-amber-300/50">
-          <Card className="relative overflow-hidden rounded-[11px] bg-gradient-to-r from-accent/5 via-white to-amber-50/40 dark:from-accent/8 dark:via-card dark:to-amber-900/8 p-4">
-            {/* Subtle decorative background */}
-            <div className="absolute top-0 left-0 w-[35%] h-full bg-gradient-to-r from-accent/5 to-transparent" />
-            <div className="absolute top-0 right-0 w-[35%] h-full bg-gradient-to-l from-amber-200/20 to-transparent" />
+        <div className="relative rounded-xl p-[1px] bg-gradient-to-r from-accent/40 via-border/30 to-amber-400/50">
+          <Card className="relative overflow-hidden rounded-[11px] p-4">
+            {/* Gradient background - Salary (teal/accent) from right, Benefits (amber) from left, meeting in middle */}
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-200/40 via-white to-accent/20 dark:from-amber-900/20 dark:via-card dark:to-accent/15" />
+            
+            {/* Soft gradient overlays that fade toward center */}
+            <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-accent/15 via-accent/5 to-transparent" />
+            <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-amber-300/25 via-amber-200/10 to-transparent" />
           
             <div className="relative z-10">
               <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-3", isRTL && "md:flex-row-reverse")}>
@@ -73,7 +83,7 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
                   <div>
                     <div className={cn("flex items-center gap-2 mb-1", isRTL && "flex-row-reverse")}>
                       <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        {isRTL ? 'إجمالي التعويضات السنوية' : 'Total Annual Compensation'}
+                        {isRTL ? 'إجمالي التعويضات المضمونة' : 'Total Guaranteed Compensation'}
                       </h3>
                       <InfoTooltip formula={totalCompensation.formula} dataSource={totalCompensation.dataSource} />
                       
@@ -95,8 +105,14 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
                       )}
                     </div>
                     <p className={cn("text-[11px] text-muted-foreground", isRTL && "text-right")}>
-                      {isRTL ? 'الراتب السنوي + قيمة المزايا' : 'Annual Salary + Benefits Value'}
+                      {isRTL ? 'الراتب السنوي + المزايا المضمونة' : 'Annual Salary + Guaranteed Benefits'}
                     </p>
+                    {/* Subtitle showing potential total */}
+                    {totalCompensation.subtitle && (
+                      <p className={cn("text-[10px] text-amber-600/80 dark:text-amber-400/80 mt-0.5", isRTL && "text-right")}>
+                        {totalCompensation.subtitle}
+                      </p>
+                    )}
                   </div>
                 </div>
                 
@@ -124,36 +140,36 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
                         strokeLinecap="round"
                         className="text-muted/20"
                       />
-                      {/* Salary arc (60%) */}
+                      {/* Salary arc (dynamic %) - teal/accent color */}
                       <path 
                         d="M 6 36 A 34 34 0 0 1 40 2" 
                         fill="none" 
                         stroke="hsl(var(--accent))" 
                         strokeWidth="5" 
                         strokeLinecap="round"
-                        className="opacity-60"
+                        className="opacity-70"
                       />
-                      {/* Benefits arc (40%) */}
+                      {/* Benefits arc (dynamic %) - amber color */}
                       <path 
                         d="M 40 2 A 34 34 0 0 1 74 36" 
                         fill="none" 
-                        stroke="#fbbf24" 
+                        stroke="#f59e0b" 
                         strokeWidth="5" 
                         strokeLinecap="round"
-                        className="opacity-50"
+                        className="opacity-60"
                       />
                     </svg>
                   </div>
                   
-                  {/* Legend */}
+                  {/* Legend - now with dynamic percentages */}
                   <div className="flex flex-col gap-1">
                     <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
-                      <div className="w-2.5 h-1 rounded-full bg-accent/60" />
-                      <span className="text-[10px] font-medium text-foreground/80">60% <span className="text-muted-foreground font-normal">{isRTL ? 'راتب' : 'Salary'}</span></span>
+                      <div className="w-2.5 h-1 rounded-full bg-accent/70" />
+                      <span className="text-[10px] font-medium text-foreground/80">{salaryPercent}% <span className="text-muted-foreground font-normal">{isRTL ? 'راتب' : 'Salary'}</span></span>
                     </div>
                     <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
-                      <div className="w-2.5 h-1 rounded-full bg-amber-300/70" />
-                      <span className="text-[10px] font-medium text-foreground/80">40% <span className="text-muted-foreground font-normal">{isRTL ? 'مزايا' : 'Benefits'}</span></span>
+                      <div className="w-2.5 h-1 rounded-full bg-amber-500/70" />
+                      <span className="text-[10px] font-medium text-foreground/80">{benefitsPercent}% <span className="text-muted-foreground font-normal">{isRTL ? 'مزايا' : 'Benefits'}</span></span>
                     </div>
                   </div>
                 </div>
@@ -191,6 +207,12 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
                 )}>
                   {metric.value}
                 </p>
+                {/* Subtitle for benefits showing potential value */}
+                {metric.subtitle && (
+                  <p className="text-[9px] text-amber-600/80 dark:text-amber-400/80 mt-0.5">
+                    {metric.subtitle}
+                  </p>
+                )}
                 <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mt-0.5">{metric.label}</p>
               </div>
             </Card>
