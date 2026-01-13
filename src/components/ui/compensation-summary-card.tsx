@@ -54,14 +54,123 @@ const iconVariantStyles = {
 export function CompensationGrid({ metrics, totalCompensation, utilization, isRTL = false }: CompensationGridProps) {
   return (
     <div className="space-y-3">
-      {/* Top Row - 4 Metrics with visual flow to Total */}
+      {/* Total Compensation Row - Now at Top */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.3 }}
+      >
+        <div className="relative rounded-xl p-[1px] bg-gradient-to-r from-accent/40 via-border/30 to-amber-300/50">
+          <Card className="relative overflow-hidden rounded-[11px] bg-gradient-to-r from-accent/5 via-white to-amber-50/40 dark:from-accent/8 dark:via-card dark:to-amber-900/8 p-4">
+            {/* Subtle decorative background */}
+            <div className="absolute top-0 left-0 w-[35%] h-full bg-gradient-to-r from-accent/5 to-transparent" />
+            <div className="absolute top-0 right-0 w-[35%] h-full bg-gradient-to-l from-amber-200/20 to-transparent" />
+          
+            <div className="relative z-10">
+              <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-3", isRTL && "md:flex-row-reverse")}>
+                {/* Left side - Label and Formula */}
+                <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+                  <div>
+                    <div className={cn("flex items-center gap-2 mb-1", isRTL && "flex-row-reverse")}>
+                      <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        {isRTL ? 'إجمالي التعويضات السنوية' : 'Total Annual Compensation'}
+                      </h3>
+                      <InfoTooltip formula={totalCompensation.formula} dataSource={totalCompensation.dataSource} />
+                      
+                      {/* Privacy Toggle Button */}
+                      {totalCompensation.onTogglePrivacy && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-accent/10"
+                          onClick={totalCompensation.onTogglePrivacy}
+                          aria-label={totalCompensation.salaryHidden ? 'Show salary' : 'Hide salary'}
+                        >
+                          {totalCompensation.salaryHidden ? (
+                            <Eye className="h-3 w-3" />
+                          ) : (
+                            <EyeOff className="h-3 w-3" />
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                    <p className={cn("text-[11px] text-muted-foreground", isRTL && "text-right")}>
+                      {isRTL ? 'الراتب السنوي + قيمة المزايا' : 'Annual Salary + Benefits Value'}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Center - Main value */}
+                <div className={cn("flex-1 flex justify-center", isRTL && "justify-center")}>
+                  <p className={cn(
+                    "text-2xl md:text-3xl font-bold text-foreground tracking-tight leading-none transition-all duration-200",
+                    totalCompensation.salaryHidden && "blur-[6px] select-none"
+                  )}>
+                    {totalCompensation.value}
+                  </p>
+                </div>
+                
+                {/* Right side - Visual breakdown */}
+                <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+                  {/* Dual arc visualization */}
+                  <div className="relative w-20 h-10">
+                    <svg className="w-full h-full" viewBox="0 0 80 40">
+                      {/* Background track */}
+                      <path 
+                        d="M 6 36 A 34 34 0 0 1 74 36" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="5" 
+                        strokeLinecap="round"
+                        className="text-muted/20"
+                      />
+                      {/* Salary arc (60%) */}
+                      <path 
+                        d="M 6 36 A 34 34 0 0 1 40 2" 
+                        fill="none" 
+                        stroke="hsl(var(--accent))" 
+                        strokeWidth="5" 
+                        strokeLinecap="round"
+                        className="opacity-60"
+                      />
+                      {/* Benefits arc (40%) */}
+                      <path 
+                        d="M 40 2 A 34 34 0 0 1 74 36" 
+                        fill="none" 
+                        stroke="#fbbf24" 
+                        strokeWidth="5" 
+                        strokeLinecap="round"
+                        className="opacity-50"
+                      />
+                    </svg>
+                  </div>
+                  
+                  {/* Legend */}
+                  <div className="flex flex-col gap-1">
+                    <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
+                      <div className="w-2.5 h-1 rounded-full bg-accent/60" />
+                      <span className="text-[10px] font-medium text-foreground/80">60% <span className="text-muted-foreground font-normal">{isRTL ? 'راتب' : 'Salary'}</span></span>
+                    </div>
+                    <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
+                      <div className="w-2.5 h-1 rounded-full bg-amber-300/70" />
+                      <span className="text-[10px] font-medium text-foreground/80">40% <span className="text-muted-foreground font-normal">{isRTL ? 'مزايا' : 'Benefits'}</span></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </motion.div>
+
+      {/* Metrics Row - 4 Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {metrics.map((metric, index) => (
           <motion.div
             key={metric.label}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05, duration: 0.3 }}
+            transition={{ delay: 0.15 + index * 0.05, duration: 0.3 }}
           >
             <Card className={cn(
               'relative p-3 border transition-all duration-200 hover:shadow-md',
@@ -88,109 +197,6 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
           </motion.div>
         ))}
       </div>
-
-      {/* Total Compensation Row */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.3 }}
-      >
-        <div className="relative rounded-xl p-[1px] bg-gradient-to-r from-accent/40 via-border/30 to-amber-300/50">
-          <Card className="relative overflow-hidden rounded-[11px] bg-gradient-to-r from-accent/5 via-white to-amber-50/40 dark:from-accent/8 dark:via-card dark:to-amber-900/8 p-5">
-            {/* Subtle decorative background */}
-            <div className="absolute top-0 left-0 w-[35%] h-full bg-gradient-to-r from-accent/5 to-transparent" />
-            <div className="absolute top-0 right-0 w-[35%] h-full bg-gradient-to-l from-amber-200/20 to-transparent" />
-          
-            <div className="relative z-10">
-              <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
-                {/* Left side - Value */}
-                <div className={cn("flex-1", isRTL && "text-right")}>
-                  {/* Header */}
-                  <div className={cn("flex items-center gap-2 mb-2", isRTL && "flex-row-reverse")}>
-                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      {isRTL ? 'إجمالي التعويضات السنوية' : 'Total Annual Compensation'}
-                    </h3>
-                    <InfoTooltip formula={totalCompensation.formula} dataSource={totalCompensation.dataSource} />
-                    
-                    {/* Privacy Toggle Button */}
-                    {totalCompensation.onTogglePrivacy && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-accent/10"
-                        onClick={totalCompensation.onTogglePrivacy}
-                        aria-label={totalCompensation.salaryHidden ? 'Show salary' : 'Hide salary'}
-                      >
-                        {totalCompensation.salaryHidden ? (
-                          <Eye className="h-3.5 w-3.5" />
-                        ) : (
-                          <EyeOff className="h-3.5 w-3.5" />
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                  
-                  {/* Main value */}
-                  <p className={cn(
-                    "text-2xl md:text-3xl font-bold text-foreground tracking-tight leading-none transition-all duration-200",
-                    totalCompensation.salaryHidden && "blur-[6px] select-none"
-                  )}>
-                    {totalCompensation.value}
-                  </p>
-                </div>
-                
-                {/* Right side - Visual breakdown */}
-                <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
-                  {/* Dual arc visualization */}
-                  <div className="relative w-24 h-12">
-                    <svg className="w-full h-full" viewBox="0 0 96 48">
-                      {/* Background track */}
-                      <path 
-                        d="M 8 44 A 40 40 0 0 1 88 44" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        strokeWidth="6" 
-                        strokeLinecap="round"
-                        className="text-muted/20"
-                      />
-                      {/* Salary arc (60%) */}
-                      <path 
-                        d="M 8 44 A 40 40 0 0 1 48 4" 
-                        fill="none" 
-                        stroke="hsl(var(--accent))" 
-                        strokeWidth="6" 
-                        strokeLinecap="round"
-                        className="opacity-60"
-                      />
-                      {/* Benefits arc (40%) */}
-                      <path 
-                        d="M 48 4 A 40 40 0 0 1 88 44" 
-                        fill="none" 
-                        stroke="#fbbf24" 
-                        strokeWidth="6" 
-                        strokeLinecap="round"
-                        className="opacity-50"
-                      />
-                    </svg>
-                  </div>
-                  
-                  {/* Legend */}
-                  <div className="flex flex-col gap-1.5">
-                    <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                      <div className="w-3 h-1.5 rounded-full bg-accent/60" />
-                      <span className="text-[11px] font-medium text-foreground/80">60% <span className="text-muted-foreground font-normal">{isRTL ? 'راتب' : 'Salary'}</span></span>
-                    </div>
-                    <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                      <div className="w-3 h-1.5 rounded-full bg-amber-300/70" />
-                      <span className="text-[11px] font-medium text-foreground/80">40% <span className="text-muted-foreground font-normal">{isRTL ? 'مزايا' : 'Benefits'}</span></span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </motion.div>
 
       {/* Utilization Row */}
       <motion.div
