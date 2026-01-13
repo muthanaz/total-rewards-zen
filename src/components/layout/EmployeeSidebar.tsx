@@ -43,7 +43,7 @@ interface NavItem {
   icon: React.ElementType;
 }
 
-// 9-Group Navigation Structure
+// Main Navigation Structure (without marketplace)
 const navigation: NavGroup[] = [
   {
     labelKey: 'nav.dashboard',
@@ -77,21 +77,15 @@ const navigation: NavGroup[] = [
     ],
   },
   {
-    labelKey: 'nav.leave',
-    items: [
-      { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
-    ],
-  },
-  {
     labelKey: 'nav.learningDevelopment',
     items: [
       { labelKey: 'nav.learning', path: '/employee/learning', icon: BookOpen },
     ],
   },
   {
-    labelKey: 'nav.marketplace',
+    labelKey: 'nav.leave',
     items: [
-      { labelKey: 'nav.perksPartners', path: '/employee/marketplace', icon: ShoppingBag },
+      { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
     ],
   },
   {
@@ -210,6 +204,45 @@ export function EmployeeSidebar() {
           </div>
         ))}
       </nav>
+
+      {/* Marketplace - Distinguished Section */}
+      <div className={cn("px-3 pb-3", isRTL && "text-right")}>
+        <Link
+          to="/employee/marketplace"
+          onClick={() => setMobileOpen(false)}
+          className={cn(
+            "flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200",
+            "bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-pink-500/10",
+            "hover:from-violet-500/20 hover:via-fuchsia-500/20 hover:to-pink-500/20",
+            "border border-violet-500/20 hover:border-violet-500/40",
+            "group",
+            isActive('/employee/marketplace') && "from-violet-500/20 via-fuchsia-500/20 to-pink-500/20 border-violet-500/40",
+            isRTL && "flex-row-reverse"
+          )}
+        >
+          <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/25">
+            <ShoppingBag className="w-4 h-4 text-white" />
+          </div>
+          <div className={cn("flex-1", isRTL && "text-right")}>
+            <span className={cn(
+              "text-sm font-medium block",
+              isActive('/employee/marketplace') 
+                ? "text-violet-600 dark:text-violet-400" 
+                : "text-sidebar-foreground group-hover:text-violet-600 dark:group-hover:text-violet-400"
+            )}>
+              {t('nav.perksPartners')}
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              {isRTL ? 'خصومات وعروض حصرية' : 'Exclusive deals & discounts'}
+            </span>
+          </div>
+          <ChevronCollapsed className={cn(
+            "w-4 h-4 text-violet-500/50 group-hover:text-violet-500 transition-all",
+            "group-hover:translate-x-0.5",
+            isRTL && "rotate-180 group-hover:-translate-x-0.5"
+          )} />
+        </Link>
+      </div>
 
       {/* Sign Out */}
       <div className={cn("p-4 border-t border-sidebar-border", isRTL && "text-right")}>
