@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AnimatedLineChart } from '@/components/charts/AnimatedLineChart';
 import { AnimatedBarChart } from '@/components/charts/AnimatedBarChart';
+import { useElementVisibility } from '@/contexts/UIVisibilityContext';
 
 const vendorMetrics = [
   { label: 'Active Offers', labelAr: 'العروض النشطة', value: '12', change: '+2', trend: 'up', icon: Tag },
@@ -109,6 +110,13 @@ export default function VendorDashboard() {
   const isRTL = direction === 'rtl';
   const [searchQuery, setSearchQuery] = useState('');
 
+  // UI Visibility hooks
+  const { isVisible: showMetricsCards } = useElementVisibility('vendor', 'dashboard', 'metrics_cards');
+  const { isVisible: showOffersTab } = useElementVisibility('vendor', 'dashboard', 'offers_tab');
+  const { isVisible: showAnalyticsTab } = useElementVisibility('vendor', 'dashboard', 'analytics_tab');
+  const { isVisible: showTransactionsTab } = useElementVisibility('vendor', 'dashboard', 'transactions_tab');
+  const { isVisible: showEarningsTab } = useElementVisibility('vendor', 'dashboard', 'earnings_tab');
+
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
 
   const filteredOffers = myOffers.filter(offer => 
@@ -135,6 +143,7 @@ export default function VendorDashboard() {
       </div>
 
       {/* Metrics Cards */}
+      {showMetricsCards && (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {vendorMetrics.map((metric) => (
           <Card key={metric.label} className="relative overflow-hidden">
@@ -168,16 +177,18 @@ export default function VendorDashboard() {
           </Card>
         ))}
       </div>
+      )}
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="offers" className="space-y-6">
         <TabsList className="w-full justify-start">
-          <TabsTrigger value="offers">{t('My Offers', 'عروضي')}</TabsTrigger>
-          <TabsTrigger value="analytics">{t('Analytics', 'التحليلات')}</TabsTrigger>
-          <TabsTrigger value="transactions">{t('Transactions', 'المعاملات')}</TabsTrigger>
-          <TabsTrigger value="earnings">{t('Earnings', 'الأرباح')}</TabsTrigger>
+          {showOffersTab && <TabsTrigger value="offers">{t('My Offers', 'عروضي')}</TabsTrigger>}
+          {showAnalyticsTab && <TabsTrigger value="analytics">{t('Analytics', 'التحليلات')}</TabsTrigger>}
+          {showTransactionsTab && <TabsTrigger value="transactions">{t('Transactions', 'المعاملات')}</TabsTrigger>}
+          {showEarningsTab && <TabsTrigger value="earnings">{t('Earnings', 'الأرباح')}</TabsTrigger>}
         </TabsList>
 
+        {showOffersTab && (
         <TabsContent value="offers" className="space-y-6">
           {/* Search */}
           <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
@@ -247,7 +258,9 @@ export default function VendorDashboard() {
             ))}
           </div>
         </TabsContent>
+        )}
 
+        {showAnalyticsTab && (
         <TabsContent value="analytics" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
@@ -279,7 +292,9 @@ export default function VendorDashboard() {
             </Card>
           </div>
         </TabsContent>
+        )}
 
+        {showTransactionsTab && (
         <TabsContent value="transactions" className="space-y-6">
           <Card>
             <CardHeader>
@@ -322,7 +337,9 @@ export default function VendorDashboard() {
             </CardContent>
           </Card>
         </TabsContent>
+        )}
 
+        {showEarningsTab && (
         <TabsContent value="earnings" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
@@ -360,6 +377,7 @@ export default function VendorDashboard() {
             </CardContent>
           </Card>
         </TabsContent>
+        )}
       </Tabs>
     </div>
   );

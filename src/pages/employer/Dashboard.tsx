@@ -14,6 +14,7 @@ import {
   ProgressBarList 
 } from '@/components/charts';
 import { EmployerBenefitRecommendations, TrendIndicator } from '@/components/dashboard';
+import { useElementVisibility } from '@/contexts/UIVisibilityContext';
 
 const metrics = {
   totalEmployees: 156,
@@ -102,6 +103,18 @@ export default function EmployerDashboard() {
   const formatCurrency = (value: number) => `AED ${(value / 1000000).toFixed(1)}M`;
   const budgetUtilization = (metrics.budgetUsed / metrics.annualBudget) * 100;
   
+  // UI Visibility hooks
+  const { isVisible: showKpiCards } = useElementVisibility('employer', 'dashboard', 'kpi_cards');
+  const { isVisible: showSecondaryKpi } = useElementVisibility('employer', 'dashboard', 'secondary_kpi');
+  const { isVisible: showExecutiveInsights } = useElementVisibility('employer', 'dashboard', 'executive_insights');
+  const { isVisible: showUtilizationTrend } = useElementVisibility('employer', 'dashboard', 'utilization_trend');
+  const { isVisible: showSpendByType } = useElementVisibility('employer', 'dashboard', 'spend_by_type');
+  const { isVisible: showSegmentComparison } = useElementVisibility('employer', 'dashboard', 'segment_comparison');
+  const { isVisible: showCumulativeSpend } = useElementVisibility('employer', 'dashboard', 'cumulative_spend');
+  const { isVisible: showTopBenefits } = useElementVisibility('employer', 'dashboard', 'top_benefits');
+  const { isVisible: showZombieSpend } = useElementVisibility('employer', 'dashboard', 'zombie_spend');
+  const { isVisible: showRecommendations } = useElementVisibility('employer', 'dashboard', 'recommendations');
+  
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Executive Header */}
@@ -122,6 +135,7 @@ export default function EmployerDashboard() {
       </div>
 
       {/* Executive KPI Cards - Primary Row */}
+      {showKpiCards && (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Employees */}
         <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-accent/5 hover:shadow-lg transition-all duration-300">
@@ -222,8 +236,10 @@ export default function EmployerDashboard() {
           </CardContent>
         </Card>
       </div>
+      )}
 
       {/* Secondary KPI Cards */}
+      {showSecondaryKpi && (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Satisfaction */}
         <Card className="border-border/50 hover:shadow-md transition-all duration-300">
@@ -316,8 +332,10 @@ export default function EmployerDashboard() {
           </CardContent>
         </Card>
       </div>
+      )}
 
       {/* Executive Summary Card */}
+      {showExecutiveInsights && (
       <Card className="border-accent/20 overflow-hidden bg-gradient-to-r from-card via-card to-accent/5">
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-4">
@@ -350,39 +368,61 @@ export default function EmployerDashboard() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Charts Row 1 */}
+      {(showUtilizationTrend || showSpendByType) && (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {showUtilizationTrend && (
         <ChartContainer title="Utilization Trend" formula="Monthly utilization % over time" dataSource="Benefits Tracker">
           <AnimatedLineChart data={utilizationTrend} showArea={true} primaryLabel="Utilization" formatValue={(v) => `${v}%`} height={240} yDomain={[50, 70]} showLegend={true} />
         </ChartContainer>
+        )}
+        {showSpendByType && (
         <ChartContainer title="Spend by Benefit Type" formula="Budget vs actual spend per category" dataSource="Finance">
           <AnimatedBarChart data={spendByType} layout="horizontal" showSecondary={true} primaryLabel="Spent (AED M)" secondaryLabel="Budget (AED M)" formatValue={(v) => `AED ${v}M`} height={240} showLegend={true} />
         </ChartContainer>
+        )}
       </div>
+      )}
 
       {/* Charts Row 2 */}
+      {(showSegmentComparison || showCumulativeSpend) && (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {showSegmentComparison && (
         <div className="lg:col-span-5">
           <ChartContainer title="Segment Comparison" formula="Tech vs Non-Tech utilization" dataSource="Analytics">
             <AnimatedRadarChart data={segmentRadarData} height={280} showSecondary={true} primaryLabel="Tech Teams" secondaryLabel="Non-Tech" showLegend={true} />
           </ChartContainer>
         </div>
-        <div className="lg:col-span-7">
+        )}
+        {showCumulativeSpend && (
+        <div className={showSegmentComparison ? "lg:col-span-7" : "lg:col-span-12"}>
           <ChartContainer title="Cumulative Spend Tracking" formula="Year-to-date spend by category" dataSource="Finance">
             <StackedAreaChart data={cumulativeSpendData} stacks={spendStacks} height={280} formatValue={(v) => `${v}M`} />
           </ChartContainer>
         </div>
+        )}
+          <ChartContainer title="Cumulative Spend Tracking" formula="Year-to-date spend by category" dataSource="Finance">
+            <StackedAreaChart data={cumulativeSpendData} stacks={spendStacks} height={280} formatValue={(v) => `${v}M`} />
+          </ChartContainer>
       </div>
+      )}
 
       {/* Bottom Section */}
+      {(showTopBenefits || showZombieSpend) && (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {showTopBenefits && (
+        <>
         <ChartContainer title="Top Utilized Benefits">
           <ProgressBarList items={topBenefits.map(b => ({ ...b, color: 'success' as const }))} size="md" />
         </ChartContainer>
         <ChartContainer title="Least Utilized Benefits">
           <ProgressBarList items={leastUsed.map(b => ({ ...b, color: 'warning' as const }))} size="md" />
         </ChartContainer>
+        </>
+        )}
+        {showZombieSpend && (
         <Card className="border-amber-500/20 bg-gradient-to-b from-card to-amber-500/5">
           <CardHeader className="pb-3 border-b border-amber-500/10">
             <CardTitle className="text-base font-display font-semibold flex items-center gap-2">
@@ -407,10 +447,14 @@ export default function EmployerDashboard() {
             </Link>
           </CardContent>
         </Card>
+        )}
       </div>
+      )}
 
       {/* Benefit Recommendations for Employers */}
+      {showRecommendations && (
       <EmployerBenefitRecommendations employeeCount={metrics.totalEmployees} />
+      )}
     </div>
   );
 }
