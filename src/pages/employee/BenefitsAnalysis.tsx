@@ -10,6 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { motion } from 'framer-motion';
+import { BENEFIT_CATEGORIES } from '@/lib/benefitCategories';
 
 // Demo data with valueType categorization
 type BenefitValueType = 'guaranteed' | 'employer_cost' | 'performance' | 'budget';
@@ -91,27 +92,27 @@ const monthlyTrendAr = [
   { name: 'ديسمبر', value: 233200, secondaryValue: 195000 },
 ];
 
-// Benefit distribution for donut chart
+// Benefit distribution for donut chart - using consistent colors from BENEFIT_CATEGORIES
 const benefitDistributionEn = [
-  { name: 'Housing', value: 120000, color: 'hsl(var(--accent))' },
-  { name: 'Education', value: 60000, color: 'hsl(210, 80%, 55%)' },
-  { name: 'Health', value: 45000, color: 'hsl(340, 75%, 55%)' },
-  { name: 'Transport', value: 39000, color: 'hsl(45, 85%, 50%)' },
-  { name: 'Bonus', value: 70000, color: 'hsl(280, 70%, 55%)' },
-  { name: 'Financial', value: 36000, color: 'hsl(160, 60%, 45%)' },
-  { name: 'Wellbeing', value: 6000, color: 'hsl(25, 80%, 55%)' },
-  { name: 'Learning', value: 12000, color: 'hsl(200, 70%, 50%)' },
+  { name: 'Housing', value: 120000, color: BENEFIT_CATEGORIES.housing.color },
+  { name: 'Education', value: 60000, color: BENEFIT_CATEGORIES.education.color },
+  { name: 'Health', value: 45000, color: BENEFIT_CATEGORIES.health.color },
+  { name: 'Transport', value: 39000, color: BENEFIT_CATEGORIES.transport.color },
+  { name: 'Bonus', value: 70000, color: BENEFIT_CATEGORIES.rewards.color },
+  { name: 'Financial', value: 36000, color: BENEFIT_CATEGORIES.financial.color },
+  { name: 'Wellbeing', value: 6000, color: BENEFIT_CATEGORIES.wellbeing.color },
+  { name: 'Learning', value: 12000, color: BENEFIT_CATEGORIES.learning.color },
 ];
 
 const benefitDistributionAr = [
-  { name: 'السكن', value: 120000, color: 'hsl(var(--accent))' },
-  { name: 'التعليم', value: 60000, color: 'hsl(210, 80%, 55%)' },
-  { name: 'الصحة', value: 45000, color: 'hsl(340, 75%, 55%)' },
-  { name: 'النقل', value: 39000, color: 'hsl(45, 85%, 50%)' },
-  { name: 'المكافأة', value: 70000, color: 'hsl(280, 70%, 55%)' },
-  { name: 'المالية', value: 36000, color: 'hsl(160, 60%, 45%)' },
-  { name: 'الرفاهية', value: 6000, color: 'hsl(25, 80%, 55%)' },
-  { name: 'التعلم', value: 12000, color: 'hsl(200, 70%, 50%)' },
+  { name: 'السكن', value: 120000, color: BENEFIT_CATEGORIES.housing.color },
+  { name: 'التعليم', value: 60000, color: BENEFIT_CATEGORIES.education.color },
+  { name: 'الصحة', value: 45000, color: BENEFIT_CATEGORIES.health.color },
+  { name: 'النقل', value: 39000, color: BENEFIT_CATEGORIES.transport.color },
+  { name: 'المكافأة', value: 70000, color: BENEFIT_CATEGORIES.rewards.color },
+  { name: 'المالية', value: 36000, color: BENEFIT_CATEGORIES.financial.color },
+  { name: 'الرفاهية', value: 6000, color: BENEFIT_CATEGORIES.wellbeing.color },
+  { name: 'التعلم', value: 12000, color: BENEFIT_CATEGORIES.learning.color },
 ];
 
 export default function BenefitsAnalysis() {

@@ -7,9 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
   Home, GraduationCap, Heart, Car, Dumbbell, PiggyBank, 
-  BookOpen, Search, ChevronRight, Filter, CheckCircle2, TrendingUp, Award
+  BookOpen, Search, ChevronRight, Filter, CheckCircle2, TrendingUp, Award, Clock, AlertCircle
 } from 'lucide-react';
 import { BENEFIT_CATEGORIES } from '@/lib/benefitCategories';
+import { getRAGIndicator, getProgressColorClass } from '@/lib/colorUtils';
 import {
   Select,
   SelectContent,
@@ -37,10 +38,17 @@ const categoryFilters = [
 
 const utilizationFilters = [
   { value: 'all', label: 'All Status' },
-  { value: 'fully-utilized', label: 'Fully Utilized' },
-  { value: 'partial', label: 'Partially Used' },
-  { value: 'unused', label: 'Not Used' },
+  { value: 'fully-utilized', label: 'Fully Utilized (80%+)' },
+  { value: 'partial', label: 'In Progress (30-79%)' },
+  { value: 'underutilized', label: 'Underutilized (<30%)' },
 ];
+
+// RAG icon component
+const RAGIcon = ({ status }: { status: 'green' | 'amber' | 'red' }) => {
+  if (status === 'green') return <CheckCircle2 className="w-3.5 h-3.5" />;
+  if (status === 'amber') return <Clock className="w-3.5 h-3.5" />;
+  return <AlertCircle className="w-3.5 h-3.5" />;
+};
 
 export default function BenefitsPage() {
   const navigate = useNavigate();
@@ -51,8 +59,8 @@ export default function BenefitsPage() {
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
 
   const benefitHighlights = useMemo(() => {
-    const fullyUtilized = benefits.filter(b => (b.utilized / b.value) >= 1);
-    const roomToUse = benefits.filter(b => (b.utilized / b.value) < 1 && (b.value - b.utilized) > 1000);
+    const fullyUtilized = benefits.filter(b => (b.utilized / b.value) >= 0.8);
+    const roomToUse = benefits.filter(b => (b.utilized / b.value) < 0.8 && (b.value - b.utilized) > 1000);
     const totalValue = benefits.reduce((sum, b) => sum + b.value, 0);
     const totalUtilized = benefits.reduce((sum, b) => sum + b.utilized, 0);
     return { fullyUtilized, roomToUse, fullyUtilizedCount: fullyUtilized.length, roomToUseCount: roomToUse.length, totalRemaining: totalValue - totalUtilized };
@@ -61,11 +69,11 @@ export default function BenefitsPage() {
   const filteredBenefits = benefits.filter(benefit => {
     const matchesSearch = benefit.name.toLowerCase().includes(search.toLowerCase()) || benefit.description.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || benefit.category === categoryFilter;
-    const utilization = benefit.utilized / benefit.value;
+    const utilization = (benefit.utilized / benefit.value) * 100;
     let matchesUtilization = true;
-    if (utilizationFilter === 'fully-utilized') matchesUtilization = utilization >= 1;
-    else if (utilizationFilter === 'partial') matchesUtilization = utilization > 0 && utilization < 1;
-    else if (utilizationFilter === 'unused') matchesUtilization = utilization === 0;
+    if (utilizationFilter === 'fully-utilized') matchesUtilization = utilization >= 80;
+    else if (utilizationFilter === 'partial') matchesUtilization = utilization >= 30 && utilization < 80;
+    else if (utilizationFilter === 'underutilized') matchesUtilization = utilization < 30;
     return matchesSearch && matchesCategory && matchesUtilization;
   });
 
@@ -80,22 +88,41 @@ export default function BenefitsPage() {
         <p className="text-muted-foreground">{benefits.length} benefits • {formatCurrency(totalValue)} total value • {overallUtilization}% utilized</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Card className="cursor-pointer bg-gradient-to-br from-emerald-500/5 to-emerald-500/10 border-emerald-500/20 hover:border-emerald-500/40" onClick={() => setUtilizationFilter('fully-utilized')}>
+      {/* RAG Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <Card 
+          className="cursor-pointer bg-gradient-to-br from-emerald-500/5 to-emerald-500/10 border-emerald-500/20 hover:border-emerald-500/40 transition-all" 
+          onClick={() => setUtilizationFilter('fully-utilized')}
+        >
           <CardContent className="p-4 flex items-start gap-3">
             <div className="p-2 rounded-lg bg-emerald-500/10"><CheckCircle2 className="w-5 h-5 text-emerald-600" /></div>
             <div className="flex-1">
               <h3 className="font-semibold text-sm text-emerald-700 dark:text-emerald-400">Fully Utilized</h3>
-              <p className="text-xs text-muted-foreground">{benefitHighlights.fullyUtilizedCount} benefits at 100%</p>
+              <p className="text-xs text-muted-foreground">{benefitHighlights.fullyUtilizedCount} benefits at 80%+</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="cursor-pointer bg-gradient-to-br from-amber-500/5 to-amber-500/10 border-amber-500/20 hover:border-amber-500/40" onClick={() => setUtilizationFilter('partial')}>
+        <Card 
+          className="cursor-pointer bg-gradient-to-br from-amber-500/5 to-amber-500/10 border-amber-500/20 hover:border-amber-500/40 transition-all" 
+          onClick={() => setUtilizationFilter('partial')}
+        >
           <CardContent className="p-4 flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/10"><TrendingUp className="w-5 h-5 text-amber-600" /></div>
+            <div className="p-2 rounded-lg bg-amber-500/10"><Clock className="w-5 h-5 text-amber-600" /></div>
             <div className="flex-1">
-              <h3 className="font-semibold text-sm text-amber-700 dark:text-amber-400">Room to Use</h3>
+              <h3 className="font-semibold text-sm text-amber-700 dark:text-amber-400">In Progress</h3>
               <p className="text-xs text-muted-foreground">{formatCurrency(benefitHighlights.totalRemaining)} available</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card 
+          className="cursor-pointer bg-gradient-to-br from-rose-500/5 to-rose-500/10 border-rose-500/20 hover:border-rose-500/40 transition-all" 
+          onClick={() => setUtilizationFilter('underutilized')}
+        >
+          <CardContent className="p-4 flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-rose-500/10"><AlertCircle className="w-5 h-5 text-rose-600" /></div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-sm text-rose-700 dark:text-rose-400">Underutilized</h3>
+              <p className="text-xs text-muted-foreground">Needs attention</p>
             </div>
           </CardContent>
         </Card>
@@ -111,7 +138,7 @@ export default function BenefitsPage() {
           <SelectContent>{categoryFilters.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
         </Select>
         <Select value={utilizationFilter} onValueChange={setUtilizationFilter}>
-          <SelectTrigger className="w-full sm:w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>{utilizationFilters.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
         </Select>
       </div>
@@ -126,30 +153,54 @@ export default function BenefitsPage() {
           {filteredBenefits.map((benefit, index) => {
             const utilization = Math.round((benefit.utilized / benefit.value) * 100);
             const remaining = benefit.value - benefit.utilized;
-            const isFullyUsed = utilization >= 100;
             const cat = BENEFIT_CATEGORIES[benefit.category as keyof typeof BENEFIT_CATEGORIES];
+            const rag = getRAGIndicator(utilization);
             
             return (
-              <Card key={benefit.name} className="group cursor-pointer hover:shadow-lg transition-all overflow-hidden" onClick={() => navigate(benefit.route)} style={{ animationDelay: `${index * 50}ms` }}>
-                <div className={cn("h-1", cat?.bgClass)} />
+              <Card 
+                key={benefit.name} 
+                className="group cursor-pointer hover:shadow-lg transition-all overflow-hidden" 
+                onClick={() => navigate(benefit.route)} 
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                {/* Category color bar */}
+                <div className={cn("h-1.5", cat?.bgClass)} />
                 <CardContent className="p-5">
                   <div className="flex items-start gap-3">
+                    {/* Icon with category color */}
                     <div className={cn("p-2.5 rounded-xl shrink-0", cat?.bgLightClass)}>
                       <benefit.icon className={cn("w-5 h-5", cat?.textClass)} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-base group-hover:text-accent transition-colors">{benefit.name}</h3>
-                      <Badge variant="secondary" className={cn("mt-1.5 text-xs", cat?.bgLightClass, cat?.textClass)}>{cat?.label}</Badge>
+                      {/* Category badge with category color */}
+                      <Badge variant="outline" className={cn("mt-1.5 text-xs", cat?.bgLightClass, cat?.textClass, cat?.borderClass)}>
+                        {cat?.label}
+                      </Badge>
                       <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{benefit.description}</p>
                     </div>
                     <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
+                  
+                  {/* Utilization section with RAG */}
                   <div className="mt-4 pt-4 border-t border-border/50 space-y-2">
-                    <div className="flex justify-between text-sm"><span className="text-muted-foreground">Utilized</span><span className="font-semibold">{formatCurrency(benefit.utilized)}</span></div>
-                    <Progress value={utilization} className={cn("h-2", isFullyUsed ? '[&>div]:bg-emerald-500' : '')} />
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Utilized</span>
+                      {/* RAG Badge */}
+                      <Badge variant="outline" className={cn("text-xs gap-1", rag.bgClass, rag.textClass, rag.borderClass)}>
+                        <RAGIcon status={rag.status} />
+                        {utilization}%
+                      </Badge>
+                    </div>
+                    {/* Progress bar with RAG color */}
+                    <Progress value={utilization} className={cn("h-2", getProgressColorClass(utilization))} />
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{isFullyUsed ? 'Fully utilized' : `Remaining: ${formatCurrency(remaining)}`}</span>
-                      <span className={cn("font-medium", isFullyUsed ? 'text-emerald-600' : cat?.textClass)}>{utilization}%</span>
+                      <span className="text-muted-foreground">
+                        {formatCurrency(benefit.utilized)} of {formatCurrency(benefit.value)}
+                      </span>
+                      <span className={cn("font-medium", rag.textClass)}>
+                        {remaining > 0 ? `${formatCurrency(remaining)} left` : 'Complete'}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
