@@ -9,8 +9,7 @@ import {
   Home, GraduationCap, Heart, Car, Dumbbell, PiggyBank, 
   BookOpen, Search, ChevronRight, Filter, CheckCircle2, TrendingUp, Award, Clock, AlertCircle
 } from 'lucide-react';
-import { BENEFIT_CATEGORIES, BENEFIT_GROUPS, BenefitGroupKey } from '@/lib/benefitCategories';
-import { getRAGIndicator, getProgressColorClass } from '@/lib/colorUtils';
+import { BENEFIT_CATEGORIES, getRAGStatus, BenefitCategoryKey } from '@/lib/benefitCategories';
 import {
   Select,
   SelectContent,
@@ -21,21 +20,14 @@ import {
 import { cn } from '@/lib/utils';
 
 const benefits = [
-  { name: 'Housing Allowance', nameKey: 'benefit.housing', icon: Home, value: 120000, utilized: 120000, category: 'housing', group: 'allowances' as BenefitGroupKey, route: '/employee/housing', description: 'Monthly housing allowance paid with salary', bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'] },
-  { name: 'Education Allowance', nameKey: 'benefit.education', icon: GraduationCap, value: 60000, utilized: 42000, category: 'education', group: 'allowances' as BenefitGroupKey, route: '/employee/schooling', description: 'Education support for dependents', bullets: ['Per child up to 18 years', 'Covers tuition fees only'] },
-  { name: 'Transport & Mobility', nameKey: 'benefit.transport', icon: Car, value: 39000, utilized: 33000, category: 'transport', group: 'allowances' as BenefitGroupKey, route: '/employee/transport', description: 'Monthly transport and flight tickets', bullets: ['Paid monthly with salary', 'Includes annual flight tickets'] },
-  { name: 'Health Insurance', nameKey: 'benefit.health', icon: Heart, value: 45000, utilized: 12500, category: 'health', group: 'health_protection' as BenefitGroupKey, route: '/employee/health', description: 'Comprehensive health coverage', bullets: ['Includes dental and optical', 'Covers spouse and children'] },
-  { name: 'Wellbeing Program', nameKey: 'benefit.wellbeing', icon: Dumbbell, value: 6000, utilized: 3200, category: 'wellbeing', group: 'health_protection' as BenefitGroupKey, route: '/employee/wellbeing', description: 'Health and wellness benefits', bullets: ['Gym membership covered', 'Wellness app subscription'] },
-  { name: 'Financial Planning', nameKey: 'benefit.financial', icon: PiggyBank, value: 36000, utilized: 18000, category: 'financial', group: 'financial_rewards' as BenefitGroupKey, route: '/employee/financial', description: 'Retirement savings with employer match', bullets: ['5% employer match', 'Multiple fund options'] },
-  { name: 'Annual Bonus', nameKey: 'benefit.bonus', icon: Award, value: 70000, utilized: 0, category: 'rewards', group: 'financial_rewards' as BenefitGroupKey, route: '/employee/bonus', description: 'Performance-based annual bonus', bullets: ['Performance-based (0-200%)', 'Target: 2 months salary'] },
-  { name: 'Learning & Development', nameKey: 'benefit.learning', icon: BookOpen, value: 12000, utilized: 4500, category: 'learning', group: 'financial_rewards' as BenefitGroupKey, route: '/employee/learning', description: 'Professional development budget', bullets: ['Courses and certifications', 'Pre-approval required'] },
-];
-
-const groupFilters = [
-  { value: 'all', label: 'All Benefits' },
-  { value: 'allowances', label: 'Allowances' },
-  { value: 'health_protection', label: 'Health & Protection' },
-  { value: 'financial_rewards', label: 'Financial & Rewards' },
+  { name: 'Housing Allowance', nameKey: 'benefit.housing', icon: Home, value: 120000, utilized: 120000, category: 'housing' as BenefitCategoryKey, route: '/employee/housing', description: 'Monthly housing allowance paid with salary', bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'] },
+  { name: 'Education Allowance', nameKey: 'benefit.education', icon: GraduationCap, value: 60000, utilized: 42000, category: 'education' as BenefitCategoryKey, route: '/employee/schooling', description: 'Education support for dependents', bullets: ['Per child up to 18 years', 'Covers tuition fees only'] },
+  { name: 'Transport & Mobility', nameKey: 'benefit.transport', icon: Car, value: 39000, utilized: 33000, category: 'transport' as BenefitCategoryKey, route: '/employee/transport', description: 'Monthly transport and flight tickets', bullets: ['Paid monthly with salary', 'Includes annual flight tickets'] },
+  { name: 'Health Insurance', nameKey: 'benefit.health', icon: Heart, value: 45000, utilized: 12500, category: 'health' as BenefitCategoryKey, route: '/employee/health', description: 'Comprehensive health coverage', bullets: ['Includes dental and optical', 'Covers spouse and children'] },
+  { name: 'Wellbeing Program', nameKey: 'benefit.wellbeing', icon: Dumbbell, value: 6000, utilized: 3200, category: 'wellbeing' as BenefitCategoryKey, route: '/employee/wellbeing', description: 'Health and wellness benefits', bullets: ['Gym membership covered', 'Wellness app subscription'] },
+  { name: 'Financial Planning', nameKey: 'benefit.financial', icon: PiggyBank, value: 36000, utilized: 18000, category: 'financial' as BenefitCategoryKey, route: '/employee/financial', description: 'Retirement savings with employer match', bullets: ['5% employer match', 'Multiple fund options'] },
+  { name: 'Annual Bonus', nameKey: 'benefit.bonus', icon: Award, value: 70000, utilized: 0, category: 'rewards' as BenefitCategoryKey, route: '/employee/bonus', description: 'Performance-based annual bonus', bullets: ['Performance-based (0-200%)', 'Target: 2 months salary'] },
+  { name: 'Learning & Development', nameKey: 'benefit.learning', icon: BookOpen, value: 12000, utilized: 4500, category: 'learning' as BenefitCategoryKey, route: '/employee/learning', description: 'Professional development budget', bullets: ['Courses and certifications', 'Pre-approval required'] },
 ];
 
 const utilizationFilters = [
@@ -55,7 +47,6 @@ const RAGIcon = ({ status }: { status: 'green' | 'amber' | 'red' }) => {
 export default function BenefitsPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [groupFilter, setGroupFilter] = useState('all');
   const [utilizationFilter, setUtilizationFilter] = useState('all');
 
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
@@ -70,13 +61,12 @@ export default function BenefitsPage() {
 
   const filteredBenefits = benefits.filter(benefit => {
     const matchesSearch = benefit.name.toLowerCase().includes(search.toLowerCase()) || benefit.description.toLowerCase().includes(search.toLowerCase());
-    const matchesGroup = groupFilter === 'all' || benefit.group === groupFilter;
     const utilization = (benefit.utilized / benefit.value) * 100;
     let matchesUtilization = true;
     if (utilizationFilter === 'fully-utilized') matchesUtilization = utilization >= 80;
     else if (utilizationFilter === 'partial') matchesUtilization = utilization >= 30 && utilization < 80;
     else if (utilizationFilter === 'underutilized') matchesUtilization = utilization < 30;
-    return matchesSearch && matchesGroup && matchesUtilization;
+    return matchesSearch && matchesUtilization;
   });
 
   const totalValue = benefits.reduce((sum, b) => sum + b.value, 0);
@@ -130,29 +120,6 @@ export default function BenefitsPage() {
         </Card>
       </div>
 
-      {/* Group Filter Chips */}
-      <div className="flex flex-wrap gap-2">
-        {groupFilters.map(g => {
-          const group = g.value !== 'all' ? BENEFIT_GROUPS[g.value as BenefitGroupKey] : null;
-          const isActive = groupFilter === g.value;
-          return (
-            <Button
-              key={g.value}
-              variant={isActive ? "default" : "outline"}
-              size="sm"
-              onClick={() => setGroupFilter(g.value)}
-              className={cn(
-                "h-8",
-                isActive && group && `${group.bgClass} text-white hover:${group.bgClass}/90`,
-                !isActive && group && `${group.bgLightClass} ${group.textClass} border-transparent hover:border-${group.bgClass}/30`
-              )}
-            >
-              {g.label}
-            </Button>
-          );
-        })}
-      </div>
-
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -167,18 +134,18 @@ export default function BenefitsPage() {
       {filteredBenefits.length === 0 ? (
         <Card className="p-8 text-center">
           <p className="text-muted-foreground">No benefits match your filters</p>
-          <Button variant="link" onClick={() => { setSearch(''); setGroupFilter('all'); setUtilizationFilter('all'); }}>Clear filters</Button>
+          <Button variant="link" onClick={() => { setSearch(''); setUtilizationFilter('all'); }}>Clear filters</Button>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredBenefits.map((benefit, index) => {
             const utilization = Math.round((benefit.utilized / benefit.value) * 100);
             const remaining = benefit.value - benefit.utilized;
-            const group = BENEFIT_GROUPS[benefit.group];
-            const rag = getRAGIndicator(utilization);
+            const cat = BENEFIT_CATEGORIES[benefit.category];
+            const rag = getRAGStatus(utilization);
             
             return (
-              <Card 
+              <Card
                 key={benefit.name} 
                 className="group cursor-pointer hover:shadow-lg transition-all overflow-hidden" 
                 onClick={() => navigate(benefit.route)} 
@@ -203,7 +170,6 @@ export default function BenefitsPage() {
                     <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                   
-                  {/* Utilization section with RAG */}
                   <div className="mt-4 pt-4 border-t border-border/50 space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Utilized</span>
@@ -214,7 +180,7 @@ export default function BenefitsPage() {
                       </Badge>
                     </div>
                     {/* Progress bar with RAG color */}
-                    <Progress value={utilization} className={cn("h-2", getProgressColorClass(utilization))} />
+                    <Progress value={utilization} className={cn("h-2", rag.progressClass)} />
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">
                         {formatCurrency(benefit.utilized)} of {formatCurrency(benefit.value)}

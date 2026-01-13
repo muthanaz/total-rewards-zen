@@ -15,8 +15,7 @@ import {
   School, Baby, Building2, CheckCircle2
 } from 'lucide-react';
 import { useSchools, useChildren } from '@/hooks/useSupabaseData';
-import { BENEFIT_GROUPS } from '@/lib/benefitCategories';
-import { getRAGIndicator } from '@/lib/colorUtils';
+import { BENEFIT_CATEGORIES, getRAGStatus } from '@/lib/benefitCategories';
 import { cn } from '@/lib/utils';
 
 const ALLOWANCE_PER_CHILD = 30000;

@@ -8,7 +8,7 @@ import {
   DollarSign, Home, GraduationCap, 
   Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote, AlertCircle, CheckCircle2, Clock, Award
 } from 'lucide-react';
-import { BENEFIT_CATEGORIES, BENEFIT_GROUPS, BenefitGroupKey } from '@/lib/benefitCategories';
+import { BENEFIT_CATEGORIES, getRAGStatus } from '@/lib/benefitCategories';
 import { getRAGIndicator, getProgressColorClass } from '@/lib/colorUtils';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
 import { BenefitActionButtons } from '@/components/employee/BenefitActionButtons';
