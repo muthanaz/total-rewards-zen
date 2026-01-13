@@ -10,6 +10,7 @@ export const UI_ELEMENTS_CONFIG = {
       { key: 'your_benefits', label: 'Your Benefits', labelAr: 'مزاياك' },
       { key: 'benefit_highlights', label: 'Benefit Highlights', labelAr: 'أبرز المزايا' },
       { key: 'request_widget', label: 'Request & Claims Widget', labelAr: 'أداة الطلبات والمطالبات' },
+      { key: 'per_diem_widget', label: 'Per Diem Claims', labelAr: 'مطالبات البدل اليومي' },
       { key: 'satisfaction_survey', label: 'Satisfaction Survey', labelAr: 'استطلاع الرضا' },
     ],
     benefits_analysis: [

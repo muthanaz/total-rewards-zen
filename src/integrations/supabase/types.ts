@@ -148,6 +148,65 @@ export type Database = {
           },
         ]
       }
+      benefit_grade_eligibility: {
+        Row: {
+          annual_allowance: number | null
+          benefit_id: string
+          coverage_percent: number | null
+          created_at: string | null
+          dependent_coverage: string | null
+          grade: string
+          id: string
+          is_eligible: boolean
+          max_claim_per_transaction: number | null
+          max_dependents: number | null
+          notes: string | null
+          requires_documentation: boolean | null
+          updated_at: string | null
+          waiting_period_days: number | null
+        }
+        Insert: {
+          annual_allowance?: number | null
+          benefit_id: string
+          coverage_percent?: number | null
+          created_at?: string | null
+          dependent_coverage?: string | null
+          grade: string
+          id?: string
+          is_eligible?: boolean
+          max_claim_per_transaction?: number | null
+          max_dependents?: number | null
+          notes?: string | null
+          requires_documentation?: boolean | null
+          updated_at?: string | null
+          waiting_period_days?: number | null
+        }
+        Update: {
+          annual_allowance?: number | null
+          benefit_id?: string
+          coverage_percent?: number | null
+          created_at?: string | null
+          dependent_coverage?: string | null
+          grade?: string
+          id?: string
+          is_eligible?: boolean
+          max_claim_per_transaction?: number | null
+          max_dependents?: number | null
+          notes?: string | null
+          requires_documentation?: boolean | null
+          updated_at?: string | null
+          waiting_period_days?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "benefit_grade_eligibility_benefit_id_fkey"
+            columns: ["benefit_id"]
+            isOneToOne: false
+            referencedRelation: "benefits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       benefits: {
         Row: {
           annual_value: number | null
@@ -603,6 +662,164 @@ export type Database = {
           settings?: Json | null
           updated_at?: string | null
           welcome_message?: string | null
+        }
+        Relationships: []
+      }
+      per_diem_claims: {
+        Row: {
+          accommodation_amount: number
+          created_at: string | null
+          currency: string
+          departure_date: string
+          destination_city: string | null
+          destination_country: string
+          destination_type: string
+          id: string
+          incidentals_amount: number
+          meals_amount: number
+          number_of_days: number | null
+          paid_at: string | null
+          rate_id: string | null
+          receipts_attached: boolean | null
+          return_date: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_notes: string | null
+          status: string
+          submitted_at: string | null
+          total_amount: number | null
+          transport_amount: number
+          trip_purpose: string
+          trip_reference: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          accommodation_amount?: number
+          created_at?: string | null
+          currency?: string
+          departure_date: string
+          destination_city?: string | null
+          destination_country: string
+          destination_type: string
+          id?: string
+          incidentals_amount?: number
+          meals_amount?: number
+          number_of_days?: number | null
+          paid_at?: string | null
+          rate_id?: string | null
+          receipts_attached?: boolean | null
+          return_date: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          submitted_at?: string | null
+          total_amount?: number | null
+          transport_amount?: number
+          trip_purpose: string
+          trip_reference?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          accommodation_amount?: number
+          created_at?: string | null
+          currency?: string
+          departure_date?: string
+          destination_city?: string | null
+          destination_country?: string
+          destination_type?: string
+          id?: string
+          incidentals_amount?: number
+          meals_amount?: number
+          number_of_days?: number | null
+          paid_at?: string | null
+          rate_id?: string | null
+          receipts_attached?: boolean | null
+          return_date?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          submitted_at?: string | null
+          total_amount?: number | null
+          transport_amount?: number
+          trip_purpose?: string
+          trip_reference?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "per_diem_claims_rate_id_fkey"
+            columns: ["rate_id"]
+            isOneToOne: false
+            referencedRelation: "per_diem_rates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      per_diem_rates: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string | null
+          currency: string
+          daily_accommodation: number
+          daily_incidentals: number
+          daily_meals: number
+          daily_total: number | null
+          daily_transport: number
+          destination_type: string
+          effective_from: string
+          effective_until: string | null
+          grade: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          region: string
+          updated_at: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          currency?: string
+          daily_accommodation?: number
+          daily_incidentals?: number
+          daily_meals?: number
+          daily_total?: number | null
+          daily_transport?: number
+          destination_type: string
+          effective_from?: string
+          effective_until?: string | null
+          grade: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          region: string
+          updated_at?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          currency?: string
+          daily_accommodation?: number
+          daily_incidentals?: number
+          daily_meals?: number
+          daily_total?: number | null
+          daily_transport?: number
+          destination_type?: string
+          effective_from?: string
+          effective_until?: string | null
+          grade?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          region?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
