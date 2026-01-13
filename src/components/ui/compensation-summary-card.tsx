@@ -68,10 +68,10 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
         transition={{ delay: 0.1, duration: 0.3 }}
       >
         <Card className="relative overflow-hidden border border-border/50 p-4">
-          {/* Gradient background: Teal (accent) from RIGHT fading to white, Gold (amber) from LEFT fading to white */}
+          {/* Gradient background: Teal (accent) from LEFT fading to white, Gold (amber) from RIGHT fading to white */}
           <div className="absolute inset-0 bg-white dark:bg-card" />
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-accent/10 via-accent/5 to-transparent" />
-          <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent" />
+          <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-accent/10 via-accent/5 to-transparent" />
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-amber-500/10 via-amber-500/5 to-transparent" />
         
           <div className="relative z-10">
             <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-3", isRTL && "md:flex-row-reverse")}>
@@ -79,7 +79,7 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
               <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
                 <div>
                   <div className={cn("flex items-center gap-2 mb-1", isRTL && "flex-row-reverse")}>
-                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    <h3 className="text-sm font-semibold text-foreground tracking-tight">
                       {isRTL ? 'إجمالي التعويضات المضمونة' : 'Total Guaranteed Compensation'}
                     </h3>
                     <InfoTooltip formula={totalCompensation.formula} dataSource={totalCompensation.dataSource} />
