@@ -91,16 +91,16 @@ export function AnimatedBarChart({
                 tickFormatter={formatValue}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                tickCount={5}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+                tickCount={4}
               />
               <YAxis 
                 type="category" 
                 dataKey="name" 
-                width={100}
+                width={70}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: 'hsl(var(--foreground))', fontSize: 12, fontWeight: 500 }}
+                tick={{ fill: 'hsl(var(--foreground))', fontSize: 11, fontWeight: 500 }}
               />
             </>
           ) : (
@@ -109,19 +109,17 @@ export function AnimatedBarChart({
                 dataKey="name"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                 interval={0}
-                angle={data.length > 5 ? -45 : 0}
-                textAnchor={data.length > 5 ? 'end' : 'middle'}
-                height={data.length > 5 ? 60 : 30}
+                height={25}
               />
               <YAxis 
                 tickFormatter={formatValue}
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                tickCount={5}
-                width={50}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+                tickCount={4}
+                width={40}
               />
             </>
           )}
