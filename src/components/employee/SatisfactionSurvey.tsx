@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Star, Sparkles, Send, CheckCircle2, Lightbulb, Calendar } from 'lucide-react';
+import { Star, Sparkles, Send, CheckCircle2, Lightbulb, Calendar, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -12,6 +12,29 @@ import { cn } from '@/lib/utils';
 
 interface SatisfactionSurveyProps {
   compact?: boolean;
+}
+
+// Survey window configuration: October 15 - December 31 (Q4 end of year)
+const SURVEY_WINDOW = {
+  startMonth: 10, // October
+  startDay: 15,
+  endMonth: 12,  // December
+  endDay: 31,
+};
+
+function isWithinSurveyWindow(): boolean {
+  const now = new Date();
+  const month = now.getMonth() + 1; // 1-12
+  const day = now.getDate();
+  
+  // Check if within the survey window (Oct 15 - Dec 31)
+  if (month === SURVEY_WINDOW.startMonth) {
+    return day >= SURVEY_WINDOW.startDay;
+  }
+  if (month > SURVEY_WINDOW.startMonth && month <= SURVEY_WINDOW.endMonth) {
+    return true;
+  }
+  return false;
 }
 
 export function SatisfactionSurvey({ compact = false }: SatisfactionSurveyProps) {
@@ -25,12 +48,12 @@ export function SatisfactionSurvey({ compact = false }: SatisfactionSurveyProps)
   const [hoveredStar, setHoveredStar] = useState<{ type: 'benefits' | 'platform'; star: number } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
-  const [lastSubmissionYear, setLastSubmissionYear] = useState<number | null>(null);
+  const [isDismissed, setIsDismissed] = useState(false);
 
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
 
   const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().toLocaleString('default', { month: 'long' });
+  const isInWindow = isWithinSurveyWindow();
 
   // Check for existing ratings this year (annual survey)
   useEffect(() => {
@@ -54,12 +77,30 @@ export function SatisfactionSurvey({ compact = false }: SatisfactionSurveyProps)
         }
         
         setHasSubmitted(true);
-        setLastSubmissionYear(currentYear);
       }
     }
 
     fetchExistingRatings();
+
+    // Check if dismissed this session
+    const dismissed = sessionStorage.getItem(`survey_dismissed_${currentYear}`);
+    if (dismissed) setIsDismissed(true);
   }, [user?.id, currentYear]);
+
+  // Don't render if outside survey window
+  if (!isInWindow) {
+    return null;
+  }
+
+  // Don't render if dismissed (for compact view only)
+  if (isDismissed && compact && hasSubmitted) {
+    return null;
+  }
+
+  const handleDismiss = () => {
+    setIsDismissed(true);
+    sessionStorage.setItem(`survey_dismissed_${currentYear}`, 'true');
+  };
 
   const handleSubmit = async () => {
     if (!user?.id) {
@@ -104,7 +145,6 @@ export function SatisfactionSurvey({ compact = false }: SatisfactionSurveyProps)
         });
 
       setHasSubmitted(true);
-      setLastSubmissionYear(currentYear);
       toast.success(t('Thank you for your feedback! Your input helps us improve.', 'شكراً لملاحظاتك! مدخلاتك تساعدنا على التحسين.'));
     } catch (error: any) {
       console.error('Error submitting satisfaction rating:', error);
@@ -178,7 +218,15 @@ export function SatisfactionSurvey({ compact = false }: SatisfactionSurveyProps)
     }
     
     return (
-      <Card className="border-violet-500/20 bg-gradient-to-br from-card via-card to-violet-500/5">
+      <Card className="border-violet-500/20 bg-gradient-to-br from-card via-card to-violet-500/5 relative">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-2 right-2 h-6 w-6 opacity-50 hover:opacity-100"
+          onClick={handleDismiss}
+        >
+          <X className="w-3.5 h-3.5" />
+        </Button>
         <CardContent className="p-4">
           <div className={cn("flex items-start gap-3", isRTL && "flex-row-reverse")}>
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500/15 to-violet-500/5 shrink-0">
@@ -371,8 +419,8 @@ export function SatisfactionSurvey({ compact = false }: SatisfactionSurveyProps)
 
         <p className="text-xs text-muted-foreground text-center">
           {t(
-            'This annual survey helps HR understand employee satisfaction and plan better benefits.',
-            'يساعد هذا الاستبيان السنوي الموارد البشرية على فهم رضا الموظفين وتخطيط مزايا أفضل.'
+            'This annual survey is available from Oct 15 to Dec 31 and helps HR plan better benefits.',
+            'هذا الاستبيان السنوي متاح من ١٥ أكتوبر إلى ٣١ ديسمبر ويساعد الموارد البشرية في تخطيط مزايا أفضل.'
           )}
         </p>
       </CardContent>

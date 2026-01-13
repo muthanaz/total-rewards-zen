@@ -620,6 +620,45 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          action_url: string | null
+          category: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_read: boolean
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          category?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean
+          message: string
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          category?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_read?: boolean
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       organizations: {
         Row: {
           accent_color: string | null
@@ -632,6 +671,8 @@ export type Database = {
           primary_color: string | null
           secondary_color: string | null
           settings: Json | null
+          survey_end_month: number | null
+          survey_start_month: number | null
           updated_at: string | null
           welcome_message: string | null
         }
@@ -646,6 +687,8 @@ export type Database = {
           primary_color?: string | null
           secondary_color?: string | null
           settings?: Json | null
+          survey_end_month?: number | null
+          survey_start_month?: number | null
           updated_at?: string | null
           welcome_message?: string | null
         }
@@ -660,6 +703,8 @@ export type Database = {
           primary_color?: string | null
           secondary_color?: string | null
           settings?: Json | null
+          survey_end_month?: number | null
+          survey_start_month?: number | null
           updated_at?: string | null
           welcome_message?: string | null
         }
