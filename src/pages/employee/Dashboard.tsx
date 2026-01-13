@@ -26,15 +26,22 @@ const salaryData = {
   activatedItems: 7,
 };
 
+// Value types: 
+// - guaranteed: Fixed cash paid regardless (Housing, Transport, Education)
+// - employer_cost: Non-cash value paid by employer (Health Insurance premium)
+// - performance: Variable based on performance (Annual Bonus)
+// - budget: Use-it-or-lose-it allocations (Learning, Wellbeing, Financial)
+type BenefitValueType = 'guaranteed' | 'employer_cost' | 'performance' | 'budget';
+
 const benefits = [
-  { name: 'Housing Allowance', nameKey: 'benefit.housing', icon: Home, value: 120000, utilized: 120000, type: 'cash_allowances', area: 'home_living', route: '/employee/housing', category: 'Housing', claimable: true, bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'], bulletsAr: ['يُدفع شهرياً مع الراتب', 'يمكن استخدامه للإيجار أو الرهن العقاري'] },
-  { name: 'Education Allowance', nameKey: 'benefit.education', icon: GraduationCap, value: 60000, utilized: 42000, type: 'cash_allowances', area: 'family_parenting', route: '/employee/schooling', category: 'Schooling', claimable: true, bullets: ['Per child up to 18 years', 'Covers tuition fees only'], bulletsAr: ['لكل طفل حتى ١٨ عاماً', 'يغطي الرسوم الدراسية فقط'] },
-  { name: 'Health Insurance', nameKey: 'benefit.health', icon: Heart, value: 45000, utilized: 12500, type: 'health_protection', area: 'health', route: '/employee/health', category: 'Health Insurance', claimable: true, bullets: ['Includes dental and optical', 'Covers spouse and children'], bulletsAr: ['يشمل طب الأسنان والبصريات', 'يغطي الزوج/الزوجة والأطفال'] },
-  { name: 'Transport & Mobility', nameKey: 'benefit.transportMobility', icon: Car, value: 39000, utilized: 33000, type: 'cash_allowances', area: 'mobility', route: '/employee/transport', category: 'Transport', claimable: true, bullets: ['Monthly allowance: AED 2,000', 'Annual flight tickets included', 'Covers fuel, parking & tickets'], bulletsAr: ['بدل شهري: ٢٠٠٠ درهم', 'تذاكر الطيران السنوية مشمولة', 'يغطي الوقود والمواقف والتذاكر'] },
-  { name: 'Annual Bonus', nameKey: 'benefit.annualBonus', icon: Gift, value: 70000, utilized: 0, type: 'cash_allowances', area: 'money', route: '/employee/bonus', category: 'Bonus', claimable: false, bullets: ['Performance-based (0-200%)', 'Paid annually in March', 'Target: 2 months base salary'], bulletsAr: ['مبني على الأداء (٠-٢٠٠٪)', 'يُدفع سنوياً في مارس', 'الهدف: راتب شهرين أساسي'] },
-  { name: 'Financial Planning', nameKey: 'benefit.financial', icon: PiggyBank, value: 36000, utilized: 18000, type: 'wealth_ownership', area: 'money', route: '/employee/financial', category: 'Financial', claimable: false, bullets: ['5% employer match', 'Multiple fund options'], bulletsAr: ['مطابقة ٥٪ من صاحب العمل', 'خيارات صناديق متعددة'] },
-  { name: 'Wellbeing Program', nameKey: 'benefit.wellbeingProgram', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', area: 'health', route: '/employee/wellbeing', category: 'Wellbeing', claimable: true, bullets: ['Gym membership covered', 'Wellness app subscription'], bulletsAr: ['عضوية النادي الرياضي مغطاة', 'اشتراك تطبيق العافية'] },
-  { name: 'Learning & Development', nameKey: 'benefit.learning', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', area: 'career', route: '/employee/learning', category: 'Learning & Development', claimable: true, bullets: ['Courses and certifications', 'Pre-approval required'], bulletsAr: ['الدورات والشهادات', 'يتطلب موافقة مسبقة'] },
+  { name: 'Housing Allowance', nameKey: 'benefit.housing', icon: Home, value: 120000, utilized: 120000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'home_living', route: '/employee/housing', category: 'Housing', claimable: true, bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'], bulletsAr: ['يُدفع شهرياً مع الراتب', 'يمكن استخدامه للإيجار أو الرهن العقاري'] },
+  { name: 'Education Allowance', nameKey: 'benefit.education', icon: GraduationCap, value: 60000, utilized: 42000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'family_parenting', route: '/employee/schooling', category: 'Schooling', claimable: true, bullets: ['Per child up to 18 years', 'Covers tuition fees only'], bulletsAr: ['لكل طفل حتى ١٨ عاماً', 'يغطي الرسوم الدراسية فقط'] },
+  { name: 'Health Insurance', nameKey: 'benefit.health', icon: Heart, value: 45000, utilized: 12500, type: 'health_protection', valueType: 'employer_cost' as BenefitValueType, area: 'health', route: '/employee/health', category: 'Health Insurance', claimable: true, bullets: ['Includes dental and optical', 'Covers spouse and children'], bulletsAr: ['يشمل طب الأسنان والبصريات', 'يغطي الزوج/الزوجة والأطفال'] },
+  { name: 'Transport & Mobility', nameKey: 'benefit.transportMobility', icon: Car, value: 39000, utilized: 33000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'mobility', route: '/employee/transport', category: 'Transport', claimable: true, bullets: ['Monthly allowance: AED 2,000', 'Annual flight tickets included', 'Covers fuel, parking & tickets'], bulletsAr: ['بدل شهري: ٢٠٠٠ درهم', 'تذاكر الطيران السنوية مشمولة', 'يغطي الوقود والمواقف والتذاكر'] },
+  { name: 'Annual Bonus', nameKey: 'benefit.annualBonus', icon: Gift, value: 70000, utilized: 0, type: 'cash_allowances', valueType: 'performance' as BenefitValueType, area: 'money', route: '/employee/bonus', category: 'Bonus', claimable: false, bullets: ['Performance-based (0-200%)', 'Paid annually in March', 'Target: 2 months base salary'], bulletsAr: ['مبني على الأداء (٠-٢٠٠٪)', 'يُدفع سنوياً في مارس', 'الهدف: راتب شهرين أساسي'] },
+  { name: 'Financial Planning', nameKey: 'benefit.financial', icon: PiggyBank, value: 36000, utilized: 18000, type: 'wealth_ownership', valueType: 'budget' as BenefitValueType, area: 'money', route: '/employee/financial', category: 'Financial', claimable: false, bullets: ['5% employer match', 'Multiple fund options'], bulletsAr: ['مطابقة ٥٪ من صاحب العمل', 'خيارات صناديق متعددة'] },
+  { name: 'Wellbeing Program', nameKey: 'benefit.wellbeingProgram', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', valueType: 'budget' as BenefitValueType, area: 'health', route: '/employee/wellbeing', category: 'Wellbeing', claimable: true, bullets: ['Gym membership covered', 'Wellness app subscription'], bulletsAr: ['عضوية النادي الرياضي مغطاة', 'اشتراك تطبيق العافية'] },
+  { name: 'Learning & Development', nameKey: 'benefit.learning', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', valueType: 'budget' as BenefitValueType, area: 'career', route: '/employee/learning', category: 'Learning & Development', claimable: true, bullets: ['Courses and certifications', 'Pre-approval required'], bulletsAr: ['الدورات والشهادات', 'يتطلب موافقة مسبقة'] },
 ];
 
 export default function EmployeeDashboard() {
@@ -56,6 +63,16 @@ export default function EmployeeDashboard() {
   
   // Calculate derived metrics from actual benefit data
   const calculatedMetrics = useMemo(() => {
+    // Guaranteed benefits = Fixed cash allowances paid regardless
+    const guaranteedBenefitValue = benefits
+      .filter(b => b.valueType === 'guaranteed')
+      .reduce((sum, b) => sum + b.value, 0);
+    
+    // Potential/variable benefits = Employer cost, performance, and budget-based
+    const potentialBenefitValue = benefits
+      .filter(b => b.valueType !== 'guaranteed')
+      .reduce((sum, b) => sum + b.value, 0);
+    
     const totalBenefitValue = benefits.reduce((sum, b) => sum + b.value, 0);
     const totalUtilized = benefits.reduce((sum, b) => sum + b.utilized, 0);
     const totalRemaining = totalBenefitValue - totalUtilized;
@@ -64,23 +81,32 @@ export default function EmployeeDashboard() {
     const underutilizedCount = benefits.filter(b => (b.utilized / b.value) < 0.5).length;
     const avgUtilizationPerBenefit = Math.round(totalUtilized / benefits.length);
     
-    // Total compensation = salary + benefits
-    const totalCompensation = salaryData.annualSalary + totalBenefitValue;
-    const benefitsAsPercentOfComp = Math.round((totalBenefitValue / totalCompensation) * 100);
+    // Total guaranteed compensation = salary + guaranteed benefits only
+    const guaranteedCompensation = salaryData.annualSalary + guaranteedBenefitValue;
+    // Potential total = salary + all benefits
+    const potentialCompensation = salaryData.annualSalary + totalBenefitValue;
+    
+    // For display, show guaranteed values as the primary metrics
+    const guaranteedBenefitsAsPercentOfComp = Math.round((guaranteedBenefitValue / guaranteedCompensation) * 100);
+    const salaryAsPercentOfGuaranteed = Math.round((salaryData.annualSalary / guaranteedCompensation) * 100);
     
     // Trend data (demo - comparing to last month)
     const lastMonthUtilized = totalUtilized * 0.92; // Demo: 8% growth
     const lastMonthUtilizationPercent = 52; // Demo value
     
     return {
+      guaranteedBenefitValue,
+      potentialBenefitValue,
       totalBenefitValue,
       totalUtilized,
       totalRemaining,
       utilizationPercent,
       fullyUtilizedCount,
       underutilizedCount,
-      totalCompensation,
-      benefitsAsPercentOfComp,
+      guaranteedCompensation,
+      potentialCompensation,
+      guaranteedBenefitsAsPercentOfComp,
+      salaryAsPercentOfGuaranteed,
       avgUtilizationPerBenefit,
       lastMonthUtilized,
       lastMonthUtilizationPercent
@@ -111,7 +137,7 @@ export default function EmployeeDashboard() {
     console.log(`Exporting data as ${format}`);
   };
 
-  // 4 Key Metrics with info tooltips
+  // 4 Key Metrics with info tooltips - Now showing guaranteed values prominently
   const hiddenValue = `${isRTL ? '' : 'AED '}•••,•••${isRTL ? ' درهم' : ''}`;
   const keyMetrics = [
     { 
@@ -134,32 +160,44 @@ export default function EmployeeDashboard() {
     },
     { 
       icon: Gift, 
-      value: salaryHidden ? hiddenValue : formatCurrency(calculatedMetrics.totalBenefitValue), 
-      label: isRTL ? 'قيمة المزايا السنوية' : 'Annual Benefits Value',
-      formula: isRTL ? 'مجموع جميع المزايا والبدلات السنوية' : 'Sum of all annual benefits & allowances',
-      dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
+      value: salaryHidden ? hiddenValue : formatCurrency(calculatedMetrics.guaranteedBenefitValue), 
+      label: isRTL ? 'المزايا المضمونة' : 'Guaranteed Benefits',
+      formula: isRTL 
+        ? `البدلات النقدية المضمونة (السكن + التعليم + النقل) = ${formatCurrency(calculatedMetrics.guaranteedBenefitValue)}. لا تشمل: المكافآت والميزانيات المتغيرة`
+        : `Fixed cash allowances (Housing + Education + Transport) = ${formatCurrency(calculatedMetrics.guaranteedBenefitValue)}. Excludes: bonuses and variable budgets`,
+      dataSource: isRTL ? 'نظام المزايا - مضمون' : 'Benefits System - Guaranteed',
       variant: 'benefits' as const,
       isSensitive: true,
+      subtitle: salaryHidden ? undefined : (isRTL 
+        ? `حتى ${formatCurrencyShort(calculatedMetrics.totalBenefitValue)} شاملة المتغيرة`
+        : `Up to ${formatCurrencyShort(calculatedMetrics.totalBenefitValue)} incl. variable`),
     },
     { 
       icon: Wallet, 
-      value: salaryHidden ? '••%' : `${calculatedMetrics.benefitsAsPercentOfComp}%`, 
+      value: salaryHidden ? '••%' : `${calculatedMetrics.guaranteedBenefitsAsPercentOfComp}%`, 
       label: isRTL ? 'المزايا من التعويضات' : 'Benefits % of Package',
-      formula: isRTL ? '(قيمة المزايا ÷ إجمالي التعويضات) × ١٠٠' : '(Benefits Value ÷ Total Compensation) × 100',
-      dataSource: isRTL ? 'محسوب' : 'Calculated',
+      formula: isRTL 
+        ? `(المزايا المضمونة ÷ إجمالي التعويضات المضمونة) × ١٠٠ = (${formatCurrency(calculatedMetrics.guaranteedBenefitValue)} ÷ ${formatCurrency(calculatedMetrics.guaranteedCompensation)}) × 100`
+        : `(Guaranteed Benefits ÷ Guaranteed Compensation) × 100 = (${formatCurrency(calculatedMetrics.guaranteedBenefitValue)} ÷ ${formatCurrency(calculatedMetrics.guaranteedCompensation)}) × 100`,
+      dataSource: isRTL ? 'محسوب - مضمون فقط' : 'Calculated - Guaranteed only',
       variant: 'benefits' as const,
       isSensitive: true,
     },
   ];
 
   const totalCompensationData = {
-    value: salaryHidden ? `${isRTL ? '' : 'AED '}•••,•••${isRTL ? ' درهم' : ''}` : formatCurrency(calculatedMetrics.totalCompensation),
+    value: salaryHidden ? `${isRTL ? '' : 'AED '}•••,•••${isRTL ? ' درهم' : ''}` : formatCurrency(calculatedMetrics.guaranteedCompensation),
     formula: isRTL 
-      ? `${formatCurrency(salaryData.annualSalary)} + ${formatCurrency(calculatedMetrics.totalBenefitValue)} = ${formatCurrency(calculatedMetrics.totalCompensation)}`
-      : `${formatCurrency(salaryData.annualSalary)} + ${formatCurrency(calculatedMetrics.totalBenefitValue)} = ${formatCurrency(calculatedMetrics.totalCompensation)}`,
-    dataSource: isRTL ? 'الراتب السنوي + قيمة المزايا' : 'Annual Salary + Benefits Value',
+      ? `الراتب السنوي (${formatCurrency(salaryData.annualSalary)}) + المزايا المضمونة (${formatCurrency(calculatedMetrics.guaranteedBenefitValue)}) = ${formatCurrency(calculatedMetrics.guaranteedCompensation)}`
+      : `Annual Salary (${formatCurrency(salaryData.annualSalary)}) + Guaranteed Benefits (${formatCurrency(calculatedMetrics.guaranteedBenefitValue)}) = ${formatCurrency(calculatedMetrics.guaranteedCompensation)}`,
+    dataSource: isRTL ? 'الراتب السنوي + المزايا المضمونة' : 'Annual Salary + Guaranteed Benefits',
+    subtitle: salaryHidden ? undefined : (isRTL 
+      ? `الإجمالي المحتمل: ${formatCurrency(calculatedMetrics.potentialCompensation)} شاملة المتغيرة`
+      : `Potential total: ${formatCurrency(calculatedMetrics.potentialCompensation)} incl. variable`),
     salaryHidden,
     onTogglePrivacy: toggleSalaryVisibility,
+    salaryPercent: calculatedMetrics.salaryAsPercentOfGuaranteed,
+    benefitsPercent: calculatedMetrics.guaranteedBenefitsAsPercentOfComp,
   };
 
   const utilizationData = {

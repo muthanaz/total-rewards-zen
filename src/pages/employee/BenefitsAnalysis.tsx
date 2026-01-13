@@ -11,16 +11,18 @@ import { cn } from '@/lib/utils';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { motion } from 'framer-motion';
 
-// Demo data
+// Demo data with valueType categorization
+type BenefitValueType = 'guaranteed' | 'employer_cost' | 'performance' | 'budget';
+
 const benefits = [
-  { name: 'Housing Allowance', value: 120000, utilized: 120000, type: 'cash_allowances' },
-  { name: 'Education Allowance', value: 60000, utilized: 42000, type: 'cash_allowances' },
-  { name: 'Health Insurance', value: 45000, utilized: 12500, type: 'health_protection' },
-  { name: 'Transport & Mobility', value: 39000, utilized: 33000, type: 'cash_allowances' },
-  { name: 'Annual Bonus', value: 70000, utilized: 0, type: 'cash_allowances' },
-  { name: 'Financial Planning', value: 36000, utilized: 18000, type: 'wealth_ownership' },
-  { name: 'Wellbeing Program', value: 6000, utilized: 3200, type: 'wellbeing' },
-  { name: 'Learning & Development', value: 12000, utilized: 4500, type: 'growth_career' },
+  { name: 'Housing Allowance', value: 120000, utilized: 120000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType },
+  { name: 'Education Allowance', value: 60000, utilized: 42000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType },
+  { name: 'Health Insurance', value: 45000, utilized: 12500, type: 'health_protection', valueType: 'employer_cost' as BenefitValueType },
+  { name: 'Transport & Mobility', value: 39000, utilized: 33000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType },
+  { name: 'Annual Bonus', value: 70000, utilized: 0, type: 'cash_allowances', valueType: 'performance' as BenefitValueType },
+  { name: 'Financial Planning', value: 36000, utilized: 18000, type: 'wealth_ownership', valueType: 'budget' as BenefitValueType },
+  { name: 'Wellbeing Program', value: 6000, utilized: 3200, type: 'wellbeing', valueType: 'budget' as BenefitValueType },
+  { name: 'Learning & Development', value: 12000, utilized: 4500, type: 'growth_career', valueType: 'budget' as BenefitValueType },
 ];
 
 // Chart data with translations
@@ -117,6 +119,7 @@ export default function BenefitsAnalysis() {
   const isRTL = direction === 'rtl';
 
   const calculatedMetrics = useMemo(() => {
+    const guaranteedBenefitValue = benefits.filter(b => b.valueType === 'guaranteed').reduce((sum, b) => sum + b.value, 0);
     const totalBenefitValue = benefits.reduce((sum, b) => sum + b.value, 0);
     const totalUtilized = benefits.reduce((sum, b) => sum + b.utilized, 0);
     const utilizationPercent = Math.round((totalUtilized / totalBenefitValue) * 100);
@@ -124,6 +127,7 @@ export default function BenefitsAnalysis() {
     const underutilizedCount = benefits.filter(b => (b.utilized / b.value) < 0.5).length;
     
     return {
+      guaranteedBenefitValue,
       totalBenefitValue,
       totalUtilized,
       utilizationPercent,
