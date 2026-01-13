@@ -159,7 +159,7 @@ export default function BenefitsPage() {
           <Button variant="link" onClick={() => { setSearch(''); setCategoryFilter('all'); setUtilizationFilter('all'); }}>Clear filters</Button>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredBenefits.map((benefit, index) => {
             const utilization = Math.round((benefit.utilized / benefit.value) * 100);
             const remaining = benefit.value - benefit.utilized;
@@ -167,44 +167,42 @@ export default function BenefitsPage() {
             return (
               <Card 
                 key={benefit.name} 
-                className="group cursor-pointer hover:border-accent/40 hover:shadow-md transition-all duration-200 flex flex-col p-5"
+                className="group cursor-pointer hover:border-accent/40 hover:shadow-md transition-all duration-200 flex flex-col p-4"
                 onClick={() => navigate(benefit.route)} 
                 style={{ animationDelay: `${index * 30}ms` }}
               >
-                <div className="flex items-start gap-4">
-                  <div className="p-3 rounded-xl bg-accent/10 group-hover:bg-accent/20 transition-colors shrink-0">
-                    <benefit.icon className="w-6 h-6 text-accent" />
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors shrink-0">
+                    <benefit.icon className="w-5 h-5 text-accent" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <h3 className="font-semibold text-base group-hover:text-accent transition-colors">
+                      <h3 className="font-semibold text-sm group-hover:text-accent transition-colors">
                         {benefit.name}
                       </h3>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{benefit.description}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{benefit.description}</p>
                   </div>
                 </div>
                 
                 {/* Utilization Progress */}
-                <div className="mt-5 pt-4 border-t border-border/50 space-y-3">
+                <div className="mt-3 pt-3 border-t border-border/50 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Utilization</span>
-                    {/* RAG Badge */}
-                    <Badge className={cn("text-xs px-2 py-0.5 gap-1 border-0", rag.bgClass, rag.textClass)}>
+                    <span className="text-xs text-muted-foreground">
+                      {formatCurrency(benefit.utilized)} / {formatCurrency(benefit.value)}
+                    </span>
+                    <Badge className={cn("text-[10px] px-1.5 py-0 gap-1 border-0", rag.bgClass, rag.textClass)}>
                       <RAGIcon status={rag.status} />
                       {utilization}%
                     </Badge>
                   </div>
-                  <Progress value={utilization} className={cn("h-2", getProgressColorClass(utilization))} />
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      {formatCurrency(benefit.utilized)} of {formatCurrency(benefit.value)}
-                    </span>
-                    <span className={cn("font-medium", rag.textClass)}>
-                      {remaining > 0 ? `${formatCurrency(remaining)} left` : 'Complete'}
-                    </span>
-                  </div>
+                  <Progress value={utilization} className={cn("h-1.5", getProgressColorClass(utilization))} />
+                  {remaining > 0 && (
+                    <p className={cn("text-xs font-medium", rag.textClass)}>
+                      {formatCurrency(remaining)} available
+                    </p>
+                  )}
                 </div>
               </Card>
             );

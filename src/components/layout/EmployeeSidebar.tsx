@@ -242,7 +242,7 @@ export function EmployeeSidebar() {
               {t('nav.profile')}
             </span>
             <span className="text-[10px] text-muted-foreground">
-              {isRTL ? 'إدارة حسابك وأمانك' : 'Manage your account & security'}
+              {isRTL ? 'إدارة الحساب والأمان' : 'Manage account & security'}
             </span>
           </div>
           <ChevronCollapsed className={cn(
