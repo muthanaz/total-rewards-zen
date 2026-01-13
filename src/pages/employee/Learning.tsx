@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { RAGLegend } from '@/components/ui/rag-legend';
 import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { NoData } from '@/components/ui/empty-state';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
@@ -11,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { BookOpen, Award, Clock, CheckCircle, Plus, ExternalLink, Wallet, TrendingUp, Calculator, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getRAGStatus } from '@/lib/benefitCategories';
+import { getRAGIndicator } from '@/lib/colorUtils';
 import { cn } from '@/lib/utils';
 
 const ANNUAL_BUDGET = 12000;
@@ -60,7 +61,7 @@ export default function LearningPage() {
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
   const remaining = ANNUAL_BUDGET - UTILIZED;
   const utilizationPercent = Math.round((UTILIZED / ANNUAL_BUDGET) * 100);
-  const rag = getRAGStatus(utilizationPercent);
+  const rag = getRAGIndicator(utilizationPercent);
   const RAGIcon = rag.status === 'green' ? CheckCircle : rag.status === 'amber' ? Clock : AlertCircle;
 
   const handleSubmitRequest = () => {
@@ -90,6 +91,9 @@ export default function LearningPage() {
           {utilizationPercent}% {rag.label}
         </Badge>
       </div>
+
+      {/* RAG Legend */}
+      <RAGLegend compact />
       
       <div className="flex justify-end">
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

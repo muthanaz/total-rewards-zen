@@ -44,8 +44,8 @@ export const RAG_INDICATORS: Record<RAGStatus, RAGIndicator> = {
   },
   amber: {
     status: 'amber',
-    label: 'In Progress',
-    labelAr: 'قيد الاستخدام',
+    label: 'Partially Used',
+    labelAr: 'مستخدم جزئياً',
     bgClass: 'bg-amber-500/10',
     textClass: 'text-amber-600 dark:text-amber-400',
     borderClass: 'border-amber-500/30',
