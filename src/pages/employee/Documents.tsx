@@ -39,10 +39,10 @@ export default function DocumentsPage() {
       <div className={cn(isRTL && "text-right")}>
         <h1 className={cn("text-2xl font-display font-bold flex items-center gap-3", isRTL && "flex-row-reverse")}>
           <FolderOpen className="w-7 h-7 text-accent" />
-          {t('Documents & Claims', 'المستندات والمطالبات')}
+          {t('HR & Requests', 'الموارد البشرية والطلبات')}
         </h1>
         <p className="text-muted-foreground mt-1">
-          {t('Generate documents and track your claims', 'إنشاء المستندات وتتبع مطالباتك')}
+          {t('HR documents, claims, per diem & government services', 'مستندات الموارد البشرية والمطالبات وبدل السفر والخدمات الحكومية')}
         </p>
       </div>
 
