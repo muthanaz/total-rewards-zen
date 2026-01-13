@@ -138,16 +138,16 @@ export default function BenefitsPage() {
                       <benefit.icon className={cn("w-5 h-5", cat?.textClass)} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm group-hover:text-accent transition-colors">{benefit.name}</h3>
-                      <Badge variant="secondary" className={cn("mt-1 text-[10px]", cat?.bgLightClass, cat?.textClass)}>{cat?.label}</Badge>
-                      <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{benefit.description}</p>
+                      <h3 className="font-semibold text-base group-hover:text-accent transition-colors">{benefit.name}</h3>
+                      <Badge variant="secondary" className={cn("mt-1.5 text-xs", cat?.bgLightClass, cat?.textClass)}>{cat?.label}</Badge>
+                      <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{benefit.description}</p>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                   <div className="mt-4 pt-4 border-t border-border/50 space-y-2">
-                    <div className="flex justify-between text-xs"><span className="text-muted-foreground">Utilized</span><span className="font-semibold">{formatCurrency(benefit.utilized)}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-muted-foreground">Utilized</span><span className="font-semibold">{formatCurrency(benefit.utilized)}</span></div>
                     <Progress value={utilization} className={cn("h-2", isFullyUsed ? '[&>div]:bg-emerald-500' : '')} />
-                    <div className="flex justify-between text-xs">
+                    <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">{isFullyUsed ? 'Fully utilized' : `Remaining: ${formatCurrency(remaining)}`}</span>
                       <span className={cn("font-medium", isFullyUsed ? 'text-emerald-600' : cat?.textClass)}>{utilization}%</span>
                     </div>
