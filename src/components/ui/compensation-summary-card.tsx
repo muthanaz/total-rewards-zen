@@ -91,34 +91,63 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
           <div className="absolute top-1/2 left-1/2 w-20 h-20 bg-accent/10 rounded-full blur-xl -translate-x-1/2 -translate-y-1/2" />
           
           <div className="relative z-10">
-            {/* Label at top */}
-            <div className={cn("flex items-center gap-2 mb-4", isRTL && "flex-row-reverse")}>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">Σ</span>
+            {/* Header with icon and label */}
+            <div className={cn("flex items-center justify-between mb-4", isRTL && "flex-row-reverse")}>
+              <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center shadow-lg shadow-accent/30">
+                  <span className="text-white font-bold text-xl">Σ</span>
+                </div>
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-accent block">
+                    {isRTL ? 'إجمالي التعويضات السنوية' : 'Total Annual Compensation'}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {isRTL ? 'الراتب + جميع المزايا' : 'Salary + All Benefits Combined'}
+                  </span>
+                </div>
               </div>
-              <span className="text-xs font-bold uppercase tracking-wider text-accent">
-                {isRTL ? 'إجمالي التعويضات السنوية' : 'Total Annual Compensation'}
-              </span>
               <InfoTooltip formula={totalCompensation.formula} dataSource={totalCompensation.dataSource} />
             </div>
             
             {/* Main value - prominent display */}
-            <div className={cn("mb-4", isRTL && "text-right")}>
-              <p className="text-3xl md:text-4xl font-bold text-foreground tracking-tight leading-none">
+            <div className={cn("mb-5", isRTL && "text-right")}>
+              <p className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-none">
                 {totalCompensation.value}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {isRTL ? 'قيمتك الإجمالية كموظف' : 'Your total value as an employee'}
               </p>
             </div>
             
-            {/* Visual equation breakdown */}
-            <div className={cn("flex items-center gap-2 flex-wrap pt-3 border-t border-accent/20", isRTL && "flex-row-reverse")}>
-              <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-accent/20 border border-accent/30">
-                <div className="w-2 h-2 rounded-full bg-accent" />
-                <span className="text-xs font-semibold text-foreground">{isRTL ? 'الراتب السنوي' : 'Annual Salary'}</span>
+            {/* Visual equation breakdown - enhanced */}
+            <div className={cn("grid grid-cols-3 gap-3 pt-4 border-t border-accent/20", isRTL && "direction-rtl")}>
+              {/* Salary Component */}
+              <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-accent/10 border border-accent/20">
+                <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
+                  <div className="w-3 h-3 rounded-full bg-accent" />
+                </div>
+                <span className="text-[10px] font-medium text-muted-foreground text-center">
+                  {isRTL ? 'الراتب السنوي' : 'Annual Salary'}
+                </span>
+                <span className="text-sm font-bold text-foreground">60%</span>
               </div>
-              <span className="text-lg font-bold text-accent">+</span>
-              <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30">
-                <div className="w-2 h-2 rounded-full bg-purple-500" />
-                <span className="text-xs font-semibold text-foreground">{isRTL ? 'قيمة المزايا' : 'Benefits Value'}</span>
+              
+              {/* Plus Sign */}
+              <div className="flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-xl">=</span>
+                </div>
+              </div>
+              
+              {/* Benefits Component */}
+              <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                  <div className="w-3 h-3 rounded-full bg-amber-500" />
+                </div>
+                <span className="text-[10px] font-medium text-muted-foreground text-center">
+                  {isRTL ? 'قيمة المزايا' : 'Benefits Value'}
+                </span>
+                <span className="text-sm font-bold text-foreground">40%</span>
               </div>
             </div>
           </div>
