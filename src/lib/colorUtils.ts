@@ -1,160 +1,28 @@
 // =============================================================================
-// UNIFIED COLOR & UTILIZATION SYSTEM
+// COLOR UTILITIES - Re-exports from unified color system
 // =============================================================================
-// Single source of truth for benefit colors and RAG utilization indicators
+// This file re-exports from benefitColors.ts for backward compatibility
 
-import { BENEFIT_CATEGORIES, BenefitCategoryKey } from './benefitCategories';
-
-// =============================================================================
-// RAG (Red-Amber-Green) UTILIZATION INDICATORS
-// =============================================================================
-// Green: 80-100% utilized (fully used or near complete)
-// Amber: 30-79% utilized (in progress, room to use more)
-// Red: 0-29% utilized (underutilized, action needed)
-
-export type RAGStatus = 'green' | 'amber' | 'red';
-
-export interface RAGIndicator {
-  status: RAGStatus;
-  label: string;
-  labelAr: string;
-  bgClass: string;
-  textClass: string;
-  borderClass: string;
-  progressClass: string;
-  icon: 'check' | 'clock' | 'alert';
-}
-
-export const RAG_THRESHOLDS = {
-  green: 80,  // 80%+ = fully utilized
-  amber: 30,  // 30-79% = in progress
-  red: 0,     // 0-29% = underutilized
-};
-
-export const RAG_INDICATORS: Record<RAGStatus, RAGIndicator> = {
-  green: {
-    status: 'green',
-    label: 'Fully Utilized',
-    labelAr: 'مستخدم بالكامل',
-    bgClass: 'bg-emerald-500/10',
-    textClass: 'text-emerald-600 dark:text-emerald-400',
-    borderClass: 'border-emerald-500/30',
-    progressClass: '[&>div]:bg-emerald-500',
-    icon: 'check',
-  },
-  amber: {
-    status: 'amber',
-    label: 'Partially Used',
-    labelAr: 'مستخدم جزئياً',
-    bgClass: 'bg-amber-500/10',
-    textClass: 'text-amber-600 dark:text-amber-400',
-    borderClass: 'border-amber-500/30',
-    progressClass: '[&>div]:bg-amber-500',
-    icon: 'clock',
-  },
-  red: {
-    status: 'red',
-    label: 'Underutilized',
-    labelAr: 'غير مستغل',
-    bgClass: 'bg-rose-500/10',
-    textClass: 'text-rose-600 dark:text-rose-400',
-    borderClass: 'border-rose-500/30',
-    progressClass: '[&>div]:bg-rose-500',
-    icon: 'alert',
-  },
-};
-
-// Get RAG status based on utilization percentage
-export function getRAGStatus(utilizationPercent: number): RAGStatus {
-  if (utilizationPercent >= RAG_THRESHOLDS.green) return 'green';
-  if (utilizationPercent >= RAG_THRESHOLDS.amber) return 'amber';
-  return 'red';
-}
-
-// Get full RAG indicator object
-export function getRAGIndicator(utilizationPercent: number): RAGIndicator {
-  const status = getRAGStatus(utilizationPercent);
-  return RAG_INDICATORS[status];
-}
-
-// Get progress bar color class based on utilization
-export function getProgressColorClass(utilizationPercent: number): string {
-  return getRAGIndicator(utilizationPercent).progressClass;
-}
-
-// =============================================================================
-// BENEFIT COLOR HELPERS
-// =============================================================================
-// Ensures consistent colors across all pages
-
-export function getBenefitColorByKey(key: string): typeof BENEFIT_CATEGORIES[BenefitCategoryKey] {
-  // Normalize key
-  const normalizedKey = key.toLowerCase().replace(/[^a-z]/g, '');
+export {
+  // RAG system
+  type RAGStatus,
+  type RAGConfig as RAGIndicator,
+  RAG_THRESHOLDS,
+  RAG_CONFIG as RAG_INDICATORS,
+  getRAGStatus,
+  getRAGIndicator,
+  getProgressColorClass,
   
-  // Map common variations to category keys
-  const keyMap: Record<string, BenefitCategoryKey> = {
-    housing: 'housing',
-    housingallowance: 'housing',
-    education: 'education',
-    educationallowance: 'education',
-    schooling: 'education',
-    health: 'health',
-    healthinsurance: 'health',
-    transport: 'transport',
-    transportmobility: 'transport',
-    mobility: 'transport',
-    wellbeing: 'wellbeing',
-    wellbeingprogram: 'wellbeing',
-    financial: 'financial',
-    financialplanning: 'financial',
-    savingsplan: 'financial',
-    learning: 'learning',
-    learningdevelopment: 'learning',
-    rewards: 'rewards',
-    bonus: 'rewards',
-    annualbonus: 'rewards',
-    equity: 'equity',
-    equityoptions: 'equity',
-    timeoff: 'timeoff',
-    leave: 'timeoff',
-    leavemanagement: 'timeoff',
-  };
-
-  const mappedKey = keyMap[normalizedKey];
-  if (mappedKey && BENEFIT_CATEGORIES[mappedKey]) {
-    return BENEFIT_CATEGORIES[mappedKey];
-  }
-  
-  // Default fallback
-  return BENEFIT_CATEGORIES.wellbeing;
-}
-
-// Get benefit color by name (handles any format)
-export function getBenefitColor(benefitName: string) {
-  return getBenefitColorByKey(benefitName);
-}
-
-// Get chart-ready colors array for benefits
-export function getBenefitChartColors(): { name: string; color: string }[] {
-  return [
-    { name: 'Housing', color: BENEFIT_CATEGORIES.housing.color },
-    { name: 'Education', color: BENEFIT_CATEGORIES.education.color },
-    { name: 'Health', color: BENEFIT_CATEGORIES.health.color },
-    { name: 'Transport', color: BENEFIT_CATEGORIES.transport.color },
-    { name: 'Bonus', color: BENEFIT_CATEGORIES.rewards.color },
-    { name: 'Financial', color: BENEFIT_CATEGORIES.financial.color },
-    { name: 'Wellbeing', color: BENEFIT_CATEGORIES.wellbeing.color },
-    { name: 'Learning', color: BENEFIT_CATEGORIES.learning.color },
-    { name: 'Equity', color: BENEFIT_CATEGORIES.equity.color },
-    { name: 'Leave', color: BENEFIT_CATEGORIES.timeoff.color },
-  ];
-}
-
-// Get color for chart by benefit name
-export function getChartColorByBenefit(benefitName: string): string {
-  const category = getBenefitColor(benefitName);
-  return category.color;
-}
+  // Benefit colors
+  type BenefitColorConfig,
+  type BenefitKey,
+  BENEFIT_COLORS,
+  getBenefitColor,
+  getBenefitColor as getBenefitColorByKey,
+  getBenefitChartColors,
+  getChartColorArray,
+  getSidebarIconColor,
+} from './benefitColors';
 
 // =============================================================================
 // MARKETPLACE CATEGORY COLORS
