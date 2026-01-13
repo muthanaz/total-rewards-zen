@@ -2,9 +2,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
-  Sparkles, Star, CheckCircle, Heart, Home, Users, Car, Dumbbell, 
-  TrendingUp, Brain, Award, Zap, Target, Clock, Gift, Percent,
-  ChevronRight, ExternalLink
+  Sparkles, Star, CheckCircle, 
+  TrendingUp, Brain, Zap, Target, ChevronRight
 } from 'lucide-react';
 import { useProfile, useMarketplaceOffers } from '@/hooks/useSupabaseData';
 import { useMemo } from 'react';
@@ -232,25 +231,6 @@ export function CuratedPerks({ onActivate }: CuratedPerksProps) {
             )}
             style={{ animationDelay: `${index * 100}ms` }}
           >
-            {/* Match Quality Indicator */}
-            <div className="absolute top-3 left-3 z-10">
-              <Badge className={cn("gap-1 text-[10px]", getMatchBadgeColor(offer.matchStrength))}>
-                {getMatchIcon(offer.matchStrength)}
-                {offer.matchStrength === 'strong' ? 'Top Match' : 
-                 offer.matchStrength === 'good' ? 'Great Fit' : 'For You'}
-              </Badge>
-            </div>
-
-            {/* Discount Badge */}
-            {offer.discount_percent && (
-              <div className="absolute top-3 right-3 z-10">
-                <Badge className="bg-emerald-500 text-white border-0 text-xs font-bold">
-                  <Percent className="w-3 h-3 mr-0.5" />
-                  {offer.discount_percent}
-                </Badge>
-              </div>
-            )}
-
             {/* Image */}
             {offer.image_url && (
               <div className="relative h-32 bg-muted overflow-hidden">
@@ -260,10 +240,26 @@ export function CuratedPerks({ onActivate }: CuratedPerksProps) {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-transparent" />
+                
+                {/* Discount Badge - Top Right */}
+                {offer.discount_percent && (
+                  <div className="absolute top-2 right-2 z-10">
+                    <Badge className="bg-emerald-500 text-white border-0 text-xs font-bold">
+                      {offer.discount_percent}% OFF
+                    </Badge>
+                  </div>
+                )}
               </div>
             )}
 
             <CardContent className="p-4 space-y-3">
+              {/* Match Quality Badge - Below image, not overlapping title */}
+              <Badge className={cn("gap-1 text-[10px] w-fit", getMatchBadgeColor(offer.matchStrength))}>
+                {getMatchIcon(offer.matchStrength)}
+                {offer.matchStrength === 'strong' ? 'Top Match' : 
+                 offer.matchStrength === 'good' ? 'Great Fit' : 'For You'}
+              </Badge>
+
               {/* Title & Merchant */}
               <div>
                 <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-accent transition-colors min-h-[40px]">
