@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Receipt, Clock, CheckCircle, XCircle, Search, Filter, Download } from 'lucide-react';
+import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
+import { Receipt, Clock, CheckCircle, XCircle, Search, Filter, Download, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Claim {
@@ -145,7 +146,13 @@ export function ClaimsDirectory({ isRTL = false }: ClaimsDirectoryProps) {
             <Receipt className="w-5 h-5 text-accent" />
             {isRTL ? 'سجل المطالبات والطلبات' : 'Claims & Requests Directory'}
           </CardTitle>
-          <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+          <div className={cn("flex items-center gap-2 flex-wrap", isRTL && "flex-row-reverse")}>
+            <SubmitClaimButton 
+              category="General" 
+              buttonText={isRTL ? 'مطالبة جديدة' : 'New Claim'}
+              buttonSize="sm"
+              showIcon={true}
+            />
             <div className="relative">
               <Search className={cn("absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground", isRTL ? "right-3" : "left-3")} />
               <Input

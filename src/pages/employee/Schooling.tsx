@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { NoSearchResults } from '@/components/ui/empty-state';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -684,8 +685,9 @@ export default function SchoolingPage() {
         </CardContent>
       </Card>
 
-      {/* View Full Policy */}
-      <div className="text-center">
+      {/* Actions */}
+      <div className="flex items-center justify-center gap-4">
+        <SubmitClaimButton category="Education" buttonText="Submit Education Claim" />
         <Button variant="outline">View Full Education Policy</Button>
       </div>
     </div>
