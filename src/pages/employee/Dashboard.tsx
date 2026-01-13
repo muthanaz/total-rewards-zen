@@ -16,6 +16,7 @@ import { ChartContainer, AnimatedBarChart, AnimatedRadarChart } from '@/componen
 import { DateRangeFilter, DrillDownModal, BenefitsDrillDownSheet } from '@/components/dashboard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { CompensationSummaryCard } from '@/components/ui/compensation-summary-card';
 import { cn } from '@/lib/utils';
 
 // Demo data - core salary info
@@ -198,85 +199,63 @@ export default function EmployeeDashboard() {
     console.log(`Exporting data as ${format}`);
   };
 
-// All 8 metrics in specified order - clean aligned design
-  const allMetrics = [
-    { 
-      icon: DollarSign, 
-      value: formatCurrency(salaryData.monthlySalary), 
-      label: isRTL ? 'الراتب الشهري' : 'Monthly Salary',
-      formula: isRTL ? 'الراتب الأساسي / ١٢' : 'Base salary / 12',
-      dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR System',
-      variant: 'primary' as const,
-      secondaryValue: `${formatCurrency(salaryData.annualSalary)}/yr`,
-      highlight: true,
+// Top 3 Summary Cards Data
+  const summaryCards = [
+    {
+      icon: DollarSign,
+      title: isRTL ? 'الراتب' : 'Salary',
+      variant: 'salary' as const,
+      metrics: [
+        { value: formatCurrency(salaryData.monthlySalary), label: isRTL ? 'شهري' : 'Monthly' },
+        { value: formatCurrency(salaryData.annualSalary), label: isRTL ? 'سنوي' : 'Annual' },
+      ],
     },
-    { 
-      icon: Gift, 
-      value: formatCurrency(calculatedMetrics.totalBenefitValue), 
-      label: isRTL ? 'قيمة المزايا السنوية' : 'Annual Benefits',
-      formula: isRTL ? 'مجموع جميع قيم المزايا' : 'Sum of all benefit values',
-      dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
-      variant: 'info' as const,
-      secondaryValue: `${benefits.length} ${isRTL ? 'مزايا' : 'benefits'}`,
+    {
+      icon: Gift,
+      title: isRTL ? 'قيمة المزايا' : 'Benefits Value',
+      variant: 'benefits' as const,
+      metrics: [
+        { value: formatCurrency(calculatedMetrics.totalBenefitValue), label: isRTL ? 'سنوي' : 'Annual' },
+        { value: `${calculatedMetrics.benefitsAsPercentOfComp}%`, label: isRTL ? 'من التعويضات' : 'of Compensation', secondary: `${benefits.length} ${isRTL ? 'مزايا' : 'benefits'}` },
+      ],
     },
+    {
+      icon: TrendingUp,
+      title: isRTL ? 'استخدام المزايا' : 'Benefits Utilization',
+      variant: 'utilization' as const,
+      metrics: [
+        { value: formatCurrency(calculatedMetrics.totalUtilized), label: isRTL ? 'مستخدم' : 'Used', secondary: `${calculatedMetrics.utilizationPercent}%` },
+        { value: formatCurrency(calculatedMetrics.totalRemaining), label: isRTL ? 'متاح' : 'Available', secondary: `${100 - calculatedMetrics.utilizationPercent}%` },
+      ],
+    },
+  ];
+
+  // Secondary metrics for quick reference
+  const secondaryMetrics = [
     { 
       icon: Wallet, 
       value: formatCurrency(calculatedMetrics.totalCompensation), 
-      label: isRTL ? 'إجمالي التعويضات' : 'Total Compensation',
-      formula: isRTL ? 'الراتب السنوي + قيمة المزايا' : 'Annual Salary + Benefits Value',
-      dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR System',
+      label: isRTL ? 'إجمالي التعويضات' : 'Total Comp',
       variant: 'primary' as const,
-      secondaryValue: isRTL ? 'راتب + مزايا' : 'Salary + Benefits',
-    },
-    { 
-      icon: TrendingUp, 
-      value: formatCurrency(calculatedMetrics.totalUtilized), 
-      label: isRTL ? 'المزايا المستخدمة' : 'Benefits Used',
-      formula: isRTL ? 'مجموع جميع المزايا المستخدمة' : 'Sum of all utilized benefits',
-      dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
-      variant: 'utilized' as const,
-      secondaryValue: `${calculatedMetrics.utilizationPercent}% ${isRTL ? 'مستخدم' : 'utilized'}`,
-    },
-    { 
-      icon: Sparkles, 
-      value: formatCurrency(calculatedMetrics.totalRemaining), 
-      label: isRTL ? 'المتاح للاستخدام' : 'Available to Use',
-      formula: isRTL ? 'إجمالي المزايا - المستخدم' : 'Total Benefits - Utilized',
-      dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
-      variant: 'remaining' as const,
-      secondaryValue: `${100 - calculatedMetrics.utilizationPercent}% ${isRTL ? 'متبقي' : 'remaining'}`,
-    },
-    { 
-      icon: Target, 
-      value: `${calculatedMetrics.benefitsAsPercentOfComp}%`, 
-      label: isRTL ? 'المزايا من التعويضات' : 'Benefits % of Comp',
-      formula: isRTL ? 'المزايا / إجمالي التعويضات' : 'Benefits Value / Total Compensation',
-      dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR System',
-      variant: 'utilization' as const,
-      secondaryValue: null,
     },
     { 
       icon: Calendar, 
       value: `${salaryData.leaveBalance} ${isRTL ? 'يوم' : 'days'}`, 
       label: isRTL ? 'رصيد الإجازات' : 'Leave Balance',
-      formula: isRTL ? 'الإجمالي - المستخدم' : 'Total - Used',
-      dataSource: isRTL ? 'نظام الإجازات' : 'Leave System',
       variant: 'remaining' as const,
       secondaryValue: `${salaryData.leaveUsed} ${isRTL ? 'مستخدم' : 'used'}`,
     },
     { 
       icon: Zap, 
       value: `${salaryData.activatedItems}`, 
-      label: isRTL ? 'الامتيازات المفعّلة' : 'Activated Perks',
-      formula: isRTL ? 'عدد التفعيلات' : 'Count of activations',
-      dataSource: isRTL ? 'السوق' : 'Marketplace',
+      label: isRTL ? 'الامتيازات المفعّلة' : 'Perks Activated',
       variant: 'info' as const,
       secondaryValue: isRTL ? 'هذا الشهر' : 'This month',
     },
   ];
   
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 animate-fade-in">
       {/* Header with Date Filter */}
       <div className={cn(
         "flex flex-col md:flex-row md:items-center justify-between gap-4",
@@ -293,21 +272,32 @@ export default function EmployeeDashboard() {
         />
       </div>
 
-      {/* All 8 Metrics Grid - Uniform Height */}
-      <div className="grid grid-cols-4 lg:grid-cols-8 gap-2 auto-rows-fr">
-        {allMetrics.map((stat, index) => (
+      {/* Top Row - 3 Main Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {summaryCards.map((card, index) => (
+          <CompensationSummaryCard
+            key={card.title}
+            icon={card.icon}
+            title={card.title}
+            metrics={card.metrics}
+            variant={card.variant}
+            index={index}
+          />
+        ))}
+      </div>
+
+      {/* Secondary Metrics Row */}
+      <div className="grid grid-cols-3 gap-2">
+        {secondaryMetrics.map((stat, index) => (
           <SummaryStatsCard
             key={stat.label}
             icon={stat.icon}
             value={stat.value}
             label={stat.label}
-            formula={stat.formula}
-            dataSource={stat.dataSource}
             variant={stat.variant}
             index={index}
-            secondaryValue={stat.secondaryValue}
+            secondaryValue={'secondaryValue' in stat ? stat.secondaryValue : null}
             compact
-            highlight={'highlight' in stat && stat.highlight}
           />
         ))}
       </div>
