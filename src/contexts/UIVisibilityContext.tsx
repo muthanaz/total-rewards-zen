@@ -23,18 +23,24 @@ export const UI_ELEMENTS_CONFIG = {
   employer: {
     dashboard: [
       { key: 'kpi_cards', label: 'KPI Summary Cards', labelAr: 'بطاقات مؤشرات الأداء' },
-      { key: 'spend_chart', label: 'Spend Overview Chart', labelAr: 'مخطط نظرة عامة على الإنفاق' },
-      { key: 'utilization_chart', label: 'Utilization Chart', labelAr: 'مخطط الاستخدام' },
-      { key: 'claims_table', label: 'Recent Claims Table', labelAr: 'جدول المطالبات الأخيرة' },
+      { key: 'secondary_kpi', label: 'Secondary KPI Cards', labelAr: 'بطاقات مؤشرات الأداء الثانوية' },
+      { key: 'executive_insights', label: 'Executive Insights', labelAr: 'رؤى تنفيذية' },
+      { key: 'utilization_trend', label: 'Utilization Trend Chart', labelAr: 'مخطط اتجاه الاستخدام' },
+      { key: 'spend_by_type', label: 'Spend by Benefit Type', labelAr: 'الإنفاق حسب نوع المزايا' },
+      { key: 'segment_comparison', label: 'Segment Comparison Radar', labelAr: 'رادار مقارنة القطاعات' },
+      { key: 'cumulative_spend', label: 'Cumulative Spend Chart', labelAr: 'مخطط الإنفاق التراكمي' },
+      { key: 'top_benefits', label: 'Top & Least Used Benefits', labelAr: 'أكثر وأقل المزايا استخداماً' },
+      { key: 'zombie_spend', label: 'Zombie Spend Alert', labelAr: 'تنبيه الإنفاق الخامل' },
       { key: 'recommendations', label: 'Recommendations Section', labelAr: 'قسم التوصيات' },
     ],
   },
   vendor: {
     dashboard: [
-      { key: 'revenue_cards', label: 'Revenue Summary Cards', labelAr: 'بطاقات ملخص الإيرادات' },
-      { key: 'transactions_chart', label: 'Transactions Chart', labelAr: 'مخطط المعاملات' },
-      { key: 'recent_transactions', label: 'Recent Transactions', labelAr: 'المعاملات الأخيرة' },
-      { key: 'offers_preview', label: 'Active Offers Preview', labelAr: 'معاينة العروض النشطة' },
+      { key: 'metrics_cards', label: 'Metrics Summary Cards', labelAr: 'بطاقات ملخص المقاييس' },
+      { key: 'offers_tab', label: 'My Offers Tab', labelAr: 'تبويب عروضي' },
+      { key: 'analytics_tab', label: 'Analytics Tab', labelAr: 'تبويب التحليلات' },
+      { key: 'transactions_tab', label: 'Transactions Tab', labelAr: 'تبويب المعاملات' },
+      { key: 'earnings_tab', label: 'Earnings Tab', labelAr: 'تبويب الأرباح' },
     ],
   },
   admin: {
