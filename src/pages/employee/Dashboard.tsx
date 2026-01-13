@@ -5,9 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { 
-  DollarSign, TrendingUp, Calendar, Zap, Home, GraduationCap, 
-  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift,
-  Wallet, Target, Sparkles
+  DollarSign, TrendingUp, Home, GraduationCap, 
+  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift
 } from 'lucide-react';
 import { BENEFIT_TYPE_COLORS, BENEFIT_TYPE_LABELS } from '@/lib/constants';
 import { RequestClaimWidget } from '@/components/employee/RequestClaimWidget';
@@ -199,58 +198,34 @@ export default function EmployeeDashboard() {
     console.log(`Exporting data as ${format}`);
   };
 
-// Top 3 Summary Cards Data
+// Top 3 Summary Cards - Expert sequenced: Earnings → Value → Usage
   const summaryCards = [
     {
       icon: DollarSign,
-      title: isRTL ? 'الراتب' : 'Salary',
+      title: isRTL ? 'التعويضات' : 'Compensation',
       variant: 'salary' as const,
       metrics: [
-        { value: formatCurrency(salaryData.monthlySalary), label: isRTL ? 'شهري' : 'Monthly' },
-        { value: formatCurrency(salaryData.annualSalary), label: isRTL ? 'سنوي' : 'Annual' },
+        { value: formatCurrency(salaryData.monthlySalary), label: isRTL ? 'الراتب الشهري' : 'Monthly Salary' },
+        { value: formatCurrency(calculatedMetrics.totalCompensation), label: isRTL ? 'إجمالي سنوي' : 'Total Annual', secondary: isRTL ? 'راتب + مزايا' : 'Salary + Benefits' },
       ],
     },
     {
       icon: Gift,
-      title: isRTL ? 'قيمة المزايا' : 'Benefits Value',
+      title: isRTL ? 'قيمة المزايا' : 'Benefits Package',
       variant: 'benefits' as const,
       metrics: [
-        { value: formatCurrency(calculatedMetrics.totalBenefitValue), label: isRTL ? 'سنوي' : 'Annual' },
-        { value: `${calculatedMetrics.benefitsAsPercentOfComp}%`, label: isRTL ? 'من التعويضات' : 'of Compensation', secondary: `${benefits.length} ${isRTL ? 'مزايا' : 'benefits'}` },
+        { value: formatCurrency(calculatedMetrics.totalBenefitValue), label: isRTL ? 'القيمة السنوية' : 'Annual Value' },
+        { value: `${calculatedMetrics.benefitsAsPercentOfComp}%`, label: isRTL ? 'من إجمالي التعويضات' : 'of Total Package', secondary: `${benefits.length} ${isRTL ? 'مزايا فعالة' : 'active benefits'}` },
       ],
     },
     {
       icon: TrendingUp,
-      title: isRTL ? 'استخدام المزايا' : 'Benefits Utilization',
+      title: isRTL ? 'الاستخدام' : 'Utilization',
       variant: 'utilization' as const,
       metrics: [
-        { value: formatCurrency(calculatedMetrics.totalUtilized), label: isRTL ? 'مستخدم' : 'Used', secondary: `${calculatedMetrics.utilizationPercent}%` },
-        { value: formatCurrency(calculatedMetrics.totalRemaining), label: isRTL ? 'متاح' : 'Available', secondary: `${100 - calculatedMetrics.utilizationPercent}%` },
+        { value: formatCurrency(calculatedMetrics.totalUtilized), label: isRTL ? 'تم استخدامه' : 'Used', secondary: `${calculatedMetrics.utilizationPercent}%` },
+        { value: formatCurrency(calculatedMetrics.totalRemaining), label: isRTL ? 'متاح للاستخدام' : 'Available', secondary: `${100 - calculatedMetrics.utilizationPercent}%` },
       ],
-    },
-  ];
-
-  // Secondary metrics for quick reference
-  const secondaryMetrics = [
-    { 
-      icon: Wallet, 
-      value: formatCurrency(calculatedMetrics.totalCompensation), 
-      label: isRTL ? 'إجمالي التعويضات' : 'Total Comp',
-      variant: 'primary' as const,
-    },
-    { 
-      icon: Calendar, 
-      value: `${salaryData.leaveBalance} ${isRTL ? 'يوم' : 'days'}`, 
-      label: isRTL ? 'رصيد الإجازات' : 'Leave Balance',
-      variant: 'remaining' as const,
-      secondaryValue: `${salaryData.leaveUsed} ${isRTL ? 'مستخدم' : 'used'}`,
-    },
-    { 
-      icon: Zap, 
-      value: `${salaryData.activatedItems}`, 
-      label: isRTL ? 'الامتيازات المفعّلة' : 'Perks Activated',
-      variant: 'info' as const,
-      secondaryValue: isRTL ? 'هذا الشهر' : 'This month',
     },
   ];
   
@@ -273,7 +248,7 @@ export default function EmployeeDashboard() {
       </div>
 
       {/* Top Row - 3 Main Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {summaryCards.map((card, index) => (
           <CompensationSummaryCard
             key={card.title}
@@ -282,22 +257,6 @@ export default function EmployeeDashboard() {
             metrics={card.metrics}
             variant={card.variant}
             index={index}
-          />
-        ))}
-      </div>
-
-      {/* Secondary Metrics Row */}
-      <div className="grid grid-cols-3 gap-2">
-        {secondaryMetrics.map((stat, index) => (
-          <SummaryStatsCard
-            key={stat.label}
-            icon={stat.icon}
-            value={stat.value}
-            label={stat.label}
-            variant={stat.variant}
-            index={index}
-            secondaryValue={'secondaryValue' in stat ? stat.secondaryValue : null}
-            compact
           />
         ))}
       </div>
