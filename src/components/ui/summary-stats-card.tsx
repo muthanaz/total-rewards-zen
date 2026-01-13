@@ -23,15 +23,15 @@ interface SummaryStatsCardProps {
   highlight?: boolean;
 }
 
-// Neutral standardized styling for all non-RAG variants
-// These use the same muted look to avoid color confusion - only utilization uses RAG
+// Neutral but visually appealing styling using accent tones
+// These are consistent across all non-RAG variants to avoid color confusion
 const neutralStyles = {
-  bg: 'bg-gradient-to-br from-muted/50 via-card to-card dark:from-muted/30 dark:via-card dark:to-card',
-  iconBg: 'bg-muted dark:bg-muted/50',
-  iconColor: 'text-muted-foreground',
+  bg: 'bg-gradient-to-br from-accent/8 via-card to-card dark:from-accent/15 dark:via-card dark:to-card',
+  iconBg: 'bg-accent/10 dark:bg-accent/20',
+  iconColor: 'text-accent',
   valueColor: 'text-foreground',
-  border: 'border-border/50 hover:border-border dark:border-border/30 dark:hover:border-border/50',
-  glow: 'bg-muted',
+  border: 'border-accent/15 hover:border-accent/30 dark:border-accent/20 dark:hover:border-accent/40',
+  glow: 'bg-accent',
 };
 
 const variantStyles: Record<CardVariant, { bg: string; iconBg: string; iconColor: string; valueColor: string; border: string; glow: string }> = {
@@ -80,13 +80,13 @@ const getRAGStyles = (progress: number) => {
   }
 };
 
-// All non-utilization variants use muted progress colors
+// All non-utilization variants use accent-tinted progress
 const progressColors: Record<CardVariant, string> = {
-  primary: '[&>div]:bg-muted-foreground/30',
-  utilized: '[&>div]:bg-muted-foreground/30',
-  remaining: '[&>div]:bg-muted-foreground/30',
-  utilization: '[&>div]:bg-muted-foreground/30', // Will be overridden by RAG
-  info: '[&>div]:bg-muted-foreground/30',
+  primary: '[&>div]:bg-accent/50',
+  utilized: '[&>div]:bg-accent/50',
+  remaining: '[&>div]:bg-accent/50',
+  utilization: '[&>div]:bg-accent/50', // Will be overridden by RAG
+  info: '[&>div]:bg-accent/50',
 };
 
 export function SummaryStatsCard({
