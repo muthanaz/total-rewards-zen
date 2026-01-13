@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
 import { UIVisibilityProvider } from "@/contexts/UIVisibilityContext";
+import { PrivacyProvider } from "@/components/ui/privacy-toggle";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -179,15 +180,17 @@ const App = () => (
       <LanguageProvider>
         <AuthProvider>
           <ProfileProvider>
-            <UIVisibilityProvider>
-              <SecurityProvider enableSessionTimeout={true}>
-                <TooltipProvider>
-                  <Toaster />
-                  <Sonner />
-                  <AppRoutes />
-                </TooltipProvider>
-              </SecurityProvider>
-            </UIVisibilityProvider>
+            <PrivacyProvider>
+              <UIVisibilityProvider>
+                <SecurityProvider enableSessionTimeout={true}>
+                  <TooltipProvider>
+                    <Toaster />
+                    <Sonner />
+                    <AppRoutes />
+                  </TooltipProvider>
+                </SecurityProvider>
+              </UIVisibilityProvider>
+            </PrivacyProvider>
           </ProfileProvider>
         </AuthProvider>
       </LanguageProvider>

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { 
   DollarSign, Home, GraduationCap, 
-  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote
+  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote, Eye, EyeOff
 } from 'lucide-react';
 import { BENEFIT_TYPE_COLORS } from '@/lib/constants';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
@@ -14,6 +14,7 @@ import { DateRangeFilter, BenefitsDrillDownSheet } from '@/components/dashboard'
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CompensationGrid } from '@/components/ui/compensation-summary-card';
 import { useUIVisibility } from '@/contexts/UIVisibilityContext';
+import { usePrivacy } from '@/components/ui/privacy-toggle';
 import { cn } from '@/lib/utils';
 
 // Demo data - core salary info
@@ -40,6 +41,7 @@ export default function EmployeeDashboard() {
   const navigate = useNavigate();
   const { t, language, direction } = useLanguage();
   const { isElementVisible } = useUIVisibility();
+  const { salaryHidden, toggleSalaryVisibility } = usePrivacy();
   const isRTL = direction === 'rtl';
   const [dateRange, setDateRange] = useState({ from: new Date(), to: new Date() });
   const [benefitsSheetOpen, setBenefitsSheetOpen] = useState(false);
@@ -86,6 +88,7 @@ export default function EmployeeDashboard() {
   }, []);
 
   const formatCurrency = (value: number) => `${isRTL ? '' : 'AED '}${value.toLocaleString(isRTL ? 'ar-AE' : 'en-AE')}${isRTL ? ' درهم' : ''}`;
+  const formatCurrencyHidden = (value: number) => salaryHidden ? '•••,•••' : formatCurrency(value);
   const formatCurrencyShort = (value: number) => `${(value / 1000).toFixed(0)}${isRTL ? 'ألف' : 'K'}`;
 
 
@@ -112,19 +115,21 @@ export default function EmployeeDashboard() {
   const keyMetrics = [
     { 
       icon: Banknote, 
-      value: formatCurrency(salaryData.monthlySalary), 
+      value: salaryHidden ? `${isRTL ? '' : 'AED '}•••,•••${isRTL ? ' درهم' : ''}` : formatCurrency(salaryData.monthlySalary), 
       label: isRTL ? 'الراتب الشهري' : 'Monthly Salary',
       formula: isRTL ? 'الراتب الأساسي الشهري قبل الخصومات' : 'Base monthly salary before deductions',
       dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR Payroll System',
       variant: 'primary' as const,
+      isSensitive: true,
     },
     { 
       icon: DollarSign, 
-      value: formatCurrency(salaryData.annualSalary), 
+      value: salaryHidden ? `${isRTL ? '' : 'AED '}•••,•••${isRTL ? ' درهم' : ''}` : formatCurrency(salaryData.annualSalary), 
       label: isRTL ? 'الراتب السنوي' : 'Annual Salary',
       formula: isRTL ? 'الراتب الشهري × ١٢ شهر' : 'Monthly Salary × 12 months',
       dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR Payroll System',
       variant: 'primary' as const,
+      isSensitive: true,
     },
     { 
       icon: Gift, 
@@ -145,11 +150,13 @@ export default function EmployeeDashboard() {
   ];
 
   const totalCompensationData = {
-    value: formatCurrency(calculatedMetrics.totalCompensation),
+    value: salaryHidden ? `${isRTL ? '' : 'AED '}•••,•••${isRTL ? ' درهم' : ''}` : formatCurrency(calculatedMetrics.totalCompensation),
     formula: isRTL 
       ? `${formatCurrency(salaryData.annualSalary)} + ${formatCurrency(calculatedMetrics.totalBenefitValue)} = ${formatCurrency(calculatedMetrics.totalCompensation)}`
       : `${formatCurrency(salaryData.annualSalary)} + ${formatCurrency(calculatedMetrics.totalBenefitValue)} = ${formatCurrency(calculatedMetrics.totalCompensation)}`,
     dataSource: isRTL ? 'الراتب السنوي + قيمة المزايا' : 'Annual Salary + Benefits Value',
+    salaryHidden,
+    onTogglePrivacy: toggleSalaryVisibility,
   };
 
   const utilizationData = {

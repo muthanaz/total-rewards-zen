@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -11,14 +11,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, Plus, Clock, CheckCircle, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useProfile } from '@/contexts/ProfileContext';
 import { LEAVE_TYPES } from '@/lib/constants';
 
-const leaveBalances = [
-  { type: 'Annual Leave', total: 30, used: 8, color: 'bg-blue-500' },
-  { type: 'Sick Leave', total: 15, used: 2, color: 'bg-rose-500' },
-  { type: 'Personal Leave', total: 5, used: 1, color: 'bg-purple-500' },
-  { type: 'Maternity Leave', total: 90, used: 0, color: 'bg-pink-500' },
-  { type: 'Compassionate Leave', total: 5, used: 0, color: 'bg-amber-500' },
+// Base leave balances - will be filtered by gender
+const allLeaveBalances = [
+  { type: 'Annual Leave', id: 'annual', total: 30, used: 8, color: 'bg-blue-500', genderSpecific: null },
+  { type: 'Sick Leave', id: 'sick', total: 15, used: 2, color: 'bg-rose-500', genderSpecific: null },
+  { type: 'Personal Leave', id: 'personal', total: 5, used: 1, color: 'bg-purple-500', genderSpecific: null },
+  { type: 'Maternity Leave', id: 'maternity', total: 90, used: 0, color: 'bg-pink-500', genderSpecific: 'female' as const },
+  { type: 'Paternity Leave', id: 'paternity', total: 5, used: 0, color: 'bg-cyan-500', genderSpecific: 'male' as const },
+  { type: 'Compassionate Leave', id: 'compassionate', total: 5, used: 0, color: 'bg-amber-500', genderSpecific: null },
 ];
 
 const recentRequests = [
@@ -29,7 +32,25 @@ const recentRequests = [
 
 export default function LeavePage() {
   const { toast } = useToast();
+  const { profile } = useProfile();
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Filter leave balances based on user's gender
+  const leaveBalances = useMemo(() => {
+    return allLeaveBalances.filter(leave => {
+      if (leave.genderSpecific === null) return true;
+      return leave.genderSpecific === profile.gender;
+    });
+  }, [profile.gender]);
+
+  // Filter leave types for the dropdown based on gender
+  const filteredLeaveTypes = useMemo(() => {
+    return LEAVE_TYPES.filter(type => {
+      if (type.id === 'maternity') return profile.gender === 'female';
+      if (type.id === 'paternity') return profile.gender === 'male';
+      return true;
+    });
+  }, [profile.gender]);
 
   const totalBalance = leaveBalances.reduce((sum, l) => sum + (l.total - l.used), 0);
   const totalUsed = leaveBalances.reduce((sum, l) => sum + l.used, 0);
@@ -87,7 +108,7 @@ export default function LeavePage() {
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {LEAVE_TYPES.map((type) => (
+                    {filteredLeaveTypes.map((type) => (
                       <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
                     ))}
                   </SelectContent>

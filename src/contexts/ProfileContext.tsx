@@ -25,6 +25,7 @@ export interface ProfileData {
   nationality: string;
   emiratesId: string;
   language: string;
+  gender: 'male' | 'female' | 'other';
   // Residence
   country: string;
   city: string;
@@ -79,6 +80,7 @@ const defaultProfile: ProfileData = {
   nationality: 'United Kingdom',
   emiratesId: '784-1990-1234567-1',
   language: 'en',
+  gender: 'male',
   country: 'United Arab Emirates',
   city: 'Dubai',
   area: 'Dubai Marina',
