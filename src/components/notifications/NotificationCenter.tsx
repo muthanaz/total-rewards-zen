@@ -183,10 +183,10 @@ export function NotificationCenter() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative h-9 w-9"
+          className="relative h-9 w-9 hover:bg-sidebar-accent"
           aria-label={t('Notifications', 'الإشعارات')}
         >
-          <Bell className="h-5 w-5" />
+          <Bell className="h-5 w-5 text-sidebar-foreground" />
           {unreadCount > 0 && (
             <Badge
               className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px] bg-red-500 text-white border-0"
