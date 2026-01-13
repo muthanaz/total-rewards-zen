@@ -251,18 +251,34 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
             <div className={cn("flex items-center gap-2.5", isRTL && "flex-row-reverse")}>
               <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
               <div>
-                <p className="text-sm font-bold text-foreground">{utilization.used}</p>
+                <p className={cn(
+                  "text-sm font-bold text-foreground transition-all duration-200",
+                  totalCompensation.salaryHidden && "blur-[4px] select-none"
+                )}>
+                  {utilization.used}
+                </p>
                 <p className="text-[10px] text-muted-foreground">
-                  {isRTL ? 'مستخدم' : 'Used'} <span className="font-semibold text-amber-500">({utilization.usedPercent}%)</span>
+                  {isRTL ? 'مستخدم' : 'Used'} <span className={cn(
+                    "font-semibold text-amber-500",
+                    totalCompensation.salaryHidden && "blur-[4px] select-none"
+                  )}>({utilization.usedPercent}%)</span>
                 </p>
               </div>
             </div>
             <div className={cn("flex items-center gap-2.5", isRTL && "flex-row-reverse text-right")}>
               <div className="w-2.5 h-2.5 rounded-full bg-amber-200/80 dark:bg-amber-600/30" />
               <div>
-                <p className="text-sm font-bold text-foreground">{utilization.remaining}</p>
+                <p className={cn(
+                  "text-sm font-bold text-foreground transition-all duration-200",
+                  totalCompensation.salaryHidden && "blur-[4px] select-none"
+                )}>
+                  {utilization.remaining}
+                </p>
                 <p className="text-[10px] text-muted-foreground">
-                  {isRTL ? 'متاح' : 'Available'} <span className="font-semibold text-amber-400">({utilization.remainingPercent}%)</span>
+                  {isRTL ? 'متاح' : 'Available'} <span className={cn(
+                    "font-semibold text-amber-400",
+                    totalCompensation.salaryHidden && "blur-[4px] select-none"
+                  )}>({utilization.remainingPercent}%)</span>
                 </p>
               </div>
             </div>
