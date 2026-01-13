@@ -17,6 +17,7 @@ interface SummaryStatsCardProps {
   progress?: number;
   className?: string;
   index?: number;
+  secondaryValue?: string | null;
 }
 
 const variantStyles: Record<CardVariant, { bg: string; iconBg: string; iconColor: string; valueColor: string; border: string; glow: string }> = {
@@ -80,6 +81,7 @@ export function SummaryStatsCard({
   progress,
   className,
   index = 0,
+  secondaryValue,
 }: SummaryStatsCardProps) {
   const styles = variantStyles[variant];
 
@@ -124,14 +126,26 @@ export function SummaryStatsCard({
           )}
         </div>
         
-        <motion.p 
-          className={cn('text-2xl font-bold mt-3 tracking-tight', styles.valueColor)}
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: index * 0.1 + 0.2, duration: 0.3 }}
-        >
-          {value}
-        </motion.p>
+        <div className="mt-3">
+          <motion.p 
+            className={cn('text-2xl font-bold tracking-tight', styles.valueColor)}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 + 0.2, duration: 0.3 }}
+          >
+            {value}
+          </motion.p>
+          {secondaryValue && (
+            <motion.p
+              className="text-xs text-muted-foreground/80 mt-0.5 font-medium"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: index * 0.1 + 0.3, duration: 0.3 }}
+            >
+              {secondaryValue}
+            </motion.p>
+          )}
+        </div>
         <p className="text-xs text-muted-foreground mt-1 font-medium uppercase tracking-wide">
           {label}
         </p>

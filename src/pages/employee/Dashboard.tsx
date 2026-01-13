@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { 
   DollarSign, TrendingUp, Calendar, Zap, Home, GraduationCap, 
   Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift,
-  Wallet, Target, Sparkles, Clock, Award
+  Wallet, Target, Sparkles
 } from 'lucide-react';
 import { BENEFIT_TYPE_COLORS, BENEFIT_TYPE_LABELS } from '@/lib/constants';
 import { RequestClaimWidget } from '@/components/employee/RequestClaimWidget';
@@ -198,7 +198,7 @@ export default function EmployeeDashboard() {
     console.log(`Exporting data as ${format}`);
   };
 
-  // Primary insight stats for the top section
+  // Primary insight stats for the top section - streamlined to avoid redundancy
   const insightStats = [
     { 
       icon: Wallet, 
@@ -208,7 +208,8 @@ export default function EmployeeDashboard() {
       dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR System',
       variant: 'primary' as const,
       progress: 100,
-      trend: { current: calculatedMetrics.totalCompensation, previous: calculatedMetrics.totalCompensation * 0.97 }
+      trend: { current: calculatedMetrics.totalCompensation, previous: calculatedMetrics.totalCompensation * 0.97 },
+      secondaryValue: null,
     },
     { 
       icon: TrendingUp, 
@@ -218,7 +219,8 @@ export default function EmployeeDashboard() {
       dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
       variant: 'utilized' as const,
       progress: calculatedMetrics.utilizationPercent,
-      trend: { current: calculatedMetrics.totalUtilized, previous: calculatedMetrics.lastMonthUtilized }
+      trend: { current: calculatedMetrics.totalUtilized, previous: calculatedMetrics.lastMonthUtilized },
+      secondaryValue: `${calculatedMetrics.utilizationPercent}${isRTL ? '٪' : '%'} ${isRTL ? 'نسبة الاستخدام' : 'utilized'}`,
     },
     { 
       icon: Sparkles, 
@@ -228,28 +230,27 @@ export default function EmployeeDashboard() {
       dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
       variant: 'remaining' as const,
       progress: 100 - calculatedMetrics.utilizationPercent,
-      trend: { current: calculatedMetrics.totalRemaining, previous: calculatedMetrics.totalRemaining * 1.05 }
+      trend: { current: calculatedMetrics.totalRemaining, previous: calculatedMetrics.totalRemaining * 1.05 },
+      secondaryValue: `${100 - calculatedMetrics.utilizationPercent}${isRTL ? '٪' : '%'} ${isRTL ? 'متبقي' : 'remaining'}`,
     },
     { 
       icon: Target, 
-      value: `${calculatedMetrics.utilizationPercent}${isRTL ? '٪' : '%'}`, 
-      label: isRTL ? 'نسبة الاستخدام' : 'Utilization Rate',
-      formula: isRTL ? '(المستخدم / الإجمالي) × ١٠٠' : '(Utilized / Total) × 100',
-      dataSource: isRTL ? 'المتتبع' : 'Tracker',
+      value: `${calculatedMetrics.benefitsAsPercentOfComp}${isRTL ? '٪' : '%'}`, 
+      label: isRTL ? 'المزايا من التعويضات' : 'Benefits % of Comp',
+      formula: isRTL ? 'المزايا / إجمالي التعويضات' : 'Benefits Value / Total Compensation',
+      dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR System',
       variant: 'utilization' as const,
-      progress: calculatedMetrics.utilizationPercent,
-      trend: { current: calculatedMetrics.utilizationPercent, previous: calculatedMetrics.lastMonthUtilizationPercent }
+      progress: calculatedMetrics.benefitsAsPercentOfComp,
+      trend: { current: calculatedMetrics.benefitsAsPercentOfComp, previous: calculatedMetrics.benefitsAsPercentOfComp - 2 },
+      secondaryValue: null,
     },
   ];
 
-  // Secondary metrics with trends
+  // Secondary metrics - streamlined (removed redundant fully utilized / opportunities)
   const secondaryMetrics = [
     { icon: DollarSign, value: formatCurrency(salaryData.monthlySalary), label: t('employee.dashboard.monthlySalary'), formula: isRTL ? 'الراتب الأساسي / ١٢' : 'Base salary / 12', source: isRTL ? 'نظام الموارد البشرية' : 'HR System', trend: null },
     { icon: Calendar, value: `${salaryData.leaveBalance} ${t('common.days')}`, label: t('employee.dashboard.leaveBalance'), formula: isRTL ? 'الإجمالي - المستخدم' : 'Total - Used', source: isRTL ? 'نظام الإجازات' : 'Leave System', trend: { current: salaryData.leaveBalance, previous: 24 } },
-    { icon: Award, value: `${calculatedMetrics.fullyUtilizedCount}`, label: isRTL ? 'مزايا مستخدمة بالكامل' : 'Fully Utilized Benefits', formula: isRTL ? 'عدد المزايا بنسبة ١٠٠٪' : 'Benefits at 100%', source: isRTL ? 'نظام المزايا' : 'Benefits System', trend: { current: calculatedMetrics.fullyUtilizedCount, previous: 1 } },
-    { icon: Clock, value: `${calculatedMetrics.underutilizedCount}`, label: isRTL ? 'فرص للاستخدام' : 'Opportunities to Use', formula: isRTL ? 'مزايا أقل من ٥٠٪' : 'Benefits under 50%', source: isRTL ? 'نظام المزايا' : 'Benefits System', trend: { current: calculatedMetrics.underutilizedCount, previous: 5 } },
     { icon: Zap, value: `${salaryData.activatedItems}`, label: t('employee.dashboard.activatedPerks'), formula: isRTL ? 'عدد التفعيلات' : 'Count of activations', source: isRTL ? 'السوق' : 'Marketplace', trend: { current: salaryData.activatedItems, previous: 4 } },
-    { icon: TrendingUp, value: `${calculatedMetrics.benefitsAsPercentOfComp}${isRTL ? '٪' : '%'}`, label: isRTL ? 'المزايا من التعويضات' : 'Benefits % of Comp', formula: isRTL ? 'المزايا / إجمالي التعويضات' : 'Benefits / Total Comp', source: isRTL ? 'نظام الموارد البشرية' : 'HR System', trend: null },
   ];
   
   return (
@@ -283,12 +284,13 @@ export default function EmployeeDashboard() {
             variant={stat.variant}
             progress={stat.progress}
             index={index}
+            secondaryValue={stat.secondaryValue}
           />
         ))}
       </div>
 
       {/* Secondary Metrics Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         {secondaryMetrics.map((metric, index) => (
           <Card 
             key={metric.label} 
