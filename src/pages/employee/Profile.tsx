@@ -5,9 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User, Briefcase, Users, Heart, Save, Plus, Trash2, Baby, PawPrint } from 'lucide-react';
+import { User, Briefcase, Users, Heart, Save, Plus, Trash2, Baby, PawPrint, Shield, Monitor, Lock, UserCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProfile, Child, Pet } from '@/contexts/ProfileContext';
+import { SessionManager } from '@/components/security/SessionManager';
+import { DataPrivacySettings } from '@/components/security/DataPrivacySettings';
+import { MFAEnrollment } from '@/components/auth/MFAEnrollment';
 
 // Comprehensive list of countries with their cities and areas
 const COUNTRIES_DATA: Record<string, Record<string, string[]>> = {
@@ -409,7 +412,13 @@ export default function ProfilePage() {
       </div>
 
       <Tabs defaultValue="personal" className="space-y-4">
-        <TabsList><TabsTrigger value="personal"><User className="w-4 h-4 mr-2" />Personal</TabsTrigger><TabsTrigger value="work"><Briefcase className="w-4 h-4 mr-2" />Work</TabsTrigger><TabsTrigger value="family"><Users className="w-4 h-4 mr-2" />Family</TabsTrigger><TabsTrigger value="lifestyle"><Heart className="w-4 h-4 mr-2" />Lifestyle</TabsTrigger></TabsList>
+        <TabsList className="flex-wrap h-auto gap-1">
+          <TabsTrigger value="personal"><User className="w-4 h-4 mr-2" />Personal</TabsTrigger>
+          <TabsTrigger value="work"><Briefcase className="w-4 h-4 mr-2" />Work</TabsTrigger>
+          <TabsTrigger value="family"><Users className="w-4 h-4 mr-2" />Family</TabsTrigger>
+          <TabsTrigger value="lifestyle"><Heart className="w-4 h-4 mr-2" />Lifestyle</TabsTrigger>
+          <TabsTrigger value="security"><Shield className="w-4 h-4 mr-2" />Security & Privacy</TabsTrigger>
+        </TabsList>
         
         <TabsContent value="personal" className="space-y-4">
           {/* Basic Information */}
@@ -602,6 +611,37 @@ export default function ProfilePage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="security" className="space-y-6">
+          <Tabs defaultValue="sessions" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
+              <TabsTrigger value="sessions" className="flex items-center gap-2">
+                <Monitor className="w-4 h-4" />
+                <span className="hidden sm:inline">Sessions</span>
+              </TabsTrigger>
+              <TabsTrigger value="mfa" className="flex items-center gap-2">
+                <Lock className="w-4 h-4" />
+                <span className="hidden sm:inline">Two-Factor Auth</span>
+              </TabsTrigger>
+              <TabsTrigger value="privacy" className="flex items-center gap-2">
+                <UserCheck className="w-4 h-4" />
+                <span className="hidden sm:inline">Privacy</span>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="sessions" className="space-y-6">
+              <SessionManager />
+            </TabsContent>
+
+            <TabsContent value="mfa" className="space-y-6">
+              <MFAEnrollment />
+            </TabsContent>
+
+            <TabsContent value="privacy" className="space-y-6">
+              <DataPrivacySettings />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
       </Tabs>
     </div>

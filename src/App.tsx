@@ -126,7 +126,7 @@ function AppRoutes() {
         <Route path="profile" element={<ProfilePage />} />
         <Route path="onboarding" element={<OnboardingPage />} />
         <Route path="knowledge" element={<KnowledgeHubPage />} />
-        <Route path="security" element={<SecuritySettingsPage />} />
+        <Route path="security" element={<Navigate to="/employee/profile" replace />} />
       </Route>
       
       {/* Employer Routes */}
