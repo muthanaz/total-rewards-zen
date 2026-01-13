@@ -30,7 +30,6 @@ interface NavItem {
   path: string;
   icon: React.ElementType;
   badge?: number;
-  iconColor?: string;
 }
 
 interface NavGroup {
@@ -39,54 +38,53 @@ interface NavGroup {
   defaultOpen?: boolean;
 }
 
-// Restructured navigation for action-oriented flow
+// Direct navigation links (single items without groups)
+interface DirectNavItem {
+  labelKey: string;
+  path: string;
+  icon: React.ElementType;
+  badge?: number;
+}
+
+const directNavItems: DirectNavItem[] = [
+  { labelKey: 'nav.dashboard', path: '/employer', icon: LayoutDashboard },
+  { labelKey: 'nav.claimsApprovals', path: '/employer/claims', icon: FileCheck, badge: 12 },
+];
+
+// Grouped navigation items
 const navigationGroups: NavGroup[] = [
-  {
-    titleKey: 'nav.group.commandCenter',
-    items: [
-      { labelKey: 'nav.commandCenter', path: '/employer', icon: LayoutDashboard, iconColor: 'text-primary' },
-    ],
-    defaultOpen: true,
-  },
-  {
-    titleKey: 'nav.group.actionQueue',
-    items: [
-      { labelKey: 'nav.claimsApprovals', path: '/employer/claims', icon: FileCheck, badge: 12, iconColor: 'text-amber-500' },
-    ],
-    defaultOpen: true,
-  },
   {
     titleKey: 'nav.group.spendIntelligence',
     items: [
-      { labelKey: 'nav.budgetUtilization', path: '/employer/spend', icon: DollarSign, iconColor: 'text-blue-500' },
-      { labelKey: 'nav.wasteRecovery', path: '/employer/zombie', icon: Recycle, iconColor: 'text-amber-500' },
+      { labelKey: 'nav.budgetUtilization', path: '/employer/spend', icon: DollarSign },
+      { labelKey: 'nav.wasteRecovery', path: '/employer/zombie', icon: Recycle },
     ],
     defaultOpen: true,
   },
   {
     titleKey: 'nav.group.workforceInsights',
     items: [
-      { labelKey: 'nav.employeeSegments', path: '/employer/segments', icon: Users, iconColor: 'text-violet-500' },
-      { labelKey: 'nav.smartRecommendations', path: '/employer/recommendations', icon: Lightbulb, iconColor: 'text-emerald-500' },
-    ],
-    defaultOpen: true,
-  },
-  {
-    titleKey: 'nav.group.marketplace',
-    items: [
-      { labelKey: 'nav.marketplaceAnalytics', path: '/employer/marketplace', icon: ShoppingBag, iconColor: 'text-pink-500' },
+      { labelKey: 'nav.employeeSegments', path: '/employer/segments', icon: Users },
+      { labelKey: 'nav.smartRecommendations', path: '/employer/recommendations', icon: Lightbulb },
     ],
     defaultOpen: true,
   },
   {
     titleKey: 'nav.group.configuration',
     items: [
-      { labelKey: 'nav.policyHub', path: '/employer/policies', icon: BookOpen, iconColor: 'text-slate-500' },
-      { labelKey: 'nav.integrations', path: '/employer/integrations', icon: Settings, iconColor: 'text-slate-500' },
+      { labelKey: 'nav.policyHub', path: '/employer/policies', icon: BookOpen },
+      { labelKey: 'nav.integrations', path: '/employer/integrations', icon: Settings },
     ],
     defaultOpen: false,
   },
 ];
+
+// Marketplace as a special standalone item at the bottom
+const marketplaceItem: DirectNavItem = {
+  labelKey: 'nav.marketplaceAnalytics',
+  path: '/employer/marketplace',
+  icon: ShoppingBag,
+};
 
 export function EmployerSidebar() {
   const location = useLocation();
@@ -115,9 +113,7 @@ export function EmployerSidebar() {
   };
 
   // Calculate total pending actions
-  const totalPendingActions = navigationGroups
-    .flatMap(g => g.items)
-    .reduce((sum, item) => sum + (item.badge || 0), 0);
+  const totalPendingActions = directNavItems.reduce((sum, item) => sum + (item.badge || 0), 0);
 
   const sidebarContent = (
     <>
@@ -165,11 +161,39 @@ export function EmployerSidebar() {
         </div>
       </div>
 
-      {/* Navigation Groups */}
+      {/* Navigation */}
       <nav className={cn(
         "flex-1 overflow-y-auto py-4 px-3",
         isRTL && "text-right"
       )}>
+        {/* Direct Navigation Items */}
+        <div className="space-y-0.5 mb-4">
+          {directNavItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => setMobileOpen(false)}
+              className={cn(
+                'nav-item relative',
+                isActive(item.path) && 'nav-item-active',
+                isRTL && 'flex-row-reverse text-right'
+              )}
+            >
+              <item.icon className="w-4 h-4 shrink-0" />
+              <span className={cn("text-sm flex-1", isRTL && "text-right")}>{t(item.labelKey)}</span>
+              {item.badge && item.badge > 0 && (
+                <Badge 
+                  variant="outline" 
+                  className="h-5 min-w-[20px] px-1.5 text-[10px] font-bold bg-amber-500/10 text-amber-600 border-amber-500/20"
+                >
+                  {item.badge}
+                </Badge>
+              )}
+            </Link>
+          ))}
+        </div>
+
+        {/* Grouped Navigation */}
         {navigationGroups.map((group) => (
           <div key={group.titleKey} className="mb-2">
             <button
@@ -199,7 +223,7 @@ export function EmployerSidebar() {
                       isRTL && 'flex-row-reverse text-right'
                     )}
                   >
-                    <item.icon className={cn("w-4 h-4 shrink-0", item.iconColor)} />
+                    <item.icon className="w-4 h-4 shrink-0" />
                     <span className={cn("text-sm flex-1", isRTL && "text-right")}>{t(item.labelKey)}</span>
                     {item.badge && item.badge > 0 && (
                       <Badge 
@@ -215,6 +239,22 @@ export function EmployerSidebar() {
             )}
           </div>
         ))}
+
+        {/* Marketplace - Standalone at bottom */}
+        <div className="mt-4 pt-4 border-t border-sidebar-border/50">
+          <Link
+            to={marketplaceItem.path}
+            onClick={() => setMobileOpen(false)}
+            className={cn(
+              'nav-item relative',
+              isActive(marketplaceItem.path) && 'nav-item-active',
+              isRTL && 'flex-row-reverse text-right'
+            )}
+          >
+            <marketplaceItem.icon className="w-4 h-4 shrink-0" />
+            <span className={cn("text-sm flex-1", isRTL && "text-right")}>{t(marketplaceItem.labelKey)}</span>
+          </Link>
+        </div>
       </nav>
 
       {/* Sign Out */}
