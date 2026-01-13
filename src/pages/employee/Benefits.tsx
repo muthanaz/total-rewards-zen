@@ -151,20 +151,17 @@ export default function BenefitsPage() {
                 onClick={() => navigate(benefit.route)} 
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                {/* Group color bar */}
-                <div className={cn("h-1.5", group.bgClass)} />
+                {/* Benefit color bar */}
+                <div className={cn("h-1.5", cat.bgClass)} />
                 <CardContent className="p-5">
                   <div className="flex items-start gap-3">
-                    {/* Icon with group color */}
-                    <div className={cn("p-2.5 rounded-xl shrink-0", group.bgLightClass)}>
-                      <benefit.icon className={cn("w-5 h-5", group.textClass)} />
+                    {/* Icon with benefit color */}
+                    <div className={cn("p-2.5 rounded-xl shrink-0", cat.bgLightClass)}>
+                      <benefit.icon className={cn("w-5 h-5", cat.textClass)} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-base group-hover:text-accent transition-colors">{benefit.name}</h3>
-                      {/* Group badge */}
-                      <Badge variant="outline" className={cn("mt-1.5 text-xs", group.bgLightClass, group.textClass, group.borderClass)}>
-                        {group.label}
-                      </Badge>
+                      <span className="text-lg font-bold mt-1 block">{formatCurrency(benefit.value)}</span>
                       <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{benefit.description}</p>
                     </div>
                     <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
