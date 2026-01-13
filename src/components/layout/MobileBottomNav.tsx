@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
-  Wallet,
+  Award,
   Heart,
   Calendar,
   User,
@@ -16,10 +16,9 @@ interface NavItem {
   icon: React.ElementType;
 }
 
-// 5 core items for bottom nav
 const bottomNavItems: NavItem[] = [
   { label: 'Home', labelAr: 'الرئيسية', path: '/employee', icon: LayoutDashboard },
-  { label: 'Benefits', labelAr: 'المزايا', path: '/employee/benefits', icon: Wallet },
+  { label: 'Benefits', labelAr: 'المزايا', path: '/employee/benefits', icon: Award },
   { label: 'Health', labelAr: 'الصحة', path: '/employee/health', icon: Heart },
   { label: 'Leave', labelAr: 'إجازة', path: '/employee/leave', icon: Calendar },
   { label: 'Profile', labelAr: 'الملف', path: '/employee/profile', icon: User },
@@ -31,21 +30,13 @@ export function MobileBottomNav() {
   const isRTL = direction === 'rtl';
 
   const isActive = (path: string) => {
-    if (path === '/employee') {
-      return location.pathname === path;
-    }
+    if (path === '/employee') return location.pathname === path;
     return location.pathname.startsWith(path);
   };
 
   return (
-    <nav className={cn(
-      "bottom-nav safe-area-bottom",
-      isRTL && "flex-row-reverse"
-    )}>
-      <div className={cn(
-        "flex items-center justify-around w-full",
-        isRTL && "flex-row-reverse"
-      )}>
+    <nav className={cn("bottom-nav safe-area-bottom", isRTL && "flex-row-reverse")}>
+      <div className={cn("flex items-center justify-around w-full", isRTL && "flex-row-reverse")}>
         {bottomNavItems.map((item) => (
           <Link
             key={item.path}
@@ -55,14 +46,10 @@ export function MobileBottomNav() {
               isActive(item.path) && 'bottom-nav-item-active'
             )}
           >
-            <div className={cn(
-              "p-2 rounded-xl transition-all",
-              isActive(item.path) 
-                ? "bg-primary/15 text-primary" 
-                : "text-muted-foreground"
-            )}>
-              <item.icon className="w-5 h-5" />
-            </div>
+            <item.icon className={cn(
+              "w-5 h-5 transition-colors",
+              isActive(item.path) ? "text-primary" : "text-muted-foreground"
+            )} />
             <span className={cn(
               "text-[10px] font-medium",
               isActive(item.path) ? "text-primary" : "text-muted-foreground"
