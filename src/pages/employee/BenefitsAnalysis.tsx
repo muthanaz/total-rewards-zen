@@ -1,156 +1,137 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { 
-  TrendingUp, TrendingDown, Target, PieChart, BarChart3, 
-  ArrowUpRight, ArrowDownRight, Calendar, DollarSign
+  AlertCircle, Clock, ArrowRight, Wallet, CalendarClock, 
+  TrendingUp, Lightbulb, ChevronRight, Sparkles, Target
 } from 'lucide-react';
-import { ChartContainer, AnimatedBarChart, AnimatedRadarChart, AnimatedDonutChart, StackedAreaChart } from '@/components/charts';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
-import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { motion } from 'framer-motion';
-import { BENEFIT_CATEGORIES } from '@/lib/benefitCategories';
+import { useNavigate } from 'react-router-dom';
 
-// Demo data with valueType categorization
-type BenefitValueType = 'guaranteed' | 'employer_cost' | 'performance' | 'budget';
-
+// Demo data with actionable info
 const benefits = [
-  { name: 'Housing Allowance', value: 120000, utilized: 120000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType },
-  { name: 'Education Allowance', value: 60000, utilized: 42000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType },
-  { name: 'Health Insurance', value: 45000, utilized: 12500, type: 'health_protection', valueType: 'employer_cost' as BenefitValueType },
-  { name: 'Transport & Mobility', value: 39000, utilized: 33000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType },
-  { name: 'Annual Bonus', value: 70000, utilized: 0, type: 'cash_allowances', valueType: 'performance' as BenefitValueType },
-  { name: 'Financial Planning', value: 36000, utilized: 18000, type: 'wealth_ownership', valueType: 'budget' as BenefitValueType },
-  { name: 'Wellbeing Program', value: 6000, utilized: 3200, type: 'wellbeing', valueType: 'budget' as BenefitValueType },
-  { name: 'Learning & Development', value: 12000, utilized: 4500, type: 'growth_career', valueType: 'budget' as BenefitValueType },
+  { 
+    id: 'health',
+    name: 'Health Insurance', 
+    nameAr: 'التأمين الصحي',
+    value: 45000, 
+    utilized: 12500, 
+    route: '/employee/health',
+    deadline: '2026-12-31',
+    tip: 'Schedule your annual checkup',
+    tipAr: 'حدد موعد الفحص السنوي',
+    urgency: 'low'
+  },
+  { 
+    id: 'education',
+    name: 'Education Allowance', 
+    nameAr: 'بدل التعليم',
+    value: 60000, 
+    utilized: 42000, 
+    route: '/employee/schooling',
+    deadline: '2026-08-31',
+    tip: 'Submit tuition receipts before school year ends',
+    tipAr: 'قدم إيصالات الرسوم قبل نهاية العام الدراسي',
+    urgency: 'medium'
+  },
+  { 
+    id: 'wellbeing',
+    name: 'Wellbeing Program', 
+    nameAr: 'برنامج الرفاهية',
+    value: 6000, 
+    utilized: 3200, 
+    route: '/employee/wellbeing',
+    deadline: '2026-12-31',
+    tip: 'Renew your gym membership',
+    tipAr: 'جدد اشتراك النادي الرياضي',
+    urgency: 'low'
+  },
+  { 
+    id: 'learning',
+    name: 'Learning & Development', 
+    nameAr: 'التعلم والتطوير',
+    value: 12000, 
+    utilized: 4500, 
+    route: '/employee/learning',
+    deadline: '2026-12-31',
+    tip: 'Enroll in a certification course',
+    tipAr: 'سجل في دورة شهادة مهنية',
+    urgency: 'medium'
+  },
+  { 
+    id: 'financial',
+    name: 'Financial Planning', 
+    nameAr: 'التخطيط المالي',
+    value: 36000, 
+    utilized: 18000, 
+    route: '/employee/financial',
+    deadline: '2026-12-31',
+    tip: 'Increase your retirement contribution',
+    tipAr: 'زد مساهمتك في صندوق التقاعد',
+    urgency: 'low'
+  },
 ];
 
-// Chart data with translations
-const utilizationByTypeEn = [
-  { name: 'Cash', value: 195000, secondaryValue: 219000 },
-  { name: 'Health', value: 12500, secondaryValue: 45000 },
-  { name: 'Wealth', value: 18000, secondaryValue: 36000 },
-  { name: 'Growth', value: 4500, secondaryValue: 12000 },
-  { name: 'Wellbeing', value: 3200, secondaryValue: 6000 },
-];
-
-const utilizationByTypeAr = [
-  { name: 'النقدية', value: 195000, secondaryValue: 219000 },
-  { name: 'الصحة', value: 12500, secondaryValue: 45000 },
-  { name: 'الثروة', value: 18000, secondaryValue: 36000 },
-  { name: 'النمو', value: 4500, secondaryValue: 12000 },
-  { name: 'الرفاهية', value: 3200, secondaryValue: 6000 },
-];
-
-const benefitRadarDataEn = [
-  { subject: 'Housing', value: 100, secondaryValue: 85, fullMark: 100 },
-  { subject: 'Education', value: 70, secondaryValue: 75, fullMark: 100 },
-  { subject: 'Health', value: 28, secondaryValue: 65, fullMark: 100 },
-  { subject: 'Transport', value: 75, secondaryValue: 70, fullMark: 100 },
-  { subject: 'Wellbeing', value: 53, secondaryValue: 60, fullMark: 100 },
-  { subject: 'Learning', value: 38, secondaryValue: 55, fullMark: 100 },
-];
-
-const benefitRadarDataAr = [
-  { subject: 'السكن', value: 100, secondaryValue: 85, fullMark: 100 },
-  { subject: 'التعليم', value: 70, secondaryValue: 75, fullMark: 100 },
-  { subject: 'الصحة', value: 28, secondaryValue: 65, fullMark: 100 },
-  { subject: 'النقل', value: 75, secondaryValue: 70, fullMark: 100 },
-  { subject: 'الرفاهية', value: 53, secondaryValue: 60, fullMark: 100 },
-  { subject: 'التعلم', value: 38, secondaryValue: 55, fullMark: 100 },
-];
-
-// Monthly utilization trend
-const monthlyTrendEn = [
-  { name: 'Jan', value: 15000, secondaryValue: 12000 },
-  { name: 'Feb', value: 22000, secondaryValue: 18000 },
-  { name: 'Mar', value: 35000, secondaryValue: 28000 },
-  { name: 'Apr', value: 48000, secondaryValue: 42000 },
-  { name: 'May', value: 62000, secondaryValue: 55000 },
-  { name: 'Jun', value: 78000, secondaryValue: 68000 },
-  { name: 'Jul', value: 95000, secondaryValue: 82000 },
-  { name: 'Aug', value: 115000, secondaryValue: 98000 },
-  { name: 'Sep', value: 138000, secondaryValue: 115000 },
-  { name: 'Oct', value: 165000, secondaryValue: 138000 },
-  { name: 'Nov', value: 198000, secondaryValue: 165000 },
-  { name: 'Dec', value: 233200, secondaryValue: 195000 },
-];
-
-const monthlyTrendAr = [
-  { name: 'يناير', value: 15000, secondaryValue: 12000 },
-  { name: 'فبراير', value: 22000, secondaryValue: 18000 },
-  { name: 'مارس', value: 35000, secondaryValue: 28000 },
-  { name: 'أبريل', value: 48000, secondaryValue: 42000 },
-  { name: 'مايو', value: 62000, secondaryValue: 55000 },
-  { name: 'يونيو', value: 78000, secondaryValue: 68000 },
-  { name: 'يوليو', value: 95000, secondaryValue: 82000 },
-  { name: 'أغسطس', value: 115000, secondaryValue: 98000 },
-  { name: 'سبتمبر', value: 138000, secondaryValue: 115000 },
-  { name: 'أكتوبر', value: 165000, secondaryValue: 138000 },
-  { name: 'نوفمبر', value: 198000, secondaryValue: 165000 },
-  { name: 'ديسمبر', value: 233200, secondaryValue: 195000 },
-];
-
-// Benefit distribution for donut chart - using consistent colors from BENEFIT_CATEGORIES
-const benefitDistributionEn = [
-  { name: 'Housing', value: 120000, color: BENEFIT_CATEGORIES.housing.color },
-  { name: 'Education', value: 60000, color: BENEFIT_CATEGORIES.education.color },
-  { name: 'Health', value: 45000, color: BENEFIT_CATEGORIES.health.color },
-  { name: 'Transport', value: 39000, color: BENEFIT_CATEGORIES.transport.color },
-  { name: 'Bonus', value: 70000, color: BENEFIT_CATEGORIES.rewards.color },
-  { name: 'Financial', value: 36000, color: BENEFIT_CATEGORIES.financial.color },
-  { name: 'Wellbeing', value: 6000, color: BENEFIT_CATEGORIES.wellbeing.color },
-  { name: 'Learning', value: 12000, color: BENEFIT_CATEGORIES.learning.color },
-];
-
-const benefitDistributionAr = [
-  { name: 'السكن', value: 120000, color: BENEFIT_CATEGORIES.housing.color },
-  { name: 'التعليم', value: 60000, color: BENEFIT_CATEGORIES.education.color },
-  { name: 'الصحة', value: 45000, color: BENEFIT_CATEGORIES.health.color },
-  { name: 'النقل', value: 39000, color: BENEFIT_CATEGORIES.transport.color },
-  { name: 'المكافأة', value: 70000, color: BENEFIT_CATEGORIES.rewards.color },
-  { name: 'المالية', value: 36000, color: BENEFIT_CATEGORIES.financial.color },
-  { name: 'الرفاهية', value: 6000, color: BENEFIT_CATEGORIES.wellbeing.color },
-  { name: 'التعلم', value: 12000, color: BENEFIT_CATEGORIES.learning.color },
+// Fully utilized benefits (for celebration)
+const fullyUtilizedBenefits = [
+  { name: 'Housing Allowance', nameAr: 'بدل السكن', value: 120000 },
+  { name: 'Transport & Mobility', nameAr: 'النقل والتنقل', value: 39000 },
 ];
 
 export default function BenefitsAnalysis() {
-  const { t, language, direction } = useLanguage();
+  const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
+  const navigate = useNavigate();
 
   const calculatedMetrics = useMemo(() => {
-    const guaranteedBenefitValue = benefits.filter(b => b.valueType === 'guaranteed').reduce((sum, b) => sum + b.value, 0);
-    const totalBenefitValue = benefits.reduce((sum, b) => sum + b.value, 0);
-    const totalUtilized = benefits.reduce((sum, b) => sum + b.utilized, 0);
-    const utilizationPercent = Math.round((totalUtilized / totalBenefitValue) * 100);
-    const fullyUtilizedCount = benefits.filter(b => (b.utilized / b.value) >= 1).length;
-    const underutilizedCount = benefits.filter(b => (b.utilized / b.value) < 0.5).length;
+    const totalValue = benefits.reduce((sum, b) => sum + b.value, 0) + 
+                       fullyUtilizedBenefits.reduce((sum, b) => sum + b.value, 0);
+    const totalUtilized = benefits.reduce((sum, b) => sum + b.utilized, 0) + 
+                          fullyUtilizedBenefits.reduce((sum, b) => sum + b.value, 0);
+    const unclaimed = totalValue - totalUtilized;
+    const utilizationPercent = Math.round((totalUtilized / totalValue) * 100);
+    
+    // Days until year end
+    const yearEnd = new Date('2026-12-31');
+    const today = new Date();
+    const daysRemaining = Math.ceil((yearEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     
     return {
-      guaranteedBenefitValue,
-      totalBenefitValue,
+      totalValue,
       totalUtilized,
+      unclaimed,
       utilizationPercent,
-      fullyUtilizedCount,
-      underutilizedCount,
+      daysRemaining,
     };
   }, []);
 
-  const formatCurrency = (value: number) => `${isRTL ? '' : 'AED '}${value.toLocaleString(isRTL ? 'ar-AE' : 'en-AE')}${isRTL ? ' درهم' : ''}`;
-  const formatCurrencyShort = (value: number) => `${(value / 1000).toFixed(0)}${isRTL ? 'ألف' : 'K'}`;
+  // Sort benefits by urgency and utilization
+  const actionableBenefits = useMemo(() => {
+    return benefits
+      .map(b => ({
+        ...b,
+        remaining: b.value - b.utilized,
+        utilizationPercent: Math.round((b.utilized / b.value) * 100),
+      }))
+      .filter(b => b.remaining > 0)
+      .sort((a, b) => a.utilizationPercent - b.utilizationPercent);
+  }, []);
 
-  const utilizationByType = isRTL ? utilizationByTypeAr : utilizationByTypeEn;
-  const benefitRadarData = isRTL ? benefitRadarDataAr : benefitRadarDataEn;
-  const monthlyTrend = isRTL ? monthlyTrendAr : monthlyTrendEn;
-  const benefitDistribution = isRTL ? benefitDistributionAr : benefitDistributionEn;
+  // Top 2 urgent actions
+  const urgentActions = actionableBenefits.slice(0, 2);
 
-  // Top underutilized benefits
-  const underutilizedBenefits = benefits
-    .map(b => ({ ...b, utilizationPercent: Math.round((b.utilized / b.value) * 100) }))
-    .filter(b => b.utilizationPercent < 80)
-    .sort((a, b) => a.utilizationPercent - b.utilizationPercent)
-    .slice(0, 4);
+  const formatCurrency = (value: number) => 
+    `${isRTL ? '' : 'AED '}${value.toLocaleString(isRTL ? 'ar-AE' : 'en-AE')}${isRTL ? ' درهم' : ''}`;
+
+  const getDaysUntilDeadline = (deadline: string) => {
+    const deadlineDate = new Date(deadline);
+    const today = new Date();
+    return Math.ceil((deadlineDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -160,234 +141,274 @@ export default function BenefitsAnalysis() {
           {isRTL ? 'تحليل المزايا' : 'Benefits Analysis'}
         </h1>
         <p className="text-muted-foreground">
-          {isRTL ? 'رؤى تفصيلية حول استخدام وتوزيع مزاياك' : 'Detailed insights into your benefits utilization and distribution'}
+          {isRTL ? 'اكتشف ما يمكنك المطالبة به واتخذ إجراءً' : 'Discover what you can claim and take action'}
         </p>
       </div>
-      {/* Quick Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}>
-          <Card className="p-3 border-accent/20 bg-accent/5">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-accent/15">
-                <Target className="w-4 h-4 text-accent" />
-              </div>
-              <div>
-                <p className="text-lg font-bold text-foreground">{calculatedMetrics.utilizationPercent}%</p>
-                <p className="text-[10px] text-muted-foreground uppercase">{isRTL ? 'نسبة الاستخدام الإجمالية' : 'Overall Utilization'}</p>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <Card className="p-3 border-emerald-500/20 bg-emerald-500/5">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-emerald-500/15">
-                <TrendingUp className="w-4 h-4 text-emerald-500" />
-              </div>
-              <div>
-                <p className="text-lg font-bold text-foreground">{calculatedMetrics.fullyUtilizedCount}</p>
-                <p className="text-[10px] text-muted-foreground uppercase">{isRTL ? 'مزايا مستخدمة بالكامل' : 'Fully Utilized'}</p>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <Card className="p-3 border-amber-500/20 bg-amber-500/5">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-amber-500/15">
-                <TrendingDown className="w-4 h-4 text-amber-500" />
-              </div>
-              <div>
-                <p className="text-lg font-bold text-foreground">{calculatedMetrics.underutilizedCount}</p>
-                <p className="text-[10px] text-muted-foreground uppercase">{isRTL ? 'مزايا غير مستغلة' : 'Under 50% Used'}</p>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <Card className="p-3 border-blue-500/20 bg-blue-500/5">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-blue-500/15">
-                <Calendar className="w-4 h-4 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-lg font-bold text-foreground">+12%</p>
-                <p className="text-[10px] text-muted-foreground uppercase">{isRTL ? 'مقارنة بالشهر الماضي' : 'vs Last Month'}</p>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
-      </div>
-
-      {/* Main Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Utilization by Benefit Type */}
-        <ChartContainer 
-          title={isRTL ? 'الاستخدام حسب النوع' : 'Utilization by Category'}
-          formula={isRTL ? 'المبلغ المستخدم مقابل الإجمالي المخصص لكل فئة' : 'Utilized amount vs total allocation per category'}
-          dataSource={isRTL ? 'نظام المزايا' : 'Benefits System'}
-        >
-          <AnimatedBarChart
-            data={utilizationByType}
-            layout="horizontal"
-            showSecondary={true}
-            primaryLabel={isRTL ? 'المستخدم' : 'Utilized'}
-            secondaryLabel={isRTL ? 'المخصص' : 'Allocated'}
-            formatValue={formatCurrencyShort}
-            height={240}
-            gradientId="analysisBar"
-            showLegend={true}
-          />
-        </ChartContainer>
-
-        {/* Benefit Comparison Radar */}
-        <ChartContainer 
-          title={isRTL ? 'مقارنة المزايا' : 'Benefit Comparison'}
-          formula={isRTL ? 'استخدامك مقابل متوسط الشركة' : 'Your utilization vs company average'}
-          dataSource={isRTL ? 'نظام المزايا' : 'Benefits System'}
-        >
-          <AnimatedRadarChart
-            data={benefitRadarData}
-            height={240}
-            showSecondary={true}
-            primaryLabel={isRTL ? 'استخدامك' : 'Your Usage'}
-            secondaryLabel={isRTL ? 'متوسط الشركة' : 'Company Avg'}
-            showLegend={true}
-          />
-        </ChartContainer>
-      </div>
-
-      {/* Second Row - Distribution & Trend */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Benefit Distribution Donut */}
-        <ChartContainer 
-          title={isRTL ? 'توزيع المزايا' : 'Benefits Distribution'}
-          formula={isRTL ? 'قيمة كل مزايا كنسبة من الإجمالي' : 'Value of each benefit as % of total'}
-          dataSource={isRTL ? 'نظام المزايا' : 'Benefits System'}
-        >
-          <AnimatedDonutChart
-            data={benefitDistribution}
-            height={200}
-            innerRadius={50}
-            showLegend={true}
-            formatValue={formatCurrencyShort}
-          />
-        </ChartContainer>
-
-        {/* Monthly Utilization Trend - spans 2 columns */}
-        <div className="lg:col-span-2">
-          <ChartContainer 
-            title={isRTL ? 'اتجاه الاستخدام الشهري' : 'Monthly Utilization Trend'}
-            formula={isRTL ? 'الاستخدام التراكمي خلال العام' : 'Cumulative utilization throughout the year'}
-            dataSource={isRTL ? 'نظام المطالبات' : 'Claims System'}
-          >
-            <StackedAreaChart
-              data={monthlyTrend}
-              height={200}
-              stacks={[
-                { key: 'value', label: isRTL ? 'هذا العام' : 'This Year', color: 'hsl(var(--accent))' },
-                { key: 'secondaryValue', label: isRTL ? 'العام الماضي' : 'Last Year', color: 'hsl(210, 70%, 60%)' },
-              ]}
-              formatValue={formatCurrencyShort}
-            />
-          </ChartContainer>
-        </div>
-      </div>
-
-      {/* Underutilized Benefits Alert */}
-      <Card className="border-amber-500/30 bg-gradient-to-r from-amber-500/5 to-transparent">
-        <CardHeader className="pb-2">
-          <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-            <div className="p-1.5 rounded-lg bg-amber-500/15">
-              <TrendingDown className="w-4 h-4 text-amber-500" />
-            </div>
-            <CardTitle className="text-sm font-semibold">
-              {isRTL ? 'فرص الاستخدام' : 'Utilization Opportunities'}
-            </CardTitle>
-            <InfoTooltip 
-              formula={isRTL ? 'المزايا التي لم يتم استخدامها بالكامل' : 'Benefits that haven\'t been fully utilized yet'}
-              dataSource={isRTL ? 'نظام المزايا' : 'Benefits System'}
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {underutilizedBenefits.map((benefit, index) => (
-              <motion.div
-                key={benefit.name}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="p-2 rounded-lg bg-card border border-border/50"
-              >
-                <div className={cn("flex items-center justify-between mb-1", isRTL && "flex-row-reverse")}>
-                  <span className="text-xs font-medium truncate">{benefit.name}</span>
-                  <span className="text-xs font-bold text-amber-600">{benefit.utilizationPercent}%</span>
+      {/* Hero: Money Left on Table */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <Card className="overflow-hidden border-accent/30 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent">
+          <CardContent className="p-6">
+            <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
+              <div className={cn("space-y-2", isRTL && "text-right")}>
+                <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                  <div className="p-2 rounded-full bg-accent/20">
+                    <Wallet className="w-5 h-5 text-accent" />
+                  </div>
+                  <span className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                    {isRTL ? 'القيمة غير المطالب بها' : 'Unclaimed Value'}
+                  </span>
                 </div>
-                <Progress 
-                  value={benefit.utilizationPercent} 
-                  className="h-1.5 [&>div]:bg-amber-500" 
-                />
-                <p className={cn("text-[10px] text-muted-foreground mt-1", isRTL && "text-right")}>
-                  {formatCurrency(benefit.value - benefit.utilized)} {isRTL ? 'متاح' : 'available'}
+                <p className="text-4xl md:text-5xl font-bold text-foreground">
+                  {formatCurrency(calculatedMetrics.unclaimed)}
                 </p>
-              </motion.div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Insights Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="p-4">
-          <div className={cn("flex items-center gap-2 mb-3", isRTL && "flex-row-reverse")}>
-            <div className="p-1.5 rounded-lg bg-emerald-500/15">
-              <ArrowUpRight className="w-4 h-4 text-emerald-500" />
+                <p className="text-sm text-muted-foreground">
+                  {isRTL 
+                    ? `من أصل ${formatCurrency(calculatedMetrics.totalValue)} إجمالي المزايا`
+                    : `Out of ${formatCurrency(calculatedMetrics.totalValue)} total benefits`}
+                </p>
+              </div>
+              
+              <div className={cn("flex flex-col items-start md:items-end gap-3", isRTL && "md:items-start")}>
+                <div className={cn("flex items-center gap-2 px-3 py-2 rounded-full bg-amber-500/10 border border-amber-500/20", isRTL && "flex-row-reverse")}>
+                  <CalendarClock className="w-4 h-4 text-amber-600" />
+                  <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                    {isRTL 
+                      ? `${calculatedMetrics.daysRemaining} يوم متبقي هذا العام`
+                      : `${calculatedMetrics.daysRemaining} days left this year`}
+                  </span>
+                </div>
+                <div className="w-full md:w-48">
+                  <div className={cn("flex justify-between text-xs mb-1", isRTL && "flex-row-reverse")}>
+                    <span className="text-muted-foreground">{isRTL ? 'نسبة الاستخدام' : 'Utilization'}</span>
+                    <span className="font-semibold">{calculatedMetrics.utilizationPercent}%</span>
+                  </div>
+                  <Progress value={calculatedMetrics.utilizationPercent} className="h-2" />
+                </div>
+              </div>
             </div>
-            <h3 className="font-semibold text-sm">{isRTL ? 'أعلى أداء' : 'Top Performers'}</h3>
-          </div>
-          <ul className="space-y-2">
-            <li className={cn("flex items-center justify-between text-sm", isRTL && "flex-row-reverse")}>
-              <span>{isRTL ? 'بدل السكن' : 'Housing Allowance'}</span>
-              <span className="text-emerald-600 font-semibold">100%</span>
-            </li>
-            <li className={cn("flex items-center justify-between text-sm", isRTL && "flex-row-reverse")}>
-              <span>{isRTL ? 'النقل والتنقل' : 'Transport & Mobility'}</span>
-              <span className="text-emerald-600 font-semibold">85%</span>
-            </li>
-            <li className={cn("flex items-center justify-between text-sm", isRTL && "flex-row-reverse")}>
-              <span>{isRTL ? 'بدل التعليم' : 'Education Allowance'}</span>
-              <span className="text-emerald-600 font-semibold">70%</span>
-            </li>
-          </ul>
+          </CardContent>
         </Card>
+      </motion.div>
 
-        <Card className="p-4">
-          <div className={cn("flex items-center gap-2 mb-3", isRTL && "flex-row-reverse")}>
-            <div className="p-1.5 rounded-lg bg-blue-500/15">
-              <DollarSign className="w-4 h-4 text-blue-500" />
+      {/* Urgent Actions */}
+      {urgentActions.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <Card className="border-amber-500/30 bg-gradient-to-r from-amber-500/5 to-transparent">
+            <CardHeader className="pb-3">
+              <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                <div className="p-1.5 rounded-lg bg-amber-500/15">
+                  <AlertCircle className="w-4 h-4 text-amber-600" />
+                </div>
+                <CardTitle className="text-base font-semibold">
+                  {isRTL ? 'إجراءات موصى بها' : 'Recommended Actions'}
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid md:grid-cols-2 gap-3">
+                {urgentActions.map((benefit, index) => (
+                  <motion.div
+                    key={benefit.id}
+                    initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.15 + index * 0.05 }}
+                    className={cn(
+                      "p-4 rounded-xl bg-card border border-border/50 hover:border-accent/50 transition-all cursor-pointer group",
+                    )}
+                    onClick={() => navigate(benefit.route)}
+                  >
+                    <div className={cn("flex items-start justify-between gap-3", isRTL && "flex-row-reverse")}>
+                      <div className={cn("flex-1 space-y-2", isRTL && "text-right")}>
+                        <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                          <span className="font-semibold text-sm">
+                            {isRTL ? benefit.nameAr : benefit.name}
+                          </span>
+                          <Badge variant="secondary" className="text-[10px] bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                            {benefit.utilizationPercent}% {isRTL ? 'مستخدم' : 'used'}
+                          </Badge>
+                        </div>
+                        <p className="text-lg font-bold text-accent">
+                          {formatCurrency(benefit.remaining)} <span className="text-xs font-normal text-muted-foreground">{isRTL ? 'متاح' : 'available'}</span>
+                        </p>
+                        <div className={cn("flex items-center gap-1.5 text-xs text-muted-foreground", isRTL && "flex-row-reverse")}>
+                          <Lightbulb className="w-3 h-3 text-amber-500" />
+                          <span>{isRTL ? benefit.tipAr : benefit.tip}</span>
+                        </div>
+                      </div>
+                      <ChevronRight className={cn(
+                        "w-5 h-5 text-muted-foreground group-hover:text-accent transition-all group-hover:translate-x-1",
+                        isRTL && "rotate-180 group-hover:-translate-x-1"
+                      )} />
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* All Benefits Breakdown */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+      >
+        <Card>
+          <CardHeader className="pb-3">
+            <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+              <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                <div className="p-1.5 rounded-lg bg-accent/15">
+                  <Target className="w-4 h-4 text-accent" />
+                </div>
+                <CardTitle className="text-base font-semibold">
+                  {isRTL ? 'المزايا القابلة للمطالبة' : 'Claimable Benefits'}
+                </CardTitle>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {actionableBenefits.length} {isRTL ? 'مزايا متاحة' : 'benefits available'}
+              </span>
             </div>
-            <h3 className="font-semibold text-sm">{isRTL ? 'القيمة غير المستخدمة' : 'Unclaimed Value'}</h3>
-          </div>
-          <div className="space-y-2">
-            <p className="text-2xl font-bold text-foreground">
-              {formatCurrency(calculatedMetrics.totalBenefitValue - calculatedMetrics.totalUtilized)}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {isRTL 
-                ? `من أصل ${formatCurrency(calculatedMetrics.totalBenefitValue)} متاح لهذا العام` 
-                : `Out of ${formatCurrency(calculatedMetrics.totalBenefitValue)} available this year`}
-            </p>
-            <Progress 
-              value={calculatedMetrics.utilizationPercent} 
-              className="h-2 [&>div]:bg-blue-500 mt-2" 
-            />
-          </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-3">
+              {actionableBenefits.map((benefit, index) => {
+                const daysUntil = getDaysUntilDeadline(benefit.deadline);
+                const isUrgent = daysUntil < 90;
+                
+                return (
+                  <motion.div
+                    key={benefit.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.25 + index * 0.03 }}
+                    className={cn(
+                      "p-4 rounded-lg border border-border/50 hover:border-accent/30 transition-all bg-card/50",
+                    )}
+                  >
+                    <div className={cn("flex flex-col sm:flex-row sm:items-center gap-4", isRTL && "sm:flex-row-reverse")}>
+                      {/* Benefit Info */}
+                      <div className={cn("flex-1 space-y-2", isRTL && "text-right")}>
+                        <div className={cn("flex items-center gap-2 flex-wrap", isRTL && "flex-row-reverse")}>
+                          <span className="font-medium">
+                            {isRTL ? benefit.nameAr : benefit.name}
+                          </span>
+                          {isUrgent && (
+                            <Badge variant="destructive" className="text-[10px]">
+                              <Clock className="w-3 h-3 mr-1" />
+                              {daysUntil} {isRTL ? 'يوم' : 'days'}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className={cn("flex items-center gap-4 text-sm", isRTL && "flex-row-reverse")}>
+                          <span className="text-muted-foreground">
+                            {isRTL ? 'مستخدم:' : 'Used:'} {formatCurrency(benefit.utilized)}
+                          </span>
+                          <span className="text-muted-foreground">•</span>
+                          <span className="font-semibold text-accent">
+                            {isRTL ? 'متاح:' : 'Available:'} {formatCurrency(benefit.remaining)}
+                          </span>
+                        </div>
+                        <Progress value={benefit.utilizationPercent} className="h-1.5" />
+                      </div>
+                      
+                      {/* Action */}
+                      <Button 
+                        size="sm" 
+                        className="shrink-0"
+                        onClick={() => navigate(benefit.route)}
+                      >
+                        {isRTL ? 'عرض التفاصيل' : 'View Details'}
+                        <ArrowRight className={cn("w-4 h-4 ml-1", isRTL && "rotate-180 mr-1 ml-0")} />
+                      </Button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </CardContent>
         </Card>
-      </div>
+      </motion.div>
+
+      {/* Fully Utilized - Celebration */}
+      {fullyUtilizedBenefits.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+        >
+          <Card className="border-emerald-500/30 bg-gradient-to-r from-emerald-500/5 to-transparent">
+            <CardHeader className="pb-3">
+              <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                <div className="p-1.5 rounded-lg bg-emerald-500/15">
+                  <Sparkles className="w-4 h-4 text-emerald-600" />
+                </div>
+                <CardTitle className="text-base font-semibold text-emerald-700 dark:text-emerald-400">
+                  {isRTL ? 'أحسنت! مزايا مستخدمة بالكامل' : 'Great job! Fully Utilized'}
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="flex flex-wrap gap-3">
+                {fullyUtilizedBenefits.map((benefit, index) => (
+                  <motion.div
+                    key={benefit.name}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.35 + index * 0.05 }}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20",
+                      isRTL && "flex-row-reverse"
+                    )}
+                  >
+                    <TrendingUp className="w-4 h-4 text-emerald-600" />
+                    <div className={isRTL ? "text-right" : ""}>
+                      <p className="font-medium text-sm">{isRTL ? benefit.nameAr : benefit.name}</p>
+                      <p className="text-xs text-emerald-600">{formatCurrency(benefit.value)} • 100%</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Smart Tips */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
+      >
+        <Card className="bg-gradient-to-br from-blue-500/5 via-transparent to-violet-500/5 border-blue-500/20">
+          <CardContent className="p-5">
+            <div className={cn("flex items-start gap-4", isRTL && "flex-row-reverse")}>
+              <div className="p-2 rounded-full bg-blue-500/15 shrink-0">
+                <Lightbulb className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className={cn("space-y-2", isRTL && "text-right")}>
+                <h3 className="font-semibold text-sm">
+                  {isRTL ? 'نصيحة ذكية' : 'Smart Tip'}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {isRTL 
+                    ? `لديك ${formatCurrency(calculatedMetrics.unclaimed)} غير مستخدمة. ركز على التعلم والتطوير والتأمين الصحي - هذه المزايا تنتهي صلاحيتها في نهاية العام ولا يمكن ترحيلها.`
+                    : `You have ${formatCurrency(calculatedMetrics.unclaimed)} unclaimed. Focus on Learning & Development and Health Insurance - these benefits expire at year-end and cannot be rolled over.`}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }
