@@ -140,7 +140,7 @@ export default function EmployeeDashboard() {
       label: isRTL ? 'المزايا من التعويضات' : 'Benefits % of Package',
       formula: isRTL ? '(قيمة المزايا ÷ إجمالي التعويضات) × ١٠٠' : '(Benefits Value ÷ Total Compensation) × 100',
       dataSource: isRTL ? 'محسوب' : 'Calculated',
-      variant: 'default' as const,
+      variant: 'warning' as const,
     },
   ];
 
