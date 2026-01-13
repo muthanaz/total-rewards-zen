@@ -25,6 +25,7 @@ import {
   LogOut,
   ShoppingBag,
   Shield,
+  Receipt,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -59,23 +60,17 @@ const navigation: NavGroup[] = [
     ],
   },
   {
-    labelKey: 'nav.leave',
+    labelKey: 'nav.leaves',
     items: [
       { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
     ],
   },
   {
-    labelKey: 'nav.hrRequests',
+    labelKey: 'nav.hrServices',
     items: [
       { labelKey: 'nav.hrDocuments', path: '/employee/documents', icon: FileText },
+      { labelKey: 'nav.claimsRequests', path: '/employee/documents?tab=claims', icon: Receipt },
       { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
-    ],
-  },
-  {
-    labelKey: 'nav.account',
-    items: [
-      { labelKey: 'nav.profile', path: '/employee/profile', icon: User },
-      { labelKey: 'nav.security', path: '/employee/security', icon: Shield },
     ],
   },
 ];
@@ -182,7 +177,7 @@ export function EmployeeSidebar() {
       </nav>
 
       {/* Marketplace - Distinguished Section */}
-      <div className={cn("px-3 pb-3", isRTL && "text-right")}>
+      <div className={cn("px-3 pb-2", isRTL && "text-right")}>
         <Link
           to="/employee/marketplace"
           onClick={() => setMobileOpen(false)}
@@ -214,6 +209,45 @@ export function EmployeeSidebar() {
           </div>
           <ChevronCollapsed className={cn(
             "w-4 h-4 text-violet-500/50 group-hover:text-violet-500 transition-all",
+            "group-hover:translate-x-0.5",
+            isRTL && "rotate-180 group-hover:-translate-x-0.5"
+          )} />
+        </Link>
+      </div>
+
+      {/* Smart Profile - Distinguished Section */}
+      <div className={cn("px-3 pb-3", isRTL && "text-right")}>
+        <Link
+          to="/employee/profile"
+          onClick={() => setMobileOpen(false)}
+          className={cn(
+            "flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200",
+            "bg-gradient-to-r from-teal-500/10 via-emerald-500/10 to-cyan-500/10",
+            "hover:from-teal-500/20 hover:via-emerald-500/20 hover:to-cyan-500/20",
+            "border border-teal-500/20 hover:border-teal-500/40",
+            "group",
+            isActive('/employee/profile') && "from-teal-500/20 via-emerald-500/20 to-cyan-500/20 border-teal-500/40",
+            isRTL && "flex-row-reverse"
+          )}
+        >
+          <div className="p-2 rounded-lg bg-gradient-to-br from-teal-500 to-emerald-500 shadow-lg shadow-teal-500/25">
+            <User className="w-4 h-4 text-white" />
+          </div>
+          <div className={cn("flex-1", isRTL && "text-right")}>
+            <span className={cn(
+              "text-sm font-medium block",
+              isActive('/employee/profile') 
+                ? "text-teal-600 dark:text-teal-400" 
+                : "text-sidebar-foreground group-hover:text-teal-600 dark:group-hover:text-teal-400"
+            )}>
+              {t('nav.profile')}
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              {isRTL ? 'إدارة حسابك وأمانك' : 'Manage your account & security'}
+            </span>
+          </div>
+          <ChevronCollapsed className={cn(
+            "w-4 h-4 text-teal-500/50 group-hover:text-teal-500 transition-all",
             "group-hover:translate-x-0.5",
             isRTL && "rotate-180 group-hover:-translate-x-0.5"
           )} />

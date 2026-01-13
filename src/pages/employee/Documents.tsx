@@ -56,10 +56,6 @@ export default function DocumentsPage() {
             <Receipt className="w-4 h-4" />
             {t('Claims & Requests', 'المطالبات والطلبات')}
           </TabsTrigger>
-          <TabsTrigger value="perdiem" className="gap-2">
-            <Plane className="w-4 h-4" />
-            {t('Per Diem', 'بدل السفر')}
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="documents" className="space-y-6">
@@ -135,12 +131,21 @@ export default function DocumentsPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="claims">
+        <TabsContent value="claims" className="space-y-6">
           <ClaimsDirectory isRTL={isRTL} />
-        </TabsContent>
-
-        <TabsContent value="perdiem">
-          <PerDiemWidget />
+          
+          {/* Per Diem Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className={cn("text-base font-display flex items-center gap-2", isRTL && "text-right flex-row-reverse")}>
+                <Plane className="w-5 h-5 text-accent" />
+                {t('Per Diem & Travel', 'بدل السفر')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PerDiemWidget />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
