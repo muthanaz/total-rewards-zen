@@ -153,57 +153,46 @@ export default function BenefitsPage() {
           {filteredBenefits.map((benefit, index) => {
             const utilization = Math.round((benefit.utilized / benefit.value) * 100);
             const remaining = benefit.value - benefit.utilized;
-            const cat = BENEFIT_CATEGORIES[benefit.category as keyof typeof BENEFIT_CATEGORIES];
             const rag = getRAGIndicator(utilization);
-            
             return (
               <Card 
                 key={benefit.name} 
-                className="group cursor-pointer hover:shadow-lg transition-all overflow-hidden" 
+                className="group cursor-pointer hover:border-accent/40 hover:shadow-sm transition-all duration-200 flex flex-col p-3"
                 onClick={() => navigate(benefit.route)} 
-                style={{ animationDelay: `${index * 50}ms` }}
+                style={{ animationDelay: `${index * 30}ms` }}
               >
-                {/* Category color bar */}
-                <div className={cn("h-1.5", cat?.bgClass)} />
-                <CardContent className="p-5">
-                  <div className="flex items-start gap-3">
-                    {/* Icon with category color */}
-                    <div className={cn("p-2.5 rounded-xl shrink-0", cat?.bgLightClass)}>
-                      <benefit.icon className={cn("w-5 h-5", cat?.textClass)} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-base group-hover:text-accent transition-colors">{benefit.name}</h3>
-                      {/* Category badge with category color */}
-                      <Badge variant="outline" className={cn("mt-1.5 text-xs", cat?.bgLightClass, cat?.textClass, cat?.borderClass)}>
-                        {cat?.label}
-                      </Badge>
-                      <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{benefit.description}</p>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="flex items-start gap-2.5">
+                  <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors shrink-0">
+                    <benefit.icon className="w-4 h-4 text-accent" />
                   </div>
-                  
-                  {/* Utilization section with RAG */}
-                  <div className="mt-4 pt-4 border-t border-border/50 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Utilized</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <h3 className="font-medium text-sm truncate group-hover:text-accent transition-colors">
+                        {benefit.name}
+                      </h3>
                       {/* RAG Badge */}
-                      <Badge variant="outline" className={cn("text-xs gap-1", rag.bgClass, rag.textClass, rag.borderClass)}>
+                      <Badge className={cn("text-[9px] px-1.5 py-0 gap-0.5 border-0", rag.bgClass, rag.textClass)}>
                         <RAGIcon status={rag.status} />
                         {utilization}%
                       </Badge>
                     </div>
-                    {/* Progress bar with RAG color */}
-                    <Progress value={utilization} className={cn("h-2", getProgressColorClass(utilization))} />
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        {formatCurrency(benefit.utilized)} of {formatCurrency(benefit.value)}
-                      </span>
-                      <span className={cn("font-medium", rag.textClass)}>
-                        {remaining > 0 ? `${formatCurrency(remaining)} left` : 'Complete'}
-                      </span>
-                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{benefit.description}</p>
                   </div>
-                </CardContent>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                </div>
+                
+                {/* Utilization Progress */}
+                <div className="mt-2.5 space-y-1">
+                  <Progress value={utilization} className={cn("h-1.5", getProgressColorClass(utilization))} />
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      {formatCurrency(benefit.utilized)} / {formatCurrency(benefit.value)}
+                    </span>
+                    <span className={cn("font-medium", rag.textClass)}>
+                      {remaining > 0 ? `${formatCurrency(remaining)} left` : 'Complete'}
+                    </span>
+                  </div>
+                </div>
               </Card>
             );
           })}
