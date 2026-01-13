@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Download, Eye, CheckCircle, Receipt, FolderOpen } from 'lucide-react';
+import { FileText, Download, Eye, CheckCircle, Receipt, FolderOpen, Plane } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { DOCUMENT_TYPES } from '@/lib/constants';
 import { ClaimsDirectory } from '@/components/employee/ClaimsDirectory';
+import PerDiemWidget from '@/components/employee/PerDiemWidget';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 
@@ -54,6 +55,10 @@ export default function DocumentsPage() {
           <TabsTrigger value="claims" className="gap-2">
             <Receipt className="w-4 h-4" />
             {t('Claims & Requests', 'المطالبات والطلبات')}
+          </TabsTrigger>
+          <TabsTrigger value="perdiem" className="gap-2">
+            <Plane className="w-4 h-4" />
+            {t('Per Diem', 'بدل السفر')}
           </TabsTrigger>
         </TabsList>
 
@@ -132,6 +137,10 @@ export default function DocumentsPage() {
 
         <TabsContent value="claims">
           <ClaimsDirectory isRTL={isRTL} />
+        </TabsContent>
+
+        <TabsContent value="perdiem">
+          <PerDiemWidget />
         </TabsContent>
       </Tabs>
     </div>
