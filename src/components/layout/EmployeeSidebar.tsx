@@ -54,23 +54,38 @@ const navigation: NavGroup[] = [
     ],
   },
   {
-    labelKey: 'nav.myBenefits',
+    labelKey: 'nav.allowances',
     items: [
       { labelKey: 'nav.housing', path: '/employee/housing', icon: Home },
-      { labelKey: 'nav.schooling', path: '/employee/schooling', icon: GraduationCap },
-      { labelKey: 'nav.healthInsurance', path: '/employee/health', icon: Heart },
       { labelKey: 'nav.transport', path: '/employee/transport', icon: Car },
+      { labelKey: 'nav.schooling', path: '/employee/schooling', icon: GraduationCap },
+    ],
+  },
+  {
+    labelKey: 'nav.healthWellbeing',
+    items: [
+      { labelKey: 'nav.healthInsurance', path: '/employee/health', icon: Heart },
       { labelKey: 'nav.wellbeing', path: '/employee/wellbeing', icon: Dumbbell },
-      { labelKey: 'nav.learning', path: '/employee/learning', icon: BookOpen },
-      { labelKey: 'nav.leave', path: '/employee/leave', icon: Calendar },
     ],
   },
   {
     labelKey: 'nav.financialRewards',
     items: [
-      { labelKey: 'nav.financial', path: '/employee/financial', icon: PiggyBank },
       { labelKey: 'nav.annualBonus', path: '/employee/bonus', icon: Award },
       { labelKey: 'nav.equity', path: '/employee/equity', icon: TrendingUp },
+      { labelKey: 'nav.financial', path: '/employee/financial', icon: PiggyBank },
+    ],
+  },
+  {
+    labelKey: 'nav.leave',
+    items: [
+      { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
+    ],
+  },
+  {
+    labelKey: 'nav.learningDevelopment',
+    items: [
+      { labelKey: 'nav.learning', path: '/employee/learning', icon: BookOpen },
     ],
   },
   {
@@ -80,7 +95,7 @@ const navigation: NavGroup[] = [
     ],
   },
   {
-    labelKey: 'nav.services',
+    labelKey: 'nav.documentsClaims',
     items: [
       { labelKey: 'nav.documents', path: '/employee/documents', icon: FileText },
       { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
@@ -101,7 +116,7 @@ export function EmployeeSidebar() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { t, direction } = useLanguage();
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['nav.dashboard', 'nav.myBenefits', 'nav.financialRewards']);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['nav.dashboard', 'nav.allowances', 'nav.financialRewards']);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isRTL = direction === 'rtl';
 
