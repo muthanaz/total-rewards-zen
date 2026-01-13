@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,22 +6,22 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { 
   DollarSign, TrendingUp, Calendar, Zap, Home, GraduationCap, 
-  Heart, Car, Dumbbell, PiggyBank, BookOpen, Plane, ChevronRight, ChevronLeft, Gift
+  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift,
+  Wallet, Target, Sparkles, Clock, Award
 } from 'lucide-react';
 import { BENEFIT_TYPE_COLORS, BENEFIT_TYPE_LABELS } from '@/lib/constants';
 import { RequestClaimWidget } from '@/components/employee/RequestClaimWidget';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
-import { ChartContainer, AnimatedBarChart, AnimatedDonutChart, AnimatedRadarChart } from '@/components/charts';
+import { ChartContainer, AnimatedBarChart, AnimatedRadarChart } from '@/components/charts';
 import { DateRangeFilter, DrillDownModal, BenefitsDrillDownSheet } from '@/components/dashboard';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { cn } from '@/lib/utils';
 
-// Demo data
-const metrics = {
+// Demo data - core salary info
+const salaryData = {
   monthlySalary: 35000,
   annualSalary: 420000,
-  annualBenefitsValue: 398000,
-  benefitsUtilization: 62,
   leaveBalance: 22,
   leaveUsed: 8,
   activatedItems: 7,
@@ -67,15 +67,6 @@ const utilizationByTypeAr = [
   { name: 'الرفاهية', value: 3200, secondaryValue: 6000 },
 ];
 
-const allowanceVsUsedEn = [
-  { name: 'Utilized', value: 233200, color: 'hsl(174 60% 45%)' },
-  { name: 'Available', value: 164800, color: 'hsl(220 14% 85%)' },
-];
-
-const allowanceVsUsedAr = [
-  { name: 'المستخدم', value: 233200, color: 'hsl(174 60% 45%)' },
-  { name: 'المتاح', value: 164800, color: 'hsl(220 14% 85%)' },
-];
 
 // Radar chart data for benefit comparison
 const benefitRadarDataEn = [
@@ -140,13 +131,38 @@ export default function EmployeeDashboard() {
   const [benefitsSheetOpen, setBenefitsSheetOpen] = useState(false);
   const [benefitsSheetCategory, setBenefitsSheetCategory] = useState<'fully-utilized' | 'room-to-use' | null>(null);
   
+  // Calculate derived metrics from actual benefit data
+  const calculatedMetrics = useMemo(() => {
+    const totalBenefitValue = benefits.reduce((sum, b) => sum + b.value, 0);
+    const totalUtilized = benefits.reduce((sum, b) => sum + b.utilized, 0);
+    const totalRemaining = totalBenefitValue - totalUtilized;
+    const utilizationPercent = Math.round((totalUtilized / totalBenefitValue) * 100);
+    const fullyUtilizedCount = benefits.filter(b => (b.utilized / b.value) >= 1).length;
+    const underutilizedCount = benefits.filter(b => (b.utilized / b.value) < 0.5).length;
+    const avgUtilizationPerBenefit = Math.round(totalUtilized / benefits.length);
+    
+    // Total compensation = salary + benefits
+    const totalCompensation = salaryData.annualSalary + totalBenefitValue;
+    const benefitsAsPercentOfComp = Math.round((totalBenefitValue / totalCompensation) * 100);
+    
+    return {
+      totalBenefitValue,
+      totalUtilized,
+      totalRemaining,
+      utilizationPercent,
+      fullyUtilizedCount,
+      underutilizedCount,
+      totalCompensation,
+      benefitsAsPercentOfComp,
+      avgUtilizationPerBenefit
+    };
+  }, []);
+
   const formatCurrency = (value: number) => `${isRTL ? '' : 'AED '}${value.toLocaleString(isRTL ? 'ar-AE' : 'en-AE')}${isRTL ? ' درهم' : ''}`;
   const formatCurrencyShort = (value: number) => `${(value / 1000).toFixed(0)}${isRTL ? 'ألف' : 'K'}`;
-  const utilizationPercent = Math.round((233200 / 398000) * 100);
 
   // Get localized data
   const utilizationByType = isRTL ? utilizationByTypeAr : utilizationByTypeEn;
-  const allowanceVsUsed = isRTL ? allowanceVsUsedAr : allowanceVsUsedEn;
   const benefitRadarData = isRTL ? benefitRadarDataAr : benefitRadarDataEn;
 
   const ChevronIcon = isRTL ? ChevronLeft : ChevronRight;
@@ -176,13 +192,54 @@ export default function EmployeeDashboard() {
     console.log(`Exporting data as ${format}`);
   };
 
-  const metricsData = [
-    { icon: DollarSign, value: formatCurrency(metrics.monthlySalary), label: t('employee.dashboard.monthlySalary'), formula: isRTL ? 'الراتب الأساسي / ١٢' : 'Base salary / 12', source: isRTL ? 'نظام الموارد البشرية' : 'HR System' },
-    { icon: DollarSign, value: formatCurrency(metrics.annualSalary), label: t('employee.dashboard.annualSalary'), formula: isRTL ? 'الشهري × ١٢' : 'Monthly × 12', source: isRTL ? 'نظام الموارد البشرية' : 'HR System' },
-    { icon: TrendingUp, value: formatCurrency(metrics.annualBenefitsValue), label: t('employee.dashboard.annualBenefits'), formula: isRTL ? 'مجموع جميع المزايا' : 'Sum of all benefit entitlements', source: isRTL ? 'نظام المزايا' : 'Benefits System' },
-    { icon: Zap, value: `${metrics.benefitsUtilization}${isRTL ? '٪' : '%'}`, label: t('employee.dashboard.utilization'), formula: isRTL ? '(المستخدم / الإجمالي) × ١٠٠' : '(Utilized / Total) × 100', source: isRTL ? 'المتتبع' : 'Tracker' },
-    { icon: Calendar, value: `${metrics.leaveBalance} ${t('common.days')}`, label: t('employee.dashboard.leaveBalance'), formula: isRTL ? 'الإجمالي - المستخدم' : 'Total - Used', source: isRTL ? 'نظام الإجازات' : 'Leave System' },
-    { icon: Zap, value: `${metrics.activatedItems}`, label: t('employee.dashboard.activatedPerks'), formula: isRTL ? 'عدد التفعيلات' : 'Count of activations', source: isRTL ? 'السوق' : 'Marketplace' },
+  // Primary insight stats for the top section
+  const insightStats = [
+    { 
+      icon: Wallet, 
+      value: formatCurrency(calculatedMetrics.totalCompensation), 
+      label: isRTL ? 'إجمالي التعويضات' : 'Total Compensation',
+      formula: isRTL ? 'الراتب السنوي + قيمة المزايا' : 'Annual Salary + Benefits Value',
+      dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR System',
+      variant: 'primary' as const,
+      progress: 100
+    },
+    { 
+      icon: TrendingUp, 
+      value: formatCurrency(calculatedMetrics.totalUtilized), 
+      label: isRTL ? 'المزايا المستخدمة' : 'Benefits Used',
+      formula: isRTL ? 'مجموع جميع المزايا المستخدمة' : 'Sum of all utilized benefits',
+      dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
+      variant: 'utilized' as const,
+      progress: calculatedMetrics.utilizationPercent
+    },
+    { 
+      icon: Sparkles, 
+      value: formatCurrency(calculatedMetrics.totalRemaining), 
+      label: isRTL ? 'المتاح للاستخدام' : 'Available to Use',
+      formula: isRTL ? 'إجمالي المزايا - المستخدم' : 'Total Benefits - Utilized',
+      dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
+      variant: 'remaining' as const,
+      progress: 100 - calculatedMetrics.utilizationPercent
+    },
+    { 
+      icon: Target, 
+      value: `${calculatedMetrics.utilizationPercent}${isRTL ? '٪' : '%'}`, 
+      label: isRTL ? 'نسبة الاستخدام' : 'Utilization Rate',
+      formula: isRTL ? '(المستخدم / الإجمالي) × ١٠٠' : '(Utilized / Total) × 100',
+      dataSource: isRTL ? 'المتتبع' : 'Tracker',
+      variant: 'utilization' as const,
+      progress: calculatedMetrics.utilizationPercent
+    },
+  ];
+
+  // Secondary metrics
+  const secondaryMetrics = [
+    { icon: DollarSign, value: formatCurrency(salaryData.monthlySalary), label: t('employee.dashboard.monthlySalary'), formula: isRTL ? 'الراتب الأساسي / ١٢' : 'Base salary / 12', source: isRTL ? 'نظام الموارد البشرية' : 'HR System' },
+    { icon: Calendar, value: `${salaryData.leaveBalance} ${t('common.days')}`, label: t('employee.dashboard.leaveBalance'), formula: isRTL ? 'الإجمالي - المستخدم' : 'Total - Used', source: isRTL ? 'نظام الإجازات' : 'Leave System' },
+    { icon: Award, value: `${calculatedMetrics.fullyUtilizedCount}`, label: isRTL ? 'مزايا مستخدمة بالكامل' : 'Fully Utilized Benefits', formula: isRTL ? 'عدد المزايا بنسبة ١٠٠٪' : 'Benefits at 100%', source: isRTL ? 'نظام المزايا' : 'Benefits System' },
+    { icon: Clock, value: `${calculatedMetrics.underutilizedCount}`, label: isRTL ? 'فرص للاستخدام' : 'Opportunities to Use', formula: isRTL ? 'مزايا أقل من ٥٠٪' : 'Benefits under 50%', source: isRTL ? 'نظام المزايا' : 'Benefits System' },
+    { icon: Zap, value: `${salaryData.activatedItems}`, label: t('employee.dashboard.activatedPerks'), formula: isRTL ? 'عدد التفعيلات' : 'Count of activations', source: isRTL ? 'السوق' : 'Marketplace' },
+    { icon: TrendingUp, value: `${calculatedMetrics.benefitsAsPercentOfComp}${isRTL ? '٪' : '%'}`, label: isRTL ? 'المزايا من التعويضات' : 'Benefits % of Comp', formula: isRTL ? 'المزايا / إجمالي التعويضات' : 'Benefits / Total Comp', source: isRTL ? 'نظام الموارد البشرية' : 'HR System' },
   ];
   
   return (
@@ -203,9 +260,26 @@ export default function EmployeeDashboard() {
         />
       </div>
 
-      {/* Metrics Grid - Uniform sizing */}
+      {/* Primary Insight Stats - New Enhanced Design */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {insightStats.map((stat, index) => (
+          <SummaryStatsCard
+            key={stat.label}
+            icon={stat.icon}
+            value={stat.value}
+            label={stat.label}
+            formula={stat.formula}
+            dataSource={stat.dataSource}
+            variant={stat.variant}
+            progress={stat.progress}
+            index={index}
+          />
+        ))}
+      </div>
+
+      {/* Secondary Metrics Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {metricsData.map((metric, index) => (
+        {secondaryMetrics.map((metric, index) => (
           <Card 
             key={metric.label} 
             className="metric-card group hover:border-accent/30 transition-all duration-300 h-full"
@@ -359,7 +433,7 @@ export default function EmployeeDashboard() {
         </div>
       </div>
 
-      {/* Charts Section - Row 1 */}
+      {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Utilization by Benefit Type - clickable bars */}
         <ChartContainer 
@@ -385,34 +459,7 @@ export default function EmployeeDashboard() {
           </p>
         </ChartContainer>
 
-        {/* Allowance vs Used Donut */}
-        <ChartContainer 
-          title={t('employee.dashboard.overallUsage')}
-          formula={isRTL ? 'إجمالي المستخدم / إجمالي المزايا السنوية' : 'Total utilized / Total annual benefits'}
-          dataSource={isRTL ? 'نظام المزايا' : 'Benefits System'}
-        >
-          <div className="flex items-center justify-center py-4">
-            <AnimatedDonutChart
-              data={allowanceVsUsed}
-              height={260}
-              innerRadius={70}
-              outerRadius={100}
-              formatValue={(v) => `${isRTL ? '' : 'AED '}${(v / 1000).toFixed(0)}${isRTL ? ' ألف درهم' : 'K'}`}
-              showLegend={true}
-              centerContent={
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-accent">{utilizationPercent}{isRTL ? '٪' : '%'}</p>
-                  <p className="text-xs text-muted-foreground">{t('employee.dashboard.used')}</p>
-                </div>
-              }
-            />
-          </div>
-        </ChartContainer>
-      </div>
-
-      {/* Charts Section - Row 2: Radar + Request Widget */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Radar Chart */}
+        {/* Radar Chart - Moved here to replace donut */}
         <ChartContainer 
           title={t('employee.dashboard.benefitComparison')}
           formula={isRTL ? 'استخدامك مقابل متوسط الشركة لكل مزايا' : 'Your utilization vs company average per benefit'}
@@ -421,7 +468,7 @@ export default function EmployeeDashboard() {
           <div className="pt-2">
             <AnimatedRadarChart
               data={benefitRadarData}
-              height={320}
+              height={280}
               showSecondary={true}
               primaryLabel={t('employee.dashboard.yourUtilization')}
               secondaryLabel={t('employee.dashboard.companyAvg')}
@@ -429,12 +476,12 @@ export default function EmployeeDashboard() {
             />
           </div>
         </ChartContainer>
+      </div>
 
-        {/* Request Widget */}
-        <div className="space-y-4">
-          <RequestClaimWidget />
-          <SatisfactionSurvey compact={true} />
-        </div>
+      {/* Request Widget Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <RequestClaimWidget />
+        <SatisfactionSurvey compact={true} />
       </div>
 
       {/* Full Satisfaction Survey */}
