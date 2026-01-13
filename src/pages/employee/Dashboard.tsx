@@ -208,6 +208,7 @@ export default function EmployeeDashboard() {
       dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR System',
       variant: 'primary' as const,
       secondaryValue: `${formatCurrency(salaryData.annualSalary)}/yr`,
+      highlight: true,
     },
     { 
       icon: Gift, 
@@ -292,8 +293,8 @@ export default function EmployeeDashboard() {
         />
       </div>
 
-      {/* All 8 Metrics Grid - Compact Design */}
-      <div className="grid grid-cols-4 lg:grid-cols-8 gap-2">
+      {/* All 8 Metrics Grid - Uniform Height */}
+      <div className="grid grid-cols-4 lg:grid-cols-8 gap-2 auto-rows-fr">
         {allMetrics.map((stat, index) => (
           <SummaryStatsCard
             key={stat.label}
@@ -306,6 +307,7 @@ export default function EmployeeDashboard() {
             index={index}
             secondaryValue={stat.secondaryValue}
             compact
+            highlight={'highlight' in stat && stat.highlight}
           />
         ))}
       </div>

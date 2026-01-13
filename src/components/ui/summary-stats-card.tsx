@@ -19,6 +19,7 @@ interface SummaryStatsCardProps {
   index?: number;
   secondaryValue?: string | null;
   compact?: boolean;
+  highlight?: boolean;
 }
 
 const variantStyles: Record<CardVariant, { bg: string; iconBg: string; iconColor: string; valueColor: string; border: string; glow: string }> = {
@@ -84,6 +85,7 @@ export function SummaryStatsCard({
   index = 0,
   secondaryValue,
   compact = false,
+  highlight = false,
 }: SummaryStatsCardProps) {
   const styles = variantStyles[variant];
 
@@ -99,10 +101,11 @@ export function SummaryStatsCard({
     >
       <Card
         className={cn(
-          'relative overflow-hidden rounded-lg transition-all duration-300 shadow-sm hover:shadow-md dark:shadow-none dark:hover:shadow-md dark:hover:shadow-black/20',
+          'relative overflow-hidden rounded-lg transition-all duration-300 shadow-sm hover:shadow-md dark:shadow-none dark:hover:shadow-md dark:hover:shadow-black/20 h-full flex flex-col',
           compact ? 'p-2.5' : 'p-4',
           styles.bg,
           styles.border,
+          highlight && 'ring-2 ring-accent/30 shadow-lg',
           className
         )}
       >
@@ -130,12 +133,13 @@ export function SummaryStatsCard({
           )}
         </div>
         
-        <div className={compact ? 'mt-1.5' : 'mt-2'}>
+        <div className={cn(compact ? 'mt-1.5' : 'mt-2', 'flex-1 flex flex-col justify-center')}>
           <motion.p 
             className={cn(
               'font-bold tracking-tight truncate',
-              compact ? 'text-sm' : 'text-xl',
-              styles.valueColor
+              compact ? (highlight ? 'text-base' : 'text-sm') : 'text-xl',
+              highlight && 'text-foreground',
+              !highlight && styles.valueColor
             )}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
