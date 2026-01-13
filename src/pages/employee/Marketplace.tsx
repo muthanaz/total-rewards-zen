@@ -9,6 +9,7 @@ import { useMarketplaceOffers } from '@/hooks/useSupabaseData';
 import { useToast } from '@/hooks/use-toast';
 import { MARKETPLACE_CATEGORIES } from '@/lib/constants';
 import { CuratedPerks } from '@/components/dashboard/CuratedPerks';
+import { getMarketplaceColor } from '@/lib/colorSystem';
 import { cn } from '@/lib/utils';
 
 export default function MarketplacePage() {
@@ -52,6 +53,25 @@ export default function MarketplacePage() {
     });
   };
 
+  // Get category badge styling
+  const getCategoryBadge = (categoryName: string) => {
+    const color = getMarketplaceColor(categoryName);
+    return (
+      <Badge 
+        variant="outline" 
+        className={cn(
+          "text-xs px-2 border",
+          color.bgLight,
+          color.text,
+          `dark:${color.textDark}`,
+          color.border
+        )}
+      >
+        {categoryName}
+      </Badge>
+    );
+  };
+
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Header */}
@@ -87,7 +107,6 @@ export default function MarketplacePage() {
         <Card className="border-border/50 bg-muted/30">
           <CardContent className="py-4">
             <div className="flex flex-col lg:flex-row gap-3">
-              {/* Search */}
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input 
@@ -98,7 +117,6 @@ export default function MarketplacePage() {
                 />
               </div>
               
-              {/* Filters */}
               <div className="flex flex-wrap gap-2">
                 <Select value={category} onValueChange={setCategory}>
                   <SelectTrigger className="w-full md:w-44 bg-background">
@@ -124,7 +142,6 @@ export default function MarketplacePage() {
                   </SelectContent>
                 </Select>
 
-                {/* View Toggle */}
                 <div className="flex border rounded-lg overflow-hidden bg-background">
                   <Button 
                     variant={viewMode === 'grid' ? 'default' : 'ghost'} 
@@ -151,52 +168,61 @@ export default function MarketplacePage() {
         {/* Offers Grid/List */}
         {viewMode === 'grid' ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {filteredOffers.map((offer, index) => (
-              <Card 
-                key={offer.id} 
-                className="benefit-card overflow-hidden group hover:shadow-md transition-all duration-300 flex flex-col"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                {offer.image_url && (
-                  <div className="h-32 bg-muted overflow-hidden shrink-0 relative">
-                    <img 
-                      src={offer.image_url} 
-                      alt={offer.title} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                    />
-                    {offer.discount_percent && (
-                      <div className="absolute top-2 right-2">
-                        <Badge className="bg-emerald-500 text-white border-0 text-xs font-bold shadow-lg">
-                          {offer.discount_percent}% OFF
-                        </Badge>
-                      </div>
-                    )}
-                  </div>
-                )}
-                <div className="p-4 space-y-2.5 flex flex-col flex-1">
-                  <h3 className="font-medium text-sm leading-snug line-clamp-2 group-hover:text-accent transition-colors">
-                    {offer.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">{offer.merchant}</p>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="secondary" className="text-xs px-2">{offer.category}</Badge>
-                    {offer.rating && (
-                      <span className="flex items-center gap-1 text-sm text-amber-500">
-                        <Star className="w-3.5 h-3.5 fill-current" />
-                        {offer.rating}
-                      </span>
-                    )}
-                  </div>
-                  {offer.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2">{offer.description}</p>
+            {filteredOffers.map((offer, index) => {
+              const categoryColor = getMarketplaceColor(offer.category);
+              return (
+                <Card 
+                  key={offer.id} 
+                  className={cn(
+                    "benefit-card overflow-hidden group hover:shadow-lg transition-all duration-300 flex flex-col",
+                    `hover:${categoryColor.border}`
                   )}
-                  <Button size="sm" className="w-full mt-auto" onClick={() => handleActivate(offer)}>
-                    <CheckCircle className="w-4 h-4 mr-1.5" />
-                    Activate
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  {offer.image_url && (
+                    <div className="h-32 bg-muted overflow-hidden shrink-0 relative">
+                      <img 
+                        src={offer.image_url} 
+                        alt={offer.title} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      />
+                      {offer.discount_percent && (
+                        <div className="absolute top-2 right-2">
+                          <Badge className="bg-emerald-500 text-white border-0 text-xs font-bold shadow-lg">
+                            {offer.discount_percent}% OFF
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <div className="p-4 space-y-2.5 flex flex-col flex-1">
+                    <h3 className={cn(
+                      "font-medium text-sm leading-snug line-clamp-2 transition-colors",
+                      `group-hover:${categoryColor.text}`
+                    )}>
+                      {offer.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">{offer.merchant}</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {getCategoryBadge(offer.category)}
+                      {offer.rating && (
+                        <span className="flex items-center gap-1 text-sm text-amber-500">
+                          <Star className="w-3.5 h-3.5 fill-current" />
+                          {offer.rating}
+                        </span>
+                      )}
+                    </div>
+                    {offer.description && (
+                      <p className="text-xs text-muted-foreground line-clamp-2">{offer.description}</p>
+                    )}
+                    <Button size="sm" className="w-full mt-auto" onClick={() => handleActivate(offer)}>
+                      <CheckCircle className="w-4 h-4 mr-1.5" />
+                      Activate
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         ) : (
           <div className="space-y-3">
@@ -231,7 +257,7 @@ export default function MarketplacePage() {
                       )}
                     </div>
                     <div className="flex items-center gap-2 mt-2">
-                      <Badge variant="secondary" className="text-xs">{offer.category}</Badge>
+                      {getCategoryBadge(offer.category)}
                       {offer.rating && (
                         <span className="flex items-center gap-1 text-xs text-amber-500">
                           <Star className="w-3 h-3 fill-current" />
