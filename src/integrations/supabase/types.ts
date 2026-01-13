@@ -913,6 +913,47 @@ export type Database = {
         }
         Relationships: []
       }
+      ui_visibility_settings: {
+        Row: {
+          element_key: string
+          id: string
+          is_visible: boolean
+          organization_id: string | null
+          page_key: string
+          role: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          element_key: string
+          id?: string
+          is_visible?: boolean
+          organization_id?: string | null
+          page_key: string
+          role: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          element_key?: string
+          id?: string
+          is_visible?: boolean
+          organization_id?: string | null
+          page_key?: string
+          role?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ui_visibility_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null

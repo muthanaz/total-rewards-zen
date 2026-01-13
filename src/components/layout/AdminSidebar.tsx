@@ -18,6 +18,7 @@ import {
   Database,
   Target,
   Wallet,
+  Sliders,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -67,6 +68,13 @@ const navigationGroups: NavGroup[] = [
     items: [
       { label: 'Organizations', labelAr: 'المنظمات', path: '/admin/organizations', icon: Building2 },
       { label: 'Saved Reports', labelAr: 'التقارير المحفوظة', path: '/admin/reports', icon: FileBarChart },
+    ],
+  },
+  {
+    title: 'Configuration',
+    titleAr: 'التكوين',
+    items: [
+      { label: 'UI Configuration', labelAr: 'تكوين الواجهة', path: '/admin/ui-config', icon: Sliders },
     ],
   },
   {

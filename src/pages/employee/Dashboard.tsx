@@ -13,6 +13,7 @@ import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
 import { DateRangeFilter, BenefitsDrillDownSheet } from '@/components/dashboard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CompensationGrid } from '@/components/ui/compensation-summary-card';
+import { useUIVisibility } from '@/contexts/UIVisibilityContext';
 import { cn } from '@/lib/utils';
 
 // Demo data - core salary info
@@ -38,12 +39,18 @@ const benefits = [
 export default function EmployeeDashboard() {
   const navigate = useNavigate();
   const { t, language, direction } = useLanguage();
+  const { isElementVisible } = useUIVisibility();
   const isRTL = direction === 'rtl';
   const [dateRange, setDateRange] = useState({ from: new Date(), to: new Date() });
-  const [drillDownOpen, setDrillDownOpen] = useState(false);
-  const [selectedDrillDown, setSelectedDrillDown] = useState<any>(null);
   const [benefitsSheetOpen, setBenefitsSheetOpen] = useState(false);
   const [benefitsSheetCategory, setBenefitsSheetCategory] = useState<'fully-utilized' | 'room-to-use' | null>(null);
+  
+  // Check visibility for each section
+  const showCompensationSummary = isElementVisible('employee', 'dashboard', 'compensation_summary');
+  const showYourBenefits = isElementVisible('employee', 'dashboard', 'your_benefits');
+  const showBenefitHighlights = isElementVisible('employee', 'dashboard', 'benefit_highlights');
+  const showRequestWidget = isElementVisible('employee', 'dashboard', 'request_widget');
+  const showSatisfactionSurvey = isElementVisible('employee', 'dashboard', 'satisfaction_survey');
   
   // Calculate derived metrics from actual benefit data
   const calculatedMetrics = useMemo(() => {
@@ -173,73 +180,77 @@ export default function EmployeeDashboard() {
       </div>
 
       {/* Compensation Summary Grid */}
-      <CompensationGrid 
-        metrics={keyMetrics}
-        totalCompensation={totalCompensationData}
-        utilization={utilizationData}
-        isRTL={isRTL}
-      />
+      {showCompensationSummary && (
+        <CompensationGrid 
+          metrics={keyMetrics}
+          totalCompensation={totalCompensationData}
+          utilization={utilizationData}
+          isRTL={isRTL}
+        />
+      )}
 
       {/* Benefits Grid - Your Benefits */}
-      <div>
-        <div className={cn("flex items-center justify-between mb-3", isRTL && "flex-row-reverse")}>
-          <h2 className="text-base font-display font-semibold">{t('employee.dashboard.yourBenefits')}</h2>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className={cn("text-accent hover:text-accent/80 h-7 text-xs", isRTL && "flex-row-reverse")}
-            onClick={() => navigate('/employee/benefits')}
-          >
-            {t('common.seeAll')}
-            <ChevronIcon className={cn("w-3 h-3", isRTL ? "mr-1" : "ml-1")} />
-          </Button>
+      {showYourBenefits && (
+        <div>
+          <div className={cn("flex items-center justify-between mb-3", isRTL && "flex-row-reverse")}>
+            <h2 className="text-base font-display font-semibold">{t('employee.dashboard.yourBenefits')}</h2>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className={cn("text-accent hover:text-accent/80 h-7 text-xs", isRTL && "flex-row-reverse")}
+              onClick={() => navigate('/employee/benefits')}
+            >
+              {t('common.seeAll')}
+              <ChevronIcon className={cn("w-3 h-3", isRTL ? "mr-1" : "ml-1")} />
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+            {benefits.map((benefit, index) => {
+              const utilization = Math.round((benefit.utilized / benefit.value) * 100);
+              const remaining = benefit.value - benefit.utilized;
+              const isFullyUsed = utilization >= 100;
+              
+              return (
+                <Card 
+                  key={benefit.name} 
+                  className="benefit-card group cursor-pointer hover:border-accent/40 hover:shadow-sm transition-all duration-200 flex flex-col p-2.5"
+                  style={{ animationDelay: `${index * 30}ms` }}
+                  onClick={() => handleBenefitClick(benefit.name)}
+                >
+                  <div className={cn("flex items-start gap-2", isRTL && "flex-row-reverse")}>
+                    <div className="p-1.5 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors shrink-0">
+                      <benefit.icon className="w-3 h-3 text-accent" />
+                    </div>
+                    <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
+                      <h3 className="font-medium text-xs truncate group-hover:text-accent transition-colors leading-tight">
+                        {t(benefit.nameKey)}
+                      </h3>
+                      <span className={`${BENEFIT_TYPE_COLORS[benefit.type]} text-[9px]`}>
+                        {t(`benefit.${benefit.type}`)}
+                      </span>
+                    </div>
+                    <ChevronIcon className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                  </div>
+                  
+                  <div className="mt-2 space-y-1 flex-1">
+                    <div className={cn("flex justify-between text-[10px]", isRTL && "flex-row-reverse")}>
+                      <span className="text-muted-foreground">{formatCurrency(benefit.utilized)}</span>
+                      <span className={isFullyUsed ? 'text-emerald-600 font-semibold' : 'font-medium'}>{utilization}%</span>
+                    </div>
+                    <Progress 
+                      value={utilization} 
+                      className={`h-1 ${isFullyUsed ? '[&>div]:bg-emerald-500' : '[&>div]:bg-accent'}`}
+                    />
+                    <p className={cn("text-[9px] text-muted-foreground", isRTL && "text-right")}>
+                      {t('employee.dashboard.remaining')}: {formatCurrency(remaining)}
+                    </p>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-          {benefits.map((benefit, index) => {
-            const utilization = Math.round((benefit.utilized / benefit.value) * 100);
-            const remaining = benefit.value - benefit.utilized;
-            const isFullyUsed = utilization >= 100;
-            
-            return (
-              <Card 
-                key={benefit.name} 
-                className="benefit-card group cursor-pointer hover:border-accent/40 hover:shadow-sm transition-all duration-200 flex flex-col p-2.5"
-                style={{ animationDelay: `${index * 30}ms` }}
-                onClick={() => handleBenefitClick(benefit.name)}
-              >
-                <div className={cn("flex items-start gap-2", isRTL && "flex-row-reverse")}>
-                  <div className="p-1.5 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors shrink-0">
-                    <benefit.icon className="w-3 h-3 text-accent" />
-                  </div>
-                  <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
-                    <h3 className="font-medium text-xs truncate group-hover:text-accent transition-colors leading-tight">
-                      {t(benefit.nameKey)}
-                    </h3>
-                    <span className={`${BENEFIT_TYPE_COLORS[benefit.type]} text-[9px]`}>
-                      {t(`benefit.${benefit.type}`)}
-                    </span>
-                  </div>
-                  <ChevronIcon className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-                </div>
-                
-                <div className="mt-2 space-y-1 flex-1">
-                  <div className={cn("flex justify-between text-[10px]", isRTL && "flex-row-reverse")}>
-                    <span className="text-muted-foreground">{formatCurrency(benefit.utilized)}</span>
-                    <span className={isFullyUsed ? 'text-emerald-600 font-semibold' : 'font-medium'}>{utilization}%</span>
-                  </div>
-                  <Progress 
-                    value={utilization} 
-                    className={`h-1 ${isFullyUsed ? '[&>div]:bg-emerald-500' : '[&>div]:bg-accent'}`}
-                  />
-                  <p className={cn("text-[9px] text-muted-foreground", isRTL && "text-right")}>
-                    {t('employee.dashboard.remaining')}: {formatCurrency(remaining)}
-                  </p>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
+      )}
 
       {/* Benefit Highlights Section */}
       <div>
