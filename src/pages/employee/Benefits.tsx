@@ -91,8 +91,11 @@ export default function BenefitsPage() {
       {/* RAG Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Card 
-          className="cursor-pointer bg-gradient-to-br from-emerald-500/5 to-emerald-500/10 border-emerald-500/20 hover:border-emerald-500/40 transition-all" 
-          onClick={() => setUtilizationFilter('fully-utilized')}
+          className={cn(
+            "cursor-pointer bg-gradient-to-br from-emerald-500/5 to-emerald-500/10 border-emerald-500/20 hover:border-emerald-500/40 transition-all",
+            utilizationFilter === 'fully-utilized' && "ring-2 ring-emerald-500/50 border-emerald-500/50"
+          )}
+          onClick={() => setUtilizationFilter(utilizationFilter === 'fully-utilized' ? 'all' : 'fully-utilized')}
         >
           <CardContent className="p-4 flex items-start gap-3">
             <div className="p-2 rounded-lg bg-emerald-500/10"><CheckCircle2 className="w-5 h-5 text-emerald-600" /></div>
@@ -103,8 +106,11 @@ export default function BenefitsPage() {
           </CardContent>
         </Card>
         <Card 
-          className="cursor-pointer bg-gradient-to-br from-amber-500/5 to-amber-500/10 border-amber-500/20 hover:border-amber-500/40 transition-all" 
-          onClick={() => setUtilizationFilter('partial')}
+          className={cn(
+            "cursor-pointer bg-gradient-to-br from-amber-500/5 to-amber-500/10 border-amber-500/20 hover:border-amber-500/40 transition-all",
+            utilizationFilter === 'partial' && "ring-2 ring-amber-500/50 border-amber-500/50"
+          )}
+          onClick={() => setUtilizationFilter(utilizationFilter === 'partial' ? 'all' : 'partial')}
         >
           <CardContent className="p-4 flex items-start gap-3">
             <div className="p-2 rounded-lg bg-amber-500/10"><Clock className="w-5 h-5 text-amber-600" /></div>
@@ -115,8 +121,11 @@ export default function BenefitsPage() {
           </CardContent>
         </Card>
         <Card 
-          className="cursor-pointer bg-gradient-to-br from-rose-500/5 to-rose-500/10 border-rose-500/20 hover:border-rose-500/40 transition-all" 
-          onClick={() => setUtilizationFilter('underutilized')}
+          className={cn(
+            "cursor-pointer bg-gradient-to-br from-rose-500/5 to-rose-500/10 border-rose-500/20 hover:border-rose-500/40 transition-all",
+            utilizationFilter === 'underutilized' && "ring-2 ring-rose-500/50 border-rose-500/50"
+          )}
+          onClick={() => setUtilizationFilter(utilizationFilter === 'underutilized' ? 'all' : 'underutilized')}
         >
           <CardContent className="p-4 flex items-start gap-3">
             <div className="p-2 rounded-lg bg-rose-500/10"><AlertCircle className="w-5 h-5 text-rose-600" /></div>
