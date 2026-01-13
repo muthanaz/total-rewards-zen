@@ -6,3 +6,4 @@ export { BenefitsDrillDownSheet } from './BenefitsDrillDownSheet';
 export { PersonalizedRecommendations } from './PersonalizedRecommendations';
 export { TrendIndicator } from './TrendIndicator';
 export { EmployerBenefitRecommendations } from './EmployerBenefitRecommendations';
+export { SmartInsights } from './SmartInsights';

@@ -8,7 +8,6 @@ import { Gift, Search, Star, Tag, CheckCircle, Filter, Grid3X3, List } from 'luc
 import { useMarketplaceOffers } from '@/hooks/useSupabaseData';
 import { useToast } from '@/hooks/use-toast';
 import { MARKETPLACE_CATEGORIES } from '@/lib/constants';
-import { CuratedPerks } from '@/components/dashboard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function MarketplacePage() {
@@ -81,9 +80,6 @@ export default function MarketplacePage() {
           </Badge>
         </div>
       </div>
-
-      {/* Curated Perks Section - NEW */}
-      <CuratedPerks onActivate={handleActivate} />
 
       {/* Filter Bar */}
       <Card className="border-border/50">

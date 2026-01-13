@@ -45,61 +45,42 @@ interface NavItem {
   icon: React.ElementType;
 }
 
+// Consolidated navigation - reduced from 9 groups to 5 for better UX
 const navigation: NavGroup[] = [
   {
     labelKey: 'nav.dashboard',
     items: [
       { labelKey: 'nav.overview', path: '/employee', icon: LayoutDashboard },
+      { labelKey: 'nav.allBenefits', path: '/employee/benefits', icon: Gift },
       { labelKey: 'nav.benefitsAnalysis', path: '/employee/benefits-analysis', icon: TrendingUp },
     ],
   },
   {
-    labelKey: 'nav.allowances',
+    labelKey: 'nav.myBenefits',
     items: [
       { labelKey: 'nav.housing', path: '/employee/housing', icon: Home },
       { labelKey: 'nav.transport', path: '/employee/transport', icon: Car },
       { labelKey: 'nav.schooling', path: '/employee/schooling', icon: GraduationCap },
-    ],
-  },
-  {
-    labelKey: 'nav.healthWellbeing',
-    items: [
       { labelKey: 'nav.healthInsurance', path: '/employee/health', icon: Heart },
       { labelKey: 'nav.wellbeing', path: '/employee/wellbeing', icon: Dumbbell },
-    ],
-  },
-  {
-    labelKey: 'nav.financialRewards',
-    items: [
       { labelKey: 'nav.annualBonus', path: '/employee/bonus', icon: Award },
-      { labelKey: 'nav.equity', path: '/employee/equity', icon: TrendingUp },
       { labelKey: 'nav.financial', path: '/employee/financial', icon: PiggyBank },
-    ],
-  },
-  {
-    labelKey: 'nav.leave',
-    items: [
-      { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
-    ],
-  },
-  {
-    labelKey: 'nav.learningDevelopment',
-    items: [
       { labelKey: 'nav.learning', path: '/employee/learning', icon: BookOpen },
     ],
   },
   {
-    labelKey: 'nav.marketplace',
+    labelKey: 'nav.timeOff',
     items: [
-      { labelKey: 'nav.perks', path: '/employee/marketplace', icon: ShoppingBag },
+      { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
+      { labelKey: 'nav.equity', path: '/employee/equity', icon: TrendingUp },
     ],
   },
   {
-    labelKey: 'nav.documentsClaims',
+    labelKey: 'nav.perksServices',
     items: [
+      { labelKey: 'nav.perks', path: '/employee/marketplace', icon: ShoppingBag },
       { labelKey: 'nav.documents', path: '/employee/documents', icon: FileText },
       { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
-      { labelKey: 'nav.knowledgeHub', path: '/employee/knowledge', icon: Lightbulb },
     ],
   },
   {
