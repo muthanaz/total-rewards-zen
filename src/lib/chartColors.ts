@@ -1,59 +1,56 @@
 // Chart color palette - consistent, accessible colors for data visualization
-// Using HSL values that work in both light and dark modes
+// Re-exports benefit colors for chart usage
+
+import { BENEFIT_COLORS, getChartColorArray } from './benefitColors';
 
 export const chartColors = {
   // Primary palette - for main data series
-  primary: 'hsl(174, 60%, 45%)', // Teal accent
-  secondary: 'hsl(222, 47%, 30%)', // Navy
+  primary: 'hsl(172, 66%, 42%)', // Teal (wellbeing)
+  secondary: 'hsl(230, 70%, 58%)', // Indigo (learning)
   
-  // Categorical palette - for multiple data series
-  categorical: [
-    'hsl(174, 60%, 45%)',  // Teal
-    'hsl(199, 89%, 48%)',  // Blue
-    'hsl(262, 52%, 55%)',  // Purple
-    'hsl(38, 92%, 50%)',   // Amber
-    'hsl(340, 65%, 55%)',  // Rose
-    'hsl(160, 84%, 39%)',  // Emerald
-    'hsl(24, 75%, 55%)',   // Orange
-    'hsl(280, 55%, 55%)',  // Violet
-  ],
+  // Categorical palette - benefit colors for charts
+  categorical: getChartColorArray(),
   
-  // Status colors
-  success: 'hsl(160, 84%, 39%)',
-  warning: 'hsl(38, 92%, 50%)',
-  error: 'hsl(0, 84%, 60%)',
-  info: 'hsl(199, 89%, 48%)',
+  // Status colors (not RAG - these are for general status)
+  success: 'hsl(152, 70%, 42%)',   // Emerald
+  warning: 'hsl(38, 92%, 52%)',     // Amber
+  error: 'hsl(345, 75%, 55%)',      // Rose
+  info: 'hsl(200, 85%, 55%)',       // Sky
   
-  // Spend categories
-  health: 'hsl(340, 65%, 55%)',
-  housing: 'hsl(199, 89%, 48%)',
-  education: 'hsl(262, 52%, 55%)',
-  transport: 'hsl(38, 92%, 50%)',
-  wellbeing: 'hsl(174, 60%, 45%)',
-  financial: 'hsl(160, 84%, 39%)',
+  // Spend categories - mapped from benefit colors
+  health: BENEFIT_COLORS.health.chartColor,
+  housing: BENEFIT_COLORS.housing.chartColor,
+  education: BENEFIT_COLORS.education.chartColor,
+  transport: BENEFIT_COLORS.transport.chartColor,
+  wellbeing: BENEFIT_COLORS.wellbeing.chartColor,
+  financial: BENEFIT_COLORS.financial.chartColor,
+  learning: BENEFIT_COLORS.learning.chartColor,
+  bonus: BENEFIT_COLORS.rewards.chartColor,
+  equity: BENEFIT_COLORS.equity.chartColor,
+  leave: BENEFIT_COLORS.timeoff.chartColor,
   
   // Performance indicators
-  excellent: 'hsl(160, 84%, 39%)',
-  good: 'hsl(174, 60%, 45%)',
-  average: 'hsl(38, 92%, 50%)',
-  poor: 'hsl(0, 84%, 60%)',
+  excellent: 'hsl(152, 70%, 42%)',  // Emerald
+  good: 'hsl(172, 66%, 42%)',       // Teal
+  average: 'hsl(38, 92%, 52%)',     // Amber
+  poor: 'hsl(345, 75%, 55%)',       // Rose
   
   // Region colors for benchmarking
   regions: {
-    uae: 'hsl(174, 60%, 45%)',
-    gcc: 'hsl(199, 89%, 48%)',
-    mena: 'hsl(262, 52%, 55%)',
-    global: 'hsl(222, 47%, 40%)',
+    uae: 'hsl(172, 66%, 42%)',      // Teal
+    gcc: 'hsl(200, 85%, 55%)',      // Sky
+    mena: 'hsl(265, 70%, 58%)',     // Violet
+    global: 'hsl(230, 70%, 58%)',   // Indigo
   },
   
   // Industry colors
   industries: {
-    technology: 'hsl(262, 52%, 55%)',
-    finance: 'hsl(160, 84%, 39%)',
-    healthcare: 'hsl(340, 65%, 55%)',
-    manufacturing: 'hsl(38, 92%, 50%)',
-    retail: 'hsl(199, 89%, 48%)',
-    energy: 'hsl(24, 75%, 55%)',
+    technology: 'hsl(265, 70%, 58%)',  // Violet
+    finance: 'hsl(152, 70%, 42%)',     // Emerald
+    healthcare: 'hsl(345, 75%, 55%)',  // Rose
+    manufacturing: 'hsl(38, 92%, 52%)', // Amber
+    retail: 'hsl(200, 85%, 55%)',      // Sky
+    energy: 'hsl(28, 90%, 52%)',       // Orange
   },
 };
 
