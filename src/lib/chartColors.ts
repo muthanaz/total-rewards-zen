@@ -1,53 +1,70 @@
-// Chart color palette - Unified platform theme
-// Single source of truth for all chart colors across the platform
-
-import { CHART_COLORS, getChartColorArray, getChartColor } from './benefitColors';
+// Chart color palette - consistent, accessible colors for data visualization
+// Using HSL values that work in both light and dark modes
 
 export const chartColors = {
-  // Primary palette - platform teal theme
-  primary: CHART_COLORS.primary,
-  secondary: CHART_COLORS.secondary,
+  // Primary palette - for main data series
+  primary: 'hsl(174, 60%, 45%)', // Teal accent
+  secondary: 'hsl(222, 47%, 30%)', // Navy
   
-  // Categorical palette - unified for all charts
-  categorical: CHART_COLORS.sequence,
+  // Categorical palette - for multiple data series
+  categorical: [
+    'hsl(174, 60%, 45%)',  // Teal
+    'hsl(199, 89%, 48%)',  // Blue
+    'hsl(262, 52%, 55%)',  // Purple
+    'hsl(38, 92%, 50%)',   // Amber
+    'hsl(340, 65%, 55%)',  // Rose
+    'hsl(160, 84%, 39%)',  // Emerald
+    'hsl(24, 75%, 55%)',   // Orange
+    'hsl(280, 55%, 55%)',  // Violet
+  ],
   
   // Status colors
-  success: CHART_COLORS.success,
-  warning: CHART_COLORS.warning,
-  info: CHART_COLORS.info,
+  success: 'hsl(160, 84%, 39%)',
+  warning: 'hsl(38, 92%, 50%)',
   error: 'hsl(0, 84%, 60%)',
+  info: 'hsl(199, 89%, 48%)',
+  
+  // Spend categories
+  health: 'hsl(340, 65%, 55%)',
+  housing: 'hsl(199, 89%, 48%)',
+  education: 'hsl(262, 52%, 55%)',
+  transport: 'hsl(38, 92%, 50%)',
+  wellbeing: 'hsl(174, 60%, 45%)',
+  financial: 'hsl(160, 84%, 39%)',
   
   // Performance indicators
-  excellent: CHART_COLORS.success,
-  good: CHART_COLORS.primary,
-  average: CHART_COLORS.warning,
+  excellent: 'hsl(160, 84%, 39%)',
+  good: 'hsl(174, 60%, 45%)',
+  average: 'hsl(38, 92%, 50%)',
   poor: 'hsl(0, 84%, 60%)',
   
   // Region colors for benchmarking
   regions: {
-    uae: CHART_COLORS.primary,
-    gcc: CHART_COLORS.secondary,
-    mena: 'hsl(185, 70%, 42%)',
-    global: 'hsl(222, 47%, 30%)',
+    uae: 'hsl(174, 60%, 45%)',
+    gcc: 'hsl(199, 89%, 48%)',
+    mena: 'hsl(262, 52%, 55%)',
+    global: 'hsl(222, 47%, 40%)',
   },
   
   // Industry colors
   industries: {
-    technology: 'hsl(199, 89%, 48%)',
-    finance: CHART_COLORS.success,
-    healthcare: CHART_COLORS.primary,
-    manufacturing: CHART_COLORS.warning,
-    retail: 'hsl(185, 70%, 42%)',
-    energy: 'hsl(38, 92%, 52%)',
+    technology: 'hsl(262, 52%, 55%)',
+    finance: 'hsl(160, 84%, 39%)',
+    healthcare: 'hsl(340, 65%, 55%)',
+    manufacturing: 'hsl(38, 92%, 50%)',
+    retail: 'hsl(199, 89%, 48%)',
+    energy: 'hsl(24, 75%, 55%)',
   },
 };
 
-// Re-export helpers
-export { getChartColorArray, getChartColor };
+// Get color by index (cycles through categorical palette)
+export const getChartColor = (index: number): string => {
+  return chartColors.categorical[index % chartColors.categorical.length];
+};
 
 // Get colors for a stacked chart
 export const getStackedColors = (count: number): string[] => {
-  return CHART_COLORS.sequence.slice(0, count);
+  return chartColors.categorical.slice(0, count);
 };
 
 export default chartColors;

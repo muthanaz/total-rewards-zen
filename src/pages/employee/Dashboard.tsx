@@ -6,9 +6,9 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { 
   DollarSign, Home, GraduationCap, 
-  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote, AlertCircle, CheckCircle2, Clock, Award
+  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote, AlertCircle, CheckCircle2, Clock
 } from 'lucide-react';
-import { getRAGStatus, BenefitCategoryKey } from '@/lib/benefitCategories';
+import { BENEFIT_TYPE_COLORS } from '@/lib/constants';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
 import { BenefitActionButtons } from '@/components/employee/BenefitActionButtons';
 import { BenefitsDrillDownSheet, SmartInsights } from '@/components/dashboard';
@@ -37,14 +37,14 @@ const salaryData = {
 type BenefitValueType = 'guaranteed' | 'employer_cost' | 'performance' | 'budget';
 
 const benefits = [
-  { name: 'Housing Allowance', nameKey: 'benefit.housing', icon: Home, value: 120000, utilized: 120000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'home_living', route: '/employee/housing', category: 'housing' as const, claimable: true, bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'], bulletsAr: ['يُدفع شهرياً مع الراتب', 'يمكن استخدامه للإيجار أو الرهن العقاري'] },
-  { name: 'Education Allowance', nameKey: 'benefit.education', icon: GraduationCap, value: 60000, utilized: 42000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'family_parenting', route: '/employee/schooling', category: 'education' as const, claimable: true, bullets: ['Per child up to 18 years', 'Covers tuition fees only'], bulletsAr: ['لكل طفل حتى ١٨ عاماً', 'يغطي الرسوم الدراسية فقط'] },
-  { name: 'Transport & Mobility', nameKey: 'benefit.transport', icon: Car, value: 39000, utilized: 33000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'mobility', route: '/employee/transport', category: 'transport' as const, claimable: true, bullets: ['Monthly allowance: AED 2,000', 'Annual flight tickets included', 'Covers fuel, parking & tickets'], bulletsAr: ['بدل شهري: ٢٠٠٠ درهم', 'تذاكر الطيران السنوية مشمولة', 'يغطي الوقود والمواقف والتذاكر'] },
-  { name: 'Health Insurance', nameKey: 'benefit.health', icon: Heart, value: 45000, utilized: 12500, type: 'health_protection', valueType: 'employer_cost' as BenefitValueType, area: 'health', route: '/employee/health', category: 'health' as const, claimable: true, bullets: ['Includes dental and optical', 'Covers spouse and children'], bulletsAr: ['يشمل طب الأسنان والبصريات', 'يغطي الزوج/الزوجة والأطفال'] },
-  { name: 'Wellbeing Program', nameKey: 'benefit.wellbeing', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', valueType: 'budget' as BenefitValueType, area: 'health', route: '/employee/wellbeing', category: 'wellbeing' as const, claimable: true, bullets: ['Gym membership covered', 'Wellness app subscription'], bulletsAr: ['عضوية النادي الرياضي مغطاة', 'اشتراك تطبيق العافية'] },
-  { name: 'Financial Planning', nameKey: 'benefit.financial', icon: PiggyBank, value: 36000, utilized: 18000, type: 'wealth_ownership', valueType: 'budget' as BenefitValueType, area: 'money', route: '/employee/financial', category: 'financial' as const, claimable: false, bullets: ['5% employer match', 'Multiple fund options'], bulletsAr: ['مطابقة ٥٪ من صاحب العمل', 'خيارات صناديق متعددة'] },
-  { name: 'Annual Bonus', nameKey: 'benefit.bonus', icon: Award, value: 70000, utilized: 0, type: 'cash_allowances', valueType: 'performance' as BenefitValueType, area: 'money', route: '/employee/bonus', category: 'rewards' as const, claimable: false, bullets: ['Performance-based (0-200%)', 'Paid annually in March', 'Target: 2 months base salary'], bulletsAr: ['مبني على الأداء (٠-٢٠٠٪)', 'يُدفع سنوياً في مارس', 'الهدف: راتب شهرين أساسي'] },
-  { name: 'Learning & Development', nameKey: 'benefit.learning', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', valueType: 'budget' as BenefitValueType, area: 'career', route: '/employee/learning', category: 'learning' as const, claimable: true, bullets: ['Courses and certifications', 'Pre-approval required'], bulletsAr: ['الدورات والشهادات', 'يتطلب موافقة مسبقة'] },
+  { name: 'Housing Allowance', nameKey: 'benefit.housing', icon: Home, value: 120000, utilized: 120000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'home_living', route: '/employee/housing', category: 'housing', claimable: true, bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'], bulletsAr: ['يُدفع شهرياً مع الراتب', 'يمكن استخدامه للإيجار أو الرهن العقاري'] },
+  { name: 'Education Allowance', nameKey: 'benefit.education', icon: GraduationCap, value: 60000, utilized: 42000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'family_parenting', route: '/employee/schooling', category: 'education', claimable: true, bullets: ['Per child up to 18 years', 'Covers tuition fees only'], bulletsAr: ['لكل طفل حتى ١٨ عاماً', 'يغطي الرسوم الدراسية فقط'] },
+  { name: 'Health Insurance', nameKey: 'benefit.health', icon: Heart, value: 45000, utilized: 12500, type: 'health_protection', valueType: 'employer_cost' as BenefitValueType, area: 'health', route: '/employee/health', category: 'health', claimable: true, bullets: ['Includes dental and optical', 'Covers spouse and children'], bulletsAr: ['يشمل طب الأسنان والبصريات', 'يغطي الزوج/الزوجة والأطفال'] },
+  { name: 'Transport & Mobility', nameKey: 'benefit.transport', icon: Car, value: 39000, utilized: 33000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'mobility', route: '/employee/transport', category: 'transport', claimable: true, bullets: ['Monthly allowance: AED 2,000', 'Annual flight tickets included', 'Covers fuel, parking & tickets'], bulletsAr: ['بدل شهري: ٢٠٠٠ درهم', 'تذاكر الطيران السنوية مشمولة', 'يغطي الوقود والمواقف والتذاكر'] },
+  { name: 'Annual Bonus', nameKey: 'benefit.bonus', icon: Gift, value: 70000, utilized: 0, type: 'cash_allowances', valueType: 'performance' as BenefitValueType, area: 'money', route: '/employee/bonus', category: 'rewards', claimable: false, bullets: ['Performance-based (0-200%)', 'Paid annually in March', 'Target: 2 months base salary'], bulletsAr: ['مبني على الأداء (٠-٢٠٠٪)', 'يُدفع سنوياً في مارس', 'الهدف: راتب شهرين أساسي'] },
+  { name: 'Financial Planning', nameKey: 'benefit.financial', icon: PiggyBank, value: 36000, utilized: 18000, type: 'wealth_ownership', valueType: 'budget' as BenefitValueType, area: 'money', route: '/employee/financial', category: 'financial', claimable: false, bullets: ['5% employer match', 'Multiple fund options'], bulletsAr: ['مطابقة ٥٪ من صاحب العمل', 'خيارات صناديق متعددة'] },
+  { name: 'Wellbeing Program', nameKey: 'benefit.wellbeing', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', valueType: 'budget' as BenefitValueType, area: 'health', route: '/employee/wellbeing', category: 'wellbeing', claimable: true, bullets: ['Gym membership covered', 'Wellness app subscription'], bulletsAr: ['عضوية النادي الرياضي مغطاة', 'اشتراك تطبيق العافية'] },
+  { name: 'Learning & Development', nameKey: 'benefit.learning', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', valueType: 'budget' as BenefitValueType, area: 'career', route: '/employee/learning', category: 'learning', claimable: true, bullets: ['Courses and certifications', 'Pre-approval required'], bulletsAr: ['الدورات والشهادات', 'يتطلب موافقة مسبقة'] },
 ];
 
 export default function EmployeeDashboard() {
@@ -133,24 +133,33 @@ export default function EmployeeDashboard() {
     setBenefitsSheetOpen(true);
   };
 
-  // Helper to get RAG badge for utilization
-  const getRAGBadge = (utilization: number) => {
-    const rag = getRAGStatus(utilization);
-    const Icon = rag.status === 'green' ? CheckCircle2 : rag.status === 'amber' ? Clock : AlertCircle;
-    return (
-      <Badge 
-        variant="outline" 
-        className={cn(
-          "gap-0.5 text-[9px] px-1.5 py-0 h-4 shrink-0",
-          rag.bgClass, 
-          rag.textClass, 
-          rag.borderClass
-        )}
-      >
-        <Icon className="w-2.5 h-2.5" />
-        {utilization}%
-      </Badge>
-    );
+  // Helper to get utilization status badge
+  const getUtilizationBadge = (utilization: number) => {
+    if (utilization >= 100) {
+      return (
+        <Badge className="bg-emerald-500/10 text-emerald-600 border-0 text-[9px] px-1.5 py-0 gap-0.5">
+          <CheckCircle2 className="w-2.5 h-2.5" />
+          {isRTL ? 'مكتمل' : 'Complete'}
+        </Badge>
+      );
+    }
+    if (utilization < 30) {
+      return (
+        <Badge className="bg-amber-500/10 text-amber-600 border-0 text-[9px] px-1.5 py-0 gap-0.5">
+          <AlertCircle className="w-2.5 h-2.5" />
+          {isRTL ? 'فرصة' : 'Opportunity'}
+        </Badge>
+      );
+    }
+    if (utilization < 70) {
+      return (
+        <Badge className="bg-blue-500/10 text-blue-600 border-0 text-[9px] px-1.5 py-0 gap-0.5">
+          <Clock className="w-2.5 h-2.5" />
+          {isRTL ? 'قيد الاستخدام' : 'In Progress'}
+        </Badge>
+      );
+    }
+    return null;
   };
 
   // 4 Key Metrics with info tooltips - Now showing guaranteed values prominently
@@ -253,7 +262,7 @@ export default function EmployeeDashboard() {
         </div>
       )}
 
-      {/* Benefits Grid - Your Benefits with RAG indicators */}
+      {/* Benefits Grid - Your Benefits */}
       {showYourBenefits && (
         <div>
           <div className={cn("flex items-center justify-between mb-3", isRTL && "flex-row-reverse")}>
@@ -268,69 +277,62 @@ export default function EmployeeDashboard() {
               <ChevronIcon className={cn("w-3 h-3", isRTL ? "mr-1" : "ml-1")} />
             </Button>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
             {benefits.map((benefit, index) => {
               const utilization = Math.round((benefit.utilized / benefit.value) * 100);
               const remaining = benefit.value - benefit.utilized;
-              const rag = getRAGStatus(utilization);
+              const isFullyUsed = utilization >= 100;
               
               return (
                 <Card 
                   key={benefit.name} 
-                  className="group cursor-pointer hover:shadow-md transition-all duration-200 flex flex-col"
+                  className="benefit-card group cursor-pointer hover:border-accent/40 hover:shadow-sm transition-all duration-200 flex flex-col p-2.5"
                   style={{ animationDelay: `${index * 30}ms` }}
                   onClick={() => handleBenefitClick(benefit.name)}
                 >
-                  <div className="p-3 flex flex-col flex-1">
-                    <div className={cn("flex items-start gap-2", isRTL && "flex-row-reverse")}>
-                      <div className="p-1.5 rounded-lg shrink-0 bg-muted">
-                        <benefit.icon className="w-4 h-4 text-foreground" />
-                      </div>
-                      <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
+                  <div className={cn("flex items-start gap-2", isRTL && "flex-row-reverse")}>
+                    <div className="p-1.5 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors shrink-0">
+                      <benefit.icon className="w-3 h-3 text-accent" />
+                    </div>
+                    <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
+                      <div className={cn("flex items-center gap-1 flex-wrap", isRTL && "flex-row-reverse justify-end")}>
                         <h3 className="font-medium text-xs truncate group-hover:text-accent transition-colors leading-tight">
                           {t(benefit.nameKey)}
                         </h3>
+                        {getUtilizationBadge(utilization)}
                       </div>
+                      <span className={`${BENEFIT_TYPE_COLORS[benefit.type]} text-[9px]`}>
+                        {t(`benefit.${benefit.type}`)}
+                      </span>
                     </div>
-                    
-                    <div className="mt-3 space-y-2 flex-1">
-                      {/* Value and RAG */}
-                      <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                        <span className={cn(
-                          "text-sm font-semibold transition-all duration-200",
-                          salaryHidden && "blur-[4px] select-none"
-                        )}>{formatCurrency(benefit.value)}</span>
-                        {getRAGBadge(utilization)}
-                      </div>
-                      
-                      {/* Progress bar with RAG color */}
-                      <Progress 
-                        value={utilization} 
-                        className={cn("h-1.5", rag.progressClass)}
-                      />
-                      
-                      {/* Remaining */}
-                      <p className={cn(
-                        "text-[10px] text-muted-foreground transition-all duration-200",
-                        salaryHidden && "blur-[4px] select-none",
-                        isRTL && "text-right"
-                      )}>
-                        {t('employee.dashboard.remaining')}: {formatCurrency(remaining)}
-                      </p>
-                    </div>
-                    
-                    {/* Action Buttons - only show for claimable benefits */}
-                    {benefit.claimable && (
-                      <div className="mt-2 pt-2 border-t border-border/30">
-                        <BenefitActionButtons
-                          benefitName={benefit.name}
-                          benefitCategory={benefit.category}
-                          isRTL={isRTL}
-                          compact={true}
-                        />
-                      </div>
-                    )}
+                    <ChevronIcon className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                   </div>
+                  
+                  <div className="mt-2 space-y-1 flex-1">
+                    <div className={cn("flex justify-between text-[10px]", isRTL && "flex-row-reverse")}>
+                      <span className="text-muted-foreground">{formatCurrency(benefit.utilized)}</span>
+                      <span className={isFullyUsed ? 'text-emerald-600 font-semibold' : 'font-medium'}>{utilization}%</span>
+                    </div>
+                    <Progress 
+                      value={utilization} 
+                      className={`h-1 ${isFullyUsed ? '[&>div]:bg-emerald-500' : '[&>div]:bg-accent'}`}
+                    />
+                    <p className={cn("text-[9px] text-muted-foreground", isRTL && "text-right")}>
+                      {t('employee.dashboard.remaining')}: {formatCurrency(remaining)}
+                    </p>
+                  </div>
+                  
+                  {/* Action Buttons - only show for claimable benefits */}
+                  {benefit.claimable && (
+                    <div className="mt-2 pt-1.5 border-t border-border/30">
+                      <BenefitActionButtons
+                        benefitName={benefit.name}
+                        benefitCategory={benefit.category}
+                        isRTL={isRTL}
+                        compact={true}
+                      />
+                    </div>
+                  )}
                 </Card>
               );
             })}

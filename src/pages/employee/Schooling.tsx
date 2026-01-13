@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { RAGLegend } from '@/components/ui/rag-legend';
 import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { NoSearchResults } from '@/components/ui/empty-state';
 import { Progress } from '@/components/ui/progress';
@@ -13,11 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   GraduationCap, Search, Star, ExternalLink, MapPin, Users, BookOpen, 
   Calculator, Wallet, TrendingUp, User, ChevronRight, Check, Info,
-  School, Baby, Building2, CheckCircle2, Clock, AlertCircle
+  School, Baby, Building2
 } from 'lucide-react';
 import { useSchools, useChildren } from '@/hooks/useSupabaseData';
-import { getRAGIndicator } from '@/lib/colorUtils';
-import { cn } from '@/lib/utils';
 
 const ALLOWANCE_PER_CHILD = 30000;
 
@@ -152,31 +149,18 @@ export default function SchoolingPage() {
     }
   };
 
-  const rag = getRAGIndicator(utilizationPercent);
-  const RAGIcon = rag.status === 'green' ? CheckCircle2 : rag.status === 'amber' ? Clock : AlertCircle;
-
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-            <GraduationCap className="w-7 h-7 text-accent" />
-            Education Allowance
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Configure education for each child individually — each child gets their own AED 30,000 allowance
-          </p>
-        </div>
-        {/* RAG Status Badge */}
-        <Badge variant="outline" className={cn("gap-1.5", rag.bgClass, rag.textClass, rag.borderClass)}>
-          <RAGIcon className="w-4 h-4" />
-          {utilizationPercent}% {rag.label}
-        </Badge>
+      <div>
+        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
+          <GraduationCap className="w-7 h-7 text-accent" />
+          Education Allowance
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Configure education for each child individually — each child gets their own AED 30,000 allowance
+        </p>
       </div>
-      
-      {/* RAG Legend */}
-      <RAGLegend compact />
 
       {/* How It Works Card */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">

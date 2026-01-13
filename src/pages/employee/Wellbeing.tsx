@@ -3,11 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { RAGLegend } from '@/components/ui/rag-legend';
 import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
-import { Dumbbell, Heart, Brain, Leaf, Moon, CheckCircle, ExternalLink, Wallet, TrendingDown, Percent, Clock, AlertCircle } from 'lucide-react';
-import { getRAGIndicator } from '@/lib/colorUtils';
-import { cn } from '@/lib/utils';
+import { Dumbbell, Heart, Brain, Leaf, Moon, CheckCircle, ExternalLink, Wallet, TrendingDown, Percent } from 'lucide-react';
 
 const ANNUAL_VALUE = 6000;
 const UTILIZED = 3200;
@@ -57,31 +54,19 @@ export default function WellbeingPage() {
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
   const remaining = ANNUAL_VALUE - UTILIZED;
   const utilizationPercent = Math.round((UTILIZED / ANNUAL_VALUE) * 100);
-  const rag = getRAGIndicator(utilizationPercent);
-  const RAGIcon = rag.status === 'green' ? CheckCircle : rag.status === 'amber' ? Clock : AlertCircle;
 
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-            <Dumbbell className="w-7 h-7 text-accent" />
-            Wellbeing Program
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Your health and wellness benefits for mind and body
-          </p>
-        </div>
-        {/* RAG Status Badge */}
-        <Badge variant="outline" className={cn("gap-1.5", rag.bgClass, rag.textClass, rag.borderClass)}>
-          <RAGIcon className="w-4 h-4" />
-          {utilizationPercent}% {rag.label}
-        </Badge>
+      <div>
+        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
+          <Dumbbell className="w-7 h-7 text-accent" />
+          Wellbeing Program
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Your health and wellness benefits for mind and body
+        </p>
       </div>
-
-      {/* RAG Legend */}
-      <RAGLegend compact />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

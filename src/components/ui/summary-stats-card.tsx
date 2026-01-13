@@ -4,7 +4,6 @@ import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { getRAGStatus, getRAGIndicator } from '@/lib/colorUtils';
 
 type CardVariant = 'primary' | 'utilized' | 'remaining' | 'utilization' | 'info';
 
@@ -23,70 +22,55 @@ interface SummaryStatsCardProps {
   highlight?: boolean;
 }
 
-// Neutral but visually appealing styling using accent tones
-// These are consistent across all non-RAG variants to avoid color confusion
-const neutralStyles = {
-  bg: 'bg-gradient-to-br from-accent/8 via-card to-card dark:from-accent/15 dark:via-card dark:to-card',
-  iconBg: 'bg-accent/10 dark:bg-accent/20',
-  iconColor: 'text-accent',
-  valueColor: 'text-foreground',
-  border: 'border-accent/15 hover:border-accent/30 dark:border-accent/20 dark:hover:border-accent/40',
-  glow: 'bg-accent',
-};
-
 const variantStyles: Record<CardVariant, { bg: string; iconBg: string; iconColor: string; valueColor: string; border: string; glow: string }> = {
-  primary: neutralStyles,
-  utilized: neutralStyles,
-  remaining: neutralStyles,
-  utilization: neutralStyles, // Will be overridden by RAG styles when progress is provided
-  info: neutralStyles,
+  primary: {
+    bg: 'bg-gradient-to-br from-accent/10 via-card to-card dark:from-accent/20 dark:via-card dark:to-card',
+    iconBg: 'bg-accent/15 dark:bg-accent/25',
+    iconColor: 'text-accent',
+    valueColor: 'text-foreground',
+    border: 'border-accent/20 hover:border-accent/40 dark:border-accent/30 dark:hover:border-accent/50',
+    glow: 'bg-accent',
+  },
+  utilized: {
+    bg: 'bg-gradient-to-br from-blue-500/10 via-card to-card dark:from-blue-500/20 dark:via-card dark:to-card',
+    iconBg: 'bg-blue-500/15 dark:bg-blue-500/25',
+    iconColor: 'text-blue-500 dark:text-blue-400',
+    valueColor: 'text-blue-600 dark:text-blue-400',
+    border: 'border-blue-500/20 hover:border-blue-500/40 dark:border-blue-500/30 dark:hover:border-blue-500/50',
+    glow: 'bg-blue-500',
+  },
+  remaining: {
+    bg: 'bg-gradient-to-br from-emerald-500/10 via-card to-card dark:from-emerald-500/20 dark:via-card dark:to-card',
+    iconBg: 'bg-emerald-500/15 dark:bg-emerald-500/25',
+    iconColor: 'text-emerald-500 dark:text-emerald-400',
+    valueColor: 'text-emerald-600 dark:text-emerald-400',
+    border: 'border-emerald-500/20 hover:border-emerald-500/40 dark:border-emerald-500/30 dark:hover:border-emerald-500/50',
+    glow: 'bg-emerald-500',
+  },
+  utilization: {
+    bg: 'bg-gradient-to-br from-purple-500/10 via-card to-card dark:from-purple-500/20 dark:via-card dark:to-card',
+    iconBg: 'bg-purple-500/15 dark:bg-purple-500/25',
+    iconColor: 'text-purple-500 dark:text-purple-400',
+    valueColor: 'text-purple-600 dark:text-purple-400',
+    border: 'border-purple-500/20 hover:border-purple-500/40 dark:border-purple-500/30 dark:hover:border-purple-500/50',
+    glow: 'bg-purple-500',
+  },
+  info: {
+    bg: 'bg-gradient-to-br from-amber-500/10 via-card to-card dark:from-amber-500/20 dark:via-card dark:to-card',
+    iconBg: 'bg-amber-500/15 dark:bg-amber-500/25',
+    iconColor: 'text-amber-500 dark:text-amber-400',
+    valueColor: 'text-amber-600 dark:text-amber-400',
+    border: 'border-amber-500/20 hover:border-amber-500/40 dark:border-amber-500/30 dark:hover:border-amber-500/50',
+    glow: 'bg-amber-500',
+  },
 };
 
-// RAG-based styles for utilization cards
-const getRAGStyles = (progress: number) => {
-  const rag = getRAGStatus(progress);
-  switch (rag) {
-    case 'green':
-      return {
-        bg: 'bg-gradient-to-br from-emerald-500/10 via-card to-card dark:from-emerald-500/20 dark:via-card dark:to-card',
-        iconBg: 'bg-emerald-500/15 dark:bg-emerald-500/25',
-        iconColor: 'text-emerald-500 dark:text-emerald-400',
-        valueColor: 'text-emerald-600 dark:text-emerald-400',
-        border: 'border-emerald-500/20 hover:border-emerald-500/40 dark:border-emerald-500/30 dark:hover:border-emerald-500/50',
-        glow: 'bg-emerald-500',
-        progressColor: '[&>div]:bg-emerald-500',
-      };
-    case 'amber':
-      return {
-        bg: 'bg-gradient-to-br from-amber-500/10 via-card to-card dark:from-amber-500/20 dark:via-card dark:to-card',
-        iconBg: 'bg-amber-500/15 dark:bg-amber-500/25',
-        iconColor: 'text-amber-500 dark:text-amber-400',
-        valueColor: 'text-amber-600 dark:text-amber-400',
-        border: 'border-amber-500/20 hover:border-amber-500/40 dark:border-amber-500/30 dark:hover:border-amber-500/50',
-        glow: 'bg-amber-500',
-        progressColor: '[&>div]:bg-amber-500',
-      };
-    case 'red':
-    default:
-      return {
-        bg: 'bg-gradient-to-br from-rose-500/10 via-card to-card dark:from-rose-500/20 dark:via-card dark:to-card',
-        iconBg: 'bg-rose-500/15 dark:bg-rose-500/25',
-        iconColor: 'text-rose-500 dark:text-rose-400',
-        valueColor: 'text-rose-600 dark:text-rose-400',
-        border: 'border-rose-500/20 hover:border-rose-500/40 dark:border-rose-500/30 dark:hover:border-rose-500/50',
-        glow: 'bg-rose-500',
-        progressColor: '[&>div]:bg-rose-500',
-      };
-  }
-};
-
-// All non-utilization variants use accent-tinted progress
 const progressColors: Record<CardVariant, string> = {
-  primary: '[&>div]:bg-accent/50',
-  utilized: '[&>div]:bg-accent/50',
-  remaining: '[&>div]:bg-accent/50',
-  utilization: '[&>div]:bg-accent/50', // Will be overridden by RAG
-  info: '[&>div]:bg-accent/50',
+  primary: '[&>div]:bg-accent',
+  utilized: '[&>div]:bg-blue-500',
+  remaining: '[&>div]:bg-emerald-500',
+  utilization: '[&>div]:bg-purple-500',
+  info: '[&>div]:bg-amber-500',
 };
 
 export function SummaryStatsCard({
@@ -103,11 +87,7 @@ export function SummaryStatsCard({
   compact = false,
   highlight = false,
 }: SummaryStatsCardProps) {
-  // Use RAG-based styling for utilization cards
-  const isUtilization = variant === 'utilization' && progress !== undefined;
-  const ragStyles = isUtilization ? getRAGStyles(progress) : null;
-  const styles = ragStyles || variantStyles[variant];
-  const progressColor = ragStyles?.progressColor || progressColors[variant];
+  const styles = variantStyles[variant];
 
   return (
     <motion.div
@@ -197,7 +177,7 @@ export function SummaryStatsCard({
           >
             <Progress 
               value={progress} 
-              className={cn('h-1 mt-2', progressColor)} 
+              className={cn('h-1 mt-2', progressColors[variant])} 
             />
           </motion.div>
         )}

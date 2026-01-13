@@ -5,13 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { RAGLegend } from '@/components/ui/rag-legend';
 import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile, Wallet, TrendingDown, Percent, Clock, AlertCircle } from 'lucide-react';
+import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile, Wallet, TrendingDown, Percent } from 'lucide-react';
 import { useHealthProviders } from '@/hooks/useSupabaseData';
-import { getRAGIndicator } from '@/lib/colorUtils';
-import { cn } from '@/lib/utils';
 
 const ANNUAL_VALUE = 45000;
 const UTILIZED = 12500;
@@ -72,8 +69,6 @@ export default function HealthPage() {
 
   const remaining = ANNUAL_VALUE - UTILIZED;
   const utilizationPercent = Math.round((UTILIZED / ANNUAL_VALUE) * 100);
-  const rag = getRAGIndicator(utilizationPercent);
-  const RAGIcon = rag.status === 'green' ? CheckCircle : rag.status === 'amber' ? Clock : AlertCircle;
 
   const providerTypes = useMemo(() => {
     const unique = [...new Set(providers.map(p => p.provider_type))];
@@ -121,25 +116,15 @@ export default function HealthPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-            <Heart className="w-7 h-7 text-accent" />
-            Health Insurance
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Comprehensive coverage for you and your family
-          </p>
-        </div>
-        {/* RAG Status Badge */}
-        <Badge variant="outline" className={cn("gap-1.5", rag.bgClass, rag.textClass, rag.borderClass)}>
-          <RAGIcon className="w-4 h-4" />
-          {utilizationPercent}% {rag.label}
-        </Badge>
+      <div>
+        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
+          <Heart className="w-7 h-7 text-accent" />
+          Health Insurance
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Comprehensive coverage for you and your family
+        </p>
       </div>
-
-      {/* RAG Legend */}
-      <RAGLegend compact />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

@@ -9,7 +9,8 @@ import {
   Home, GraduationCap, Heart, Car, Dumbbell, PiggyBank, 
   BookOpen, Search, ChevronRight, Filter, CheckCircle2, TrendingUp, Award, Clock, AlertCircle
 } from 'lucide-react';
-import { getRAGStatus, BenefitCategoryKey } from '@/lib/benefitCategories';
+import { BENEFIT_CATEGORIES } from '@/lib/benefitCategories';
+import { getRAGIndicator, getProgressColorClass } from '@/lib/colorUtils';
 import {
   Select,
   SelectContent,
@@ -20,14 +21,19 @@ import {
 import { cn } from '@/lib/utils';
 
 const benefits = [
-  { name: 'Housing Allowance', nameKey: 'benefit.housing', icon: Home, value: 120000, utilized: 120000, category: 'housing' as BenefitCategoryKey, route: '/employee/housing', description: 'Monthly housing allowance paid with salary', bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'] },
-  { name: 'Education Allowance', nameKey: 'benefit.education', icon: GraduationCap, value: 60000, utilized: 42000, category: 'education' as BenefitCategoryKey, route: '/employee/schooling', description: 'Education support for dependents', bullets: ['Per child up to 18 years', 'Covers tuition fees only'] },
-  { name: 'Transport & Mobility', nameKey: 'benefit.transport', icon: Car, value: 39000, utilized: 33000, category: 'transport' as BenefitCategoryKey, route: '/employee/transport', description: 'Monthly transport and flight tickets', bullets: ['Paid monthly with salary', 'Includes annual flight tickets'] },
-  { name: 'Health Insurance', nameKey: 'benefit.health', icon: Heart, value: 45000, utilized: 12500, category: 'health' as BenefitCategoryKey, route: '/employee/health', description: 'Comprehensive health coverage', bullets: ['Includes dental and optical', 'Covers spouse and children'] },
-  { name: 'Wellbeing Program', nameKey: 'benefit.wellbeing', icon: Dumbbell, value: 6000, utilized: 3200, category: 'wellbeing' as BenefitCategoryKey, route: '/employee/wellbeing', description: 'Health and wellness benefits', bullets: ['Gym membership covered', 'Wellness app subscription'] },
-  { name: 'Financial Planning', nameKey: 'benefit.financial', icon: PiggyBank, value: 36000, utilized: 18000, category: 'financial' as BenefitCategoryKey, route: '/employee/financial', description: 'Retirement savings with employer match', bullets: ['5% employer match', 'Multiple fund options'] },
-  { name: 'Annual Bonus', nameKey: 'benefit.bonus', icon: Award, value: 70000, utilized: 0, category: 'rewards' as BenefitCategoryKey, route: '/employee/bonus', description: 'Performance-based annual bonus', bullets: ['Performance-based (0-200%)', 'Target: 2 months salary'] },
-  { name: 'Learning & Development', nameKey: 'benefit.learning', icon: BookOpen, value: 12000, utilized: 4500, category: 'learning' as BenefitCategoryKey, route: '/employee/learning', description: 'Professional development budget', bullets: ['Courses and certifications', 'Pre-approval required'] },
+  { name: 'Housing Allowance', nameKey: 'benefit.housing', icon: Home, value: 120000, utilized: 120000, category: 'housing', route: '/employee/housing', description: 'Monthly housing allowance paid with salary', bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'] },
+  { name: 'Education Allowance', nameKey: 'benefit.education', icon: GraduationCap, value: 60000, utilized: 42000, category: 'education', route: '/employee/schooling', description: 'Education support for dependents', bullets: ['Per child up to 18 years', 'Covers tuition fees only'] },
+  { name: 'Health Insurance', nameKey: 'benefit.health', icon: Heart, value: 45000, utilized: 12500, category: 'health', route: '/employee/health', description: 'Comprehensive health coverage', bullets: ['Includes dental and optical', 'Covers spouse and children'] },
+  { name: 'Transport & Mobility', nameKey: 'benefit.transport', icon: Car, value: 39000, utilized: 33000, category: 'transport', route: '/employee/transport', description: 'Monthly transport and flight tickets', bullets: ['Paid monthly with salary', 'Includes annual flight tickets'] },
+  { name: 'Annual Bonus', nameKey: 'benefit.bonus', icon: Award, value: 70000, utilized: 0, category: 'rewards', route: '/employee/bonus', description: 'Performance-based annual bonus', bullets: ['Performance-based (0-200%)', 'Target: 2 months salary'] },
+  { name: 'Financial Planning', nameKey: 'benefit.financial', icon: PiggyBank, value: 36000, utilized: 18000, category: 'financial', route: '/employee/financial', description: 'Retirement savings with employer match', bullets: ['5% employer match', 'Multiple fund options'] },
+  { name: 'Wellbeing Program', nameKey: 'benefit.wellbeing', icon: Dumbbell, value: 6000, utilized: 3200, category: 'wellbeing', route: '/employee/wellbeing', description: 'Health and wellness benefits', bullets: ['Gym membership covered', 'Wellness app subscription'] },
+  { name: 'Learning & Development', nameKey: 'benefit.learning', icon: BookOpen, value: 12000, utilized: 4500, category: 'learning', route: '/employee/learning', description: 'Professional development budget', bullets: ['Courses and certifications', 'Pre-approval required'] },
+];
+
+const categoryFilters = [
+  { value: 'all', label: 'All Categories' },
+  ...Object.entries(BENEFIT_CATEGORIES).map(([key, cat]) => ({ value: key, label: cat.label })),
 ];
 
 const utilizationFilters = [
@@ -47,6 +53,7 @@ const RAGIcon = ({ status }: { status: 'green' | 'amber' | 'red' }) => {
 export default function BenefitsPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [utilizationFilter, setUtilizationFilter] = useState('all');
 
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
@@ -61,12 +68,13 @@ export default function BenefitsPage() {
 
   const filteredBenefits = benefits.filter(benefit => {
     const matchesSearch = benefit.name.toLowerCase().includes(search.toLowerCase()) || benefit.description.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = categoryFilter === 'all' || benefit.category === categoryFilter;
     const utilization = (benefit.utilized / benefit.value) * 100;
     let matchesUtilization = true;
     if (utilizationFilter === 'fully-utilized') matchesUtilization = utilization >= 80;
     else if (utilizationFilter === 'partial') matchesUtilization = utilization >= 30 && utilization < 80;
     else if (utilizationFilter === 'underutilized') matchesUtilization = utilization < 30;
-    return matchesSearch && matchesUtilization;
+    return matchesSearch && matchesCategory && matchesUtilization;
   });
 
   const totalValue = benefits.reduce((sum, b) => sum + b.value, 0);
@@ -125,6 +133,10 @@ export default function BenefitsPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Search benefits..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-full sm:w-[200px]"><Filter className="w-4 h-4 mr-2" /><SelectValue placeholder="Category" /></SelectTrigger>
+          <SelectContent>{categoryFilters.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
+        </Select>
         <Select value={utilizationFilter} onValueChange={setUtilizationFilter}>
           <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>{utilizationFilters.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
@@ -134,36 +146,43 @@ export default function BenefitsPage() {
       {filteredBenefits.length === 0 ? (
         <Card className="p-8 text-center">
           <p className="text-muted-foreground">No benefits match your filters</p>
-          <Button variant="link" onClick={() => { setSearch(''); setUtilizationFilter('all'); }}>Clear filters</Button>
+          <Button variant="link" onClick={() => { setSearch(''); setCategoryFilter('all'); setUtilizationFilter('all'); }}>Clear filters</Button>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredBenefits.map((benefit, index) => {
             const utilization = Math.round((benefit.utilized / benefit.value) * 100);
             const remaining = benefit.value - benefit.utilized;
-            const rag = getRAGStatus(utilization);
+            const cat = BENEFIT_CATEGORIES[benefit.category as keyof typeof BENEFIT_CATEGORIES];
+            const rag = getRAGIndicator(utilization);
             
             return (
-              <Card
+              <Card 
                 key={benefit.name} 
                 className="group cursor-pointer hover:shadow-lg transition-all overflow-hidden" 
                 onClick={() => navigate(benefit.route)} 
                 style={{ animationDelay: `${index * 50}ms` }}
               >
+                {/* Category color bar */}
+                <div className={cn("h-1.5", cat?.bgClass)} />
                 <CardContent className="p-5">
                   <div className="flex items-start gap-3">
-                    {/* Neutral icon styling */}
-                    <div className="p-2.5 rounded-xl shrink-0 bg-muted">
-                      <benefit.icon className="w-5 h-5 text-foreground" />
+                    {/* Icon with category color */}
+                    <div className={cn("p-2.5 rounded-xl shrink-0", cat?.bgLightClass)}>
+                      <benefit.icon className={cn("w-5 h-5", cat?.textClass)} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-base group-hover:text-accent transition-colors">{benefit.name}</h3>
-                      <span className="text-lg font-bold mt-1 block">{formatCurrency(benefit.value)}</span>
+                      {/* Category badge with category color */}
+                      <Badge variant="outline" className={cn("mt-1.5 text-xs", cat?.bgLightClass, cat?.textClass, cat?.borderClass)}>
+                        {cat?.label}
+                      </Badge>
                       <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{benefit.description}</p>
                     </div>
                     <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                   
+                  {/* Utilization section with RAG */}
                   <div className="mt-4 pt-4 border-t border-border/50 space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Utilized</span>
@@ -174,7 +193,7 @@ export default function BenefitsPage() {
                       </Badge>
                     </div>
                     {/* Progress bar with RAG color */}
-                    <Progress value={utilization} className={cn("h-2", rag.progressClass)} />
+                    <Progress value={utilization} className={cn("h-2", getProgressColorClass(utilization))} />
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">
                         {formatCurrency(benefit.utilized)} of {formatCurrency(benefit.value)}
@@ -190,27 +209,6 @@ export default function BenefitsPage() {
           })}
         </div>
       )}
-
-      {/* RAG Legend */}
-      <Card className="bg-muted/30 border-border/50">
-        <CardContent className="py-3 px-4">
-          <div className="flex flex-wrap items-center gap-4 text-xs">
-            <span className="text-muted-foreground font-medium">Utilization Legend:</span>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="text-muted-foreground">80%+ On Track</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-amber-600" />
-              <span className="text-muted-foreground">30-79% In Progress</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <AlertCircle className="w-3.5 h-3.5 text-red-600" />
-              <span className="text-muted-foreground">&lt;30% Needs Attention</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
