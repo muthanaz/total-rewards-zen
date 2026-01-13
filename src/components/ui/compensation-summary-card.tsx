@@ -78,7 +78,7 @@ export function CompensationGrid({ metrics, totalCompensation, isRTL = false }: 
               <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
                 <div>
                   <div className={cn("flex items-center gap-2 mb-1", isRTL && "flex-row-reverse")}>
-                    <h3 className="text-sm font-semibold text-foreground tracking-tight">
+                    <h3 className="text-base font-bold text-foreground tracking-tight">
                       {isRTL ? 'إجمالي التعويضات المضمونة' : 'Total Guaranteed Compensation'}
                     </h3>
                     <InfoTooltip formula={totalCompensation.formula} dataSource={totalCompensation.dataSource} />
