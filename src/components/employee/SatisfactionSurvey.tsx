@@ -143,28 +143,57 @@ export function SatisfactionSurvey({ compact = false }: SatisfactionSurveyProps)
   };
 
   if (compact) {
+    const currentRating = ratings.overall || 0;
+    
     return (
-      <Card className="border-violet-500/20 bg-gradient-to-br from-card to-violet-500/5">
-        <CardContent className="p-4">
-          <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-            <div className="p-2.5 rounded-xl bg-violet-500/10 shrink-0">
-              <Smile className="w-5 h-5 text-violet-500" />
+      <Card className="border-violet-500/20 bg-gradient-to-br from-card via-card to-violet-500/5">
+        <CardContent className="p-3">
+          <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+            <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500/15 to-violet-500/5 shrink-0">
+              <Smile className="w-4 h-4 text-violet-500" />
             </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium">{t('Rate your benefits experience', 'قيّم تجربة مزاياك')}</p>
-              <div className="mt-2">
-                {renderStars('overall')}
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold truncate">{t('Rate your benefits experience', 'قيّم تجربة مزاياك')}</p>
+              <div className="flex items-center gap-1 mt-1.5">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => handleRating('overall', star)}
+                    onMouseEnter={() => setHoveredStar({ category: 'overall', star })}
+                    onMouseLeave={() => setHoveredStar(null)}
+                    className="p-0.5 transition-all hover:scale-110 active:scale-95"
+                    disabled={isSubmitting}
+                  >
+                    <Star
+                      className={cn(
+                        "w-4 h-4 transition-all duration-200",
+                        star <= (hoveredStar?.category === 'overall' ? hoveredStar.star : currentRating)
+                          ? "fill-amber-400 text-amber-400 drop-shadow-sm"
+                          : "text-muted-foreground/30 hover:text-amber-300"
+                      )}
+                    />
+                  </button>
+                ))}
+                {currentRating > 0 && (
+                  <span className="text-[10px] font-medium text-violet-600 ml-1">{currentRating}/5</span>
+                )}
               </div>
             </div>
-            {ratings.overall && (
+            {ratings.overall && !hasSubmitted && (
               <Button 
                 size="sm" 
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="shrink-0"
+                className="shrink-0 h-7 w-7 p-0 bg-violet-500 hover:bg-violet-600"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-3 h-3" />
               </Button>
+            )}
+            {hasSubmitted && (
+              <div className="shrink-0 p-1.5 rounded-full bg-emerald-500/10">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              </div>
             )}
           </div>
         </CardContent>
