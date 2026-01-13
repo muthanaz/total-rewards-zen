@@ -95,9 +95,10 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.3 }}
       >
-        <Card className="relative overflow-hidden border border-accent/30 bg-accent/5 p-5">
+        <Card className="relative overflow-hidden border border-accent/20 bg-gradient-to-r from-accent/8 via-emerald-50/50 to-amber-50/60 dark:from-accent/10 dark:via-emerald-900/10 dark:to-amber-900/10 p-5">
           {/* Subtle decorative background */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full blur-3xl translate-x-1/4 -translate-y-1/4" />
+          <div className="absolute top-0 left-0 w-40 h-40 bg-accent/10 rounded-full blur-3xl -translate-x-1/4 -translate-y-1/4" />
+          <div className="absolute bottom-0 right-0 w-40 h-40 bg-amber-400/10 rounded-full blur-3xl translate-x-1/4 translate-y-1/4" />
           
           <div className="relative z-10">
             <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
