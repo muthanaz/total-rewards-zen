@@ -13,7 +13,7 @@ import { BENEFIT_TYPE_COLORS, BENEFIT_TYPE_LABELS } from '@/lib/constants';
 import { RequestClaimWidget } from '@/components/employee/RequestClaimWidget';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
 import { ChartContainer, AnimatedBarChart, AnimatedRadarChart } from '@/components/charts';
-import { DateRangeFilter, DrillDownModal, BenefitsDrillDownSheet } from '@/components/dashboard';
+import { DateRangeFilter, DrillDownModal, BenefitsDrillDownSheet, PersonalizedRecommendations, TrendIndicator } from '@/components/dashboard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { cn } from '@/lib/utils';
@@ -145,6 +145,10 @@ export default function EmployeeDashboard() {
     const totalCompensation = salaryData.annualSalary + totalBenefitValue;
     const benefitsAsPercentOfComp = Math.round((totalBenefitValue / totalCompensation) * 100);
     
+    // Trend data (demo - comparing to last month)
+    const lastMonthUtilized = totalUtilized * 0.92; // Demo: 8% growth
+    const lastMonthUtilizationPercent = 52; // Demo value
+    
     return {
       totalBenefitValue,
       totalUtilized,
@@ -154,7 +158,9 @@ export default function EmployeeDashboard() {
       underutilizedCount,
       totalCompensation,
       benefitsAsPercentOfComp,
-      avgUtilizationPerBenefit
+      avgUtilizationPerBenefit,
+      lastMonthUtilized,
+      lastMonthUtilizationPercent
     };
   }, []);
 
@@ -201,7 +207,8 @@ export default function EmployeeDashboard() {
       formula: isRTL ? 'الراتب السنوي + قيمة المزايا' : 'Annual Salary + Benefits Value',
       dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR System',
       variant: 'primary' as const,
-      progress: 100
+      progress: 100,
+      trend: { current: calculatedMetrics.totalCompensation, previous: calculatedMetrics.totalCompensation * 0.97 }
     },
     { 
       icon: TrendingUp, 
@@ -210,7 +217,8 @@ export default function EmployeeDashboard() {
       formula: isRTL ? 'مجموع جميع المزايا المستخدمة' : 'Sum of all utilized benefits',
       dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
       variant: 'utilized' as const,
-      progress: calculatedMetrics.utilizationPercent
+      progress: calculatedMetrics.utilizationPercent,
+      trend: { current: calculatedMetrics.totalUtilized, previous: calculatedMetrics.lastMonthUtilized }
     },
     { 
       icon: Sparkles, 
@@ -219,7 +227,8 @@ export default function EmployeeDashboard() {
       formula: isRTL ? 'إجمالي المزايا - المستخدم' : 'Total Benefits - Utilized',
       dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
       variant: 'remaining' as const,
-      progress: 100 - calculatedMetrics.utilizationPercent
+      progress: 100 - calculatedMetrics.utilizationPercent,
+      trend: { current: calculatedMetrics.totalRemaining, previous: calculatedMetrics.totalRemaining * 1.05 }
     },
     { 
       icon: Target, 
@@ -228,18 +237,19 @@ export default function EmployeeDashboard() {
       formula: isRTL ? '(المستخدم / الإجمالي) × ١٠٠' : '(Utilized / Total) × 100',
       dataSource: isRTL ? 'المتتبع' : 'Tracker',
       variant: 'utilization' as const,
-      progress: calculatedMetrics.utilizationPercent
+      progress: calculatedMetrics.utilizationPercent,
+      trend: { current: calculatedMetrics.utilizationPercent, previous: calculatedMetrics.lastMonthUtilizationPercent }
     },
   ];
 
-  // Secondary metrics
+  // Secondary metrics with trends
   const secondaryMetrics = [
-    { icon: DollarSign, value: formatCurrency(salaryData.monthlySalary), label: t('employee.dashboard.monthlySalary'), formula: isRTL ? 'الراتب الأساسي / ١٢' : 'Base salary / 12', source: isRTL ? 'نظام الموارد البشرية' : 'HR System' },
-    { icon: Calendar, value: `${salaryData.leaveBalance} ${t('common.days')}`, label: t('employee.dashboard.leaveBalance'), formula: isRTL ? 'الإجمالي - المستخدم' : 'Total - Used', source: isRTL ? 'نظام الإجازات' : 'Leave System' },
-    { icon: Award, value: `${calculatedMetrics.fullyUtilizedCount}`, label: isRTL ? 'مزايا مستخدمة بالكامل' : 'Fully Utilized Benefits', formula: isRTL ? 'عدد المزايا بنسبة ١٠٠٪' : 'Benefits at 100%', source: isRTL ? 'نظام المزايا' : 'Benefits System' },
-    { icon: Clock, value: `${calculatedMetrics.underutilizedCount}`, label: isRTL ? 'فرص للاستخدام' : 'Opportunities to Use', formula: isRTL ? 'مزايا أقل من ٥٠٪' : 'Benefits under 50%', source: isRTL ? 'نظام المزايا' : 'Benefits System' },
-    { icon: Zap, value: `${salaryData.activatedItems}`, label: t('employee.dashboard.activatedPerks'), formula: isRTL ? 'عدد التفعيلات' : 'Count of activations', source: isRTL ? 'السوق' : 'Marketplace' },
-    { icon: TrendingUp, value: `${calculatedMetrics.benefitsAsPercentOfComp}${isRTL ? '٪' : '%'}`, label: isRTL ? 'المزايا من التعويضات' : 'Benefits % of Comp', formula: isRTL ? 'المزايا / إجمالي التعويضات' : 'Benefits / Total Comp', source: isRTL ? 'نظام الموارد البشرية' : 'HR System' },
+    { icon: DollarSign, value: formatCurrency(salaryData.monthlySalary), label: t('employee.dashboard.monthlySalary'), formula: isRTL ? 'الراتب الأساسي / ١٢' : 'Base salary / 12', source: isRTL ? 'نظام الموارد البشرية' : 'HR System', trend: null },
+    { icon: Calendar, value: `${salaryData.leaveBalance} ${t('common.days')}`, label: t('employee.dashboard.leaveBalance'), formula: isRTL ? 'الإجمالي - المستخدم' : 'Total - Used', source: isRTL ? 'نظام الإجازات' : 'Leave System', trend: { current: salaryData.leaveBalance, previous: 24 } },
+    { icon: Award, value: `${calculatedMetrics.fullyUtilizedCount}`, label: isRTL ? 'مزايا مستخدمة بالكامل' : 'Fully Utilized Benefits', formula: isRTL ? 'عدد المزايا بنسبة ١٠٠٪' : 'Benefits at 100%', source: isRTL ? 'نظام المزايا' : 'Benefits System', trend: { current: calculatedMetrics.fullyUtilizedCount, previous: 1 } },
+    { icon: Clock, value: `${calculatedMetrics.underutilizedCount}`, label: isRTL ? 'فرص للاستخدام' : 'Opportunities to Use', formula: isRTL ? 'مزايا أقل من ٥٠٪' : 'Benefits under 50%', source: isRTL ? 'نظام المزايا' : 'Benefits System', trend: { current: calculatedMetrics.underutilizedCount, previous: 5 } },
+    { icon: Zap, value: `${salaryData.activatedItems}`, label: t('employee.dashboard.activatedPerks'), formula: isRTL ? 'عدد التفعيلات' : 'Count of activations', source: isRTL ? 'السوق' : 'Marketplace', trend: { current: salaryData.activatedItems, previous: 4 } },
+    { icon: TrendingUp, value: `${calculatedMetrics.benefitsAsPercentOfComp}${isRTL ? '٪' : '%'}`, label: isRTL ? 'المزايا من التعويضات' : 'Benefits % of Comp', formula: isRTL ? 'المزايا / إجمالي التعويضات' : 'Benefits / Total Comp', source: isRTL ? 'نظام الموارد البشرية' : 'HR System', trend: null },
   ];
   
   return (
@@ -478,14 +488,14 @@ export default function EmployeeDashboard() {
         </ChartContainer>
       </div>
 
+      {/* Personalized Recommendations */}
+      <PersonalizedRecommendations benefits={benefits} />
+
       {/* Request Widget Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <RequestClaimWidget />
         <SatisfactionSurvey compact={true} />
       </div>
-
-      {/* Full Satisfaction Survey */}
-      <SatisfactionSurvey />
 
       {/* Drill-down Modal */}
       <DrillDownModal
