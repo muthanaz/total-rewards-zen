@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { 
   DollarSign, Home, GraduationCap, 
@@ -19,6 +18,8 @@ import { useUIVisibility } from '@/contexts/UIVisibilityContext';
 import { usePrivacy } from '@/components/ui/privacy-toggle';
 import { cn } from '@/lib/utils';
 import { CompensationBreakdownModal } from '@/components/employee/CompensationBreakdownModal';
+import { GlassmorphismCard, GradientMeshBackground } from '@/components/ui/glassmorphism-card';
+import { AnimatedProgressRing } from '@/components/ui/animated-progress-ring';
 
 // Demo data - core salary info
 const salaryData = {
@@ -277,63 +278,80 @@ export default function EmployeeDashboard() {
               <ChevronIcon className={cn("w-3 h-3", isRTL ? "mr-1" : "ml-1")} />
             </Button>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {benefits.map((benefit, index) => {
               const utilization = Math.round((benefit.utilized / benefit.value) * 100);
               const remaining = benefit.value - benefit.utilized;
               const isFullyUsed = utilization >= 100;
+              const ringColor = isFullyUsed ? "success" : utilization < 30 ? "warning" : "accent";
               
               return (
-                <Card 
-                  key={benefit.name} 
-                  className="benefit-card group cursor-pointer hover:border-accent/40 hover:shadow-sm transition-all duration-200 flex flex-col p-2.5"
-                  style={{ animationDelay: `${index * 30}ms` }}
-                  onClick={() => handleBenefitClick(benefit.name)}
+                <GradientMeshBackground 
+                  key={benefit.name}
+                  category={benefit.category}
+                  className="group"
                 >
-                  <div className={cn("flex items-start gap-2", isRTL && "flex-row-reverse")}>
-                    <div className="p-1.5 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors shrink-0">
-                      <benefit.icon className="w-3 h-3 text-accent" />
-                    </div>
-                    <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
-                      <div className={cn("flex items-center gap-1 flex-wrap", isRTL && "flex-row-reverse justify-end")}>
-                        <h3 className="font-medium text-xs truncate group-hover:text-accent transition-colors leading-tight">
-                          {t(benefit.nameKey)}
-                        </h3>
-                        {getUtilizationBadge(utilization)}
+                  <GlassmorphismCard 
+                    variant="frosted"
+                    delay={index}
+                    className="cursor-pointer p-3 h-full"
+                    onClick={() => handleBenefitClick(benefit.name)}
+                  >
+                    <div className={cn("flex items-start gap-3", isRTL && "flex-row-reverse")}>
+                      {/* Animated Progress Ring with Icon */}
+                      <div className="relative shrink-0">
+                        <AnimatedProgressRing
+                          value={utilization}
+                          size={48}
+                          strokeWidth={4}
+                          color={ringColor}
+                          showPercentage={false}
+                          animationDuration={0.8}
+                        >
+                          <div className="p-1.5 rounded-full bg-accent/10">
+                            <benefit.icon className="w-4 h-4 text-accent" />
+                          </div>
+                        </AnimatedProgressRing>
                       </div>
-                      <span className={`${BENEFIT_TYPE_COLORS[benefit.type]} text-[9px]`}>
-                        {t(`benefit.${benefit.type}`)}
-                      </span>
+                      
+                      <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
+                        <div className={cn("flex items-center gap-1 flex-wrap", isRTL && "flex-row-reverse justify-end")}>
+                          <h3 className="font-medium text-xs truncate group-hover:text-accent transition-colors leading-tight">
+                            {t(benefit.nameKey)}
+                          </h3>
+                          {getUtilizationBadge(utilization)}
+                        </div>
+                        <span className={`${BENEFIT_TYPE_COLORS[benefit.type]} text-[9px]`}>
+                          {t(`benefit.${benefit.type}`)}
+                        </span>
+                        
+                        <div className="mt-2 space-y-0.5">
+                          <div className={cn("flex justify-between text-[10px]", isRTL && "flex-row-reverse")}>
+                            <span className="text-muted-foreground">{formatCurrency(benefit.utilized)}</span>
+                            <span className={isFullyUsed ? 'text-emerald-600 font-semibold' : 'font-medium'}>{utilization}%</span>
+                          </div>
+                          <p className={cn("text-[9px] text-muted-foreground", isRTL && "text-right")}>
+                            {t('employee.dashboard.remaining')}: {formatCurrency(remaining)}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <ChevronIcon className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-1" />
                     </div>
-                    <ChevronIcon className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-                  </div>
-                  
-                  <div className="mt-2 space-y-1 flex-1">
-                    <div className={cn("flex justify-between text-[10px]", isRTL && "flex-row-reverse")}>
-                      <span className="text-muted-foreground">{formatCurrency(benefit.utilized)}</span>
-                      <span className={isFullyUsed ? 'text-emerald-600 font-semibold' : 'font-medium'}>{utilization}%</span>
-                    </div>
-                    <Progress 
-                      value={utilization} 
-                      className={`h-1 ${isFullyUsed ? '[&>div]:bg-emerald-500' : '[&>div]:bg-accent'}`}
-                    />
-                    <p className={cn("text-[9px] text-muted-foreground", isRTL && "text-right")}>
-                      {t('employee.dashboard.remaining')}: {formatCurrency(remaining)}
-                    </p>
-                  </div>
-                  
-                  {/* Action Buttons - only show for claimable benefits */}
-                  {benefit.claimable && (
-                    <div className="mt-2 pt-1.5 border-t border-border/30">
-                      <BenefitActionButtons
-                        benefitName={benefit.name}
-                        benefitCategory={benefit.category}
-                        isRTL={isRTL}
-                        compact={true}
-                      />
-                    </div>
-                  )}
-                </Card>
+                    
+                    {/* Action Buttons - only show for claimable benefits */}
+                    {benefit.claimable && (
+                      <div className="mt-2 pt-1.5 border-t border-border/30">
+                        <BenefitActionButtons
+                          benefitName={benefit.name}
+                          benefitCategory={benefit.category}
+                          isRTL={isRTL}
+                          compact={true}
+                        />
+                      </div>
+                    )}
+                  </GlassmorphismCard>
+                </GradientMeshBackground>
               );
             })}
           </div>
