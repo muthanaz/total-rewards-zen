@@ -41,98 +41,181 @@ export function SmartInsights({ benefits, className }: SmartInsightsProps) {
   const isRTL = direction === 'rtl';
   const navigate = useNavigate();
 
-  // Generate AI-powered insights based on benefits data
+  // Generate truly smart, contextual insights based on actual benefits data
   const insights = useMemo<Insight[]>(() => {
     const generatedInsights: Insight[] = [];
     const now = new Date();
     const currentMonth = now.getMonth();
+    const currentDay = now.getDate();
     const daysInYear = 365;
     const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
     const yearProgress = dayOfYear / daysInYear;
-
-    // Analyze each benefit for insights
-    benefits.forEach(benefit => {
-      const utilization = benefit.utilized / benefit.value;
-      const remaining = benefit.value - benefit.utilized;
-
-      // Underutilization warning (less than expected for this time of year)
-      if (utilization < yearProgress * 0.7 && remaining > 5000) {
-        if (benefit.name.includes('Health')) {
-          generatedInsights.push({
-            id: `health-checkup-${benefit.name}`,
-            type: 'action',
-            title: isRTL ? 'حان وقت الفحص الطبي' : 'Schedule Your Health Check-up',
-            description: isRTL 
-              ? `لديك ${remaining.toLocaleString('ar-AE')} درهم متبقية في التأمين الصحي. الفحوصات السنوية مغطاة بالكامل.`
-              : `You have AED ${remaining.toLocaleString()} remaining in health insurance. Annual check-ups are fully covered.`,
-            action: isRTL ? 'احجز الآن' : 'Book Now',
-            route: benefit.route,
-            priority: 'high',
-          });
-        } else if (benefit.name.includes('Learning')) {
-          generatedInsights.push({
-            id: `learning-${benefit.name}`,
-            type: 'opportunity',
-            title: isRTL ? 'استثمر في تطويرك' : 'Invest in Your Growth',
-            description: isRTL
-              ? `${remaining.toLocaleString('ar-AE')} درهم متاحة للتعلم. استكشف الدورات المعتمدة.`
-              : `AED ${remaining.toLocaleString()} available for learning. Explore certified courses.`,
-            action: isRTL ? 'استكشف الدورات' : 'Explore Courses',
-            route: benefit.route,
-            priority: 'medium',
-          });
-        } else if (benefit.name.includes('Wellbeing')) {
-          generatedInsights.push({
-            id: `wellbeing-${benefit.name}`,
-            type: 'opportunity',
-            title: isRTL ? 'عزز صحتك النفسية والجسدية' : 'Boost Your Wellness',
-            description: isRTL
-              ? `فعّل عضوية النادي الرياضي أو تطبيقات الصحة. ${remaining.toLocaleString('ar-AE')} درهم متبقية.`
-              : `Activate gym membership or wellness apps. AED ${remaining.toLocaleString()} remaining.`,
-            action: isRTL ? 'اكتشف الخيارات' : 'Discover Options',
-            route: benefit.route,
-            priority: 'medium',
-          });
-        }
-      }
-
-      // Achievement - fully utilized
-      if (utilization >= 1) {
+    const monthsRemaining = 12 - currentMonth;
+    
+    // Calculate aggregate stats
+    const totalValue = benefits.reduce((sum, b) => sum + b.value, 0);
+    const totalUtilized = benefits.reduce((sum, b) => sum + b.utilized, 0);
+    const totalRemaining = totalValue - totalUtilized;
+    const overallUtilization = totalUtilized / totalValue;
+    
+    // Find specific benefit patterns
+    const healthBenefit = benefits.find(b => b.name.includes('Health'));
+    const learningBenefit = benefits.find(b => b.name.includes('Learning'));
+    const wellbeingBenefit = benefits.find(b => b.name.includes('Wellbeing'));
+    const financialBenefit = benefits.find(b => b.name.includes('Financial'));
+    const transportBenefit = benefits.find(b => b.name.includes('Transport'));
+    
+    const underutilizedBenefits = benefits.filter(b => {
+      const util = b.utilized / b.value;
+      return util < yearProgress * 0.7 && (b.value - b.utilized) > 1000;
+    });
+    
+    const fullyUtilizedCount = benefits.filter(b => b.utilized >= b.value).length;
+    
+    // 1. Health-specific insight with actionable recommendation
+    if (healthBenefit) {
+      const healthRemaining = healthBenefit.value - healthBenefit.utilized;
+      const healthUtilization = healthBenefit.utilized / healthBenefit.value;
+      
+      if (healthUtilization < 0.4 && healthRemaining > 20000) {
         generatedInsights.push({
-          id: `achievement-${benefit.name}`,
-          type: 'achievement',
-          title: isRTL ? `${benefit.name} - مستخدم بالكامل` : `${benefit.name} - Fully Utilized`,
+          id: 'health-checkup',
+          type: 'action',
+          title: isRTL ? 'فحص طبي سنوي مجاني' : 'Free Annual Health Screening',
+          description: isRTL 
+            ? `${healthRemaining.toLocaleString('ar-AE')} درهم متبقية. احجز فحصك الوقائي السنوي - مغطى بالكامل بدون خصم.`
+            : `AED ${healthRemaining.toLocaleString()} remaining. Book your preventive annual screening - fully covered with no deductible.`,
+          action: isRTL ? 'احجز موعدك' : 'Book Appointment',
+          route: healthBenefit.route,
+          priority: 'high',
+        });
+      } else if (healthUtilization < 0.6) {
+        generatedInsights.push({
+          id: 'health-dental',
+          type: 'opportunity',
+          title: isRTL ? 'لا تنسَ فحص الأسنان' : 'Dental Check-up Covered',
           description: isRTL
-            ? 'أحسنت! استخدمت هذه الميزة بالكامل.'
-            : 'Great job! You\'ve fully utilized this benefit.',
-          priority: 'low',
+            ? `تأمينك يغطي فحصين للأسنان سنوياً. ${healthRemaining.toLocaleString('ar-AE')} درهم متاحة للعلاجات الأخرى.`
+            : `Your plan covers 2 dental visits/year. AED ${healthRemaining.toLocaleString()} available for other treatments.`,
+          action: isRTL ? 'عرض التغطية' : 'View Coverage',
+          route: healthBenefit.route,
+          priority: 'medium',
         });
       }
-    });
-
-    // Time-based reminders
-    if (currentMonth >= 9) { // October onwards
-      const unusedTotal = benefits.reduce((sum, b) => sum + (b.value - b.utilized), 0);
-      if (unusedTotal > 20000) {
+    }
+    
+    // 2. Learning with deadline urgency
+    if (learningBenefit) {
+      const learningRemaining = learningBenefit.value - learningBenefit.utilized;
+      const learningUtilization = learningBenefit.utilized / learningBenefit.value;
+      
+      if (learningUtilization < 0.5 && learningRemaining > 5000) {
+        const monthlyBudget = Math.round(learningRemaining / monthsRemaining);
         generatedInsights.push({
-          id: 'year-end-reminder',
-          type: 'reminder',
-          title: isRTL ? 'تذكير نهاية السنة' : 'Year-End Reminder',
+          id: 'learning-budget',
+          type: 'opportunity',
+          title: isRTL ? 'ميزانية تطوير غير مستخدمة' : 'Unused Development Budget',
           description: isRTL
-            ? `لديك ${unusedTotal.toLocaleString('ar-AE')} درهم من المزايا غير المستخدمة. بعض المزايا لا تُرحّل للسنة القادمة.`
-            : `You have AED ${unusedTotal.toLocaleString()} in unused benefits. Some benefits don't carry over to next year.`,
-          action: isRTL ? 'راجع المزايا' : 'Review Benefits',
-          route: '/employee/benefits',
+            ? `${learningRemaining.toLocaleString('ar-AE')} درهم متبقية (${monthlyBudget.toLocaleString('ar-AE')} شهرياً). دورات LinkedIn و Coursera مؤهلة.`
+            : `AED ${learningRemaining.toLocaleString()} remaining (AED ${monthlyBudget.toLocaleString()}/month). LinkedIn Learning & Coursera courses eligible.`,
+          action: isRTL ? 'تصفح الدورات' : 'Browse Courses',
+          route: learningBenefit.route,
+          priority: 'medium',
+        });
+      }
+    }
+    
+    // 3. Wellbeing with specific actionable tip
+    if (wellbeingBenefit) {
+      const wellbeingRemaining = wellbeingBenefit.value - wellbeingBenefit.utilized;
+      const wellbeingUtilization = wellbeingBenefit.utilized / wellbeingBenefit.value;
+      
+      if (wellbeingUtilization < 0.6 && wellbeingRemaining > 1500) {
+        generatedInsights.push({
+          id: 'wellbeing-gym',
+          type: 'opportunity',
+          title: isRTL ? 'عضوية النادي مغطاة' : 'Gym Membership Covered',
+          description: isRTL
+            ? `فعّل عضوية Fitness First أو GymNation مجاناً. ${wellbeingRemaining.toLocaleString('ar-AE')} درهم متبقية لتطبيقات الصحة.`
+            : `Activate Fitness First or GymNation membership free. AED ${wellbeingRemaining.toLocaleString()} left for wellness apps.`,
+          action: isRTL ? 'فعّل الآن' : 'Activate Now',
+          route: wellbeingBenefit.route,
+          priority: 'medium',
+        });
+      }
+    }
+    
+    // 4. Year-end urgency (Q4 only)
+    if (currentMonth >= 9 && totalRemaining > 30000) {
+      const weeksRemaining = Math.ceil((new Date(now.getFullYear(), 11, 31).getTime() - now.getTime()) / (7 * 24 * 60 * 60 * 1000));
+      generatedInsights.push({
+        id: 'year-end-urgency',
+        type: 'reminder',
+        title: isRTL ? `${weeksRemaining} أسابيع متبقية` : `${weeksRemaining} Weeks Left This Year`,
+        description: isRTL
+          ? `${totalRemaining.toLocaleString('ar-AE')} درهم من المزايا لن تُرحّل. راجع الآن لتحقيق أقصى استفادة.`
+          : `AED ${totalRemaining.toLocaleString()} in benefits won't carry over. Review now to maximize your package.`,
+        action: isRTL ? 'راجع الكل' : 'Review All',
+        route: '/employee/benefits',
+        priority: 'high',
+      });
+    }
+    
+    // 5. Savings/Financial planning insight
+    if (financialBenefit) {
+      const financialUtilization = financialBenefit.utilized / financialBenefit.value;
+      if (financialUtilization < 1) {
+        const matchAvailable = financialBenefit.value - financialBenefit.utilized;
+        generatedInsights.push({
+          id: 'savings-match',
+          type: 'action',
+          title: isRTL ? 'احصل على مطابقة صاحب العمل' : 'Claim Employer Match',
+          description: isRTL
+            ? `صاحب العمل يطابق مدخراتك حتى ${matchAvailable.toLocaleString('ar-AE')} درهم سنوياً. ضاعف مدخراتك.`
+            : `Your employer matches contributions up to AED ${matchAvailable.toLocaleString()}/year. Double your savings.`,
+          action: isRTL ? 'زيادة المساهمة' : 'Increase Contribution',
+          route: financialBenefit.route,
           priority: 'high',
         });
       }
     }
+    
+    // 6. Achievement for good utilizers
+    if (fullyUtilizedCount >= 2) {
+      generatedInsights.push({
+        id: 'achievement-utilizer',
+        type: 'achievement',
+        title: isRTL ? 'أداء ممتاز!' : 'Great Utilization!',
+        description: isRTL
+          ? `${fullyUtilizedCount} مزايا مستخدمة بالكامل. أنت من أفضل ٢٠٪ من الموظفين في استخدام المزايا.`
+          : `${fullyUtilizedCount} benefits fully utilized. You're in the top 20% of benefits users.`,
+        priority: 'low',
+      });
+    }
+    
+    // 7. Transport/Flight tickets reminder mid-year
+    if (currentMonth >= 5 && currentMonth <= 8 && transportBenefit) {
+      const transportRemaining = transportBenefit.value - transportBenefit.utilized;
+      if (transportRemaining > 10000) {
+        generatedInsights.push({
+          id: 'flight-reminder',
+          type: 'reminder',
+          title: isRTL ? 'تذاكر الطيران السنوية' : 'Annual Flight Tickets',
+          description: isRTL
+            ? `تذكر حجز تذاكر الإجازة السنوية. ${transportRemaining.toLocaleString('ar-AE')} درهم متاحة للسفر.`
+            : `Remember to book your annual leave flights. AED ${transportRemaining.toLocaleString()} available for travel.`,
+          action: isRTL ? 'عرض التفاصيل' : 'View Details',
+          route: transportBenefit.route,
+          priority: 'medium',
+        });
+      }
+    }
 
-    // Sort by priority
+    // Sort by priority and limit to 3 most relevant
     const priorityOrder = { high: 0, medium: 1, low: 2 };
     return generatedInsights
       .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
-      .slice(0, 3); // Show max 3 insights
+      .slice(0, 3);
   }, [benefits, isRTL]);
 
   if (insights.length === 0) return null;
