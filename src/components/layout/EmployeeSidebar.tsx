@@ -43,43 +43,19 @@ interface NavItem {
   icon: React.ElementType;
 }
 
-// Main Navigation Structure (without marketplace)
+// Main Navigation Structure
 const navigation: NavGroup[] = [
   {
     labelKey: 'nav.dashboard',
     items: [
       { labelKey: 'nav.overview', path: '/employee', icon: LayoutDashboard },
+    ],
+  },
+  {
+    labelKey: 'nav.myBenefits',
+    items: [
       { labelKey: 'nav.allBenefits', path: '/employee/benefits', icon: Gift },
       { labelKey: 'nav.benefitsAnalysis', path: '/employee/benefits-analysis', icon: TrendingUp },
-    ],
-  },
-  {
-    labelKey: 'nav.allowances',
-    items: [
-      { labelKey: 'nav.housing', path: '/employee/housing', icon: Home },
-      { labelKey: 'nav.schooling', path: '/employee/schooling', icon: GraduationCap },
-      { labelKey: 'nav.transport', path: '/employee/transport', icon: Car },
-    ],
-  },
-  {
-    labelKey: 'nav.healthWellbeing',
-    items: [
-      { labelKey: 'nav.healthInsurance', path: '/employee/health', icon: Heart },
-      { labelKey: 'nav.wellbeing', path: '/employee/wellbeing', icon: Dumbbell },
-    ],
-  },
-  {
-    labelKey: 'nav.financialRewards',
-    items: [
-      { labelKey: 'nav.financial', path: '/employee/financial', icon: PiggyBank },
-      { labelKey: 'nav.annualBonus', path: '/employee/bonus', icon: Award },
-      { labelKey: 'nav.equity', path: '/employee/equity', icon: TrendingUp },
-    ],
-  },
-  {
-    labelKey: 'nav.learningDevelopment',
-    items: [
-      { labelKey: 'nav.learning', path: '/employee/learning', icon: BookOpen },
     ],
   },
   {
@@ -109,7 +85,7 @@ export function EmployeeSidebar() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { t, direction } = useLanguage();
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['nav.dashboard', 'nav.allowances', 'nav.financialRewards']);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['nav.dashboard', 'nav.myBenefits']);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isRTL = direction === 'rtl';
 
