@@ -36,6 +36,7 @@ import BenefitsPage from "./pages/employee/Benefits";
 import OnboardingPage from "./pages/employee/Onboarding";
 import KnowledgeHubPage from "./pages/employee/KnowledgeHub";
 import SecuritySettingsPage from "./pages/employee/SecuritySettings";
+import BenefitsAnalysisPage from "./pages/employee/BenefitsAnalysis";
 
 import EmployerDashboard from "./pages/employer/Dashboard";
 import SpendPage from "./pages/employer/Spend";
@@ -103,6 +104,7 @@ function AppRoutes() {
       {/* Employee Routes */}
       <Route path="/employee" element={<ProtectedRoute allowedRoles={['employee']}><EmployeeLayout /></ProtectedRoute>}>
         <Route index element={<EmployeeDashboard />} />
+        <Route path="benefits-analysis" element={<BenefitsAnalysisPage />} />
         <Route path="benefits" element={<BenefitsPage />} />
         <Route path="housing" element={<HousingPage />} />
         <Route path="schooling" element={<SchoolingPage />} />
