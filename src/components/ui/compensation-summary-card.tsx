@@ -10,7 +10,7 @@ interface MetricItem {
   label: string;
   formula?: string;
   dataSource?: string;
-  variant?: 'default' | 'primary' | 'success' | 'warning';
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'benefits';
 }
 
 interface CompensationGridProps {
@@ -33,16 +33,18 @@ interface CompensationGridProps {
 
 const variantStyles = {
   default: 'border-border/50 bg-card',
-  primary: 'border-accent/30 bg-accent/5',
+  primary: 'border-sky-500/30 bg-sky-500/5',
   success: 'border-emerald-500/30 bg-emerald-500/5',
   warning: 'border-amber-500/30 bg-amber-500/5',
+  benefits: 'border-teal-500/30 bg-teal-500/5',
 };
 
 const iconVariantStyles = {
   default: 'bg-muted text-muted-foreground',
-  primary: 'bg-accent/15 text-accent',
+  primary: 'bg-sky-500/15 text-sky-500',
   success: 'bg-emerald-500/15 text-emerald-500',
   warning: 'bg-amber-500/15 text-amber-500',
+  benefits: 'bg-teal-500/15 text-teal-500',
 };
 
 export function CompensationGrid({ metrics, totalCompensation, utilization, isRTL = false }: CompensationGridProps) {
@@ -78,76 +80,112 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
         ))}
       </div>
 
-      {/* Total Compensation Row - Visual Sum */}
+      {/* Total Compensation Row - Side by Side Layout */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.3 }}
       >
-        <Card className="relative overflow-hidden border-2 border-accent/40 bg-gradient-to-br from-accent/15 via-accent/5 to-purple-500/15 p-5">
-          {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-40 h-40 bg-accent/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/15 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4" />
-          <div className="absolute top-1/2 left-1/2 w-20 h-20 bg-accent/10 rounded-full blur-xl -translate-x-1/2 -translate-y-1/2" />
+        <Card className="relative overflow-hidden border-2 border-transparent bg-gradient-to-r from-sky-500/10 via-card to-teal-500/10 p-5">
+          {/* Gradient border effect */}
+          <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-sky-500/40 via-purple-500/30 to-teal-500/40 -z-10 blur-[1px]" />
+          <div className="absolute inset-[2px] rounded-lg bg-card -z-10" />
+          
+          {/* Decorative background elements */}
+          <div className="absolute top-0 left-0 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/4" />
+          <div className="absolute bottom-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl translate-y-1/2 translate-x-1/4" />
           
           <div className="relative z-10">
-            {/* Header with icon and label */}
-            <div className={cn("flex items-center justify-between mb-4", isRTL && "flex-row-reverse")}>
+            <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
+              {/* Left side - Value */}
+              <div className={cn("flex-1", isRTL && "text-right")}>
+                {/* Header */}
+                <div className={cn("flex items-center gap-3 mb-3", isRTL && "flex-row-reverse")}>
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 via-purple-500 to-teal-500 flex items-center justify-center shadow-lg">
+                    <span className="text-white font-bold text-lg">Σ</span>
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-foreground/70 block">
+                      {isRTL ? 'إجمالي التعويضات السنوية' : 'Total Annual Compensation'}
+                    </span>
+                  </div>
+                  <InfoTooltip formula={totalCompensation.formula} dataSource={totalCompensation.dataSource} />
+                </div>
+                
+                {/* Main value */}
+                <p className="text-3xl md:text-4xl font-bold text-foreground tracking-tight leading-none">
+                  {totalCompensation.value}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  {isRTL ? 'قيمتك الإجمالية كموظف' : 'Your total employee value'}
+                </p>
+              </div>
+              
+              {/* Right side - Visual breakdown */}
               <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center shadow-lg shadow-accent/30">
-                  <span className="text-white font-bold text-xl">Σ</span>
+                {/* Salary segment */}
+                <div className="flex flex-col items-center">
+                  <div className="relative w-16 h-16">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                      {/* Background circle */}
+                      <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="4" className="text-muted/20" />
+                      {/* Salary arc (60%) */}
+                      <circle 
+                        cx="18" cy="18" r="14" fill="none" 
+                        stroke="url(#salaryGradient)" 
+                        strokeWidth="4" 
+                        strokeDasharray="52.8 87.96" 
+                        strokeLinecap="round"
+                        className="drop-shadow-sm"
+                      />
+                      {/* Benefits arc (40%) */}
+                      <circle 
+                        cx="18" cy="18" r="14" fill="none" 
+                        stroke="url(#benefitsGradient)" 
+                        strokeWidth="4" 
+                        strokeDasharray="35.2 87.96" 
+                        strokeDashoffset="-52.8"
+                        strokeLinecap="round"
+                        className="drop-shadow-sm"
+                      />
+                      <defs>
+                        <linearGradient id="salaryGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#0ea5e9" />
+                          <stop offset="100%" stopColor="#8b5cf6" />
+                        </linearGradient>
+                        <linearGradient id="benefitsGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#14b8a6" />
+                          <stop offset="100%" stopColor="#06b6d4" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-[10px] font-bold text-foreground">100%</span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-accent block">
-                    {isRTL ? 'إجمالي التعويضات السنوية' : 'Total Annual Compensation'}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {isRTL ? 'الراتب + جميع المزايا' : 'Salary + All Benefits Combined'}
-                  </span>
+                
+                {/* Legend */}
+                <div className="flex flex-col gap-2">
+                  <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                    <div className="w-3 h-3 rounded-full bg-gradient-to-r from-sky-500 to-purple-500" />
+                    <div className={cn("flex flex-col", isRTL && "items-end")}>
+                      <span className="text-[10px] font-medium text-muted-foreground">
+                        {isRTL ? 'الراتب' : 'Salary'}
+                      </span>
+                      <span className="text-sm font-bold text-sky-500">60%</span>
+                    </div>
+                  </div>
+                  <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                    <div className="w-3 h-3 rounded-full bg-gradient-to-r from-teal-500 to-cyan-500" />
+                    <div className={cn("flex flex-col", isRTL && "items-end")}>
+                      <span className="text-[10px] font-medium text-muted-foreground">
+                        {isRTL ? 'المزايا' : 'Benefits'}
+                      </span>
+                      <span className="text-sm font-bold text-teal-500">40%</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <InfoTooltip formula={totalCompensation.formula} dataSource={totalCompensation.dataSource} />
-            </div>
-            
-            {/* Main value - prominent display */}
-            <div className={cn("mb-5", isRTL && "text-right")}>
-              <p className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-none">
-                {totalCompensation.value}
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {isRTL ? 'قيمتك الإجمالية كموظف' : 'Your total value as an employee'}
-              </p>
-            </div>
-            
-            {/* Visual equation breakdown - enhanced */}
-            <div className={cn("grid grid-cols-3 gap-3 pt-4 border-t border-accent/20", isRTL && "direction-rtl")}>
-              {/* Salary Component */}
-              <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-accent/10 border border-accent/20">
-                <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
-                  <div className="w-3 h-3 rounded-full bg-accent" />
-                </div>
-                <span className="text-[10px] font-medium text-muted-foreground text-center">
-                  {isRTL ? 'الراتب السنوي' : 'Annual Salary'}
-                </span>
-                <span className="text-sm font-bold text-foreground">60%</span>
-              </div>
-              
-              {/* Plus Sign */}
-              <div className="flex items-center justify-center">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-xl">=</span>
-                </div>
-              </div>
-              
-              {/* Benefits Component */}
-              <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                  <div className="w-3 h-3 rounded-full bg-amber-500" />
-                </div>
-                <span className="text-[10px] font-medium text-muted-foreground text-center">
-                  {isRTL ? 'قيمة المزايا' : 'Benefits Value'}
-                </span>
-                <span className="text-sm font-bold text-foreground">40%</span>
               </div>
             </div>
           </div>
@@ -160,16 +198,16 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25, duration: 0.3 }}
       >
-        <Card className="relative border border-border/50 bg-card p-4">
+        <Card className="relative border border-teal-500/20 bg-gradient-to-r from-teal-500/5 to-transparent p-4">
           <div className={cn("flex items-center justify-between mb-3", isRTL && "flex-row-reverse")}>
             <h3 className="text-sm font-semibold text-foreground">{isRTL ? 'استخدام المزايا' : 'Benefits Utilization'}</h3>
             <InfoTooltip formula={utilization.formula} dataSource={utilization.dataSource} />
           </div>
           
           {/* Progress bar */}
-          <div className="relative h-3 bg-muted rounded-full overflow-hidden mb-3">
+          <div className="relative h-3 bg-teal-500/10 rounded-full overflow-hidden mb-3">
             <motion.div 
-              className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full"
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${utilization.usedPercent}%` }}
               transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
@@ -179,20 +217,20 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
           {/* Used and Remaining */}
           <div className={cn("grid grid-cols-2 gap-4", isRTL && "direction-rtl")}>
             <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-              <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+              <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-teal-500 to-cyan-500" />
               <div>
                 <p className="text-base font-bold text-foreground">{utilization.used}</p>
                 <p className="text-[10px] text-muted-foreground">
-                  {isRTL ? 'مستخدم' : 'Used'} <span className="font-semibold text-blue-500">({utilization.usedPercent}%)</span>
+                  {isRTL ? 'مستخدم' : 'Used'} <span className="font-semibold text-teal-500">({utilization.usedPercent}%)</span>
                 </p>
               </div>
             </div>
             <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse text-right")}>
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+              <div className="w-2.5 h-2.5 rounded-full bg-teal-500/30" />
               <div>
                 <p className="text-base font-bold text-foreground">{utilization.remaining}</p>
                 <p className="text-[10px] text-muted-foreground">
-                  {isRTL ? 'متاح' : 'Available'} <span className="font-semibold text-emerald-500">({utilization.remainingPercent}%)</span>
+                  {isRTL ? 'متاح' : 'Available'} <span className="font-semibold text-teal-500/70">({utilization.remainingPercent}%)</span>
                 </p>
               </div>
             </div>

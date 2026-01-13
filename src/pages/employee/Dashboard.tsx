@@ -132,7 +132,7 @@ export default function EmployeeDashboard() {
       label: isRTL ? 'قيمة المزايا السنوية' : 'Annual Benefits Value',
       formula: isRTL ? 'مجموع جميع المزايا والبدلات السنوية' : 'Sum of all annual benefits & allowances',
       dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
-      variant: 'warning' as const,
+      variant: 'benefits' as const,
     },
     { 
       icon: Wallet, 
@@ -140,7 +140,7 @@ export default function EmployeeDashboard() {
       label: isRTL ? 'المزايا من التعويضات' : 'Benefits % of Package',
       formula: isRTL ? '(قيمة المزايا ÷ إجمالي التعويضات) × ١٠٠' : '(Benefits Value ÷ Total Compensation) × 100',
       dataSource: isRTL ? 'محسوب' : 'Calculated',
-      variant: 'warning' as const,
+      variant: 'benefits' as const,
     },
   ];
 
