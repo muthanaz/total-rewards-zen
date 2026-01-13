@@ -27,6 +27,7 @@ interface CompensationGridProps {
     onTogglePrivacy?: () => void;
     salaryPercent?: number;
     benefitsPercent?: number;
+    onCardClick?: () => void;
   };
   utilization: {
     used: string;
@@ -67,7 +68,13 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.3 }}
       >
-        <Card className="relative overflow-hidden border border-border/50 p-4">
+        <Card 
+          className={cn(
+            "relative overflow-hidden border border-border/50 p-4",
+            totalCompensation.onCardClick && "cursor-pointer hover:shadow-md hover:border-accent/30 transition-all group"
+          )}
+          onClick={totalCompensation.onCardClick}
+        >
           {/* Gradient background: Teal (accent) from LEFT fading to white, Gold (amber) from RIGHT fading to white */}
           <div className="absolute inset-0 bg-white dark:bg-card" />
           <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-accent/10 via-accent/5 to-transparent" />

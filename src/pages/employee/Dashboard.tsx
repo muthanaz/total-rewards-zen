@@ -16,6 +16,7 @@ import { CompensationGrid } from '@/components/ui/compensation-summary-card';
 import { useUIVisibility } from '@/contexts/UIVisibilityContext';
 import { usePrivacy } from '@/components/ui/privacy-toggle';
 import { cn } from '@/lib/utils';
+import { CompensationBreakdownModal } from '@/components/employee/CompensationBreakdownModal';
 
 // Demo data - core salary info
 const salaryData = {
@@ -53,6 +54,7 @@ export default function EmployeeDashboard() {
   const [dateRange, setDateRange] = useState({ from: new Date(), to: new Date() });
   const [benefitsSheetOpen, setBenefitsSheetOpen] = useState(false);
   const [benefitsSheetCategory, setBenefitsSheetCategory] = useState<'fully-utilized' | 'room-to-use' | null>(null);
+  const [compensationModalOpen, setCompensationModalOpen] = useState(false);
   
   // Check visibility for each section
   const showCompensationSummary = isElementVisible('employee', 'dashboard', 'compensation_summary');
@@ -198,6 +200,7 @@ export default function EmployeeDashboard() {
     onTogglePrivacy: toggleSalaryVisibility,
     salaryPercent: calculatedMetrics.salaryAsPercentOfGuaranteed,
     benefitsPercent: calculatedMetrics.guaranteedBenefitsAsPercentOfComp,
+    onCardClick: () => setCompensationModalOpen(true),
   };
 
   const utilizationData = {
@@ -386,6 +389,20 @@ export default function EmployeeDashboard() {
         onOpenChange={setBenefitsSheetOpen}
         category={benefitsSheetCategory}
         benefits={benefits}
+      />
+
+      {/* Compensation Breakdown Modal */}
+      <CompensationBreakdownModal
+        open={compensationModalOpen}
+        onOpenChange={setCompensationModalOpen}
+        isRTL={isRTL}
+        salaryData={salaryData}
+        benefits={benefits.map(b => ({
+          name: b.name,
+          value: b.value,
+          utilized: b.utilized,
+          valueType: b.valueType,
+        }))}
       />
     </div>
   );

@@ -1,17 +1,15 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
 import { 
   TrendingUp, TrendingDown, Target, PieChart, BarChart3, 
-  ArrowUpRight, ArrowDownRight, Calendar, DollarSign, ChevronRight
+  ArrowUpRight, ArrowDownRight, Calendar, DollarSign
 } from 'lucide-react';
 import { ChartContainer, AnimatedBarChart, AnimatedRadarChart, AnimatedDonutChart, StackedAreaChart } from '@/components/charts';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { motion } from 'framer-motion';
-import { CompensationBreakdownModal } from '@/components/employee/CompensationBreakdownModal';
 
 // Demo data with valueType categorization
 type BenefitValueType = 'guaranteed' | 'employer_cost' | 'performance' | 'budget';
@@ -119,13 +117,6 @@ const benefitDistributionAr = [
 export default function BenefitsAnalysis() {
   const { t, language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
-  const [compensationModalOpen, setCompensationModalOpen] = useState(false);
-
-  // Demo salary data
-  const salaryData = {
-    monthlySalary: 35000,
-    annualSalary: 420000,
-  };
 
   const calculatedMetrics = useMemo(() => {
     const guaranteedBenefitValue = benefits.filter(b => b.valueType === 'guaranteed').reduce((sum, b) => sum + b.value, 0);
@@ -171,51 +162,6 @@ export default function BenefitsAnalysis() {
           {isRTL ? 'رؤى تفصيلية حول استخدام وتوزيع مزاياك' : 'Detailed insights into your benefits utilization and distribution'}
         </p>
       </div>
-
-      {/* Total Compensation Card - Clickable */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <Card 
-          className="relative overflow-hidden border border-border/50 p-4 cursor-pointer hover:shadow-md hover:border-accent/30 transition-all group"
-          onClick={() => setCompensationModalOpen(true)}
-        >
-          {/* Gradient background */}
-          <div className="absolute inset-0 bg-white dark:bg-card" />
-          <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-accent/10 via-accent/5 to-transparent" />
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-amber-500/10 via-amber-500/5 to-transparent" />
-          
-          <div className="relative z-10">
-            <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-              <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-                <div className="p-2 rounded-lg bg-accent/15">
-                  <DollarSign className="w-5 h-5 text-accent" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground">
-                    {isRTL ? 'إجمالي التعويضات المضمونة' : 'Total Guaranteed Compensation'}
-                  </h3>
-                  <p className="text-[11px] text-muted-foreground">
-                    {isRTL ? 'انقر لعرض التفاصيل الكاملة' : 'Click to view full breakdown'}
-                  </p>
-                </div>
-              </div>
-              <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-                <div className={cn("text-right", isRTL && "text-left")}>
-                  <p className="text-2xl font-bold text-foreground">
-                    {formatCurrency(salaryData.annualSalary + calculatedMetrics.guaranteedBenefitValue)}
-                  </p>
-                  <p className="text-[10px] text-amber-600/80">
-                    {isRTL 
-                      ? `الإجمالي المحتمل: ${formatCurrency(salaryData.annualSalary + calculatedMetrics.totalBenefitValue)}`
-                      : `Potential: ${formatCurrency(salaryData.annualSalary + calculatedMetrics.totalBenefitValue)}`}
-                  </p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
-              </div>
-            </div>
-          </div>
-        </Card>
-      </motion.div>
-
       {/* Quick Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}>
@@ -441,15 +387,6 @@ export default function BenefitsAnalysis() {
           </div>
         </Card>
       </div>
-
-      {/* Compensation Breakdown Modal */}
-      <CompensationBreakdownModal
-        open={compensationModalOpen}
-        onOpenChange={setCompensationModalOpen}
-        isRTL={isRTL}
-        salaryData={salaryData}
-        benefits={benefits}
-      />
     </div>
   );
 }
