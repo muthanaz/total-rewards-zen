@@ -89,7 +89,10 @@ export function CompensationGrid({ metrics, totalCompensation, isRTL = false }: 
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-accent/10"
-                        onClick={totalCompensation.onTogglePrivacy}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          totalCompensation.onTogglePrivacy?.();
+                        }}
                         aria-label={totalCompensation.salaryHidden ? 'Show salary' : 'Hide salary'}
                       >
                         {totalCompensation.salaryHidden ? (
