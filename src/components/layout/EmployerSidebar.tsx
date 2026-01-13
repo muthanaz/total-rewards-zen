@@ -4,18 +4,18 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
   DollarSign,
-  Ghost,
+  Recycle,
   Users,
   FileCheck,
   ShoppingBag,
-  FileText,
   Lightbulb,
   Menu,
   X,
   LogOut,
-  Database,
+  Settings,
   BookOpen,
   ChevronDown,
+  AlertCircle,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -23,54 +23,68 @@ import { Button } from '@/components/ui/button';
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
-
-interface NavGroup {
-  titleKey: string;
-  items: NavItem[];
-}
+import { Badge } from '@/components/ui/badge';
 
 interface NavItem {
   labelKey: string;
   path: string;
   icon: React.ElementType;
+  badge?: number;
+  iconColor?: string;
 }
 
-// Grouped navigation for better organization
+interface NavGroup {
+  titleKey: string;
+  items: NavItem[];
+  defaultOpen?: boolean;
+}
+
+// Restructured navigation for action-oriented flow
 const navigationGroups: NavGroup[] = [
   {
-    titleKey: 'nav.group.overview',
+    titleKey: 'nav.group.commandCenter',
     items: [
-      { labelKey: 'nav.overview', path: '/employer', icon: LayoutDashboard },
+      { labelKey: 'nav.commandCenter', path: '/employer', icon: LayoutDashboard, iconColor: 'text-primary' },
     ],
+    defaultOpen: true,
   },
   {
-    titleKey: 'nav.group.operations',
+    titleKey: 'nav.group.actionQueue',
     items: [
-      { labelKey: 'nav.claimsApprovals', path: '/employer/claims', icon: FileCheck },
-      { labelKey: 'nav.employeeSegments', path: '/employer/segments', icon: Users },
+      { labelKey: 'nav.claimsApprovals', path: '/employer/claims', icon: FileCheck, badge: 12, iconColor: 'text-amber-500' },
     ],
+    defaultOpen: true,
   },
   {
-    titleKey: 'nav.group.financials',
+    titleKey: 'nav.group.spendIntelligence',
     items: [
-      { labelKey: 'nav.spendUtilization', path: '/employer/spend', icon: DollarSign },
-      { labelKey: 'nav.zombieSpend', path: '/employer/zombie', icon: Ghost },
+      { labelKey: 'nav.budgetUtilization', path: '/employer/spend', icon: DollarSign, iconColor: 'text-blue-500' },
+      { labelKey: 'nav.wasteRecovery', path: '/employer/zombie', icon: Recycle, iconColor: 'text-amber-500' },
     ],
+    defaultOpen: true,
   },
   {
-    titleKey: 'nav.group.analytics',
+    titleKey: 'nav.group.workforceInsights',
     items: [
-      { labelKey: 'nav.marketplaceAnalytics', path: '/employer/marketplace', icon: ShoppingBag },
-      { labelKey: 'nav.policyInsights', path: '/employer/policies', icon: FileText },
-      { labelKey: 'nav.recommendations', path: '/employer/recommendations', icon: Lightbulb },
+      { labelKey: 'nav.employeeSegments', path: '/employer/segments', icon: Users, iconColor: 'text-violet-500' },
+      { labelKey: 'nav.smartRecommendations', path: '/employer/recommendations', icon: Lightbulb, iconColor: 'text-emerald-500' },
     ],
+    defaultOpen: true,
   },
   {
-    titleKey: 'nav.group.settings',
+    titleKey: 'nav.group.marketplace',
     items: [
-      { labelKey: 'nav.integrations', path: '/employer/integrations', icon: Database },
-      { labelKey: 'nav.knowledgeCenter', path: '/employer/knowledge', icon: BookOpen },
+      { labelKey: 'nav.marketplaceAnalytics', path: '/employer/marketplace', icon: ShoppingBag, iconColor: 'text-pink-500' },
     ],
+    defaultOpen: true,
+  },
+  {
+    titleKey: 'nav.group.configuration',
+    items: [
+      { labelKey: 'nav.policyHub', path: '/employer/policies', icon: BookOpen, iconColor: 'text-slate-500' },
+      { labelKey: 'nav.integrations', path: '/employer/integrations', icon: Settings, iconColor: 'text-slate-500' },
+    ],
+    defaultOpen: false,
   },
 ];
 
@@ -80,7 +94,9 @@ export function EmployerSidebar() {
   const { signOut } = useAuth();
   const { t, direction } = useLanguage();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(navigationGroups.map(g => g.titleKey));
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(
+    navigationGroups.filter(g => g.defaultOpen !== false).map(g => g.titleKey)
+  );
   const isRTL = direction === 'rtl';
 
   const handleSignOut = async () => {
@@ -97,6 +113,11 @@ export function EmployerSidebar() {
         : [...prev, groupTitleKey]
     );
   };
+
+  // Calculate total pending actions
+  const totalPendingActions = navigationGroups
+    .flatMap(g => g.items)
+    .reduce((sum, item) => sum + (item.badge || 0), 0);
 
   const sidebarContent = (
     <>
@@ -119,6 +140,20 @@ export function EmployerSidebar() {
             </span>
           </div>
         </div>
+        
+        {/* Quick Stats Bar */}
+        {totalPendingActions > 0 && (
+          <div className={cn(
+            "flex items-center gap-2 mt-3 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20",
+            isRTL && "flex-row-reverse"
+          )}>
+            <AlertCircle className="w-4 h-4 text-amber-500" />
+            <span className="text-xs font-medium text-amber-600">
+              {totalPendingActions} {t('nav.pendingActions')}
+            </span>
+          </div>
+        )}
+        
         {/* Theme & Language Controls */}
         <div className={cn(
           "flex items-center gap-1 mt-3 pt-3 border-t border-sidebar-border/50",
@@ -136,7 +171,7 @@ export function EmployerSidebar() {
         isRTL && "text-right"
       )}>
         {navigationGroups.map((group) => (
-          <div key={group.titleKey} className="mb-3">
+          <div key={group.titleKey} className="mb-2">
             <button
               onClick={() => toggleGroup(group.titleKey)}
               className={cn(
@@ -159,13 +194,21 @@ export function EmployerSidebar() {
                     to={item.path}
                     onClick={() => setMobileOpen(false)}
                     className={cn(
-                      'nav-item',
+                      'nav-item relative',
                       isActive(item.path) && 'nav-item-active',
                       isRTL && 'flex-row-reverse text-right'
                     )}
                   >
-                    <item.icon className="w-4 h-4 shrink-0" />
+                    <item.icon className={cn("w-4 h-4 shrink-0", item.iconColor)} />
                     <span className={cn("text-sm flex-1", isRTL && "text-right")}>{t(item.labelKey)}</span>
+                    {item.badge && item.badge > 0 && (
+                      <Badge 
+                        variant="outline" 
+                        className="h-5 min-w-[20px] px-1.5 text-[10px] font-bold bg-amber-500/10 text-amber-600 border-amber-500/20"
+                      >
+                        {item.badge}
+                      </Badge>
+                    )}
                   </Link>
                 ))}
               </div>
