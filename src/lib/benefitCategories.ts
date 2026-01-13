@@ -1,8 +1,8 @@
 // =============================================================================
 // BENEFIT CATEGORY SYSTEM - SINGLE SOURCE OF TRUTH
 // =============================================================================
-// Unified benefit naming, colors, and categorization across the entire platform
-// Psychology-based color choices for intuitive recognition
+// Unified benefit grouping, colors, and categorization across the entire platform
+// Benefits are grouped by TYPE for consistent color coding
 
 import { 
   Home, GraduationCap, Heart, Car, Dumbbell, PiggyBank, 
@@ -10,25 +10,72 @@ import {
 } from 'lucide-react';
 
 // =============================================================================
-// COLOR DEFINITIONS (Psychology-based)
+// BENEFIT GROUP COLORS (3 Main Groups)
 // =============================================================================
-// Sky Blue: Trust, stability → Housing (home = security)
-// Purple: Wisdom, education → Schooling
-// Rose: Care, compassion → Health
-// Amber: Energy, warmth → Transport
-// Teal: Balance, wellness → Wellbeing (brand accent)
-// Emerald: Growth, prosperity → Financial
-// Indigo: Knowledge, depth → Learning
-// Orange: Enthusiasm, success → Bonus/Rewards
-// Violet: Premium, ownership → Equity
-// Cyan: Freedom, clarity → Leave/Time Off
+// Allowances (Housing, Education, Transport): Sky Blue - trust, stability
+// Health & Protection (Health Insurance, Wellbeing): Rose - care, compassion  
+// Financial & Rewards (Bonus, Financial, Equity, Learning): Emerald - growth, prosperity
+
+export type BenefitGroupKey = 'allowances' | 'health_protection' | 'financial_rewards';
+
+export interface BenefitGroup {
+  key: BenefitGroupKey;
+  label: string;
+  labelAr: string;
+  color: string;
+  bgClass: string;
+  bgLightClass: string;
+  textClass: string;
+  borderClass: string;
+  gradientClass: string;
+}
+
+export const BENEFIT_GROUPS: Record<BenefitGroupKey, BenefitGroup> = {
+  allowances: {
+    key: 'allowances',
+    label: 'Allowances',
+    labelAr: 'البدلات',
+    color: 'hsl(200, 95%, 48%)',
+    bgClass: 'bg-sky-500',
+    bgLightClass: 'bg-sky-500/10',
+    textClass: 'text-sky-600 dark:text-sky-400',
+    borderClass: 'border-sky-500/20',
+    gradientClass: 'from-sky-500 to-blue-600',
+  },
+  health_protection: {
+    key: 'health_protection',
+    label: 'Health & Protection',
+    labelAr: 'الصحة والحماية',
+    color: 'hsl(350, 80%, 55%)',
+    bgClass: 'bg-rose-500',
+    bgLightClass: 'bg-rose-500/10',
+    textClass: 'text-rose-600 dark:text-rose-400',
+    borderClass: 'border-rose-500/20',
+    gradientClass: 'from-rose-500 to-pink-600',
+  },
+  financial_rewards: {
+    key: 'financial_rewards',
+    label: 'Financial & Rewards',
+    labelAr: 'المالية والمكافآت',
+    color: 'hsl(155, 75%, 40%)',
+    bgClass: 'bg-emerald-500',
+    bgLightClass: 'bg-emerald-500/10',
+    textClass: 'text-emerald-600 dark:text-emerald-400',
+    borderClass: 'border-emerald-500/20',
+    gradientClass: 'from-emerald-500 to-green-600',
+  },
+};
+
+// =============================================================================
+// INDIVIDUAL BENEFIT CATEGORIES (for specific styling per benefit)
+// =============================================================================
 
 export const BENEFIT_CATEGORIES = {
   housing: {
     key: 'housing',
     label: 'Housing',
     fullLabel: 'Housing Allowance',
-    // Sky blue - trust, stability, security
+    group: 'allowances' as BenefitGroupKey,
     color: 'hsl(200, 95%, 48%)',
     bgClass: 'bg-sky-500',
     bgLightClass: 'bg-sky-500/10',
@@ -43,22 +90,37 @@ export const BENEFIT_CATEGORIES = {
     key: 'education',
     label: 'Education',
     fullLabel: 'Education Allowance',
-    // Purple - wisdom, creativity, education
-    color: 'hsl(270, 70%, 55%)',
-    bgClass: 'bg-purple-500',
-    bgLightClass: 'bg-purple-500/10',
-    textClass: 'text-purple-600 dark:text-purple-400',
-    borderClass: 'border-purple-500/20',
-    gradientClass: 'from-purple-500 to-violet-600',
+    group: 'allowances' as BenefitGroupKey,
+    color: 'hsl(200, 95%, 48%)',
+    bgClass: 'bg-sky-500',
+    bgLightClass: 'bg-sky-500/10',
+    textClass: 'text-sky-600 dark:text-sky-400',
+    borderClass: 'border-sky-500/20',
+    gradientClass: 'from-sky-500 to-blue-600',
     icon: GraduationCap,
     route: '/employee/schooling',
     description: 'Education support for dependents',
+  },
+  transport: {
+    key: 'transport',
+    label: 'Transport',
+    fullLabel: 'Transport & Mobility',
+    group: 'allowances' as BenefitGroupKey,
+    color: 'hsl(200, 95%, 48%)',
+    bgClass: 'bg-sky-500',
+    bgLightClass: 'bg-sky-500/10',
+    textClass: 'text-sky-600 dark:text-sky-400',
+    borderClass: 'border-sky-500/20',
+    gradientClass: 'from-sky-500 to-blue-600',
+    icon: Car,
+    route: '/employee/transport',
+    description: 'Monthly transport and annual flight tickets',
   },
   health: {
     key: 'health',
     label: 'Health Insurance',
     fullLabel: 'Health Insurance',
-    // Rose - care, compassion, heart
+    group: 'health_protection' as BenefitGroupKey,
     color: 'hsl(350, 80%, 55%)',
     bgClass: 'bg-rose-500',
     bgLightClass: 'bg-rose-500/10',
@@ -69,32 +131,17 @@ export const BENEFIT_CATEGORIES = {
     route: '/employee/health',
     description: 'Comprehensive health coverage for you and family',
   },
-  transport: {
-    key: 'transport',
-    label: 'Transport',
-    fullLabel: 'Transport & Mobility',
-    // Amber - energy, movement, warmth
-    color: 'hsl(35, 95%, 50%)',
-    bgClass: 'bg-amber-500',
-    bgLightClass: 'bg-amber-500/10',
-    textClass: 'text-amber-600 dark:text-amber-400',
-    borderClass: 'border-amber-500/20',
-    gradientClass: 'from-amber-500 to-orange-500',
-    icon: Car,
-    route: '/employee/transport',
-    description: 'Monthly transport and annual flight tickets',
-  },
   wellbeing: {
     key: 'wellbeing',
     label: 'Wellbeing',
     fullLabel: 'Wellbeing Program',
-    // Teal - balance, calm, wellness (brand accent)
-    color: 'hsl(174, 60%, 45%)',
-    bgClass: 'bg-teal-500',
-    bgLightClass: 'bg-teal-500/10',
-    textClass: 'text-teal-600 dark:text-teal-400',
-    borderClass: 'border-teal-500/20',
-    gradientClass: 'from-teal-500 to-emerald-500',
+    group: 'health_protection' as BenefitGroupKey,
+    color: 'hsl(350, 80%, 55%)',
+    bgClass: 'bg-rose-500',
+    bgLightClass: 'bg-rose-500/10',
+    textClass: 'text-rose-600 dark:text-rose-400',
+    borderClass: 'border-rose-500/20',
+    gradientClass: 'from-rose-500 to-pink-600',
     icon: Dumbbell,
     route: '/employee/wellbeing',
     description: 'Health and wellness benefits for mind and body',
@@ -103,7 +150,7 @@ export const BENEFIT_CATEGORIES = {
     key: 'financial',
     label: 'Financial',
     fullLabel: 'Financial Planning',
-    // Emerald - growth, prosperity, money
+    group: 'financial_rewards' as BenefitGroupKey,
     color: 'hsl(155, 75%, 40%)',
     bgClass: 'bg-emerald-500',
     bgLightClass: 'bg-emerald-500/10',
@@ -118,13 +165,13 @@ export const BENEFIT_CATEGORIES = {
     key: 'learning',
     label: 'Learning',
     fullLabel: 'Learning & Development',
-    // Indigo - knowledge, depth, wisdom
-    color: 'hsl(235, 75%, 58%)',
-    bgClass: 'bg-indigo-500',
-    bgLightClass: 'bg-indigo-500/10',
-    textClass: 'text-indigo-600 dark:text-indigo-400',
-    borderClass: 'border-indigo-500/20',
-    gradientClass: 'from-indigo-500 to-blue-600',
+    group: 'financial_rewards' as BenefitGroupKey,
+    color: 'hsl(155, 75%, 40%)',
+    bgClass: 'bg-emerald-500',
+    bgLightClass: 'bg-emerald-500/10',
+    textClass: 'text-emerald-600 dark:text-emerald-400',
+    borderClass: 'border-emerald-500/20',
+    gradientClass: 'from-emerald-500 to-green-600',
     icon: BookOpen,
     route: '/employee/learning',
     description: 'Professional development and training budget',
@@ -133,13 +180,13 @@ export const BENEFIT_CATEGORIES = {
     key: 'rewards',
     label: 'Bonus',
     fullLabel: 'Annual Bonus',
-    // Orange - enthusiasm, success, achievement
-    color: 'hsl(25, 95%, 55%)',
-    bgClass: 'bg-orange-500',
-    bgLightClass: 'bg-orange-500/10',
-    textClass: 'text-orange-600 dark:text-orange-400',
-    borderClass: 'border-orange-500/20',
-    gradientClass: 'from-orange-500 to-red-500',
+    group: 'financial_rewards' as BenefitGroupKey,
+    color: 'hsl(155, 75%, 40%)',
+    bgClass: 'bg-emerald-500',
+    bgLightClass: 'bg-emerald-500/10',
+    textClass: 'text-emerald-600 dark:text-emerald-400',
+    borderClass: 'border-emerald-500/20',
+    gradientClass: 'from-emerald-500 to-green-600',
     icon: Award,
     route: '/employee/bonus',
     description: 'Performance-based annual bonus',
@@ -148,13 +195,13 @@ export const BENEFIT_CATEGORIES = {
     key: 'equity',
     label: 'Equity',
     fullLabel: 'Equity & Options',
-    // Violet - premium, luxury, ownership
-    color: 'hsl(280, 70%, 55%)',
-    bgClass: 'bg-violet-500',
-    bgLightClass: 'bg-violet-500/10',
-    textClass: 'text-violet-600 dark:text-violet-400',
-    borderClass: 'border-violet-500/20',
-    gradientClass: 'from-violet-500 to-purple-600',
+    group: 'financial_rewards' as BenefitGroupKey,
+    color: 'hsl(155, 75%, 40%)',
+    bgClass: 'bg-emerald-500',
+    bgLightClass: 'bg-emerald-500/10',
+    textClass: 'text-emerald-600 dark:text-emerald-400',
+    borderClass: 'border-emerald-500/20',
+    gradientClass: 'from-emerald-500 to-green-600',
     icon: TrendingUp,
     route: '/employee/equity',
     description: 'Stock options and equity compensation',
@@ -163,7 +210,7 @@ export const BENEFIT_CATEGORIES = {
     key: 'timeoff',
     label: 'Leave',
     fullLabel: 'Leave Management',
-    // Cyan - freedom, clarity, refreshment
+    group: 'allowances' as BenefitGroupKey, // Leave is separate but uses neutral
     color: 'hsl(190, 90%, 45%)',
     bgClass: 'bg-cyan-500',
     bgLightClass: 'bg-cyan-500/10',
@@ -188,6 +235,7 @@ export interface BenefitDefinition {
   name: string;
   nameKey: string;
   category: BenefitCategoryKey;
+  group: BenefitGroupKey;
   icon: LucideIcon;
   route: string;
   description: string;
@@ -201,6 +249,7 @@ export const BENEFIT_DEFINITIONS: BenefitDefinition[] = [
     name: 'Housing Allowance',
     nameKey: 'benefit.housing',
     category: 'housing',
+    group: 'allowances',
     icon: Home,
     route: '/employee/housing',
     description: 'Monthly housing allowance paid with salary',
@@ -212,6 +261,7 @@ export const BENEFIT_DEFINITIONS: BenefitDefinition[] = [
     name: 'Education Allowance',
     nameKey: 'benefit.education',
     category: 'education',
+    group: 'allowances',
     icon: GraduationCap,
     route: '/employee/schooling',
     description: 'Education support for dependents',
@@ -219,21 +269,11 @@ export const BENEFIT_DEFINITIONS: BenefitDefinition[] = [
     bulletsAr: ['لكل طفل حتى ١٨ عاماً', 'يغطي الرسوم الدراسية فقط'],
   },
   {
-    key: 'health',
-    name: 'Health Insurance',
-    nameKey: 'benefit.health',
-    category: 'health',
-    icon: Heart,
-    route: '/employee/health',
-    description: 'Comprehensive health coverage',
-    bullets: ['Includes dental and optical', 'Covers spouse and children'],
-    bulletsAr: ['يشمل طب الأسنان والبصريات', 'يغطي الزوج/الزوجة والأطفال'],
-  },
-  {
     key: 'transport',
     name: 'Transport & Mobility',
     nameKey: 'benefit.transport',
     category: 'transport',
+    group: 'allowances',
     icon: Car,
     route: '/employee/transport',
     description: 'Monthly transport and flight tickets',
@@ -241,32 +281,23 @@ export const BENEFIT_DEFINITIONS: BenefitDefinition[] = [
     bulletsAr: ['يُدفع شهرياً مع الراتب', 'يشمل تذاكر الطيران السنوية'],
   },
   {
-    key: 'rewards',
-    name: 'Annual Bonus',
-    nameKey: 'benefit.bonus',
-    category: 'rewards',
-    icon: Award,
-    route: '/employee/bonus',
-    description: 'Performance-based annual bonus',
-    bullets: ['Performance-based (0-200%)', 'Target: 2 months salary'],
-    bulletsAr: ['مبني على الأداء (٠-٢٠٠٪)', 'الهدف: راتب شهرين'],
-  },
-  {
-    key: 'financial',
-    name: 'Financial Planning',
-    nameKey: 'benefit.financial',
-    category: 'financial',
-    icon: PiggyBank,
-    route: '/employee/financial',
-    description: 'Retirement savings with employer match',
-    bullets: ['5% employer match', 'Multiple fund options'],
-    bulletsAr: ['مطابقة ٥٪ من صاحب العمل', 'خيارات صناديق متعددة'],
+    key: 'health',
+    name: 'Health Insurance',
+    nameKey: 'benefit.health',
+    category: 'health',
+    group: 'health_protection',
+    icon: Heart,
+    route: '/employee/health',
+    description: 'Comprehensive health coverage',
+    bullets: ['Includes dental and optical', 'Covers spouse and children'],
+    bulletsAr: ['يشمل طب الأسنان والبصريات', 'يغطي الزوج/الزوجة والأطفال'],
   },
   {
     key: 'wellbeing',
     name: 'Wellbeing Program',
     nameKey: 'benefit.wellbeing',
     category: 'wellbeing',
+    group: 'health_protection',
     icon: Dumbbell,
     route: '/employee/wellbeing',
     description: 'Health and wellness benefits',
@@ -274,10 +305,35 @@ export const BENEFIT_DEFINITIONS: BenefitDefinition[] = [
     bulletsAr: ['عضوية النادي الرياضي مغطاة', 'اشتراك تطبيق العافية'],
   },
   {
+    key: 'financial',
+    name: 'Financial Planning',
+    nameKey: 'benefit.financial',
+    category: 'financial',
+    group: 'financial_rewards',
+    icon: PiggyBank,
+    route: '/employee/financial',
+    description: 'Retirement savings with employer match',
+    bullets: ['5% employer match', 'Multiple fund options'],
+    bulletsAr: ['مطابقة ٥٪ من صاحب العمل', 'خيارات صناديق متعددة'],
+  },
+  {
+    key: 'rewards',
+    name: 'Annual Bonus',
+    nameKey: 'benefit.bonus',
+    category: 'rewards',
+    group: 'financial_rewards',
+    icon: Award,
+    route: '/employee/bonus',
+    description: 'Performance-based annual bonus',
+    bullets: ['Performance-based (0-200%)', 'Target: 2 months salary'],
+    bulletsAr: ['مبني على الأداء (٠-٢٠٠٪)', 'الهدف: راتب شهرين'],
+  },
+  {
     key: 'learning',
     name: 'Learning & Development',
     nameKey: 'benefit.learning',
     category: 'learning',
+    group: 'financial_rewards',
     icon: BookOpen,
     route: '/employee/learning',
     description: 'Professional development budget',
@@ -289,6 +345,7 @@ export const BENEFIT_DEFINITIONS: BenefitDefinition[] = [
     name: 'Equity & Options',
     nameKey: 'benefit.equity',
     category: 'equity',
+    group: 'financial_rewards',
     icon: TrendingUp,
     route: '/employee/equity',
     description: 'Stock options and equity compensation',
@@ -300,6 +357,7 @@ export const BENEFIT_DEFINITIONS: BenefitDefinition[] = [
     name: 'Leave Management',
     nameKey: 'benefit.leave',
     category: 'timeoff',
+    group: 'allowances',
     icon: Calendar,
     route: '/employee/leave',
     description: 'Annual, sick, and other leave types',
@@ -356,6 +414,11 @@ export function getBenefitCategory(benefitName: string): BenefitCategory {
   return BENEFIT_CATEGORIES[key] || BENEFIT_CATEGORIES.wellbeing;
 }
 
+export function getBenefitGroup(benefitName: string): BenefitGroup {
+  const cat = getBenefitCategory(benefitName);
+  return BENEFIT_GROUPS[cat.group];
+}
+
 export function getBenefitDefinition(key: BenefitCategoryKey): BenefitDefinition | undefined {
   return BENEFIT_DEFINITIONS.find(b => b.key === key);
 }
@@ -392,4 +455,12 @@ export const BENEFIT_TYPE_TO_CATEGORY: Record<string, BenefitCategoryKey> = {
 
 export function getCategoryColorsArray(): string[] {
   return Object.values(BENEFIT_CATEGORIES).map(cat => cat.color);
+}
+
+// Get chart colors based on benefit groups (for consistent pie/bar charts)
+export function getGroupChartColors(): { name: string; color: string }[] {
+  return Object.values(BENEFIT_GROUPS).map(g => ({
+    name: g.label,
+    color: g.color,
+  }));
 }
