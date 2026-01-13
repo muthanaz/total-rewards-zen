@@ -84,31 +84,42 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.3 }}
       >
-        <Card className="relative overflow-hidden border-2 border-accent/40 bg-gradient-to-r from-accent/10 via-accent/5 to-purple-500/10 p-4">
+        <Card className="relative overflow-hidden border-2 border-accent/40 bg-gradient-to-br from-accent/15 via-accent/5 to-purple-500/15 p-5">
           {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+          <div className="absolute top-0 right-0 w-40 h-40 bg-accent/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/15 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4" />
+          <div className="absolute top-1/2 left-1/2 w-20 h-20 bg-accent/10 rounded-full blur-xl -translate-x-1/2 -translate-y-1/2" />
           
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            {/* Visual equation */}
-            <div className={cn("flex items-center gap-2 flex-wrap", isRTL && "flex-row-reverse")}>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/15 border border-accent/20">
-                <span className="text-xs font-semibold text-accent">{isRTL ? 'الراتب السنوي' : 'Annual Salary'}</span>
+          <div className="relative z-10">
+            {/* Label at top */}
+            <div className={cn("flex items-center gap-2 mb-4", isRTL && "flex-row-reverse")}>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center">
+                <span className="text-white font-bold text-sm">Σ</span>
               </div>
-              <span className="text-lg font-bold text-muted-foreground">+</span>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/15 border border-purple-500/20">
-                <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">{isRTL ? 'قيمة المزايا' : 'Benefits Value'}</span>
-              </div>
-              <span className="text-lg font-bold text-muted-foreground">=</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-accent">
+                {isRTL ? 'إجمالي التعويضات السنوية' : 'Total Annual Compensation'}
+              </span>
+              <InfoTooltip formula={totalCompensation.formula} dataSource={totalCompensation.dataSource} />
             </div>
             
-            {/* Total value */}
-            <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-              <div>
-                <p className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">{totalCompensation.value}</p>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{isRTL ? 'إجمالي التعويضات السنوية' : 'Total Annual Compensation'}</p>
+            {/* Main value - prominent display */}
+            <div className={cn("mb-4", isRTL && "text-right")}>
+              <p className="text-3xl md:text-4xl font-bold text-foreground tracking-tight leading-none">
+                {totalCompensation.value}
+              </p>
+            </div>
+            
+            {/* Visual equation breakdown */}
+            <div className={cn("flex items-center gap-2 flex-wrap pt-3 border-t border-accent/20", isRTL && "flex-row-reverse")}>
+              <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-accent/20 border border-accent/30">
+                <div className="w-2 h-2 rounded-full bg-accent" />
+                <span className="text-xs font-semibold text-foreground">{isRTL ? 'الراتب السنوي' : 'Annual Salary'}</span>
               </div>
-              <InfoTooltip formula={totalCompensation.formula} dataSource={totalCompensation.dataSource} />
+              <span className="text-lg font-bold text-accent">+</span>
+              <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30">
+                <div className="w-2 h-2 rounded-full bg-purple-500" />
+                <span className="text-xs font-semibold text-foreground">{isRTL ? 'قيمة المزايا' : 'Benefits Value'}</span>
+              </div>
             </div>
           </div>
         </Card>
