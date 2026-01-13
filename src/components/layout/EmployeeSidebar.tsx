@@ -68,8 +68,7 @@ const navigation: NavGroup[] = [
   {
     labelKey: 'nav.hrServices',
     items: [
-      { labelKey: 'nav.hrDocuments', path: '/employee/documents', icon: FileText },
-      { labelKey: 'nav.claimsRequests', path: '/employee/documents?tab=claims', icon: Receipt },
+      { labelKey: 'nav.hrClaims', path: '/employee/documents', icon: FileText },
       { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
     ],
   },
@@ -216,7 +215,7 @@ export function EmployeeSidebar() {
       </div>
 
       {/* Smart Profile - Distinguished Section */}
-      <div className={cn("px-3 pb-3", isRTL && "text-right")}>
+      <div className={cn("px-3 pb-2", isRTL && "text-right")}>
         <Link
           to="/employee/profile"
           onClick={() => setMobileOpen(false)}
