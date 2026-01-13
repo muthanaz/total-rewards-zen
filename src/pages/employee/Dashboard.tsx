@@ -3,14 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { 
   DollarSign, Home, GraduationCap, 
-  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote, Eye, EyeOff
+  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote, AlertCircle, CheckCircle2, Clock
 } from 'lucide-react';
 import { BENEFIT_TYPE_COLORS } from '@/lib/constants';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
 import { BenefitActionButtons } from '@/components/employee/BenefitActionButtons';
-import { DateRangeFilter, BenefitsDrillDownSheet } from '@/components/dashboard';
+import { BenefitsDrillDownSheet, SmartInsights } from '@/components/dashboard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CompensationGrid } from '@/components/ui/compensation-summary-card';
 import { BenefitsUtilizationCard } from '@/components/ui/benefits-utilization-card';
@@ -52,7 +53,6 @@ export default function EmployeeDashboard() {
   const { isElementVisible } = useUIVisibility();
   const { salaryHidden, toggleSalaryVisibility } = usePrivacy();
   const isRTL = direction === 'rtl';
-  const [dateRange, setDateRange] = useState({ from: new Date(), to: new Date() });
   const [benefitsSheetOpen, setBenefitsSheetOpen] = useState(false);
   const [benefitsSheetCategory, setBenefitsSheetCategory] = useState<'fully-utilized' | 'room-to-use' | null>(null);
   const [compensationModalOpen, setCompensationModalOpen] = useState(false);
@@ -60,8 +60,6 @@ export default function EmployeeDashboard() {
   // Check visibility for each section
   const showCompensationSummary = isElementVisible('employee', 'dashboard', 'compensation_summary');
   const showYourBenefits = isElementVisible('employee', 'dashboard', 'your_benefits');
-  const showBenefitHighlights = isElementVisible('employee', 'dashboard', 'benefit_highlights');
-  const showRequestWidget = isElementVisible('employee', 'dashboard', 'request_widget');
   const showSatisfactionSurvey = isElementVisible('employee', 'dashboard', 'satisfaction_survey');
   
   // Calculate derived metrics from actual benefit data
@@ -135,9 +133,33 @@ export default function EmployeeDashboard() {
     setBenefitsSheetOpen(true);
   };
 
-  const handleExport = (format: 'csv' | 'pdf') => {
-    // Demo export functionality
-    console.log(`Exporting data as ${format}`);
+  // Helper to get utilization status badge
+  const getUtilizationBadge = (utilization: number) => {
+    if (utilization >= 100) {
+      return (
+        <Badge className="bg-emerald-500/10 text-emerald-600 border-0 text-[9px] px-1.5 py-0 gap-0.5">
+          <CheckCircle2 className="w-2.5 h-2.5" />
+          {isRTL ? 'مكتمل' : 'Complete'}
+        </Badge>
+      );
+    }
+    if (utilization < 30) {
+      return (
+        <Badge className="bg-amber-500/10 text-amber-600 border-0 text-[9px] px-1.5 py-0 gap-0.5">
+          <AlertCircle className="w-2.5 h-2.5" />
+          {isRTL ? 'فرصة' : 'Opportunity'}
+        </Badge>
+      );
+    }
+    if (utilization < 70) {
+      return (
+        <Badge className="bg-blue-500/10 text-blue-600 border-0 text-[9px] px-1.5 py-0 gap-0.5">
+          <Clock className="w-2.5 h-2.5" />
+          {isRTL ? 'قيد الاستخدام' : 'In Progress'}
+        </Badge>
+      );
+    }
+    return null;
   };
 
   // 4 Key Metrics with info tooltips - Now showing guaranteed values prominently
@@ -215,7 +237,7 @@ export default function EmployeeDashboard() {
   
   return (
     <div className="space-y-5 animate-fade-in">
-      {/* Header with Date Filter */}
+      {/* Header - Simplified without Date Filter */}
       <div className={cn(
         "flex flex-col md:flex-row md:items-center justify-between gap-4",
         isRTL && "md:flex-row-reverse"
@@ -224,11 +246,6 @@ export default function EmployeeDashboard() {
           <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">{t('employee.dashboard.title')}</h1>
           <p className="text-muted-foreground">{t('employee.dashboard.subtitle')}</p>
         </div>
-        <DateRangeFilter 
-          onRangeChange={setDateRange}
-          onExport={handleExport}
-          showExport={true}
-        />
       </div>
 
       {/* Compensation Summary Grid */}
@@ -278,9 +295,12 @@ export default function EmployeeDashboard() {
                       <benefit.icon className="w-3 h-3 text-accent" />
                     </div>
                     <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
-                      <h3 className="font-medium text-xs truncate group-hover:text-accent transition-colors leading-tight">
-                        {t(benefit.nameKey)}
-                      </h3>
+                      <div className={cn("flex items-center gap-1 flex-wrap", isRTL && "flex-row-reverse justify-end")}>
+                        <h3 className="font-medium text-xs truncate group-hover:text-accent transition-colors leading-tight">
+                          {t(benefit.nameKey)}
+                        </h3>
+                        {getUtilizationBadge(utilization)}
+                      </div>
                       <span className={`${BENEFIT_TYPE_COLORS[benefit.type]} text-[9px]`}>
                         {t(`benefit.${benefit.type}`)}
                       </span>
@@ -334,62 +354,17 @@ export default function EmployeeDashboard() {
         </div>
       )}
 
-      {/* Benefit Highlights Section */}
-      {showBenefitHighlights && (
-      <div>
-        <h2 className={cn("text-base font-display font-semibold mb-3", isRTL && "text-right")}>
-          {isRTL ? 'ملخص المزايا' : 'Benefit Highlights'}
-        </h2>
-        <div className="grid grid-cols-3 gap-2">
-          <div 
-            className="p-3 rounded-lg bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 cursor-pointer hover:border-emerald-500/40 hover:shadow-sm transition-all group"
-            onClick={() => handleHighlightClick('fully-utilized')}
-          >
-            <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-              <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <p className="text-xs font-semibold text-emerald-600">{t('employee.dashboard.fullyUtilized')}</p>
-              </div>
-              <ChevronIcon className={cn(
-                "w-3 h-3 text-emerald-500 opacity-0 group-hover:opacity-100 transition-all",
-                !isRTL && "group-hover:translate-x-0.5",
-                isRTL && "group-hover:-translate-x-0.5"
-              )} />
-            </div>
-            <p className={cn("text-[10px] text-muted-foreground mt-1", isRTL && "text-right")}>
-              {benefits.filter(b => (b.utilized / b.value) >= 1).length} {t('employee.dashboard.benefitsAt100')}
-            </p>
-          </div>
-          <div 
-            className="p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20 cursor-pointer hover:border-amber-500/40 hover:shadow-sm transition-all group"
-            onClick={() => handleHighlightClick('room-to-use')}
-          >
-            <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-              <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
-                <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                <p className="text-xs font-semibold text-amber-600">{t('employee.dashboard.roomToUse')}</p>
-              </div>
-              <ChevronIcon className={cn(
-                "w-3 h-3 text-amber-500 opacity-0 group-hover:opacity-100 transition-all",
-                !isRTL && "group-hover:translate-x-0.5",
-                isRTL && "group-hover:-translate-x-0.5"
-              )} />
-            </div>
-            <p className={cn("text-[10px] text-muted-foreground mt-1", isRTL && "text-right")}>
-              {benefits.filter(b => (b.utilized / b.value) < 1).length} {t('employee.dashboard.benefitsWithRemaining')}
-            </p>
-          </div>
-          <div className="p-3 rounded-lg bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20">
-            <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
-              <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-              <p className="text-xs font-semibold text-accent">{t('employee.dashboard.thisMonth')}</p>
-            </div>
-            <p className={cn("text-[10px] text-muted-foreground mt-1", isRTL && "text-right")}>
-              {isRTL ? '٣ تفعيلات، ٢ مطالبات' : '3 activations, 2 claims'}
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Smart Insights - AI-powered recommendations replacing Benefit Highlights */}
+      {showCompensationSummary && (
+        <SmartInsights 
+          benefits={benefits.map(b => ({
+            name: b.name,
+            value: b.value,
+            utilized: b.utilized,
+            route: b.route,
+            valueType: b.valueType,
+          }))}
+        />
       )}
 
       {/* Satisfaction Survey Section */}
