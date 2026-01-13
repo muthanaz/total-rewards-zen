@@ -20,7 +20,7 @@ export function PrivacyToggle({
   className,
   size = 'default',
 }: PrivacyToggleProps) {
-  const [internalHidden, setInternalHidden] = useState(true);
+  const [internalHidden, setInternalHidden] = useState(false);
   
   // Use controlled state if provided, otherwise use internal state
   const isHidden = controlledHidden !== undefined ? controlledHidden : internalHidden;
@@ -92,7 +92,7 @@ interface PrivacyContextType {
 const PrivacyContext = createContext<PrivacyContextType | undefined>(undefined);
 
 export function PrivacyProvider({ children }: { children: ReactNode }) {
-  const [salaryHidden, setSalaryHidden] = useState(true);
+  const [salaryHidden, setSalaryHidden] = useState(false);
   
   const toggleSalaryVisibility = () => setSalaryHidden(prev => !prev);
 
