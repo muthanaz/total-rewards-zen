@@ -22,6 +22,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 
 interface NavGroup {
   titleKey: string;
@@ -123,6 +124,7 @@ export function EmployerSidebar() {
           "flex items-center gap-1 mt-3 pt-3 border-t border-sidebar-border/50",
           isRTL && "flex-row-reverse"
         )}>
+          <NotificationCenter />
           <LanguageSwitcher />
           <DarkModeToggle />
         </div>
