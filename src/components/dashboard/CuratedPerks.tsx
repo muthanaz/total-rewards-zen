@@ -253,8 +253,8 @@ export function CuratedPerks({ onActivate }: CuratedPerksProps) {
             )}
 
             <CardContent className="p-4 space-y-3">
-              {/* Match Quality Badge - Below image, not overlapping title */}
-              <Badge className={cn("gap-1 text-[10px] w-fit", getMatchBadgeColor(offer.matchStrength))}>
+              {/* Match Quality Badge */}
+              <Badge className={cn("gap-1 text-xs w-fit", getMatchBadgeColor(offer.matchStrength))}>
                 {getMatchIcon(offer.matchStrength)}
                 {offer.matchStrength === 'strong' ? 'Top Match' : 
                  offer.matchStrength === 'good' ? 'Great Fit' : 'For You'}
@@ -262,20 +262,20 @@ export function CuratedPerks({ onActivate }: CuratedPerksProps) {
 
               {/* Title & Merchant */}
               <div>
-                <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-accent transition-colors min-h-[40px]">
+                <h3 className="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-accent transition-colors min-h-[40px]">
                   {offer.title}
                 </h3>
-                <p className="text-xs text-muted-foreground mt-1">{offer.merchant}</p>
+                <p className="text-sm text-muted-foreground mt-1">{offer.merchant}</p>
               </div>
 
               {/* Category & Rating */}
               <div className="flex items-center justify-between gap-2">
-                <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
+                <Badge variant="secondary" className="text-xs px-2 py-0.5">
                   {offer.category}
                 </Badge>
                 {offer.rating && (
-                  <span className="flex items-center gap-1 text-xs text-amber-500 font-medium">
-                    <Star className="w-3 h-3 fill-current" />
+                  <span className="flex items-center gap-1 text-sm text-amber-500 font-medium">
+                    <Star className="w-3.5 h-3.5 fill-current" />
                     {offer.rating}
                   </span>
                 )}
@@ -283,7 +283,7 @@ export function CuratedPerks({ onActivate }: CuratedPerksProps) {
 
               {/* Personalization Reason */}
               <div className="pt-2 border-t border-border/50">
-                <p className="text-[11px] text-accent/80 flex items-center gap-1.5">
+                <p className="text-xs text-accent flex items-center gap-1.5">
                   <Sparkles className="w-3 h-3" />
                   {offer.curationReason}
                 </p>
@@ -295,7 +295,7 @@ export function CuratedPerks({ onActivate }: CuratedPerksProps) {
                 className="w-full gap-2"
                 onClick={() => onActivate(offer)}
               >
-                <CheckCircle className="w-3.5 h-3.5" />
+                <CheckCircle className="w-4 h-4" />
                 Activate Offer
               </Button>
             </CardContent>

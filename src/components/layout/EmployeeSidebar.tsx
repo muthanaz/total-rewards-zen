@@ -32,8 +32,6 @@ import { Button } from '@/components/ui/button';
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
-import { BENEFIT_CATEGORIES, getSidebarIconColor } from '@/lib/benefitCategories';
-
 interface NavGroup {
   labelKey: string;
   items: NavItem[];
@@ -43,10 +41,9 @@ interface NavItem {
   labelKey: string;
   path: string;
   icon: React.ElementType;
-  colorClass?: string; // Benefit category color
 }
 
-// 9-Group Navigation Structure with Benefit Category Colors
+// 9-Group Navigation Structure
 const navigation: NavGroup[] = [
   {
     labelKey: 'nav.dashboard',
@@ -59,36 +56,36 @@ const navigation: NavGroup[] = [
   {
     labelKey: 'nav.allowances',
     items: [
-      { labelKey: 'nav.housing', path: '/employee/housing', icon: Home, colorClass: BENEFIT_CATEGORIES.housing.textClass },
-      { labelKey: 'nav.transport', path: '/employee/transport', icon: Car, colorClass: BENEFIT_CATEGORIES.transport.textClass },
-      { labelKey: 'nav.schooling', path: '/employee/schooling', icon: GraduationCap, colorClass: BENEFIT_CATEGORIES.education.textClass },
+      { labelKey: 'nav.housing', path: '/employee/housing', icon: Home },
+      { labelKey: 'nav.transport', path: '/employee/transport', icon: Car },
+      { labelKey: 'nav.schooling', path: '/employee/schooling', icon: GraduationCap },
     ],
   },
   {
     labelKey: 'nav.healthWellbeing',
     items: [
-      { labelKey: 'nav.healthInsurance', path: '/employee/health', icon: Heart, colorClass: BENEFIT_CATEGORIES.health.textClass },
-      { labelKey: 'nav.wellbeing', path: '/employee/wellbeing', icon: Dumbbell, colorClass: BENEFIT_CATEGORIES.wellbeing.textClass },
+      { labelKey: 'nav.healthInsurance', path: '/employee/health', icon: Heart },
+      { labelKey: 'nav.wellbeing', path: '/employee/wellbeing', icon: Dumbbell },
     ],
   },
   {
     labelKey: 'nav.financialRewards',
     items: [
-      { labelKey: 'nav.annualBonus', path: '/employee/bonus', icon: Award, colorClass: BENEFIT_CATEGORIES.rewards.textClass },
-      { labelKey: 'nav.financial', path: '/employee/financial', icon: PiggyBank, colorClass: BENEFIT_CATEGORIES.financial.textClass },
-      { labelKey: 'nav.equity', path: '/employee/equity', icon: TrendingUp, colorClass: BENEFIT_CATEGORIES.equity.textClass },
+      { labelKey: 'nav.annualBonus', path: '/employee/bonus', icon: Award },
+      { labelKey: 'nav.financial', path: '/employee/financial', icon: PiggyBank },
+      { labelKey: 'nav.equity', path: '/employee/equity', icon: TrendingUp },
     ],
   },
   {
     labelKey: 'nav.leave',
     items: [
-      { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar, colorClass: BENEFIT_CATEGORIES.timeoff.textClass },
+      { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
     ],
   },
   {
     labelKey: 'nav.learningDevelopment',
     items: [
-      { labelKey: 'nav.learning', path: '/employee/learning', icon: BookOpen, colorClass: BENEFIT_CATEGORIES.learning.textClass },
+      { labelKey: 'nav.learning', path: '/employee/learning', icon: BookOpen },
     ],
   },
   {
@@ -204,10 +201,7 @@ export function EmployeeSidebar() {
                       isRTL && 'flex-row-reverse text-right'
                     )}
                   >
-                    <item.icon className={cn(
-                      "w-4 h-4 shrink-0",
-                      !isActive(item.path) && item.colorClass
-                    )} />
+                    <item.icon className="w-4 h-4 shrink-0" />
                     <span className={cn("text-sm flex-1", isRTL && "text-right")}>{t(item.labelKey)}</span>
                   </Link>
                 ))}
