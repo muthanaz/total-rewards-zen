@@ -91,6 +91,10 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.account': 'Account',
     'nav.profile': 'Smart Profile',
     'nav.security': 'Security & Privacy',
+    'nav.allBenefits': 'All Benefits',
+    'nav.servicesSupport': 'Services & Support',
+    'nav.timeOff': 'Time Off',
+    'nav.myBenefits': 'My Benefits',
     
     // Employee Dashboard
     'employee.dashboard.title': 'Dashboard Overview',
@@ -281,6 +285,10 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.account': 'الحساب',
     'nav.profile': 'الملف الذكي',
     'nav.security': 'الأمان والخصوصية',
+    'nav.allBenefits': 'جميع المزايا',
+    'nav.servicesSupport': 'الخدمات والدعم',
+    'nav.timeOff': 'الإجازات',
+    'nav.myBenefits': 'مزاياي',
     
     // Employee Dashboard
     'employee.dashboard.title': 'نظرة عامة على لوحة التحكم',

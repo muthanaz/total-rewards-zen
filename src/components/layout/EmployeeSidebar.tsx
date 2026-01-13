@@ -45,12 +45,12 @@ interface NavItem {
   icon: React.ElementType;
 }
 
-// Consolidated navigation - reduced from 9 groups to 5 for better UX
+// Restructured navigation with logical groupings
 const navigation: NavGroup[] = [
   {
-    labelKey: 'nav.dashboard',
+    labelKey: 'nav.overview',
     items: [
-      { labelKey: 'nav.overview', path: '/employee', icon: LayoutDashboard },
+      { labelKey: 'nav.dashboard', path: '/employee', icon: LayoutDashboard },
       { labelKey: 'nav.allBenefits', path: '/employee/benefits', icon: Gift },
       { labelKey: 'nav.benefitsAnalysis', path: '/employee/benefits-analysis', icon: TrendingUp },
     ],
@@ -65,6 +65,7 @@ const navigation: NavGroup[] = [
       { labelKey: 'nav.wellbeing', path: '/employee/wellbeing', icon: Dumbbell },
       { labelKey: 'nav.annualBonus', path: '/employee/bonus', icon: Award },
       { labelKey: 'nav.financial', path: '/employee/financial', icon: PiggyBank },
+      { labelKey: 'nav.equity', path: '/employee/equity', icon: TrendingUp },
       { labelKey: 'nav.learning', path: '/employee/learning', icon: BookOpen },
     ],
   },
@@ -72,13 +73,17 @@ const navigation: NavGroup[] = [
     labelKey: 'nav.timeOff',
     items: [
       { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
-      { labelKey: 'nav.equity', path: '/employee/equity', icon: TrendingUp },
     ],
   },
   {
-    labelKey: 'nav.perksServices',
+    labelKey: 'nav.marketplace',
     items: [
       { labelKey: 'nav.perks', path: '/employee/marketplace', icon: ShoppingBag },
+    ],
+  },
+  {
+    labelKey: 'nav.servicesSupport',
+    items: [
       { labelKey: 'nav.documents', path: '/employee/documents', icon: FileText },
       { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
     ],

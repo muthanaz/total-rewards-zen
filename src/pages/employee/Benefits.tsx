@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
   Home, GraduationCap, Heart, Car, Dumbbell, PiggyBank, 
-  BookOpen, Plane, Search, ChevronRight, Filter, Gift
+  BookOpen, Search, ChevronRight, Filter, Gift, CheckCircle2, AlertCircle, TrendingUp
 } from 'lucide-react';
 import { BENEFIT_TYPE_COLORS, BENEFIT_TYPE_LABELS } from '@/lib/constants';
 import {
@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 const benefits = [
   { name: 'Housing Allowance', icon: Home, value: 120000, utilized: 120000, type: 'cash_allowances', area: 'home_living', route: '/employee/housing', description: 'Monthly housing allowance paid with salary', bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'] },
@@ -53,6 +54,22 @@ export default function BenefitsPage() {
 
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
 
+  // Calculate benefit highlights (merged from dashboard)
+  const benefitHighlights = useMemo(() => {
+    const fullyUtilized = benefits.filter(b => (b.utilized / b.value) >= 1);
+    const roomToUse = benefits.filter(b => (b.utilized / b.value) < 1 && (b.value - b.utilized) > 1000);
+    const totalValue = benefits.reduce((sum, b) => sum + b.value, 0);
+    const totalUtilized = benefits.reduce((sum, b) => sum + b.utilized, 0);
+    
+    return {
+      fullyUtilized,
+      roomToUse,
+      fullyUtilizedCount: fullyUtilized.length,
+      roomToUseCount: roomToUse.length,
+      totalRemaining: totalValue - totalUtilized,
+    };
+  }, []);
+
   const filteredBenefits = benefits.filter(benefit => {
     const matchesSearch = benefit.name.toLowerCase().includes(search.toLowerCase()) ||
                          benefit.description.toLowerCase().includes(search.toLowerCase());
@@ -85,6 +102,81 @@ export default function BenefitsPage() {
             {benefits.length} benefits • {formatCurrency(totalValue)} total value • {overallUtilization}% utilized
           </p>
         </div>
+      </div>
+
+      {/* Benefit Highlights - Merged from Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {/* Fully Utilized Card */}
+        <Card 
+          className={cn(
+            "cursor-pointer transition-all duration-300 overflow-hidden group",
+            "bg-gradient-to-br from-emerald-500/5 to-emerald-500/10 border-emerald-500/20 hover:border-emerald-500/40 hover:shadow-md"
+          )}
+          onClick={() => setUtilizationFilter('fully-utilized')}
+        >
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-emerald-500/10 shrink-0">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-sm text-emerald-700 dark:text-emerald-400">Fully Utilized</h3>
+                  <Badge className="bg-emerald-500/10 text-emerald-600 border-0 text-xs">
+                    {benefitHighlights.fullyUtilizedCount} benefits
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Great job! These benefits are at 100% utilization.
+                </p>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {benefitHighlights.fullyUtilized.slice(0, 3).map((b) => (
+                    <Badge key={b.name} variant="secondary" className="text-[10px] py-0 bg-emerald-500/5">
+                      {b.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Room to Use Card */}
+        <Card 
+          className={cn(
+            "cursor-pointer transition-all duration-300 overflow-hidden group",
+            "bg-gradient-to-br from-amber-500/5 to-amber-500/10 border-amber-500/20 hover:border-amber-500/40 hover:shadow-md"
+          )}
+          onClick={() => setUtilizationFilter('partial')}
+        >
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-amber-500/10 shrink-0">
+                <TrendingUp className="w-5 h-5 text-amber-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-sm text-amber-700 dark:text-amber-400">Room to Use</h3>
+                  <Badge className="bg-amber-500/10 text-amber-600 border-0 text-xs">
+                    {formatCurrency(benefitHighlights.totalRemaining)} available
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {benefitHighlights.roomToUseCount} benefits with remaining allocation to claim.
+                </p>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {benefitHighlights.roomToUse.slice(0, 3).map((b) => (
+                    <Badge key={b.name} variant="secondary" className="text-[10px] py-0 bg-amber-500/5">
+                      {b.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
