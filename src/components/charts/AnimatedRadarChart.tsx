@@ -62,7 +62,7 @@ export function AnimatedRadarChart({
               dataKey="subject" 
               tick={{ 
                 fill: 'hsl(var(--muted-foreground))', 
-                fontSize: 11,
+                fontSize: 10,
                 fontWeight: 500
               }}
               tickLine={false}
@@ -71,8 +71,8 @@ export function AnimatedRadarChart({
             <PolarRadiusAxis 
               angle={90} 
               domain={[0, maxValue]}
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
-              tickCount={4}
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9 }}
+              tickCount={3}
               axisLine={false}
               tickFormatter={(v) => `${v}%`}
             />

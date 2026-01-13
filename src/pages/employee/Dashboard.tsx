@@ -13,7 +13,7 @@ import { BENEFIT_TYPE_COLORS, BENEFIT_TYPE_LABELS } from '@/lib/constants';
 import { RequestClaimWidget } from '@/components/employee/RequestClaimWidget';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
 import { ChartContainer, AnimatedBarChart, AnimatedRadarChart } from '@/components/charts';
-import { DateRangeFilter, DrillDownModal, BenefitsDrillDownSheet, PersonalizedRecommendations, TrendIndicator } from '@/components/dashboard';
+import { DateRangeFilter, DrillDownModal, BenefitsDrillDownSheet } from '@/components/dashboard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { cn } from '@/lib/utils';
@@ -52,18 +52,18 @@ const benefits = [
 
 // Chart data with translations
 const utilizationByTypeEn = [
-  { name: 'Cash & Allowances', value: 195000, secondaryValue: 219000 },
-  { name: 'Health & Protection', value: 12500, secondaryValue: 45000 },
-  { name: 'Wealth & Ownership', value: 18000, secondaryValue: 36000 },
-  { name: 'Growth & Career', value: 4500, secondaryValue: 12000 },
+  { name: 'Cash', value: 195000, secondaryValue: 219000 },
+  { name: 'Health', value: 12500, secondaryValue: 45000 },
+  { name: 'Wealth', value: 18000, secondaryValue: 36000 },
+  { name: 'Growth', value: 4500, secondaryValue: 12000 },
   { name: 'Wellbeing', value: 3200, secondaryValue: 6000 },
 ];
 
 const utilizationByTypeAr = [
-  { name: 'البدلات النقدية', value: 195000, secondaryValue: 219000 },
-  { name: 'الصحة والحماية', value: 12500, secondaryValue: 45000 },
-  { name: 'الثروة والملكية', value: 18000, secondaryValue: 36000 },
-  { name: 'النمو والمسار المهني', value: 4500, secondaryValue: 12000 },
+  { name: 'النقدية', value: 195000, secondaryValue: 219000 },
+  { name: 'الصحة', value: 12500, secondaryValue: 45000 },
+  { name: 'الثروة', value: 18000, secondaryValue: 36000 },
+  { name: 'النمو', value: 4500, secondaryValue: 12000 },
   { name: 'الرفاهية', value: 3200, secondaryValue: 6000 },
 ];
 
@@ -198,7 +198,7 @@ export default function EmployeeDashboard() {
     console.log(`Exporting data as ${format}`);
   };
 
-// All 8 metrics in specified order - compact design
+// All 8 metrics in specified order - clean aligned design
   const allMetrics = [
     { 
       icon: DollarSign, 
@@ -207,12 +207,12 @@ export default function EmployeeDashboard() {
       formula: isRTL ? 'الراتب الأساسي / ١٢' : 'Base salary / 12',
       dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR System',
       variant: 'primary' as const,
-      secondaryValue: `${isRTL ? 'سنوي: ' : 'Annual: '}${formatCurrency(salaryData.annualSalary)}`,
+      secondaryValue: `${formatCurrency(salaryData.annualSalary)}/yr`,
     },
     { 
       icon: Gift, 
       value: formatCurrency(calculatedMetrics.totalBenefitValue), 
-      label: isRTL ? 'قيمة المزايا السنوية' : 'Annual Benefits Value',
+      label: isRTL ? 'قيمة المزايا السنوية' : 'Annual Benefits',
       formula: isRTL ? 'مجموع جميع قيم المزايا' : 'Sum of all benefit values',
       dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
       variant: 'info' as const,
@@ -225,7 +225,7 @@ export default function EmployeeDashboard() {
       formula: isRTL ? 'الراتب السنوي + قيمة المزايا' : 'Annual Salary + Benefits Value',
       dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR System',
       variant: 'primary' as const,
-      secondaryValue: null,
+      secondaryValue: isRTL ? 'راتب + مزايا' : 'Salary + Benefits',
     },
     { 
       icon: TrendingUp, 
@@ -234,7 +234,7 @@ export default function EmployeeDashboard() {
       formula: isRTL ? 'مجموع جميع المزايا المستخدمة' : 'Sum of all utilized benefits',
       dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
       variant: 'utilized' as const,
-      secondaryValue: `${calculatedMetrics.utilizationPercent}${isRTL ? '٪' : '%'} ${isRTL ? 'مستخدم' : 'utilized'}`,
+      secondaryValue: `${calculatedMetrics.utilizationPercent}% ${isRTL ? 'مستخدم' : 'utilized'}`,
     },
     { 
       icon: Sparkles, 
@@ -243,16 +243,16 @@ export default function EmployeeDashboard() {
       formula: isRTL ? 'إجمالي المزايا - المستخدم' : 'Total Benefits - Utilized',
       dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
       variant: 'remaining' as const,
-      secondaryValue: `${100 - calculatedMetrics.utilizationPercent}${isRTL ? '٪' : '%'} ${isRTL ? 'متبقي' : 'remaining'}`,
+      secondaryValue: `${100 - calculatedMetrics.utilizationPercent}% ${isRTL ? 'متبقي' : 'remaining'}`,
     },
     { 
       icon: Target, 
-      value: `${calculatedMetrics.benefitsAsPercentOfComp}${isRTL ? '٪' : '%'}`, 
+      value: `${calculatedMetrics.benefitsAsPercentOfComp}%`, 
       label: isRTL ? 'المزايا من التعويضات' : 'Benefits % of Comp',
       formula: isRTL ? 'المزايا / إجمالي التعويضات' : 'Benefits Value / Total Compensation',
       dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR System',
       variant: 'utilization' as const,
-      secondaryValue: isRTL ? 'مقياس رئيسي' : 'Key metric',
+      secondaryValue: null,
     },
     { 
       icon: Calendar, 
@@ -371,54 +371,59 @@ export default function EmployeeDashboard() {
         </div>
       </div>
 
-      {/* Benefit Highlights - Now below Your Benefits */}
-      <div className="grid grid-cols-3 gap-2">
-        <div 
-          className="p-3 rounded-lg bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 cursor-pointer hover:border-emerald-500/40 hover:shadow-sm transition-all group"
-          onClick={() => handleHighlightClick('fully-utilized')}
-        >
-          <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-            <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <p className="text-xs font-semibold text-emerald-600">{t('employee.dashboard.fullyUtilized')}</p>
+      {/* Benefit Highlights Section */}
+      <div>
+        <h2 className={cn("text-base font-display font-semibold mb-3", isRTL && "text-right")}>
+          {isRTL ? 'ملخص المزايا' : 'Benefit Highlights'}
+        </h2>
+        <div className="grid grid-cols-3 gap-2">
+          <div 
+            className="p-3 rounded-lg bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 cursor-pointer hover:border-emerald-500/40 hover:shadow-sm transition-all group"
+            onClick={() => handleHighlightClick('fully-utilized')}
+          >
+            <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+              <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <p className="text-xs font-semibold text-emerald-600">{t('employee.dashboard.fullyUtilized')}</p>
+              </div>
+              <ChevronIcon className={cn(
+                "w-3 h-3 text-emerald-500 opacity-0 group-hover:opacity-100 transition-all",
+                !isRTL && "group-hover:translate-x-0.5",
+                isRTL && "group-hover:-translate-x-0.5"
+              )} />
             </div>
-            <ChevronIcon className={cn(
-              "w-3 h-3 text-emerald-500 opacity-0 group-hover:opacity-100 transition-all",
-              !isRTL && "group-hover:translate-x-0.5",
-              isRTL && "group-hover:-translate-x-0.5"
-            )} />
+            <p className={cn("text-[10px] text-muted-foreground mt-1", isRTL && "text-right")}>
+              {benefits.filter(b => (b.utilized / b.value) >= 1).length} {t('employee.dashboard.benefitsAt100')}
+            </p>
           </div>
-          <p className={cn("text-[10px] text-muted-foreground mt-1", isRTL && "text-right")}>
-            {benefits.filter(b => (b.utilized / b.value) >= 1).length} {t('employee.dashboard.benefitsAt100')}
-          </p>
-        </div>
-        <div 
-          className="p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20 cursor-pointer hover:border-amber-500/40 hover:shadow-sm transition-all group"
-          onClick={() => handleHighlightClick('room-to-use')}
-        >
-          <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-            <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              <p className="text-xs font-semibold text-amber-600">{t('employee.dashboard.roomToUse')}</p>
+          <div 
+            className="p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20 cursor-pointer hover:border-amber-500/40 hover:shadow-sm transition-all group"
+            onClick={() => handleHighlightClick('room-to-use')}
+          >
+            <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+              <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                <p className="text-xs font-semibold text-amber-600">{t('employee.dashboard.roomToUse')}</p>
+              </div>
+              <ChevronIcon className={cn(
+                "w-3 h-3 text-amber-500 opacity-0 group-hover:opacity-100 transition-all",
+                !isRTL && "group-hover:translate-x-0.5",
+                isRTL && "group-hover:-translate-x-0.5"
+              )} />
             </div>
-            <ChevronIcon className={cn(
-              "w-3 h-3 text-amber-500 opacity-0 group-hover:opacity-100 transition-all",
-              !isRTL && "group-hover:translate-x-0.5",
-              isRTL && "group-hover:-translate-x-0.5"
-            )} />
+            <p className={cn("text-[10px] text-muted-foreground mt-1", isRTL && "text-right")}>
+              {benefits.filter(b => (b.utilized / b.value) < 1).length} {t('employee.dashboard.benefitsWithRemaining')}
+            </p>
           </div>
-          <p className={cn("text-[10px] text-muted-foreground mt-1", isRTL && "text-right")}>
-            {benefits.filter(b => (b.utilized / b.value) < 1).length} {t('employee.dashboard.benefitsWithRemaining')}
-          </p>
-        </div>
-        <div className="p-3 rounded-lg bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20">
-          <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
-            <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-            <p className="text-xs font-semibold text-accent">{t('employee.dashboard.thisMonth')}</p>
+          <div className="p-3 rounded-lg bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20">
+            <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
+              <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+              <p className="text-xs font-semibold text-accent">{t('employee.dashboard.thisMonth')}</p>
+            </div>
+            <p className={cn("text-[10px] text-muted-foreground mt-1", isRTL && "text-right")}>
+              {isRTL ? '٣ تفعيلات، ٢ مطالبات' : '3 activations, 2 claims'}
+            </p>
           </div>
-          <p className={cn("text-[10px] text-muted-foreground mt-1", isRTL && "text-right")}>
-            {isRTL ? '٣ تفعيلات، ٢ مطالبات' : '3 activations, 2 claims'}
-          </p>
         </div>
       </div>
 
@@ -465,8 +470,6 @@ export default function EmployeeDashboard() {
         </ChartContainer>
       </div>
 
-      {/* Personalized Recommendations */}
-      <PersonalizedRecommendations benefits={benefits} />
 
       {/* Request Widget Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
