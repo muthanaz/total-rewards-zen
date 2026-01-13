@@ -95,25 +95,19 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.3 }}
       >
-        <div className="relative rounded-xl p-[1.5px] bg-gradient-to-r from-accent via-transparent to-amber-400">
-          <Card className="relative overflow-hidden rounded-[10px] bg-gradient-to-r from-accent/12 via-white to-amber-100/30 dark:from-accent/15 dark:via-card dark:to-amber-900/15 p-5">
+        <div className="relative rounded-xl p-[1px] bg-gradient-to-r from-accent/40 via-border/30 to-amber-300/50">
+          <Card className="relative overflow-hidden rounded-[11px] bg-gradient-to-r from-accent/5 via-white to-amber-50/40 dark:from-accent/8 dark:via-card dark:to-amber-900/8 p-5">
             {/* Subtle decorative background */}
-            <div className="absolute top-0 left-0 w-[35%] h-full bg-gradient-to-r from-accent/10 to-transparent" />
-            <div className="absolute top-0 right-0 w-[35%] h-full bg-gradient-to-l from-amber-400/10 to-transparent" />
+            <div className="absolute top-0 left-0 w-[35%] h-full bg-gradient-to-r from-accent/5 to-transparent" />
+            <div className="absolute top-0 right-0 w-[35%] h-full bg-gradient-to-l from-amber-200/20 to-transparent" />
           
             <div className="relative z-10">
               <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
                 {/* Left side - Value */}
                 <div className={cn("flex-1", isRTL && "text-right")}>
                   {/* Header */}
-                  <div className={cn("flex items-center gap-2.5 mb-3", isRTL && "flex-row-reverse")}>
-                    <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
-                      <svg className="w-4 h-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M12 6v12M8 12h8" />
-                      </svg>
-                    </div>
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  <div className={cn("flex items-center gap-2 mb-2", isRTL && "flex-row-reverse")}>
+                    <h3 className="text-sm font-semibold text-foreground">
                       {isRTL ? 'إجمالي التعويضات السنوية' : 'Total Annual Compensation'}
                     </h3>
                     <InfoTooltip formula={totalCompensation.formula} dataSource={totalCompensation.dataSource} />
@@ -179,13 +173,13 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25, duration: 0.3 }}
       >
-        <Card className="relative border border-amber-300/40 bg-amber-50/30 dark:bg-amber-900/10 dark:border-amber-500/20 p-4">
+        <Card className="relative border border-amber-200/50 bg-amber-50/20 dark:bg-amber-900/5 dark:border-amber-500/15 p-4">
           <div className={cn("flex items-center justify-between mb-3", isRTL && "flex-row-reverse")}>
             <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-              <div className="w-6 h-6 rounded-lg bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-amber-500" />
+              <div className="w-6 h-6 rounded-lg bg-amber-100/60 dark:bg-amber-500/15 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-amber-400" />
               </div>
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              <h3 className="text-sm font-semibold text-foreground">
                 {isRTL ? 'استخدام المزايا' : 'Benefits Utilization'}
               </h3>
             </div>
@@ -193,9 +187,9 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
           </div>
           
           {/* Progress bar */}
-          <div className="relative h-2.5 bg-amber-100/60 dark:bg-amber-900/30 rounded-full overflow-hidden mb-3">
+          <div className="relative h-2.5 bg-amber-100/40 dark:bg-amber-900/20 rounded-full overflow-hidden mb-3">
             <motion.div 
-              className="absolute inset-y-0 left-0 bg-gradient-to-r from-accent to-teal-400 rounded-full"
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-300 to-amber-400 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${utilization.usedPercent}%` }}
               transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
@@ -205,20 +199,20 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
           {/* Used and Remaining */}
           <div className={cn("grid grid-cols-2 gap-4", isRTL && "direction-rtl")}>
             <div className={cn("flex items-center gap-2.5", isRTL && "flex-row-reverse")}>
-              <div className="w-2.5 h-2.5 rounded-full bg-accent" />
+              <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
               <div>
                 <p className="text-sm font-bold text-foreground">{utilization.used}</p>
                 <p className="text-[10px] text-muted-foreground">
-                  {isRTL ? 'مستخدم' : 'Used'} <span className="font-semibold text-accent">({utilization.usedPercent}%)</span>
+                  {isRTL ? 'مستخدم' : 'Used'} <span className="font-semibold text-amber-500">({utilization.usedPercent}%)</span>
                 </p>
               </div>
             </div>
             <div className={cn("flex items-center gap-2.5", isRTL && "flex-row-reverse text-right")}>
-              <div className="w-2.5 h-2.5 rounded-full bg-amber-200 dark:bg-amber-600/40" />
+              <div className="w-2.5 h-2.5 rounded-full bg-amber-200/80 dark:bg-amber-600/30" />
               <div>
                 <p className="text-sm font-bold text-foreground">{utilization.remaining}</p>
                 <p className="text-[10px] text-muted-foreground">
-                  {isRTL ? 'متاح' : 'Available'} <span className="font-semibold text-amber-500">({utilization.remainingPercent}%)</span>
+                  {isRTL ? 'متاح' : 'Available'} <span className="font-semibold text-amber-400">({utilization.remainingPercent}%)</span>
                 </p>
               </div>
             </div>
