@@ -1,67 +1,53 @@
-// Chart color palette - consistent, accessible colors for data visualization
-// Re-exports benefit colors for chart usage
+// Chart color palette - Unified platform theme
+// Single source of truth for all chart colors across the platform
 
-import { BENEFIT_COLORS, getChartColorArray } from './benefitColors';
+import { CHART_COLORS, getChartColorArray, getChartColor } from './benefitColors';
 
 export const chartColors = {
-  // Primary palette - for main data series
-  primary: 'hsl(172, 66%, 42%)', // Teal (wellbeing)
-  secondary: 'hsl(230, 70%, 58%)', // Indigo (learning)
+  // Primary palette - platform teal theme
+  primary: CHART_COLORS.primary,
+  secondary: CHART_COLORS.secondary,
   
-  // Categorical palette - benefit colors for charts
-  categorical: getChartColorArray(),
+  // Categorical palette - unified for all charts
+  categorical: CHART_COLORS.sequence,
   
-  // Status colors (not RAG - these are for general status)
-  success: 'hsl(152, 70%, 42%)',   // Emerald
-  warning: 'hsl(38, 92%, 52%)',     // Amber
-  error: 'hsl(345, 75%, 55%)',      // Rose
-  info: 'hsl(200, 85%, 55%)',       // Sky
-  
-  // Spend categories - mapped from benefit colors
-  health: BENEFIT_COLORS.health.chartColor,
-  housing: BENEFIT_COLORS.housing.chartColor,
-  education: BENEFIT_COLORS.education.chartColor,
-  transport: BENEFIT_COLORS.transport.chartColor,
-  wellbeing: BENEFIT_COLORS.wellbeing.chartColor,
-  financial: BENEFIT_COLORS.financial.chartColor,
-  learning: BENEFIT_COLORS.learning.chartColor,
-  bonus: BENEFIT_COLORS.rewards.chartColor,
-  equity: BENEFIT_COLORS.equity.chartColor,
-  leave: BENEFIT_COLORS.timeoff.chartColor,
+  // Status colors
+  success: CHART_COLORS.success,
+  warning: CHART_COLORS.warning,
+  info: CHART_COLORS.info,
+  error: 'hsl(0, 84%, 60%)',
   
   // Performance indicators
-  excellent: 'hsl(152, 70%, 42%)',  // Emerald
-  good: 'hsl(172, 66%, 42%)',       // Teal
-  average: 'hsl(38, 92%, 52%)',     // Amber
-  poor: 'hsl(345, 75%, 55%)',       // Rose
+  excellent: CHART_COLORS.success,
+  good: CHART_COLORS.primary,
+  average: CHART_COLORS.warning,
+  poor: 'hsl(0, 84%, 60%)',
   
   // Region colors for benchmarking
   regions: {
-    uae: 'hsl(172, 66%, 42%)',      // Teal
-    gcc: 'hsl(200, 85%, 55%)',      // Sky
-    mena: 'hsl(265, 70%, 58%)',     // Violet
-    global: 'hsl(230, 70%, 58%)',   // Indigo
+    uae: CHART_COLORS.primary,
+    gcc: CHART_COLORS.secondary,
+    mena: 'hsl(185, 70%, 42%)',
+    global: 'hsl(222, 47%, 30%)',
   },
   
   // Industry colors
   industries: {
-    technology: 'hsl(265, 70%, 58%)',  // Violet
-    finance: 'hsl(152, 70%, 42%)',     // Emerald
-    healthcare: 'hsl(345, 75%, 55%)',  // Rose
-    manufacturing: 'hsl(38, 92%, 52%)', // Amber
-    retail: 'hsl(200, 85%, 55%)',      // Sky
-    energy: 'hsl(28, 90%, 52%)',       // Orange
+    technology: 'hsl(199, 89%, 48%)',
+    finance: CHART_COLORS.success,
+    healthcare: CHART_COLORS.primary,
+    manufacturing: CHART_COLORS.warning,
+    retail: 'hsl(185, 70%, 42%)',
+    energy: 'hsl(38, 92%, 52%)',
   },
 };
 
-// Get color by index (cycles through categorical palette)
-export const getChartColor = (index: number): string => {
-  return chartColors.categorical[index % chartColors.categorical.length];
-};
+// Re-export helpers
+export { getChartColorArray, getChartColor };
 
 // Get colors for a stacked chart
 export const getStackedColors = (count: number): string[] => {
-  return chartColors.categorical.slice(0, count);
+  return CHART_COLORS.sequence.slice(0, count);
 };
 
 export default chartColors;
