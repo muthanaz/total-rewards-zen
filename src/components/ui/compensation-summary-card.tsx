@@ -107,7 +107,7 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
                 <div className={cn("flex-1", isRTL && "text-right")}>
                   {/* Header */}
                   <div className={cn("flex items-center gap-2 mb-2", isRTL && "flex-row-reverse")}>
-                    <h3 className="text-sm font-semibold text-foreground">
+                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       {isRTL ? 'إجمالي التعويضات السنوية' : 'Total Annual Compensation'}
                     </h3>
                     <InfoTooltip formula={totalCompensation.formula} dataSource={totalCompensation.dataSource} />
@@ -201,10 +201,10 @@ export function CompensationGrid({ metrics, totalCompensation, utilization, isRT
         <Card className="relative border border-amber-200/50 bg-amber-50/20 dark:bg-amber-900/5 dark:border-amber-500/15 p-4">
           <div className={cn("flex items-center justify-between mb-3", isRTL && "flex-row-reverse")}>
             <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-              <div className="w-6 h-6 rounded-lg bg-amber-100/60 dark:bg-amber-500/15 flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-amber-400" />
+              <div className="w-5 h-5 rounded-md bg-amber-100/60 dark:bg-amber-500/15 flex items-center justify-center">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
               </div>
-              <h3 className="text-sm font-semibold text-foreground">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 {isRTL ? 'استخدام المزايا' : 'Benefits Utilization'}
               </h3>
             </div>
