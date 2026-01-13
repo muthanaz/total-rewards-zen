@@ -57,8 +57,8 @@ const navigation: NavGroup[] = [
     labelKey: 'nav.allowances',
     items: [
       { labelKey: 'nav.housing', path: '/employee/housing', icon: Home },
-      { labelKey: 'nav.transport', path: '/employee/transport', icon: Car },
       { labelKey: 'nav.schooling', path: '/employee/schooling', icon: GraduationCap },
+      { labelKey: 'nav.transport', path: '/employee/transport', icon: Car },
     ],
   },
   {
@@ -71,8 +71,8 @@ const navigation: NavGroup[] = [
   {
     labelKey: 'nav.financialRewards',
     items: [
-      { labelKey: 'nav.annualBonus', path: '/employee/bonus', icon: Award },
       { labelKey: 'nav.financial', path: '/employee/financial', icon: PiggyBank },
+      { labelKey: 'nav.annualBonus', path: '/employee/bonus', icon: Award },
       { labelKey: 'nav.equity', path: '/employee/equity', icon: TrendingUp },
     ],
   },
@@ -89,9 +89,9 @@ const navigation: NavGroup[] = [
     ],
   },
   {
-    labelKey: 'nav.documentsClaims',
+    labelKey: 'nav.hrRequests',
     items: [
-      { labelKey: 'nav.documents', path: '/employee/documents', icon: FileText },
+      { labelKey: 'nav.hrDocuments', path: '/employee/documents', icon: FileText },
       { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
     ],
   },
