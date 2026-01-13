@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { 
   DollarSign, TrendingUp, Home, GraduationCap, 
-  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift
+  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote
 } from 'lucide-react';
 import { BENEFIT_TYPE_COLORS, BENEFIT_TYPE_LABELS } from '@/lib/constants';
 import { RequestClaimWidget } from '@/components/employee/RequestClaimWidget';
@@ -14,8 +14,7 @@ import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
 import { ChartContainer, AnimatedBarChart, AnimatedRadarChart } from '@/components/charts';
 import { DateRangeFilter, DrillDownModal, BenefitsDrillDownSheet } from '@/components/dashboard';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { CompensationSummaryCard } from '@/components/ui/compensation-summary-card';
+import { CompensationGrid } from '@/components/ui/compensation-summary-card';
 import { cn } from '@/lib/utils';
 
 // Demo data - core salary info
@@ -198,36 +197,58 @@ export default function EmployeeDashboard() {
     console.log(`Exporting data as ${format}`);
   };
 
-// Top 3 Summary Cards - Expert sequenced: Earnings → Value → Usage
-  const summaryCards = [
-    {
-      icon: DollarSign,
-      title: isRTL ? 'التعويضات' : 'Compensation',
-      variant: 'salary' as const,
-      metrics: [
-        { value: formatCurrency(salaryData.monthlySalary), label: isRTL ? 'الراتب الشهري' : 'Monthly Salary' },
-        { value: formatCurrency(calculatedMetrics.totalCompensation), label: isRTL ? 'إجمالي سنوي' : 'Total Annual', secondary: isRTL ? 'راتب + مزايا' : 'Salary + Benefits' },
-      ],
+  // 4 Key Metrics with info tooltips
+  const keyMetrics = [
+    { 
+      icon: Banknote, 
+      value: formatCurrency(salaryData.monthlySalary), 
+      label: isRTL ? 'الراتب الشهري' : 'Monthly Salary',
+      formula: isRTL ? 'الراتب الأساسي الشهري قبل الخصومات' : 'Base monthly salary before deductions',
+      dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR Payroll System',
+      variant: 'primary' as const,
     },
-    {
-      icon: Gift,
-      title: isRTL ? 'قيمة المزايا' : 'Benefits Package',
-      variant: 'benefits' as const,
-      metrics: [
-        { value: formatCurrency(calculatedMetrics.totalBenefitValue), label: isRTL ? 'القيمة السنوية' : 'Annual Value' },
-        { value: `${calculatedMetrics.benefitsAsPercentOfComp}%`, label: isRTL ? 'من إجمالي التعويضات' : 'of Total Package', secondary: `${benefits.length} ${isRTL ? 'مزايا فعالة' : 'active benefits'}` },
-      ],
+    { 
+      icon: DollarSign, 
+      value: formatCurrency(salaryData.annualSalary), 
+      label: isRTL ? 'الراتب السنوي' : 'Annual Salary',
+      formula: isRTL ? 'الراتب الشهري × ١٢ شهر' : 'Monthly Salary × 12 months',
+      dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR Payroll System',
+      variant: 'primary' as const,
     },
-    {
-      icon: TrendingUp,
-      title: isRTL ? 'الاستخدام' : 'Utilization',
-      variant: 'utilization' as const,
-      metrics: [
-        { value: formatCurrency(calculatedMetrics.totalUtilized), label: isRTL ? 'تم استخدامه' : 'Used', secondary: `${calculatedMetrics.utilizationPercent}%` },
-        { value: formatCurrency(calculatedMetrics.totalRemaining), label: isRTL ? 'متاح للاستخدام' : 'Available', secondary: `${100 - calculatedMetrics.utilizationPercent}%` },
-      ],
+    { 
+      icon: Gift, 
+      value: formatCurrency(calculatedMetrics.totalBenefitValue), 
+      label: isRTL ? 'قيمة المزايا السنوية' : 'Annual Benefits Value',
+      formula: isRTL ? 'مجموع جميع المزايا والبدلات السنوية' : 'Sum of all annual benefits & allowances',
+      dataSource: isRTL ? 'نظام المزايا' : 'Benefits System',
+      variant: 'warning' as const,
+    },
+    { 
+      icon: Wallet, 
+      value: `${calculatedMetrics.benefitsAsPercentOfComp}%`, 
+      label: isRTL ? 'المزايا من التعويضات' : 'Benefits % of Package',
+      formula: isRTL ? '(قيمة المزايا ÷ إجمالي التعويضات) × ١٠٠' : '(Benefits Value ÷ Total Compensation) × 100',
+      dataSource: isRTL ? 'محسوب' : 'Calculated',
+      variant: 'default' as const,
     },
   ];
+
+  const totalCompensationData = {
+    value: formatCurrency(calculatedMetrics.totalCompensation),
+    formula: isRTL 
+      ? `${formatCurrency(salaryData.annualSalary)} + ${formatCurrency(calculatedMetrics.totalBenefitValue)} = ${formatCurrency(calculatedMetrics.totalCompensation)}`
+      : `${formatCurrency(salaryData.annualSalary)} + ${formatCurrency(calculatedMetrics.totalBenefitValue)} = ${formatCurrency(calculatedMetrics.totalCompensation)}`,
+    dataSource: isRTL ? 'الراتب السنوي + قيمة المزايا' : 'Annual Salary + Benefits Value',
+  };
+
+  const utilizationData = {
+    used: formatCurrency(calculatedMetrics.totalUtilized),
+    usedPercent: calculatedMetrics.utilizationPercent,
+    remaining: formatCurrency(calculatedMetrics.totalRemaining),
+    remainingPercent: 100 - calculatedMetrics.utilizationPercent,
+    formula: isRTL ? 'إجمالي المزايا المستخدمة من القيمة السنوية' : 'Total benefits claimed from annual value',
+    dataSource: isRTL ? 'نظام المطالبات' : 'Claims System',
+  };
   
   return (
     <div className="space-y-5 animate-fade-in">
@@ -247,19 +268,13 @@ export default function EmployeeDashboard() {
         />
       </div>
 
-      {/* Top Row - 3 Main Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {summaryCards.map((card, index) => (
-          <CompensationSummaryCard
-            key={card.title}
-            icon={card.icon}
-            title={card.title}
-            metrics={card.metrics}
-            variant={card.variant}
-            index={index}
-          />
-        ))}
-      </div>
+      {/* Compensation Summary Grid */}
+      <CompensationGrid 
+        metrics={keyMetrics}
+        totalCompensation={totalCompensationData}
+        utilization={utilizationData}
+        isRTL={isRTL}
+      />
 
       {/* Benefits Grid - Your Benefits */}
       <div>
