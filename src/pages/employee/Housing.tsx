@@ -6,10 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { RAGLegend } from '@/components/ui/rag-legend';
 import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { Home, Search, Star, Clock, ExternalLink, MapPin, Bath, Bed, Filter, Wallet, TrendingDown, Percent, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useHousingAreas, useHousingListings } from '@/hooks/useSupabaseData';
-import { getRAGStatus } from '@/lib/benefitCategories';
+import { getRAGStatus, getRAGIndicator } from '@/lib/colorUtils';
 import { cn } from '@/lib/utils';
 
 const HOUSING_ALLOWANCE = 120000; // Demo annual allowance
@@ -27,7 +28,7 @@ export default function HousingPage() {
   const utilized = 120000; // Demo utilized amount
   const remaining = HOUSING_ALLOWANCE - utilized;
   const utilizationPercent = Math.round((utilized / HOUSING_ALLOWANCE) * 100);
-  const rag = getRAGStatus(utilizationPercent);
+  const rag = getRAGIndicator(utilizationPercent);
 
   const filteredListings = useMemo(() => {
     let filtered = [...listings];
@@ -105,6 +106,9 @@ export default function HousingPage() {
           {utilizationPercent}% {rag.label}
         </Badge>
       </div>
+
+      {/* RAG Legend */}
+      <RAGLegend compact />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

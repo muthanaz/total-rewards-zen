@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { RAGLegend } from '@/components/ui/rag-legend';
 import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { Dumbbell, Heart, Brain, Leaf, Moon, CheckCircle, ExternalLink, Wallet, TrendingDown, Percent, Clock, AlertCircle } from 'lucide-react';
-import { getRAGStatus } from '@/lib/benefitCategories';
+import { getRAGIndicator } from '@/lib/colorUtils';
 import { cn } from '@/lib/utils';
 
 const ANNUAL_VALUE = 6000;
@@ -56,7 +57,7 @@ export default function WellbeingPage() {
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
   const remaining = ANNUAL_VALUE - UTILIZED;
   const utilizationPercent = Math.round((UTILIZED / ANNUAL_VALUE) * 100);
-  const rag = getRAGStatus(utilizationPercent);
+  const rag = getRAGIndicator(utilizationPercent);
   const RAGIcon = rag.status === 'green' ? CheckCircle : rag.status === 'amber' ? Clock : AlertCircle;
 
   return (
@@ -78,6 +79,9 @@ export default function WellbeingPage() {
           {utilizationPercent}% {rag.label}
         </Badge>
       </div>
+
+      {/* RAG Legend */}
+      <RAGLegend compact />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

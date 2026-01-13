@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { RAGLegend } from '@/components/ui/rag-legend';
 import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { NoSearchResults } from '@/components/ui/empty-state';
 import { Progress } from '@/components/ui/progress';
@@ -12,10 +13,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   GraduationCap, Search, Star, ExternalLink, MapPin, Users, BookOpen, 
   Calculator, Wallet, TrendingUp, User, ChevronRight, Check, Info,
-  School, Baby, Building2, CheckCircle2
+  School, Baby, Building2, CheckCircle2, Clock, AlertCircle
 } from 'lucide-react';
 import { useSchools, useChildren } from '@/hooks/useSupabaseData';
-import { BENEFIT_CATEGORIES, getRAGStatus } from '@/lib/benefitCategories';
+import { BENEFIT_CATEGORIES } from '@/lib/benefitCategories';
+import { getRAGIndicator } from '@/lib/colorUtils';
 import { cn } from '@/lib/utils';
 
 const ALLOWANCE_PER_CHILD = 30000;
@@ -152,7 +154,8 @@ export default function SchoolingPage() {
   };
 
   const educationCat = BENEFIT_CATEGORIES.education;
-  const rag = getRAGStatus(utilizationPercent);
+  const rag = getRAGIndicator(utilizationPercent);
+  const RAGIcon = rag.status === 'green' ? CheckCircle2 : rag.status === 'amber' ? Clock : AlertCircle;
 
   return (
     <div className="space-y-6">
@@ -171,10 +174,13 @@ export default function SchoolingPage() {
         </div>
         {/* RAG Status Badge */}
         <Badge variant="outline" className={cn("gap-1.5", rag.bgClass, rag.textClass, rag.borderClass)}>
-          <CheckCircle2 className="w-4 h-4" />
+          <RAGIcon className="w-4 h-4" />
           {utilizationPercent}% {rag.label}
         </Badge>
       </div>
+      
+      {/* RAG Legend */}
+      <RAGLegend compact />
       
       {/* Benefit color bar */}
       <div className={cn("h-1 rounded-full", educationCat.bgClass)} />

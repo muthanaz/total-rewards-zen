@@ -5,11 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { RAGLegend } from '@/components/ui/rag-legend';
 import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile, Wallet, TrendingDown, Percent, Clock, AlertCircle } from 'lucide-react';
 import { useHealthProviders } from '@/hooks/useSupabaseData';
-import { getRAGStatus } from '@/lib/benefitCategories';
+import { getRAGIndicator } from '@/lib/colorUtils';
 import { cn } from '@/lib/utils';
 
 const ANNUAL_VALUE = 45000;
@@ -71,7 +72,7 @@ export default function HealthPage() {
 
   const remaining = ANNUAL_VALUE - UTILIZED;
   const utilizationPercent = Math.round((UTILIZED / ANNUAL_VALUE) * 100);
-  const rag = getRAGStatus(utilizationPercent);
+  const rag = getRAGIndicator(utilizationPercent);
   const RAGIcon = rag.status === 'green' ? CheckCircle : rag.status === 'amber' ? Clock : AlertCircle;
 
   const providerTypes = useMemo(() => {
@@ -136,6 +137,9 @@ export default function HealthPage() {
           {utilizationPercent}% {rag.label}
         </Badge>
       </div>
+
+      {/* RAG Legend */}
+      <RAGLegend compact />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
