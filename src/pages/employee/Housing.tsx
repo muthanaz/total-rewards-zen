@@ -7,14 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
-import { Home, Search, Star, Clock, ExternalLink, MapPin, Bath, Bed, Filter, Wallet, TrendingDown, Percent, CheckCircle2 } from 'lucide-react';
+import { Home, Search, Star, Clock, ExternalLink, MapPin, Bath, Bed, Filter, Wallet, TrendingDown, Percent, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useHousingAreas, useHousingListings } from '@/hooks/useSupabaseData';
-import { BENEFIT_CATEGORIES } from '@/lib/benefitCategories';
-import { getRAGIndicator, getProgressColorClass } from '@/lib/colorUtils';
+import { getRAGStatus } from '@/lib/benefitCategories';
 import { cn } from '@/lib/utils';
 
 const HOUSING_ALLOWANCE = 120000; // Demo annual allowance
-const housingCategory = BENEFIT_CATEGORIES.housing;
 
 export default function HousingPage() {
   const { data: areas = [] } = useHousingAreas();
@@ -29,7 +27,7 @@ export default function HousingPage() {
   const utilized = 120000; // Demo utilized amount
   const remaining = HOUSING_ALLOWANCE - utilized;
   const utilizationPercent = Math.round((utilized / HOUSING_ALLOWANCE) * 100);
-  const rag = getRAGIndicator(utilizationPercent);
+  const rag = getRAGStatus(utilizationPercent);
 
   const filteredListings = useMemo(() => {
     let filtered = [...listings];
@@ -86,15 +84,15 @@ export default function HousingPage() {
     return <Badge className="bg-warning/10 text-warning border-0">Top-up: {formatCurrency(topUp)}</Badge>;
   };
 
+  const RAGIcon = rag.status === 'green' ? CheckCircle2 : rag.status === 'amber' ? Clock : AlertCircle;
+
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header with category color */}
+      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-            <div className={cn("p-2 rounded-xl", housingCategory.bgLightClass)}>
-              <Home className={cn("w-6 h-6", housingCategory.textClass)} />
-            </div>
+            <Home className="w-7 h-7 text-accent" />
             Housing Allowance
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -103,13 +101,10 @@ export default function HousingPage() {
         </div>
         {/* RAG Status Badge */}
         <Badge variant="outline" className={cn("gap-1.5", rag.bgClass, rag.textClass, rag.borderClass)}>
-          <CheckCircle2 className="w-4 h-4" />
+          <RAGIcon className="w-4 h-4" />
           {utilizationPercent}% {rag.label}
         </Badge>
       </div>
-
-      {/* Category color bar */}
-      <div className={cn("h-1 rounded-full", housingCategory.bgClass)} />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

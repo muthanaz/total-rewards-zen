@@ -9,7 +9,7 @@ import {
   Home, GraduationCap, Heart, Car, Dumbbell, PiggyBank, 
   BookOpen, Search, ChevronRight, Filter, CheckCircle2, TrendingUp, Award, Clock, AlertCircle
 } from 'lucide-react';
-import { BENEFIT_CATEGORIES, getRAGStatus, BenefitCategoryKey } from '@/lib/benefitCategories';
+import { getRAGStatus, BenefitCategoryKey } from '@/lib/benefitCategories';
 import {
   Select,
   SelectContent,
@@ -141,7 +141,6 @@ export default function BenefitsPage() {
           {filteredBenefits.map((benefit, index) => {
             const utilization = Math.round((benefit.utilized / benefit.value) * 100);
             const remaining = benefit.value - benefit.utilized;
-            const cat = BENEFIT_CATEGORIES[benefit.category];
             const rag = getRAGStatus(utilization);
             
             return (
@@ -151,13 +150,11 @@ export default function BenefitsPage() {
                 onClick={() => navigate(benefit.route)} 
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                {/* Benefit color bar */}
-                <div className={cn("h-1.5", cat.bgClass)} />
                 <CardContent className="p-5">
                   <div className="flex items-start gap-3">
-                    {/* Icon with benefit color */}
-                    <div className={cn("p-2.5 rounded-xl shrink-0", cat.bgLightClass)}>
-                      <benefit.icon className={cn("w-5 h-5", cat.textClass)} />
+                    {/* Neutral icon styling */}
+                    <div className="p-2.5 rounded-xl shrink-0 bg-muted">
+                      <benefit.icon className="w-5 h-5 text-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-base group-hover:text-accent transition-colors">{benefit.name}</h3>
@@ -193,6 +190,27 @@ export default function BenefitsPage() {
           })}
         </div>
       )}
+
+      {/* RAG Legend */}
+      <Card className="bg-muted/30 border-border/50">
+        <CardContent className="py-3 px-4">
+          <div className="flex flex-wrap items-center gap-4 text-xs">
+            <span className="text-muted-foreground font-medium">Utilization Legend:</span>
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="text-muted-foreground">80%+ On Track</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-amber-600" />
+              <span className="text-muted-foreground">30-79% In Progress</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 text-red-600" />
+              <span className="text-muted-foreground">&lt;30% Needs Attention</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

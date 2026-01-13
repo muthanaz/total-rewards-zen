@@ -8,7 +8,7 @@ import {
   DollarSign, Home, GraduationCap, 
   Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote, AlertCircle, CheckCircle2, Clock, Award
 } from 'lucide-react';
-import { BENEFIT_CATEGORIES, getRAGStatus, BenefitCategoryKey } from '@/lib/benefitCategories';
+import { getRAGStatus, BenefitCategoryKey } from '@/lib/benefitCategories';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
 import { BenefitActionButtons } from '@/components/employee/BenefitActionButtons';
 import { BenefitsDrillDownSheet, SmartInsights } from '@/components/dashboard';
@@ -272,23 +272,19 @@ export default function EmployeeDashboard() {
             {benefits.map((benefit, index) => {
               const utilization = Math.round((benefit.utilized / benefit.value) * 100);
               const remaining = benefit.value - benefit.utilized;
-              const cat = BENEFIT_CATEGORIES[benefit.category];
               const rag = getRAGStatus(utilization);
               
               return (
                 <Card 
                   key={benefit.name} 
-                  className="group cursor-pointer hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden"
+                  className="group cursor-pointer hover:shadow-md transition-all duration-200 flex flex-col"
                   style={{ animationDelay: `${index * 30}ms` }}
                   onClick={() => handleBenefitClick(benefit.name)}
                 >
-                  {/* Benefit color bar at top */}
-                  <div className={cn("h-1", cat.bgClass)} />
-                  
                   <div className="p-3 flex flex-col flex-1">
                     <div className={cn("flex items-start gap-2", isRTL && "flex-row-reverse")}>
-                      <div className={cn("p-1.5 rounded-lg shrink-0", cat.bgLightClass)}>
-                        <benefit.icon className={cn("w-4 h-4", cat.textClass)} />
+                      <div className="p-1.5 rounded-lg shrink-0 bg-muted">
+                        <benefit.icon className="w-4 h-4 text-foreground" />
                       </div>
                       <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
                         <h3 className="font-medium text-xs truncate group-hover:text-accent transition-colors leading-tight">
@@ -300,7 +296,10 @@ export default function EmployeeDashboard() {
                     <div className="mt-3 space-y-2 flex-1">
                       {/* Value and RAG */}
                       <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                        <span className="text-sm font-semibold">{formatCurrency(benefit.value)}</span>
+                        <span className={cn(
+                          "text-sm font-semibold transition-all duration-200",
+                          salaryHidden && "blur-[4px] select-none"
+                        )}>{formatCurrency(benefit.value)}</span>
                         {getRAGBadge(utilization)}
                       </div>
                       
@@ -311,7 +310,11 @@ export default function EmployeeDashboard() {
                       />
                       
                       {/* Remaining */}
-                      <p className={cn("text-[10px] text-muted-foreground", isRTL && "text-right")}>
+                      <p className={cn(
+                        "text-[10px] text-muted-foreground transition-all duration-200",
+                        salaryHidden && "blur-[4px] select-none",
+                        isRTL && "text-right"
+                      )}>
                         {t('employee.dashboard.remaining')}: {formatCurrency(remaining)}
                       </p>
                     </div>

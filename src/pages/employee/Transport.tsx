@@ -1,9 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
-import { Car, Fuel, Plane, CreditCard, CheckCircle, Wallet, TrendingDown, Percent } from 'lucide-react';
+import { Car, Fuel, Plane, CreditCard, CheckCircle, Wallet, TrendingDown, Percent, Clock, AlertCircle } from 'lucide-react';
+import { getRAGStatus } from '@/lib/benefitCategories';
+import { cn } from '@/lib/utils';
 const allowances = [
   {
     name: 'Fuel Allowance',
@@ -50,18 +53,27 @@ export default function TransportPage() {
   const totalUtilized = allowances.reduce((sum, a) => sum + a.utilized, 0);
   const totalRemaining = totalAnnual - totalUtilized;
   const totalUtilization = Math.round((totalUtilized / totalAnnual) * 100);
+  const rag = getRAGStatus(totalUtilization);
+  const RAGIcon = rag.status === 'green' ? CheckCircle : rag.status === 'amber' ? Clock : AlertCircle;
 
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-          <Car className="w-7 h-7 text-accent" />
-          Transport & Mobility
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Fuel, car allowance, and annual flight tickets
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
+            <Car className="w-7 h-7 text-accent" />
+            Transport & Mobility
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Fuel, car allowance, and annual flight tickets
+          </p>
+        </div>
+        {/* RAG Status Badge */}
+        <Badge variant="outline" className={cn("gap-1.5", rag.bgClass, rag.textClass, rag.borderClass)}>
+          <RAGIcon className="w-4 h-4" />
+          {totalUtilization}% {rag.label}
+        </Badge>
       </div>
 
       {/* Summary Cards */}
