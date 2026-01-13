@@ -16,7 +16,6 @@ import {
   School, Baby, Building2, CheckCircle2, Clock, AlertCircle
 } from 'lucide-react';
 import { useSchools, useChildren } from '@/hooks/useSupabaseData';
-import { BENEFIT_CATEGORIES } from '@/lib/benefitCategories';
 import { getRAGIndicator } from '@/lib/colorUtils';
 import { cn } from '@/lib/utils';
 
@@ -153,19 +152,16 @@ export default function SchoolingPage() {
     }
   };
 
-  const educationCat = BENEFIT_CATEGORIES.education;
   const rag = getRAGIndicator(utilizationPercent);
   const RAGIcon = rag.status === 'green' ? CheckCircle2 : rag.status === 'amber' ? Clock : AlertCircle;
 
   return (
     <div className="space-y-6">
-      {/* Header with benefit color */}
+      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-            <div className={cn("p-2 rounded-xl", educationCat.bgLightClass)}>
-              <GraduationCap className={cn("w-6 h-6", educationCat.textClass)} />
-            </div>
+            <GraduationCap className="w-7 h-7 text-accent" />
             Education Allowance
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -181,9 +177,6 @@ export default function SchoolingPage() {
       
       {/* RAG Legend */}
       <RAGLegend compact />
-      
-      {/* Benefit color bar */}
-      <div className={cn("h-1 rounded-full", educationCat.bgClass)} />
 
       {/* How It Works Card */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">

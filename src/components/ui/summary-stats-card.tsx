@@ -23,47 +23,23 @@ interface SummaryStatsCardProps {
   highlight?: boolean;
 }
 
+// Neutral standardized styling for all non-RAG variants
+// These use the same muted look to avoid color confusion - only utilization uses RAG
+const neutralStyles = {
+  bg: 'bg-gradient-to-br from-muted/50 via-card to-card dark:from-muted/30 dark:via-card dark:to-card',
+  iconBg: 'bg-muted dark:bg-muted/50',
+  iconColor: 'text-muted-foreground',
+  valueColor: 'text-foreground',
+  border: 'border-border/50 hover:border-border dark:border-border/30 dark:hover:border-border/50',
+  glow: 'bg-muted',
+};
+
 const variantStyles: Record<CardVariant, { bg: string; iconBg: string; iconColor: string; valueColor: string; border: string; glow: string }> = {
-  primary: {
-    bg: 'bg-gradient-to-br from-accent/10 via-card to-card dark:from-accent/20 dark:via-card dark:to-card',
-    iconBg: 'bg-accent/15 dark:bg-accent/25',
-    iconColor: 'text-accent',
-    valueColor: 'text-foreground',
-    border: 'border-accent/20 hover:border-accent/40 dark:border-accent/30 dark:hover:border-accent/50',
-    glow: 'bg-accent',
-  },
-  utilized: {
-    bg: 'bg-gradient-to-br from-blue-500/10 via-card to-card dark:from-blue-500/20 dark:via-card dark:to-card',
-    iconBg: 'bg-blue-500/15 dark:bg-blue-500/25',
-    iconColor: 'text-blue-500 dark:text-blue-400',
-    valueColor: 'text-blue-600 dark:text-blue-400',
-    border: 'border-blue-500/20 hover:border-blue-500/40 dark:border-blue-500/30 dark:hover:border-blue-500/50',
-    glow: 'bg-blue-500',
-  },
-  remaining: {
-    bg: 'bg-gradient-to-br from-emerald-500/10 via-card to-card dark:from-emerald-500/20 dark:via-card dark:to-card',
-    iconBg: 'bg-emerald-500/15 dark:bg-emerald-500/25',
-    iconColor: 'text-emerald-500 dark:text-emerald-400',
-    valueColor: 'text-emerald-600 dark:text-emerald-400',
-    border: 'border-emerald-500/20 hover:border-emerald-500/40 dark:border-emerald-500/30 dark:hover:border-emerald-500/50',
-    glow: 'bg-emerald-500',
-  },
-  utilization: {
-    bg: 'bg-gradient-to-br from-purple-500/10 via-card to-card dark:from-purple-500/20 dark:via-card dark:to-card',
-    iconBg: 'bg-purple-500/15 dark:bg-purple-500/25',
-    iconColor: 'text-purple-500 dark:text-purple-400',
-    valueColor: 'text-purple-600 dark:text-purple-400',
-    border: 'border-purple-500/20 hover:border-purple-500/40 dark:border-purple-500/30 dark:hover:border-purple-500/50',
-    glow: 'bg-purple-500',
-  },
-  info: {
-    bg: 'bg-gradient-to-br from-amber-500/10 via-card to-card dark:from-amber-500/20 dark:via-card dark:to-card',
-    iconBg: 'bg-amber-500/15 dark:bg-amber-500/25',
-    iconColor: 'text-amber-500 dark:text-amber-400',
-    valueColor: 'text-amber-600 dark:text-amber-400',
-    border: 'border-amber-500/20 hover:border-amber-500/40 dark:border-amber-500/30 dark:hover:border-amber-500/50',
-    glow: 'bg-amber-500',
-  },
+  primary: neutralStyles,
+  utilized: neutralStyles,
+  remaining: neutralStyles,
+  utilization: neutralStyles, // Will be overridden by RAG styles when progress is provided
+  info: neutralStyles,
 };
 
 // RAG-based styles for utilization cards
@@ -104,12 +80,13 @@ const getRAGStyles = (progress: number) => {
   }
 };
 
+// All non-utilization variants use muted progress colors
 const progressColors: Record<CardVariant, string> = {
-  primary: '[&>div]:bg-accent',
-  utilized: '[&>div]:bg-blue-500',
-  remaining: '[&>div]:bg-emerald-500',
-  utilization: '[&>div]:bg-purple-500',
-  info: '[&>div]:bg-amber-500',
+  primary: '[&>div]:bg-muted-foreground/30',
+  utilized: '[&>div]:bg-muted-foreground/30',
+  remaining: '[&>div]:bg-muted-foreground/30',
+  utilization: '[&>div]:bg-muted-foreground/30', // Will be overridden by RAG
+  info: '[&>div]:bg-muted-foreground/30',
 };
 
 export function SummaryStatsCard({
