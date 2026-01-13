@@ -2,8 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { Car, Fuel, Plane, CreditCard, CheckCircle, Wallet, TrendingDown, Percent } from 'lucide-react';
-
 const allowances = [
   {
     name: 'Fuel Allowance',
@@ -266,8 +266,9 @@ export default function TransportPage() {
         </CardContent>
       </Card>
 
-      {/* View Full Policy */}
-      <div className="text-center">
+      {/* Actions */}
+      <div className="flex items-center justify-center gap-4">
+        <SubmitClaimButton category="Transport" buttonText="Submit Transport Claim" />
         <Button variant="outline">View Full Transport Policy</Button>
       </div>
     </div>

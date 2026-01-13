@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile, Wallet, TrendingDown, Percent } from 'lucide-react';
 import { useHealthProviders } from '@/hooks/useSupabaseData';
@@ -408,8 +409,9 @@ export default function HealthPage() {
         </CardContent>
       </Card>
 
-      {/* View Full Policy */}
-      <div className="text-center">
+      {/* Actions */}
+      <div className="flex items-center justify-center gap-4">
+        <SubmitClaimButton category="Health Insurance" buttonText="Submit Health Claim" />
         <Button variant="outline">View Full Insurance Policy</Button>
       </div>
     </div>

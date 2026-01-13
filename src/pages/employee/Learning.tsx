@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { NoData } from '@/components/ui/empty-state';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -312,8 +313,9 @@ export default function LearningPage() {
         </CardContent>
       </Card>
 
-      {/* View Full Policy */}
-      <div className="text-center">
+      {/* Actions */}
+      <div className="flex items-center justify-center gap-4">
+        <SubmitClaimButton category="Learning & Development" buttonText="Submit L&D Claim" />
         <Button variant="outline">View Full L&D Policy</Button>
       </div>
     </div>

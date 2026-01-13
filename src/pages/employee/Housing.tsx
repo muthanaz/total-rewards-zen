@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { Home, Search, Star, Clock, ExternalLink, MapPin, Bath, Bed, Filter, Wallet, TrendingDown, Percent } from 'lucide-react';
 import { useHousingAreas, useHousingListings } from '@/hooks/useSupabaseData';
 
@@ -402,8 +403,9 @@ export default function HousingPage() {
         </CardContent>
       </Card>
 
-      {/* View Full Policy */}
-      <div className="text-center">
+      {/* Actions */}
+      <div className="flex items-center justify-center gap-4">
+        <SubmitClaimButton category="Housing" buttonText="Submit Housing Claim" />
         <Button variant="outline">View Full Housing Policy</Button>
       </div>
     </div>
