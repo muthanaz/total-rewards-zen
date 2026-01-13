@@ -19,6 +19,7 @@ import {
   Target,
   Wallet,
   Sliders,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -75,6 +76,7 @@ const navigationGroups: NavGroup[] = [
     titleAr: 'التكوين',
     items: [
       { label: 'UI Configuration', labelAr: 'تكوين الواجهة', path: '/admin/ui-config', icon: Sliders },
+      { label: 'Data Migration', labelAr: 'ترحيل البيانات', path: '/admin/data-migration', icon: FileSpreadsheet },
     ],
   },
   {

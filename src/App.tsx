@@ -59,6 +59,7 @@ import AdminSettings from "./pages/admin/Settings";
 import AdminOrganizations from "./pages/admin/Organizations";
 import AdminOrganizationSettings from "./pages/admin/OrganizationSettings";
 import AdminUIConfiguration from "./pages/admin/UIConfiguration";
+import AdminDataMigration from "./pages/admin/DataMigration";
 import VendorDashboard from "./pages/vendor/Dashboard";
 import VendorOffers from "./pages/vendor/Offers";
 import VendorTransactions from "./pages/vendor/Transactions";
@@ -152,6 +153,7 @@ function AppRoutes() {
         <Route path="organizations/:orgId/settings" element={<AdminOrganizationSettings />} />
         <Route path="settings" element={<AdminSettings />} />
         <Route path="ui-config" element={<AdminUIConfiguration />} />
+        <Route path="data-migration" element={<AdminDataMigration />} />
       </Route>
       
       {/* Vendor Routes */}
