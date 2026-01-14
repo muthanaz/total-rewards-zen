@@ -2,7 +2,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { BenefitGuide } from '@/components/employee/BenefitGuide';
 import { Dumbbell, Heart, Brain, Leaf, CheckCircle, ExternalLink, Wallet, TrendingDown, Percent } from 'lucide-react';
 

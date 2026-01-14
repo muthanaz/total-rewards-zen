@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { BenefitGuide } from '@/components/employee/BenefitGuide';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile, Wallet, TrendingDown, Percent } from 'lucide-react';

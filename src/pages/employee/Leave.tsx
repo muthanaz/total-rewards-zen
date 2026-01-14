@@ -103,65 +103,66 @@ export default function LeavePage() {
     'Public holidays are in addition to annual leave',
   ];
 
+  const leaveRequestButton = (
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm">
+          <Plus className="w-4 h-4 mr-2" />
+          Request Leave
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Request Leave</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label>Leave Type</Label>
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredLeaveTypes.map((type) => (
+                  <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>From Date</Label>
+              <Input type="date" />
+            </div>
+            <div className="space-y-2">
+              <Label>To Date</Label>
+              <Input type="date" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Reason</Label>
+            <Textarea placeholder="Brief description of leave reason" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleSubmitRequest}>Submit Request</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-            <Calendar className="w-7 h-7 text-accent" />
-            Leave Management
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            View balances and request time off
-          </p>
-        </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Request Leave
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Request Leave</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Leave Type</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filteredLeaveTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>From Date</Label>
-                  <Input type="date" />
-                </div>
-                <div className="space-y-2">
-                  <Label>To Date</Label>
-                  <Input type="date" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Reason</Label>
-                <Textarea placeholder="Brief description of leave reason" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSubmitRequest}>Submit Request</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      <div>
+        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
+          <Calendar className="w-7 h-7 text-accent" />
+          Leave Management
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          View balances and request time off
+        </p>
       </div>
 
       {/* Summary Cards */}
@@ -199,6 +200,7 @@ export default function LeavePage() {
         steps={guideSteps}
         policyPoints={policyPoints}
         policyButtonText="View Leave Policy"
+        customAction={leaveRequestButton}
       />
 
       {/* Leave Balances */}
