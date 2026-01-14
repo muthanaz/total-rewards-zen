@@ -69,6 +69,8 @@ import AdminOrganizationSettings from "./pages/admin/OrganizationSettings";
 import AdminUIConfiguration from "./pages/admin/UIConfiguration";
 import AdminDataMigration from "./pages/admin/DataMigration";
 import AdminTenantIsolationTest from "./pages/admin/TenantIsolationTest";
+import AdminDataQualityPage from "./pages/admin/DataQuality";
+import AdminBenchmarkMethodologyPage from "./pages/admin/BenchmarkMethodology";
 import VendorDashboard from "./pages/vendor/Dashboard";
 import VendorOffers from "./pages/vendor/Offers";
 import VendorTransactions from "./pages/vendor/Transactions";
@@ -178,6 +180,8 @@ function AppRoutes() {
         <Route path="ui-config" element={<AdminUIConfiguration />} />
         <Route path="data-migration" element={<AdminDataMigration />} />
         <Route path="tenant-test" element={<AdminTenantIsolationTest />} />
+        <Route path="data-quality" element={<AdminDataQualityPage />} />
+        <Route path="benchmark-methodology" element={<AdminBenchmarkMethodologyPage />} />
       </Route>
       
       {/* Vendor Routes */}
