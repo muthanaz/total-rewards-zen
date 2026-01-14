@@ -1,6 +1,7 @@
+import { ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, BookOpen, ExternalLink, FileText } from 'lucide-react';
+import { CheckCircle, BookOpen, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
 import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
@@ -21,6 +22,7 @@ interface BenefitGuideProps {
   className?: string;
   claimCategory?: string;
   claimButtonText?: string;
+  customAction?: ReactNode;
 }
 
 export function BenefitGuide({
@@ -33,6 +35,7 @@ export function BenefitGuide({
   className,
   claimCategory,
   claimButtonText,
+  customAction,
 }: BenefitGuideProps) {
   return (
     <Card className={cn("border-accent/30 bg-gradient-to-br from-accent/5 via-transparent to-transparent", className)}>
@@ -43,6 +46,7 @@ export function BenefitGuide({
             {title}
           </CardTitle>
           <div className="flex items-center gap-2 shrink-0">
+            {customAction}
             {claimCategory && claimButtonText && (
               <SubmitClaimButton 
                 category={claimCategory} 

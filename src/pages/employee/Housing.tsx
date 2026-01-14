@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { BenefitGuide } from '@/components/employee/BenefitGuide';
 import { Home, Search, Star, Clock, ExternalLink, MapPin, Bath, Bed, Wallet, TrendingDown, Percent, CheckCircle2 } from 'lucide-react';
 import { useHousingAreas, useHousingListings } from '@/hooks/useSupabaseData';

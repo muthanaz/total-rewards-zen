@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { BenefitGuide } from '@/components/employee/BenefitGuide';
 import { NoData } from '@/components/ui/empty-state';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
@@ -94,54 +93,55 @@ export default function LearningPage() {
     'Study leave: up to 5 days for certifications',
   ];
 
+  const courseRequestButton = (
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm">
+          <Plus className="w-4 h-4 mr-2" />
+          Request Course
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Request Learning Budget</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label>Course/Certification Name</Label>
+            <Input placeholder="e.g., AWS Cloud Practitioner" />
+          </div>
+          <div className="space-y-2">
+            <Label>Provider</Label>
+            <Input placeholder="e.g., Coursera, Udemy, AWS" />
+          </div>
+          <div className="space-y-2">
+            <Label>Estimated Cost (AED)</Label>
+            <Input type="number" placeholder="0" />
+          </div>
+          <div className="space-y-2">
+            <Label>Justification</Label>
+            <Textarea placeholder="How will this help your role?" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleSubmitRequest}>Submit Request</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-            <BookOpen className="w-7 h-7 text-accent" />
-            Learning & Development
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Courses, certifications, and professional development
-          </p>
-        </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Request Course
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Request Learning Budget</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Course/Certification Name</Label>
-                <Input placeholder="e.g., AWS Cloud Practitioner" />
-              </div>
-              <div className="space-y-2">
-                <Label>Provider</Label>
-                <Input placeholder="e.g., Coursera, Udemy, AWS" />
-              </div>
-              <div className="space-y-2">
-                <Label>Estimated Cost (AED)</Label>
-                <Input type="number" placeholder="0" />
-              </div>
-              <div className="space-y-2">
-                <Label>Justification</Label>
-                <Textarea placeholder="How will this help your role?" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSubmitRequest}>Submit Request</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      <div>
+        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
+          <BookOpen className="w-7 h-7 text-accent" />
+          Learning & Development
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Courses, certifications, and professional development
+        </p>
       </div>
 
       {/* Summary Cards */}
@@ -194,6 +194,7 @@ export default function LearningPage() {
         policyButtonText="View L&D Policy"
         claimCategory="Learning & Development"
         claimButtonText="Submit Claim"
+        customAction={courseRequestButton}
       />
 
       {/* Your Learning */}
