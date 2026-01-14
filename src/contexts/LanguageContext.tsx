@@ -163,6 +163,7 @@ const translations: Record<Language, Record<string, string>> = {
     'benefit.learning': 'Learning & Development',
     'benefit.equity': 'Equity & Options',
     'benefit.leave': 'Leave Management',
+    'benefit.gratuity': 'End of Service Gratuity',
     
     // Navigation additions
     'nav.annualBonus': 'Annual Bonus',
@@ -379,6 +380,7 @@ const translations: Record<Language, Record<string, string>> = {
     'benefit.learning': 'التعلم والتطوير',
     'benefit.equity': 'الأسهم والخيارات',
     'benefit.leave': 'إدارة الإجازات',
+    'benefit.gratuity': 'مكافأة نهاية الخدمة',
     
     // Navigation additions
     'nav.annualBonus': 'المكافأة السنوية',
