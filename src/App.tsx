@@ -26,6 +26,7 @@ import HealthPage from "./pages/employee/Health";
 import TransportPage from "./pages/employee/Transport";
 import WellbeingPage from "./pages/employee/Wellbeing";
 import FinancialPage from "./pages/employee/Financial";
+import GratuityPage from "./pages/employee/Gratuity";
 import BonusPage from "./pages/employee/Bonus";
 import EquityPage from "./pages/employee/Equity";
 import LearningPage from "./pages/employee/Learning";
@@ -118,6 +119,7 @@ function AppRoutes() {
         <Route path="transport" element={<TransportPage />} />
         <Route path="wellbeing" element={<WellbeingPage />} />
         <Route path="financial" element={<FinancialPage />} />
+        <Route path="gratuity" element={<GratuityPage />} />
         <Route path="bonus" element={<BonusPage />} />
         <Route path="equity" element={<EquityPage />} />
         <Route path="learning" element={<LearningPage />} />

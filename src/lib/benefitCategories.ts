@@ -6,7 +6,7 @@
 
 import { 
   Home, GraduationCap, Heart, Car, Dumbbell, PiggyBank, 
-  BookOpen, TrendingUp, Award, Calendar, LucideIcon
+  BookOpen, TrendingUp, Award, Calendar, Landmark, LucideIcon
 } from 'lucide-react';
 
 // =============================================================================
@@ -173,6 +173,21 @@ export const BENEFIT_CATEGORIES = {
     icon: Calendar,
     route: '/employee/leave',
     description: 'Annual, sick, and other leave types',
+  },
+  gratuity: {
+    key: 'gratuity',
+    label: 'Gratuity',
+    fullLabel: 'End of Service Gratuity',
+    // Gold - value, achievement, reward
+    color: 'hsl(45, 90%, 50%)',
+    bgClass: 'bg-yellow-500',
+    bgLightClass: 'bg-yellow-500/10',
+    textClass: 'text-yellow-600 dark:text-yellow-400',
+    borderClass: 'border-yellow-500/20',
+    gradientClass: 'from-yellow-500 to-amber-600',
+    icon: Landmark,
+    route: '/employee/gratuity',
+    description: 'Statutory end of service payment under UAE Labor Law',
   },
 } as const;
 
