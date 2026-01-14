@@ -1,18 +1,25 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { 
   Users, DollarSign, TrendingUp, TrendingDown, Smile, 
   Recycle, FileCheck, Target, ArrowRight, AlertTriangle, 
-  CheckCircle2, Sparkles, Zap, Clock, ExternalLink 
+  CheckCircle2, Sparkles, Zap, Clock, ExternalLink,
+  BarChart3, Shield, Activity, Eye, Lightbulb, Building2,
+  ArrowUpRight, ArrowDownRight, Gauge, PieChart
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { ChartContainer, AnimatedLineChart, ProgressBarList } from '@/components/charts';
 import { useElementVisibility } from '@/contexts/UIVisibilityContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import { useEmployerViewMode } from '@/components/layout/EmployerSidebar';
+import { motion, AnimatePresence } from 'framer-motion';
+import chartColors from '@/lib/chartColors';
 
+// Dashboard metrics data
 const metrics = {
   totalEmployees: 156,
   employeeChange: 8,
@@ -28,15 +35,66 @@ const metrics = {
   pendingClaims: 12,
   avgProcessingDays: 2.3,
   slaTarget: 3,
+  programScore: 72,
+  roiScore: 3.2,
+  riskExposure: 8500000,
 };
 
-// Urgent actions that need attention
+// Executive Pulse data
+const executivePulseCards = [
+  {
+    id: 'roi',
+    title: { en: 'Benefits ROI', ar: 'عائد المزايا' },
+    value: '3.2x',
+    subtitle: { en: 'Return on investment', ar: 'العائد على الاستثمار' },
+    trend: '+0.4x',
+    trendUp: true,
+    icon: TrendingUp,
+    color: 'emerald',
+    benchmark: { en: 'vs Industry: +12%', ar: 'مقارنة بالصناعة: +12%' },
+  },
+  {
+    id: 'financial',
+    title: { en: 'Financial Health', ar: 'الصحة المالية' },
+    value: '64%',
+    subtitle: { en: 'Budget utilized', ar: 'الميزانية المستخدمة' },
+    trend: '-11% to target',
+    trendUp: false,
+    icon: DollarSign,
+    color: 'amber',
+    benchmark: { en: 'Target: 75%', ar: 'الهدف: 75%' },
+  },
+  {
+    id: 'risk',
+    title: { en: 'Risk Exposure', ar: 'التعرض للمخاطر' },
+    value: 'AED 8.5M',
+    subtitle: { en: 'Zombie + SLA risks', ar: 'مخاطر الهدر والخدمة' },
+    trend: 'AED 5.1M recoverable',
+    trendUp: true,
+    icon: Shield,
+    color: 'red',
+    benchmark: { en: 'Action needed', ar: 'يتطلب إجراء' },
+  },
+  {
+    id: 'sentiment',
+    title: { en: 'Workforce Sentiment', ar: 'رضا الموظفين' },
+    value: '4.2/5',
+    subtitle: { en: '+0.3 since Q3', ar: '+0.3 منذ الربع الثالث' },
+    trend: '+7.7%',
+    trendUp: true,
+    icon: Smile,
+    color: 'violet',
+    benchmark: { en: '142 responses', ar: '142 استجابة' },
+  },
+];
+
+// Urgent actions
 const urgentActions = [
   { 
     id: 1, 
     type: 'claims', 
-    title: '12 claims pending review', 
-    subtitle: 'Avg wait: 2.3 days (SLA: 3 days)',
+    title: { en: '12 claims pending review', ar: '12 مطالبة قيد المراجعة' },
+    subtitle: { en: 'Avg wait: 2.3 days (SLA: 3 days)', ar: 'متوسط الانتظار: 2.3 يوم (الهدف: 3 أيام)' },
     icon: FileCheck,
     color: 'amber',
     link: '/employer/claims',
@@ -45,45 +103,43 @@ const urgentActions = [
   { 
     id: 2, 
     type: 'waste', 
-    title: 'AED 8.5M waste identified', 
-    subtitle: 'AED 5.1M recoverable this quarter',
+    title: { en: 'AED 8.5M waste identified', ar: 'تم تحديد 8.5 مليون درهم هدر' },
+    subtitle: { en: 'AED 5.1M recoverable this quarter', ar: '5.1 مليون درهم قابلة للاسترداد' },
     icon: Recycle,
     color: 'amber',
     link: '/employer/zombie',
     urgent: true,
   },
-  { 
-    id: 3, 
-    type: 'utilization', 
-    title: 'Utilization at 64%', 
-    subtitle: '11% below 75% target',
-    icon: TrendingUp,
-    color: 'blue',
-    link: '/employer/spend',
-    urgent: false,
-  },
 ];
 
-// Smart recommendations with ROI
+// Smart recommendations
 const smartRecommendations = [
   { 
-    title: 'Boost L&D communication', 
-    impact: 'Could save AED 2.8M',
+    title: { en: 'Boost L&D communication', ar: 'تعزيز التواصل حول التطوير' },
+    impact: { en: 'Could save AED 2.8M', ar: 'يمكن توفير 2.8 مليون درهم' },
     roi: '3.2x',
     effort: 'low',
   },
   { 
-    title: 'Simplify wellbeing claims', 
-    impact: 'Could increase usage by 25%',
+    title: { en: 'Simplify wellbeing claims', ar: 'تبسيط مطالبات الرفاهية' },
+    impact: { en: 'Could increase usage by 25%', ar: 'يمكن زيادة الاستخدام بنسبة 25%' },
     roi: '2.1x',
     effort: 'medium',
   },
   { 
-    title: 'Launch flex benefits pilot', 
-    impact: 'Improve satisfaction 15%',
+    title: { en: 'Launch flex benefits pilot', ar: 'إطلاق برنامج المزايا المرنة' },
+    impact: { en: 'Improve satisfaction 15%', ar: 'تحسين الرضا بنسبة 15%' },
     roi: '2.8x',
     effort: 'high',
   },
+];
+
+// Industry benchmarks
+const industryBenchmarks = [
+  { metric: { en: 'Utilization Rate', ar: 'معدل الاستخدام' }, you: 64, industry: 62, top: 78, status: 'good' },
+  { metric: { en: 'Cost Per Employee', ar: 'التكلفة لكل موظف' }, you: 45, industry: 42, top: 52, status: 'optimal' },
+  { metric: { en: 'Zombie Spend Rate', ar: 'معدل الهدر' }, you: 13.7, industry: 18, top: 8, status: 'good' },
+  { metric: { en: 'Satisfaction Score', ar: 'درجة الرضا' }, you: 4.2, industry: 3.6, top: 4.3, status: 'near-top' },
 ];
 
 const utilizationTrend = [
@@ -96,20 +152,22 @@ const utilizationTrend = [
 ];
 
 const topBenefits = [
-  { name: 'Housing Allowance', value: 95 },
-  { name: 'Health Insurance', value: 78 },
-  { name: 'Transport Allowance', value: 72 },
+  { name: 'Housing Allowance', value: 95, color: chartColors.health },
+  { name: 'Health Insurance', value: 78, color: chartColors.housing },
+  { name: 'Transport Allowance', value: 72, color: chartColors.transport },
 ];
 
 const bottomBenefits = [
-  { name: 'Learning & Development', value: 38 },
-  { name: 'Wellbeing Program', value: 45 },
-  { name: 'Financial Planning', value: 52 },
+  { name: 'Learning & Development', value: 38, color: chartColors.education },
+  { name: 'Wellbeing Program', value: 45, color: chartColors.wellbeing },
+  { name: 'Financial Planning', value: 52, color: chartColors.financial },
 ];
 
 export default function EmployerDashboard() {
-  const { t, direction } = useLanguage();
+  const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
+  const isArabic = language === 'ar';
+  const viewMode = useEmployerViewMode();
   
   const formatCurrency = (value: number) => `AED ${(value / 1000000).toFixed(1)}M`;
   const budgetUtilization = (metrics.budgetUsed / metrics.annualBudget) * 100;
@@ -127,345 +185,608 @@ export default function EmployerDashboard() {
       medium: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
       high: 'bg-red-500/10 text-red-600 border-red-500/20',
     };
-    return <Badge variant="outline" className={cn("text-[10px]", styles[effort as keyof typeof styles])}>{effort} effort</Badge>;
+    const labels = {
+      low: isArabic ? 'سريع' : 'Quick Win',
+      medium: isArabic ? 'متوسط' : 'Medium',
+      high: isArabic ? 'مشروع' : 'Project',
+    };
+    return <Badge variant="outline" className={cn("text-[10px]", styles[effort as keyof typeof styles])}>{labels[effort as keyof typeof labels]}</Badge>;
+  };
+
+  const getColorClasses = (color: string) => {
+    const colors: Record<string, { bg: string; text: string; border: string }> = {
+      emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-500', border: 'border-emerald-500/20' },
+      amber: { bg: 'bg-amber-500/10', text: 'text-amber-500', border: 'border-amber-500/20' },
+      red: { bg: 'bg-red-500/10', text: 'text-red-500', border: 'border-red-500/20' },
+      violet: { bg: 'bg-violet-500/10', text: 'text-violet-500', border: 'border-violet-500/20' },
+      blue: { bg: 'bg-blue-500/10', text: 'text-blue-500', border: 'border-blue-500/20' },
+    };
+    return colors[color] || colors.blue;
   };
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Executive Header */}
+      {/* Executive Command Bar */}
       <div className={cn(
-        "flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4",
-        isRTL && "lg:flex-row-reverse"
+        "bg-gradient-to-r from-card via-card to-primary/5 rounded-2xl border border-border/50 p-4",
+        isRTL && "bg-gradient-to-l"
       )}>
-        <div className={cn("space-y-1", isRTL && "text-right")}>
-          <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">
-            {t('employer.dashboard.title')}
-          </h1>
-          <p className="text-muted-foreground flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            {t('employer.dashboard.subtitle')} • December 2024
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className={cn(
-            "px-3 py-1",
-            metrics.utilizationRate >= 70 
-              ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" 
-              : "bg-amber-500/10 text-amber-600 border-amber-500/20"
+        <div className={cn(
+          "flex flex-wrap items-center justify-between gap-4",
+          isRTL && "flex-row-reverse"
+        )}>
+          {/* Title & Period */}
+          <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
+            <div className={cn(isRTL && "text-right")}>
+              <h1 className="text-xl lg:text-2xl font-display font-bold tracking-tight">
+                {viewMode === 'strategic' 
+                  ? (isArabic ? 'لوحة التحكم التنفيذية' : 'Executive Dashboard')
+                  : (isArabic ? 'لوحة العمليات' : 'Operations Dashboard')
+                }
+              </h1>
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                <Clock className="w-3.5 h-3.5" />
+                {isArabic ? 'ديسمبر 2024 • شهري' : 'December 2024 • Monthly View'}
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Stats Bar */}
+          <div className={cn(
+            "flex items-center gap-6 text-sm",
+            isRTL && "flex-row-reverse"
           )}>
-            {metrics.utilizationRate >= 70 ? (
-              <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-            ) : (
-              <AlertTriangle className="w-3.5 h-3.5 mr-1.5" />
-            )}
-            Program Health: {metrics.utilizationRate >= 70 ? 'Good' : 'Needs Attention'}
-          </Badge>
+            <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+              <div className={cn(
+                "w-2 h-2 rounded-full",
+                metrics.programScore >= 70 ? "bg-emerald-500" : "bg-amber-500"
+              )} />
+              <span className="text-muted-foreground">{isArabic ? 'البرنامج:' : 'Program:'}</span>
+              <span className="font-bold">{metrics.programScore}/100</span>
+            </div>
+            <div className="h-4 w-px bg-border" />
+            <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+              <span className="text-muted-foreground">{isArabic ? 'الميزانية:' : 'Budget:'}</span>
+              <span className="font-bold">{formatCurrency(metrics.annualBudget)}</span>
+            </div>
+            <div className="h-4 w-px bg-border" />
+            <Badge variant="outline" className={cn(
+              "px-3 py-1",
+              metrics.utilizationRate >= 70 
+                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" 
+                : "bg-amber-500/10 text-amber-600 border-amber-500/20"
+            )}>
+              {metrics.utilizationRate >= 70 ? (
+                <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+              ) : (
+                <AlertTriangle className="w-3.5 h-3.5 mr-1.5" />
+              )}
+              {metrics.utilizationRate}% {isArabic ? 'استخدام' : 'utilized'}
+            </Badge>
+          </div>
         </div>
       </div>
 
-      {/* Hero Alert Bar */}
-      {showAlerts && urgentActions.filter(a => a.urgent).length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {urgentActions.filter(a => a.urgent).map((action) => (
-            <Link key={action.id} to={action.link}>
-              <div className={cn(
-                "p-4 rounded-xl border transition-all duration-300 cursor-pointer hover:scale-[1.01]",
-                action.color === 'amber' 
-                  ? "bg-amber-500/5 border-amber-500/20 hover:border-amber-500/40" 
-                  : "bg-blue-500/5 border-blue-500/20 hover:border-blue-500/40"
-              )}>
-                <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-                  <div className={cn(
-                    "p-2 rounded-lg",
-                    action.color === 'amber' ? "bg-amber-500/10" : "bg-blue-500/10"
-                  )}>
-                    <action.icon className={cn(
-                      "w-5 h-5",
-                      action.color === 'amber' ? "text-amber-500" : "text-blue-500"
-                    )} />
-                  </div>
-                  <div className={cn("flex-1", isRTL && "text-right")}>
-                    <p className="font-semibold text-sm">{action.title}</p>
-                    <p className="text-xs text-muted-foreground">{action.subtitle}</p>
-                  </div>
-                  <ArrowRight className={cn("w-4 h-4 text-muted-foreground", isRTL && "rotate-180")} />
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+      {/* Strategic View Content */}
+      <AnimatePresence mode="wait">
+        {viewMode === 'strategic' ? (
+          <motion.div
+            key="strategic"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-6"
+          >
+            {/* Executive Pulse Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {executivePulseCards.map((card, index) => {
+                const colorClasses = getColorClasses(card.color);
+                return (
+                  <motion.div
+                    key={card.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Card className={cn(
+                      "border-border/50 hover:shadow-lg transition-all duration-300 overflow-hidden",
+                      colorClasses.border
+                    )}>
+                      <CardContent className="p-4">
+                        <div className={cn("flex items-start justify-between mb-3", isRTL && "flex-row-reverse")}>
+                          <div className={cn("p-2 rounded-xl", colorClasses.bg)}>
+                            <card.icon className={cn("w-5 h-5", colorClasses.text)} />
+                          </div>
+                          <div className={cn(
+                            "flex items-center gap-1 text-xs font-medium",
+                            card.trendUp ? "text-emerald-600" : "text-amber-600"
+                          )}>
+                            {card.trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                            <span>{card.trend}</span>
+                          </div>
+                        </div>
+                        <div className={cn(isRTL && "text-right")}>
+                          <p className={cn("text-2xl font-bold tracking-tight", colorClasses.text)}>
+                            {card.value}
+                          </p>
+                          <p className="text-sm font-medium text-foreground mt-1">
+                            {isArabic ? card.title.ar : card.title.en}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {isArabic ? card.subtitle.ar : card.subtitle.en}
+                          </p>
+                        </div>
+                        <div className={cn(
+                          "mt-3 pt-3 border-t border-border/50 text-[10px] text-muted-foreground",
+                          isRTL && "text-right"
+                        )}>
+                          {isArabic ? card.benchmark.ar : card.benchmark.en}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
 
-      {/* Financial Health Summary */}
-      {showFinancialSummary && (
-        <Card className="border-border/50 bg-gradient-to-br from-card via-card to-primary/5">
-          <CardContent className="p-6">
-            <div className={cn("flex items-center gap-2 mb-4", isRTL && "flex-row-reverse")}>
-              <DollarSign className="w-5 h-5 text-primary" />
-              <h2 className="font-display font-semibold text-lg">Financial Health Summary</h2>
-            </div>
-            
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-              <div className={cn("space-y-1", isRTL && "text-right")}>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Annual Budget</p>
-                <p className="text-2xl font-bold">{formatCurrency(metrics.annualBudget)}</p>
-              </div>
-              <div className={cn("space-y-1", isRTL && "text-right")}>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Spent YTD</p>
-                <p className="text-2xl font-bold text-blue-600">{formatCurrency(metrics.budgetUsed)}</p>
-              </div>
-              <div className={cn("space-y-1", isRTL && "text-right")}>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Remaining</p>
-                <p className="text-2xl font-bold text-emerald-600">{formatCurrency(metrics.budgetRemaining)}</p>
-              </div>
-              <div className={cn("space-y-1", isRTL && "text-right")}>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Utilization</p>
-                <div className="flex items-baseline gap-2">
-                  <p className={cn(
-                    "text-2xl font-bold",
-                    metrics.utilizationRate >= metrics.utilizationTarget ? "text-emerald-600" : "text-amber-600"
-                  )}>
-                    {metrics.utilizationRate}%
-                  </p>
-                  <span className="text-xs text-muted-foreground">/ {metrics.utilizationTarget}% target</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <div className={cn("flex justify-between text-xs", isRTL && "flex-row-reverse")}>
-                <span className="text-muted-foreground">Budget Progress</span>
-                <span className="font-medium">{budgetUtilization.toFixed(0)}% deployed</span>
-              </div>
-              <Progress value={budgetUtilization} className="h-2" />
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            {/* Financial Health + Competitive Position */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Financial Health Summary */}
+              {showFinancialSummary && (
+                <Card className="border-border/50 bg-gradient-to-br from-card via-card to-primary/5">
+                  <CardHeader className="pb-2">
+                    <CardTitle className={cn(
+                      "text-base font-display font-semibold flex items-center gap-2",
+                      isRTL && "flex-row-reverse"
+                    )}>
+                      <DollarSign className="w-5 h-5 text-primary" />
+                      {isArabic ? 'ملخص الصحة المالية' : 'Financial Health Summary'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className={cn("space-y-1", isRTL && "text-right")}>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                          {isArabic ? 'الميزانية السنوية' : 'Annual Budget'}
+                        </p>
+                        <p className="text-xl font-bold">{formatCurrency(metrics.annualBudget)}</p>
+                      </div>
+                      <div className={cn("space-y-1", isRTL && "text-right")}>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                          {isArabic ? 'المستخدم حتى الآن' : 'Spent YTD'}
+                        </p>
+                        <p className="text-xl font-bold text-blue-600">{formatCurrency(metrics.budgetUsed)}</p>
+                      </div>
+                      <div className={cn("space-y-1", isRTL && "text-right")}>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                          {isArabic ? 'المتبقي' : 'Remaining'}
+                        </p>
+                        <p className="text-xl font-bold text-emerald-600">{formatCurrency(metrics.budgetRemaining)}</p>
+                      </div>
+                      <div className={cn("space-y-1", isRTL && "text-right")}>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                          {isArabic ? 'الاستخدام' : 'Utilization'}
+                        </p>
+                        <div className="flex items-baseline gap-2">
+                          <p className={cn(
+                            "text-xl font-bold",
+                            metrics.utilizationRate >= metrics.utilizationTarget ? "text-emerald-600" : "text-amber-600"
+                          )}>
+                            {metrics.utilizationRate}%
+                          </p>
+                          <span className="text-xs text-muted-foreground">/ {metrics.utilizationTarget}%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className={cn("flex justify-between text-xs", isRTL && "flex-row-reverse")}>
+                        <span className="text-muted-foreground">{isArabic ? 'تقدم الميزانية' : 'Budget Progress'}</span>
+                        <span className="font-medium">{budgetUtilization.toFixed(0)}% {isArabic ? 'مُنفذ' : 'deployed'}</span>
+                      </div>
+                      <Progress value={budgetUtilization} className="h-2" />
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
-      {/* Action Priority Matrix */}
-      {showActionMatrix && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Urgent Actions */}
-          <Card className="border-amber-500/20 bg-gradient-to-br from-card to-amber-500/5">
-            <CardHeader className="pb-3">
-              <CardTitle className={cn(
-                "text-base font-display font-semibold flex items-center gap-2",
-                isRTL && "flex-row-reverse"
-              )}>
-                <Zap className="w-4 h-4 text-amber-500" />
-                Action Required
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {urgentActions.map((action) => (
-                <Link key={action.id} to={action.link}>
-                  <div className={cn(
-                    "p-3 rounded-lg border border-border/50 bg-card hover:bg-accent/5 transition-colors cursor-pointer group",
-                    "flex items-center gap-3",
+              {/* Competitive Position */}
+              <Card className="border-border/50">
+                <CardHeader className="pb-2">
+                  <CardTitle className={cn(
+                    "text-base font-display font-semibold flex items-center gap-2",
                     isRTL && "flex-row-reverse"
                   )}>
-                    <div className={cn(
-                      "p-2 rounded-lg shrink-0",
-                      action.color === 'amber' ? "bg-amber-500/10" : "bg-blue-500/10"
+                    <BarChart3 className="w-5 h-5 text-primary" />
+                    {isArabic ? 'الموقع التنافسي' : 'Competitive Position'}
+                  </CardTitle>
+                  <CardDescription>{isArabic ? 'مقارنة بمعايير الصناعة' : 'vs Industry Benchmarks'}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {industryBenchmarks.map((item, index) => (
+                      <div key={index} className={cn(
+                        "flex items-center justify-between p-2 rounded-lg bg-muted/30",
+                        isRTL && "flex-row-reverse"
+                      )}>
+                        <span className="text-sm font-medium flex-1">
+                          {isArabic ? item.metric.ar : item.metric.en}
+                        </span>
+                        <div className={cn("flex items-center gap-3 text-sm", isRTL && "flex-row-reverse")}>
+                          <span className="font-bold text-primary">{item.you}%</span>
+                          <span className="text-muted-foreground">{item.industry}%</span>
+                          <span className="text-emerald-600 font-medium">{item.top}%</span>
+                          <Badge variant="outline" className={cn(
+                            "text-[9px]",
+                            item.status === 'optimal' ? 'bg-emerald-500/10 text-emerald-600' :
+                            item.status === 'near-top' ? 'bg-blue-500/10 text-blue-600' :
+                            'bg-amber-500/10 text-amber-600'
+                          )}>
+                            {item.status === 'optimal' ? '✓' : item.status === 'near-top' ? '★' : '○'}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className={cn("flex items-center justify-center gap-4 text-[10px] text-muted-foreground mt-3", isRTL && "flex-row-reverse")}>
+                    <span className="flex items-center gap-1"><span className="font-bold text-primary">●</span> {isArabic ? 'أنت' : 'You'}</span>
+                    <span className="flex items-center gap-1"><span className="text-muted-foreground">●</span> {isArabic ? 'الصناعة' : 'Industry'}</span>
+                    <span className="flex items-center gap-1"><span className="text-emerald-600">●</span> {isArabic ? 'الأفضل' : 'Top 10%'}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Action Priority Matrix */}
+            {showActionMatrix && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Urgent Actions */}
+                <Card className="border-amber-500/20 bg-gradient-to-br from-card to-amber-500/5">
+                  <CardHeader className="pb-3">
+                    <CardTitle className={cn(
+                      "text-base font-display font-semibold flex items-center gap-2",
+                      isRTL && "flex-row-reverse"
                     )}>
-                      <action.icon className={cn(
-                        "w-4 h-4",
-                        action.color === 'amber' ? "text-amber-500" : "text-blue-500"
-                      )} />
-                    </div>
-                    <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
-                      <p className="text-sm font-medium truncate">{action.title}</p>
-                      <p className="text-xs text-muted-foreground truncate">{action.subtitle}</p>
-                    </div>
-                    <ExternalLink className={cn(
-                      "w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0",
-                      isRTL && "rotate-180"
-                    )} />
-                  </div>
-                </Link>
-              ))}
-            </CardContent>
-          </Card>
+                      <Zap className="w-4 h-4 text-amber-500" />
+                      {isArabic ? 'يتطلب إجراء' : 'Action Required'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {urgentActions.map((action) => (
+                      <Link key={action.id} to={action.link}>
+                        <div className={cn(
+                          "p-3 rounded-lg border border-border/50 bg-card hover:bg-accent/5 transition-colors cursor-pointer group",
+                          "flex items-center gap-3",
+                          isRTL && "flex-row-reverse"
+                        )}>
+                          <div className={cn(
+                            "p-2 rounded-lg shrink-0",
+                            action.color === 'amber' ? "bg-amber-500/10" : "bg-blue-500/10"
+                          )}>
+                            <action.icon className={cn(
+                              "w-4 h-4",
+                              action.color === 'amber' ? "text-amber-500" : "text-blue-500"
+                            )} />
+                          </div>
+                          <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
+                            <p className="text-sm font-medium truncate">
+                              {isArabic ? action.title.ar : action.title.en}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {isArabic ? action.subtitle.ar : action.subtitle.en}
+                            </p>
+                          </div>
+                          <ExternalLink className={cn(
+                            "w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0",
+                            isRTL && "rotate-180"
+                          )} />
+                        </div>
+                      </Link>
+                    ))}
+                  </CardContent>
+                </Card>
 
-          {/* Smart Recommendations */}
-          <Card className="border-emerald-500/20 bg-gradient-to-br from-card to-emerald-500/5">
-            <CardHeader className="pb-3">
-              <CardTitle className={cn(
-                "text-base font-display font-semibold flex items-center gap-2",
-                isRTL && "flex-row-reverse"
-              )}>
-                <Sparkles className="w-4 h-4 text-emerald-500" />
-                Smart Recommendations
-                <Badge variant="outline" className="ml-auto text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                  AI Powered
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {smartRecommendations.map((rec, idx) => (
-                <div 
-                  key={idx}
-                  className={cn(
-                    "p-3 rounded-lg border border-border/50 bg-card hover:bg-accent/5 transition-colors cursor-pointer",
-                    isRTL && "text-right"
-                  )}
-                >
-                  <div className={cn("flex items-start justify-between gap-2", isRTL && "flex-row-reverse")}>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{rec.title}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{rec.impact}</p>
-                    </div>
-                    <div className={cn("flex items-center gap-2 shrink-0", isRTL && "flex-row-reverse")}>
-                      <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                        {rec.roi} ROI
+                {/* Smart Recommendations */}
+                <Card className="border-emerald-500/20 bg-gradient-to-br from-card to-emerald-500/5">
+                  <CardHeader className="pb-3">
+                    <CardTitle className={cn(
+                      "text-base font-display font-semibold flex items-center gap-2",
+                      isRTL && "flex-row-reverse"
+                    )}>
+                      <Sparkles className="w-4 h-4 text-emerald-500" />
+                      {isArabic ? 'توصيات ذكية' : 'Smart Recommendations'}
+                      <Badge variant="outline" className="ml-auto text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                        {isArabic ? 'بالذكاء الاصطناعي' : 'AI Powered'}
                       </Badge>
-                      {getEffortBadge(rec.effort)}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {smartRecommendations.map((rec, idx) => (
+                      <div 
+                        key={idx}
+                        className={cn(
+                          "p-3 rounded-lg border border-border/50 bg-card hover:bg-accent/5 transition-colors cursor-pointer",
+                          isRTL && "text-right"
+                        )}
+                      >
+                        <div className={cn("flex items-start justify-between gap-2", isRTL && "flex-row-reverse")}>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">{isArabic ? rec.title.ar : rec.title.en}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{isArabic ? rec.impact.ar : rec.impact.en}</p>
+                          </div>
+                          <div className={cn("flex items-center gap-2 shrink-0", isRTL && "flex-row-reverse")}>
+                            <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                              {rec.roi} ROI
+                            </Badge>
+                            {getEffortBadge(rec.effort)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <Link to="/employer/recommendations">
+                      <Button variant="ghost" size="sm" className="w-full text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10">
+                        {isArabic ? 'عرض كل التوصيات' : 'View All Recommendations'} 
+                        <ArrowRight className={cn("w-4 h-4 ml-1", isRTL && "rotate-180 mr-1 ml-0")} />
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Utilization Snapshot */}
+            {showUtilizationSnapshot && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <Card className="border-border/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                      <TrendingUp className="w-4 h-4 text-primary" />
+                      {isArabic ? 'اتجاه الاستخدام' : 'Utilization Trend'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer height={120}>
+                      <AnimatedLineChart 
+                        data={utilizationTrend} 
+                        color={chartColors.primary}
+                      />
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                      {isArabic ? 'الأعلى أداءً' : 'Top Performers'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ProgressBarList items={topBenefits} />
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                      <AlertTriangle className="w-4 h-4 text-amber-500" />
+                      {isArabic ? 'يحتاج اهتمام' : 'Needs Attention'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ProgressBarList items={bottomBenefits} />
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          /* Operational View Content */
+          <motion.div
+            key="operational"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-6"
+          >
+            {/* Quick Stats for HR */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="border-amber-500/20 hover:shadow-md transition-all duration-300">
+                <CardContent className="p-4">
+                  <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+                    <div className="p-2.5 rounded-xl bg-amber-500/10 shrink-0">
+                      <FileCheck className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
+                      <p className="text-2xl font-bold tracking-tight text-amber-600">{metrics.pendingClaims}</p>
+                      <p className="text-xs text-muted-foreground">{isArabic ? 'مطالبات معلقة' : 'Pending Claims'}</p>
                     </div>
                   </div>
-                </div>
-              ))}
-              <Link to="/employer/recommendations">
-                <Button variant="ghost" size="sm" className="w-full text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10">
-                  View All Recommendations <ArrowRight className={cn("w-4 h-4 ml-1", isRTL && "rotate-180 mr-1 ml-0")} />
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+                  <Link to="/employer/claims">
+                    <Button variant="ghost" size="sm" className="w-full mt-2 text-xs text-amber-600 hover:bg-amber-500/10">
+                      {isArabic ? 'مراجعة الآن' : 'Review Now'} →
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
 
-      {/* Team Health Indicators */}
-      {showTeamHealth && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Employees */}
-          <Card className="border-border/50 hover:shadow-md transition-all duration-300">
-            <CardContent className="p-4">
-              <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-                <div className="p-2.5 rounded-xl bg-primary/10 shrink-0">
-                  <Users className="w-5 h-5 text-primary" />
-                </div>
-                <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
-                  <p className="text-2xl font-bold tracking-tight">{metrics.totalEmployees}</p>
-                  <p className="text-xs text-muted-foreground">Total Employees</p>
-                </div>
-              </div>
-              <div className={cn("mt-3 flex items-center gap-1 text-xs", isRTL && "flex-row-reverse")}>
-                <TrendingUp className="w-3 h-3 text-emerald-500" />
-                <span className="text-emerald-600 font-medium">+{metrics.employeeChange}</span>
-                <span className="text-muted-foreground">YTD</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Satisfaction */}
-          <Card className="border-border/50 hover:shadow-md transition-all duration-300">
-            <CardContent className="p-4">
-              <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-                <div className="p-2.5 rounded-xl bg-violet-500/10 shrink-0">
-                  <Smile className="w-5 h-5 text-violet-500" />
-                </div>
-                <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
-                  <p className="text-2xl font-bold tracking-tight">{metrics.satisfactionScore}<span className="text-base text-muted-foreground font-normal">/5</span></p>
-                  <p className="text-xs text-muted-foreground">Satisfaction</p>
-                </div>
-              </div>
-              <div className="mt-3 flex gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <div 
-                    key={star} 
-                    className={`h-1.5 flex-1 rounded-full ${star <= Math.round(metrics.satisfactionScore) ? 'bg-violet-500' : 'bg-muted'}`} 
-                  />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Retention */}
-          <Card className="border-border/50 hover:shadow-md transition-all duration-300">
-            <CardContent className="p-4">
-              <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-                <div className="p-2.5 rounded-xl bg-emerald-500/10 shrink-0">
-                  <Target className="w-5 h-5 text-emerald-500" />
-                </div>
-                <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
-                  <p className="text-2xl font-bold tracking-tight text-emerald-600">{metrics.retentionRate}%</p>
-                  <p className="text-xs text-muted-foreground">Retention Rate</p>
-                </div>
-              </div>
-              <div className="mt-3">
-                <Progress value={metrics.retentionRate} className="h-1.5 [&>div]:bg-emerald-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Pending Claims */}
-          <Link to="/employer/claims">
-            <Card className="border-amber-500/20 hover:shadow-md transition-all duration-300 cursor-pointer hover:border-amber-500/40">
-              <CardContent className="p-4">
-                <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-                  <div className="p-2.5 rounded-xl bg-amber-500/10 shrink-0">
-                    <FileCheck className="w-5 h-5 text-amber-500" />
+              <Card className="border-border/50 hover:shadow-md transition-all duration-300">
+                <CardContent className="p-4">
+                  <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+                    <div className="p-2.5 rounded-xl bg-primary/10 shrink-0">
+                      <Users className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
+                      <p className="text-2xl font-bold tracking-tight">{metrics.totalEmployees}</p>
+                      <p className="text-xs text-muted-foreground">{isArabic ? 'إجمالي الموظفين' : 'Total Employees'}</p>
+                    </div>
                   </div>
-                  <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
-                    <p className="text-2xl font-bold tracking-tight text-amber-600">{metrics.pendingClaims}</p>
-                    <p className="text-xs text-muted-foreground">Pending Claims</p>
+                  <div className={cn("mt-2 flex items-center gap-1 text-xs text-emerald-600", isRTL && "flex-row-reverse")}>
+                    <TrendingUp className="w-3 h-3" />
+                    <span>+{metrics.employeeChange} {isArabic ? 'هذا العام' : 'YTD'}</span>
                   </div>
-                </div>
-                <div className={cn("mt-3 flex items-center justify-between text-xs", isRTL && "flex-row-reverse")}>
-                  <span className="text-muted-foreground">Avg processing</span>
-                  <span className={cn(
-                    "font-medium",
-                    metrics.avgProcessingDays <= metrics.slaTarget ? "text-emerald-600" : "text-amber-600"
-                  )}>
-                    {metrics.avgProcessingDays} days
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
-      )}
+                </CardContent>
+              </Card>
 
-      {/* Utilization Snapshot */}
-      {showUtilizationSnapshot && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Trend Chart */}
-          <div className="lg:col-span-1">
-            <ChartContainer title="Utilization Trend" formula="6-month trend" dataSource="Analytics">
-              <AnimatedLineChart 
-                data={utilizationTrend} 
-                showArea={true} 
-                primaryLabel="Utilization" 
-                formatValue={(v) => `${v}%`} 
-                height={200} 
-                yDomain={[50, 70]} 
-              />
-            </ChartContainer>
-          </div>
-          
-          {/* Top Benefits */}
-          <ChartContainer title="Top Performing">
-            <ProgressBarList 
-              items={topBenefits.map(b => ({ ...b, color: 'success' as const }))} 
-              size="sm" 
-            />
-          </ChartContainer>
-          
-          {/* Bottom Benefits */}
-          <ChartContainer title="Needs Attention">
-            <ProgressBarList 
-              items={bottomBenefits.map(b => ({ ...b, color: 'warning' as const }))} 
-              size="sm" 
-            />
-            <Link to="/employer/zombie" className="block mt-3">
-              <Button variant="ghost" size="sm" className="w-full text-amber-600 hover:text-amber-700 hover:bg-amber-500/10">
-                Explore Recovery Options <ArrowRight className={cn("w-4 h-4 ml-1", isRTL && "rotate-180 mr-1 ml-0")} />
-              </Button>
-            </Link>
-          </ChartContainer>
-        </div>
-      )}
+              <Card className="border-border/50 hover:shadow-md transition-all duration-300">
+                <CardContent className="p-4">
+                  <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+                    <div className="p-2.5 rounded-xl bg-violet-500/10 shrink-0">
+                      <Smile className="w-5 h-5 text-violet-500" />
+                    </div>
+                    <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
+                      <p className="text-2xl font-bold tracking-tight">{metrics.satisfactionScore}<span className="text-base text-muted-foreground font-normal">/5</span></p>
+                      <p className="text-xs text-muted-foreground">{isArabic ? 'الرضا' : 'Satisfaction'}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border/50 hover:shadow-md transition-all duration-300">
+                <CardContent className="p-4">
+                  <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+                    <div className="p-2.5 rounded-xl bg-emerald-500/10 shrink-0">
+                      <Target className="w-5 h-5 text-emerald-500" />
+                    </div>
+                    <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
+                      <p className="text-2xl font-bold tracking-tight text-emerald-600">{metrics.retentionRate}%</p>
+                      <p className="text-xs text-muted-foreground">{isArabic ? 'معدل الاحتفاظ' : 'Retention Rate'}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Operational Actions + Financial Summary */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Claims Queue */}
+              <Card className="border-amber-500/20">
+                <CardHeader className="pb-3">
+                  <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+                    <CardTitle className={cn("text-base font-display font-semibold flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                      <FileCheck className="w-5 h-5 text-amber-500" />
+                      {isArabic ? 'قائمة المطالبات' : 'Claims Queue'}
+                    </CardTitle>
+                    <Badge className="bg-amber-500/10 text-amber-600 border-0">
+                      {metrics.pendingClaims} {isArabic ? 'معلقة' : 'pending'}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {urgentActions.filter(a => a.type === 'claims').map((action) => (
+                    <Link key={action.id} to={action.link}>
+                      <div className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 transition-colors">
+                        <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+                          <div className={cn(isRTL && "text-right")}>
+                            <p className="font-medium">{isArabic ? action.title.ar : action.title.en}</p>
+                            <p className="text-sm text-muted-foreground">{isArabic ? action.subtitle.ar : action.subtitle.en}</p>
+                          </div>
+                          <ArrowRight className={cn("w-5 h-5 text-amber-500", isRTL && "rotate-180")} />
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                  <Link to="/employer/claims">
+                    <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">
+                      {isArabic ? 'عرض كل المطالبات' : 'View All Claims'}
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+
+              {/* Budget Overview */}
+              <Card className="border-border/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className={cn("text-base font-display font-semibold flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                    <DollarSign className="w-5 h-5 text-primary" />
+                    {isArabic ? 'نظرة عامة على الميزانية' : 'Budget Overview'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className={cn("p-3 rounded-lg bg-muted/30", isRTL && "text-right")}>
+                      <p className="text-xs text-muted-foreground">{isArabic ? 'الميزانية' : 'Budget'}</p>
+                      <p className="text-lg font-bold">{formatCurrency(metrics.annualBudget)}</p>
+                    </div>
+                    <div className={cn("p-3 rounded-lg bg-muted/30", isRTL && "text-right")}>
+                      <p className="text-xs text-muted-foreground">{isArabic ? 'المُنفق' : 'Spent'}</p>
+                      <p className="text-lg font-bold text-blue-600">{formatCurrency(metrics.budgetUsed)}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className={cn("flex justify-between text-sm", isRTL && "flex-row-reverse")}>
+                      <span>{isArabic ? 'الاستخدام' : 'Utilization'}</span>
+                      <span className="font-medium">{metrics.utilizationRate}% / {metrics.utilizationTarget}%</span>
+                    </div>
+                    <Progress value={metrics.utilizationRate} className="h-3" />
+                  </div>
+                  <Link to="/employer/spend">
+                    <Button variant="outline" className="w-full">
+                      {isArabic ? 'عرض التفاصيل' : 'View Details'} →
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Team Health + Quick Links */}
+            {showTeamHealth && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <Card className="border-border/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className={cn("text-sm font-medium", isRTL && "text-right")}>
+                      {isArabic ? 'الأعلى أداءً' : 'Top Performers'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ProgressBarList items={topBenefits} />
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className={cn("text-sm font-medium", isRTL && "text-right")}>
+                      {isArabic ? 'يحتاج اهتمام' : 'Needs Attention'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ProgressBarList items={bottomBenefits} />
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className={cn("text-sm font-medium", isRTL && "text-right")}>
+                      {isArabic ? 'روابط سريعة' : 'Quick Links'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Link to="/employer/segments">
+                      <Button variant="ghost" size="sm" className="w-full justify-start">
+                        <Users className="w-4 h-4 mr-2" />
+                        {isArabic ? 'شرائح الموظفين' : 'Employee Segments'}
+                      </Button>
+                    </Link>
+                    <Link to="/employer/zombie">
+                      <Button variant="ghost" size="sm" className="w-full justify-start">
+                        <Recycle className="w-4 h-4 mr-2" />
+                        {isArabic ? 'استرداد الهدر' : 'Waste Recovery'}
+                      </Button>
+                    </Link>
+                    <Link to="/employer/recommendations">
+                      <Button variant="ghost" size="sm" className="w-full justify-start">
+                        <Lightbulb className="w-4 h-4 mr-2" />
+                        {isArabic ? 'التوصيات' : 'Recommendations'}
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
