@@ -79,6 +79,8 @@ import VendorAnalytics from "./pages/vendor/Analytics";
 import VendorCreateOffer from "./pages/vendor/CreateOffer";
 import VendorProfile from "./pages/vendor/Profile";
 import VendorSettings from "./pages/vendor/Settings";
+import VendorPayouts from "./pages/vendor/Payouts";
+import VendorOfferQuality from "./pages/vendor/OfferQuality";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -189,9 +191,11 @@ function AppRoutes() {
         <Route index element={<VendorDashboard />} />
         <Route path="offers" element={<VendorOffers />} />
         <Route path="offers/new" element={<VendorCreateOffer />} />
+        <Route path="offer-quality" element={<VendorOfferQuality />} />
         <Route path="analytics" element={<VendorAnalytics />} />
         <Route path="transactions" element={<VendorTransactions />} />
         <Route path="earnings" element={<VendorEarnings />} />
+        <Route path="payouts" element={<VendorPayouts />} />
         <Route path="profile" element={<VendorProfile />} />
         <Route path="settings" element={<VendorSettings />} />
       </Route>

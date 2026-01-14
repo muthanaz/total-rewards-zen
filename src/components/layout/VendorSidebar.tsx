@@ -14,6 +14,8 @@ import {
   Store,
   FileText,
   ChevronDown,
+  CreditCard,
+  FileCheck,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -49,6 +51,7 @@ const navigationGroups: NavGroup[] = [
     items: [
       { label: 'My Offers', labelAr: 'عروضي', path: '/vendor/offers', icon: Tag },
       { label: 'Create Offer', labelAr: 'إنشاء عرض', path: '/vendor/offers/new', icon: Package },
+      { label: 'Offer Quality', labelAr: 'جودة العروض', path: '/vendor/offer-quality', icon: FileCheck },
     ],
   },
   {
@@ -57,7 +60,14 @@ const navigationGroups: NavGroup[] = [
     items: [
       { label: 'Analytics', labelAr: 'التحليلات', path: '/vendor/analytics', icon: TrendingUp },
       { label: 'Transactions', labelAr: 'المعاملات', path: '/vendor/transactions', icon: FileText },
+    ],
+  },
+  {
+    title: 'Finance',
+    titleAr: 'المالية',
+    items: [
       { label: 'Earnings', labelAr: 'الأرباح', path: '/vendor/earnings', icon: Wallet },
+      { label: 'Payouts', labelAr: 'المدفوعات', path: '/vendor/payouts', icon: CreditCard },
     ],
   },
   {
