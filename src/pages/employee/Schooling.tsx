@@ -163,26 +163,6 @@ export default function SchoolingPage() {
         </p>
       </div>
 
-      {/* Comprehensive Benefit Guide */}
-      <BenefitGuide
-        icon={GraduationCap}
-        title="Education Allowance Guide"
-        steps={[
-          { title: 'Per-Child Allowance', description: 'Each child receives AED 30,000 per year — allowances are separate and do not combine', highlight: 'AED 30,000' },
-          { title: 'Different Schools OK', description: 'Each child can attend a different school — you choose what\'s best for their age and needs' },
-          { title: 'Top-Up If Needed', description: 'If school fees exceed AED 30,000, the extra is deducted from your salary automatically' },
-        ]}
-        policyPoints={[
-          'AED 30,000 per child per academic year (not combined)',
-          'Covers children aged 4–18 years',
-          'Each child can attend a different school',
-          'Tuition fees only (excludes transport, uniform)',
-          'Direct payment to school or reimbursement',
-          'Excess fees deducted from monthly salary',
-        ]}
-        policyButtonText="View Education Policy"
-      />
-
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <SummaryStatsCard
@@ -232,6 +212,26 @@ export default function SchoolingPage() {
           index={4}
         />
       </div>
+
+      {/* Comprehensive Benefit Guide */}
+      <BenefitGuide
+        icon={GraduationCap}
+        title="Education Allowance Guide"
+        steps={[
+          { title: 'Per-Child Allowance', description: 'Each child receives AED 30,000 per year — allowances are separate and do not combine', highlight: 'AED 30,000' },
+          { title: 'Different Schools OK', description: 'Each child can attend a different school — you choose what\'s best for their age and needs' },
+          { title: 'Top-Up If Needed', description: 'If school fees exceed AED 30,000, the extra is deducted from your salary automatically' },
+        ]}
+        policyPoints={[
+          'AED 30,000 per child per academic year (not combined)',
+          'Covers children aged 4–18 years',
+          'Each child can attend a different school',
+          'Tuition fees only (excludes transport, uniform)',
+          'Direct payment to school or reimbursement',
+          'Excess fees deducted from monthly salary',
+        ]}
+        policyButtonText="View Education Policy"
+      />
 
       {/* Children Allocation Cards */}
       <div>
