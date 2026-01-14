@@ -178,6 +178,8 @@ export default function HousingPage() {
         steps={guideSteps}
         policyPoints={policyPoints}
         policyButtonText="View Housing Policy"
+        claimCategory="Housing"
+        claimButtonText="Submit Claim"
       />
 
       {/* Area Comparison Table */}
@@ -377,10 +379,6 @@ export default function HousingPage() {
         </Card>
       )}
 
-      {/* Actions */}
-      <div className="flex items-center justify-center">
-        <SubmitClaimButton category="Housing" buttonText="Submit Housing Claim" />
-      </div>
     </div>
   );
 }

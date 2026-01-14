@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, BookOpen, ExternalLink } from 'lucide-react';
+import { CheckCircle, BookOpen, ExternalLink, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
+import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 
 interface GuideStep {
   title: string;
@@ -18,6 +19,8 @@ interface BenefitGuideProps {
   policyButtonText: string;
   onViewPolicy?: () => void;
   className?: string;
+  claimCategory?: string;
+  claimButtonText?: string;
 }
 
 export function BenefitGuide({
@@ -28,6 +31,8 @@ export function BenefitGuide({
   policyButtonText,
   onViewPolicy,
   className,
+  claimCategory,
+  claimButtonText,
 }: BenefitGuideProps) {
   return (
     <Card className={cn("border-accent/30 bg-gradient-to-br from-accent/5 via-transparent to-transparent", className)}>
@@ -37,16 +42,26 @@ export function BenefitGuide({
             <Icon className="w-5 h-5 text-accent" />
             {title}
           </CardTitle>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onViewPolicy}
-            className="shrink-0 gap-1.5"
-          >
-            <BookOpen className="w-3.5 h-3.5" />
-            {policyButtonText}
-            <ExternalLink className="w-3 h-3" />
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            {claimCategory && claimButtonText && (
+              <SubmitClaimButton 
+                category={claimCategory} 
+                buttonText={claimButtonText}
+                buttonVariant="default"
+                buttonSize="sm"
+              />
+            )}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onViewPolicy}
+              className="gap-1.5"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              {policyButtonText}
+              <ExternalLink className="w-3 h-3" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">

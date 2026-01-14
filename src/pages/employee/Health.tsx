@@ -197,6 +197,8 @@ export default function HealthPage() {
         steps={guideSteps}
         policyPoints={policyPoints}
         policyButtonText="View Insurance Policy"
+        claimCategory="Health Insurance"
+        claimButtonText="Submit Claim"
       />
 
       {/* Coverage Categories */}
@@ -369,10 +371,6 @@ export default function HealthPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Actions */}
-      <div className="flex items-center justify-center">
-        <SubmitClaimButton category="Health Insurance" buttonText="Submit Health Claim" />
-      </div>
     </div>
   );
 }

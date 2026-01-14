@@ -192,6 +192,8 @@ export default function LearningPage() {
         steps={guideSteps}
         policyPoints={policyPoints}
         policyButtonText="View L&D Policy"
+        claimCategory="Learning & Development"
+        claimButtonText="Submit Claim"
       />
 
       {/* Your Learning */}
@@ -273,10 +275,6 @@ export default function LearningPage() {
         </CardContent>
       </Card>
 
-      {/* Actions */}
-      <div className="flex items-center justify-center">
-        <SubmitClaimButton category="Learning & Development" buttonText="Submit L&D Claim" />
-      </div>
     </div>
   );
 }
