@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { ClipboardCheck, Clock, CheckCircle, XCircle, Search, Filter, Eye, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -189,8 +190,11 @@ export default function ClaimsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <ClipboardCheck className="h-8 w-8 text-primary" />
-              <div>
-                <p className="text-2xl font-bold">{requests.length}</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-1">
+                  <p className="text-2xl font-bold">{requests.length}</p>
+                  <InfoTooltip formula="Total count of all claims, requests, and questions submitted." dataSource="Claims System" />
+                </div>
                 <p className="text-sm text-muted-foreground">Total Requests</p>
               </div>
             </div>
@@ -200,8 +204,11 @@ export default function ClaimsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <Clock className="h-8 w-8 text-amber-500" />
-              <div>
-                <p className="text-2xl font-bold text-amber-600">{pendingCount}</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-1">
+                  <p className="text-2xl font-bold text-amber-600">{pendingCount}</p>
+                  <InfoTooltip formula="Claims in 'pending' status awaiting review." dataSource="Claims System" />
+                </div>
                 <p className="text-sm text-muted-foreground">Pending Review</p>
               </div>
             </div>
@@ -211,8 +218,11 @@ export default function ClaimsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <CheckCircle className="h-8 w-8 text-green-500" />
-              <div>
-                <p className="text-2xl font-bold text-green-600">{approvedCount}</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-1">
+                  <p className="text-2xl font-bold text-green-600">{approvedCount}</p>
+                  <InfoTooltip formula="Claims that have been approved this period." dataSource="Claims System" />
+                </div>
                 <p className="text-sm text-muted-foreground">Approved</p>
               </div>
             </div>
@@ -222,8 +232,11 @@ export default function ClaimsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <XCircle className="h-8 w-8 text-red-500" />
-              <div>
-                <p className="text-2xl font-bold text-red-600">{rejectedCount}</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-1">
+                  <p className="text-2xl font-bold text-red-600">{rejectedCount}</p>
+                  <InfoTooltip formula="Claims that have been rejected this period." dataSource="Claims System" />
+                </div>
                 <p className="text-sm text-muted-foreground">Rejected</p>
               </div>
             </div>

@@ -8,6 +8,7 @@ import { Ghost, AlertTriangle, TrendingDown, Lightbulb, DollarSign, Users, Targe
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 import { useState } from 'react';
 import { DrillDownModal } from '@/components/dashboard';
+import { Link } from 'react-router-dom';
 
 const zombieCategories = [
   { 
@@ -151,7 +152,7 @@ export default function ZombieSpendPage() {
           label="Recovery Potential"
           value={`AED ${(recoveryPotential / 1000).toFixed(0)}K`}
           icon={TrendingDown}
-          formula="Estimated recoverable amount (60% of zombie spend)"
+          formula="Estimated recoverable amount (60% of zombie spend based on industry benchmarks)"
           dataSource="Analytics Model"
           index={2}
         />
@@ -170,10 +171,13 @@ export default function ZombieSpendPage() {
       {/* Risk Indicators */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-amber-500" />
-            Benefit Health Overview
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-display flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Benefit Health Overview
+            </CardTitle>
+            <InfoTooltip formula="Benefits categorized by utilization rate: High Risk (<60%), Medium Risk (60-75%), Healthy (>75%)." dataSource="Benefits Analytics" />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -196,11 +200,15 @@ export default function ZombieSpendPage() {
       {/* Zombie Spend Chart - Enhanced */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            Zombie Spend by Benefit
-            <InfoTooltip formula="Stacked comparison of utilized vs zombie amounts" dataSource="Benefits Analytics" />
-          </CardTitle>
-          <CardDescription>Click on any bar to see detailed breakdown</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base font-display flex items-center gap-2">
+                Zombie Spend by Benefit
+              </CardTitle>
+              <CardDescription>Click on any bar to see detailed breakdown</CardDescription>
+            </div>
+            <InfoTooltip formula="Stacked comparison of utilized vs zombie amounts per benefit category." dataSource="Benefits Analytics" />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="h-[320px]">
@@ -279,10 +287,13 @@ export default function ZombieSpendPage() {
       {/* Detailed Analysis */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <Lightbulb className="h-5 w-5 text-accent" />
-            Detailed Analysis & Recommendations
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-display flex items-center gap-2">
+              <Lightbulb className="h-5 w-5 text-accent" />
+              Detailed Analysis & Recommendations
+            </CardTitle>
+            <InfoTooltip formula="AI-generated insights based on utilization patterns, employee feedback, and industry benchmarks." dataSource="AI Analytics" />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -302,19 +313,31 @@ export default function ZombieSpendPage() {
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
                       <div className="space-y-1">
-                        <p className="text-muted-foreground text-xs">Allocated</p>
+                        <div className="flex items-center gap-1">
+                          <p className="text-muted-foreground text-xs">Allocated</p>
+                          <InfoTooltip formula="Total budget allocated for this benefit category." dataSource="Finance" />
+                        </div>
                         <p className="font-semibold">AED {category.allocated.toLocaleString()}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-muted-foreground text-xs">Utilized</p>
+                        <div className="flex items-center gap-1">
+                          <p className="text-muted-foreground text-xs">Utilized</p>
+                          <InfoTooltip formula="Amount actually used by employees." dataSource="Claims System" />
+                        </div>
                         <p className="font-semibold text-accent">AED {category.utilized.toLocaleString()}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-muted-foreground text-xs">Zombie Amount</p>
+                        <div className="flex items-center gap-1">
+                          <p className="text-muted-foreground text-xs">Zombie Amount</p>
+                          <InfoTooltip formula="Allocated - Utilized = Unused (zombie) spend." dataSource="Calculated" />
+                        </div>
                         <p className="font-semibold text-amber-500">AED {category.zombie.toLocaleString()}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-muted-foreground text-xs">Affected</p>
+                        <div className="flex items-center gap-1">
+                          <p className="text-muted-foreground text-xs">Affected</p>
+                          <InfoTooltip formula="Number of employees not utilizing this benefit." dataSource="HR System" />
+                        </div>
                         <p className="font-semibold">{category.affectedEmployees} employees</p>
                       </div>
                     </div>
@@ -337,9 +360,11 @@ export default function ZombieSpendPage() {
                       </div>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" className="shrink-0">
-                    Take Action
-                  </Button>
+                  <Link to="/employer/recommendations">
+                    <Button variant="outline" size="sm" className="shrink-0">
+                      Take Action
+                    </Button>
+                  </Link>
                 </div>
               </div>
             ))}

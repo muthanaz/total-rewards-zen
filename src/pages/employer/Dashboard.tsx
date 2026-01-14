@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { 
   Users, DollarSign, TrendingUp, TrendingDown, Smile, 
   Recycle, FileCheck, Target, ArrowRight, AlertTriangle, 
@@ -21,7 +22,6 @@ import chartColors from '@/lib/chartColors';
 import { MoneyFlowVisualization } from '@/components/employer/MoneyFlowVisualization';
 import { YearEndProjection } from '@/components/employer/YearEndProjection';
 import { AIInsightsPanel } from '@/components/employer/AIInsightsPanel';
-import { PeriodSelector } from '@/components/employer/PeriodSelector';
 
 // Dashboard metrics data
 const metrics = {
@@ -56,6 +56,7 @@ const executivePulseCards = [
     icon: TrendingUp,
     color: 'emerald',
     benchmark: { en: 'vs Industry: +12%', ar: 'مقارنة بالصناعة: +12%' },
+    tooltip: 'Calculated as (Value Delivered / Total Spend). Based on employee valuations and productivity metrics.'
   },
   {
     id: 'financial',
@@ -67,6 +68,7 @@ const executivePulseCards = [
     icon: DollarSign,
     color: 'amber',
     benchmark: { en: 'Target: 75%', ar: 'الهدف: 75%' },
+    tooltip: 'Percentage of annual budget spent year-to-date (YTD Spend / Annual Budget × 100).'
   },
   {
     id: 'risk',
@@ -78,6 +80,7 @@ const executivePulseCards = [
     icon: Shield,
     color: 'red',
     benchmark: { en: 'Action needed', ar: 'يتطلب إجراء' },
+    tooltip: 'Sum of underutilized benefits (zombie spend) and potential SLA penalty exposure.'
   },
   {
     id: 'sentiment',
@@ -89,6 +92,7 @@ const executivePulseCards = [
     icon: Smile,
     color: 'violet',
     benchmark: { en: '142 responses', ar: '142 استجابة' },
+    tooltip: 'Average satisfaction rating from employee surveys. Based on 142 responses this quarter.'
   },
 ];
 
@@ -123,18 +127,21 @@ const smartRecommendations = [
     impact: { en: 'Could save AED 2.8M', ar: 'يمكن توفير 2.8 مليون درهم' },
     roi: '3.2x',
     effort: 'low',
+    link: '/employer/recommendations',
   },
   { 
     title: { en: 'Simplify wellbeing claims', ar: 'تبسيط مطالبات الرفاهية' },
     impact: { en: 'Could increase usage by 25%', ar: 'يمكن زيادة الاستخدام بنسبة 25%' },
     roi: '2.1x',
     effort: 'medium',
+    link: '/employer/recommendations',
   },
   { 
     title: { en: 'Launch flex benefits pilot', ar: 'إطلاق برنامج المزايا المرنة' },
     impact: { en: 'Improve satisfaction 15%', ar: 'تحسين الرضا بنسبة 15%' },
     roi: '2.8x',
     effort: 'high',
+    link: '/employer/recommendations',
   },
 ];
 
@@ -247,11 +254,19 @@ export default function EmployerDashboard() {
               )} />
               <span className="text-muted-foreground">{isArabic ? 'البرنامج:' : 'Program:'}</span>
               <span className="font-bold">{metrics.programScore}/100</span>
+              <InfoTooltip 
+                formula="Weighted average of utilization (40%), satisfaction (30%), cost efficiency (20%), and compliance (10%)." 
+                dataSource="Benefits Analytics" 
+              />
             </div>
             <div className="h-4 w-px bg-border" />
             <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
               <span className="text-muted-foreground">{isArabic ? 'الميزانية:' : 'Budget:'}</span>
               <span className="font-bold">{formatCurrency(metrics.annualBudget)}</span>
+              <InfoTooltip 
+                formula="Total allocated benefits budget for the fiscal year." 
+                dataSource="Finance System" 
+              />
             </div>
             <div className="h-4 w-px bg-border" />
             <Badge variant="outline" className={cn(
@@ -299,8 +314,11 @@ export default function EmployerDashboard() {
                     )}>
                       <CardContent className="p-4">
                         <div className={cn("flex items-start justify-between mb-3", isRTL && "flex-row-reverse")}>
-                          <div className={cn("p-2 rounded-xl", colorClasses.bg)}>
-                            <card.icon className={cn("w-5 h-5", colorClasses.text)} />
+                          <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                            <div className={cn("p-2 rounded-xl", colorClasses.bg)}>
+                              <card.icon className={cn("w-5 h-5", colorClasses.text)} />
+                            </div>
+                            <InfoTooltip formula={card.tooltip} dataSource="Benefits Analytics" />
                           </div>
                           <div className={cn(
                             "flex items-center gap-1 text-xs font-medium",
@@ -355,126 +373,25 @@ export default function EmployerDashboard() {
               />
             </div>
 
-            {/* Financial Health + Competitive Position */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Financial Health Summary */}
-              {showFinancialSummary && (
-                <Card className="border-border/50 bg-gradient-to-br from-card via-card to-primary/5">
-                  <CardHeader className="pb-2">
-                    <CardTitle className={cn(
-                      "text-base font-display font-semibold flex items-center gap-2",
-                      isRTL && "flex-row-reverse"
-                    )}>
-                      <DollarSign className="w-5 h-5 text-primary" />
-                      {isArabic ? 'ملخص الصحة المالية' : 'Financial Health Summary'}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className={cn("space-y-1", isRTL && "text-right")}>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                          {isArabic ? 'الميزانية السنوية' : 'Annual Budget'}
-                        </p>
-                        <p className="text-xl font-bold">{formatCurrency(metrics.annualBudget)}</p>
-                      </div>
-                      <div className={cn("space-y-1", isRTL && "text-right")}>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                          {isArabic ? 'المستخدم حتى الآن' : 'Spent YTD'}
-                        </p>
-                        <p className="text-xl font-bold text-blue-600">{formatCurrency(metrics.budgetUsed)}</p>
-                      </div>
-                      <div className={cn("space-y-1", isRTL && "text-right")}>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                          {isArabic ? 'المتبقي' : 'Remaining'}
-                        </p>
-                        <p className="text-xl font-bold text-emerald-600">{formatCurrency(metrics.budgetRemaining)}</p>
-                      </div>
-                      <div className={cn("space-y-1", isRTL && "text-right")}>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                          {isArabic ? 'الاستخدام' : 'Utilization'}
-                        </p>
-                        <div className="flex items-baseline gap-2">
-                          <p className={cn(
-                            "text-xl font-bold",
-                            metrics.utilizationRate >= metrics.utilizationTarget ? "text-emerald-600" : "text-amber-600"
-                          )}>
-                            {metrics.utilizationRate}%
-                          </p>
-                          <span className="text-xs text-muted-foreground">/ {metrics.utilizationTarget}%</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className={cn("flex justify-between text-xs", isRTL && "flex-row-reverse")}>
-                        <span className="text-muted-foreground">{isArabic ? 'تقدم الميزانية' : 'Budget Progress'}</span>
-                        <span className="font-medium">{budgetUtilization.toFixed(0)}% {isArabic ? 'مُنفذ' : 'deployed'}</span>
-                      </div>
-                      <Progress value={budgetUtilization} className="h-2" />
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Competitive Position */}
-              <Card className="border-border/50">
-                <CardHeader className="pb-2">
-                  <CardTitle className={cn(
-                    "text-base font-display font-semibold flex items-center gap-2",
-                    isRTL && "flex-row-reverse"
-                  )}>
-                    <BarChart3 className="w-5 h-5 text-primary" />
-                    {isArabic ? 'الموقع التنافسي' : 'Competitive Position'}
-                  </CardTitle>
-                  <CardDescription>{isArabic ? 'مقارنة بمعايير الصناعة' : 'vs Industry Benchmarks'}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {industryBenchmarks.map((item, index) => (
-                      <div key={index} className={cn(
-                        "flex items-center justify-between p-2 rounded-lg bg-muted/30",
-                        isRTL && "flex-row-reverse"
-                      )}>
-                        <span className="text-sm font-medium flex-1">
-                          {isArabic ? item.metric.ar : item.metric.en}
-                        </span>
-                        <div className={cn("flex items-center gap-3 text-sm", isRTL && "flex-row-reverse")}>
-                          <span className="font-bold text-primary">{item.you}%</span>
-                          <span className="text-muted-foreground">{item.industry}%</span>
-                          <span className="text-emerald-600 font-medium">{item.top}%</span>
-                          <Badge variant="outline" className={cn(
-                            "text-[9px]",
-                            item.status === 'optimal' ? 'bg-emerald-500/10 text-emerald-600' :
-                            item.status === 'near-top' ? 'bg-blue-500/10 text-blue-600' :
-                            'bg-amber-500/10 text-amber-600'
-                          )}>
-                            {item.status === 'optimal' ? '✓' : item.status === 'near-top' ? '★' : '○'}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className={cn("flex items-center justify-center gap-4 text-[10px] text-muted-foreground mt-3", isRTL && "flex-row-reverse")}>
-                    <span className="flex items-center gap-1"><span className="font-bold text-primary">●</span> {isArabic ? 'أنت' : 'You'}</span>
-                    <span className="flex items-center gap-1"><span className="text-muted-foreground">●</span> {isArabic ? 'الصناعة' : 'Industry'}</span>
-                    <span className="flex items-center gap-1"><span className="text-emerald-600">●</span> {isArabic ? 'الأفضل' : 'Top 10%'}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
             {/* Action Priority Matrix */}
             {showActionMatrix && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Urgent Actions */}
                 <Card className="border-amber-500/20 bg-gradient-to-br from-card to-amber-500/5">
                   <CardHeader className="pb-3">
-                    <CardTitle className={cn(
-                      "text-base font-display font-semibold flex items-center gap-2",
-                      isRTL && "flex-row-reverse"
-                    )}>
-                      <Zap className="w-4 h-4 text-amber-500" />
-                      {isArabic ? 'يتطلب إجراء' : 'Action Required'}
-                    </CardTitle>
+                    <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+                      <CardTitle className={cn(
+                        "text-base font-display font-semibold flex items-center gap-2",
+                        isRTL && "flex-row-reverse"
+                      )}>
+                        <Zap className="w-4 h-4 text-amber-500" />
+                        {isArabic ? 'يتطلب إجراء' : 'Action Required'}
+                      </CardTitle>
+                      <InfoTooltip 
+                        formula="Items requiring immediate attention based on SLA timelines and financial impact." 
+                        dataSource="System Alerts" 
+                      />
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {urgentActions.map((action) => (
@@ -514,39 +431,44 @@ export default function EmployerDashboard() {
                 {/* Smart Recommendations */}
                 <Card className="border-emerald-500/20 bg-gradient-to-br from-card to-emerald-500/5">
                   <CardHeader className="pb-3">
-                    <CardTitle className={cn(
-                      "text-base font-display font-semibold flex items-center gap-2",
-                      isRTL && "flex-row-reverse"
-                    )}>
-                      <Sparkles className="w-4 h-4 text-emerald-500" />
-                      {isArabic ? 'توصيات ذكية' : 'Smart Recommendations'}
-                      <Badge variant="outline" className="ml-auto text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                        {isArabic ? 'بالذكاء الاصطناعي' : 'AI Powered'}
-                      </Badge>
-                    </CardTitle>
+                    <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+                      <CardTitle className={cn(
+                        "text-base font-display font-semibold flex items-center gap-2",
+                        isRTL && "flex-row-reverse"
+                      )}>
+                        <Sparkles className="w-4 h-4 text-emerald-500" />
+                        {isArabic ? 'توصيات ذكية' : 'Smart Recommendations'}
+                        <Badge variant="outline" className="ml-auto text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                          {isArabic ? 'بالذكاء الاصطناعي' : 'AI Powered'}
+                        </Badge>
+                      </CardTitle>
+                      <InfoTooltip 
+                        formula="AI-generated recommendations based on utilization patterns, industry benchmarks, and cost analysis." 
+                        dataSource="AI Analytics Engine" 
+                      />
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {smartRecommendations.map((rec, idx) => (
-                      <div 
-                        key={idx}
-                        className={cn(
+                      <Link key={idx} to={rec.link}>
+                        <div className={cn(
                           "p-3 rounded-lg border border-border/50 bg-card hover:bg-accent/5 transition-colors cursor-pointer",
                           isRTL && "text-right"
-                        )}
-                      >
-                        <div className={cn("flex items-start justify-between gap-2", isRTL && "flex-row-reverse")}>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium">{isArabic ? rec.title.ar : rec.title.en}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{isArabic ? rec.impact.ar : rec.impact.en}</p>
-                          </div>
-                          <div className={cn("flex items-center gap-2 shrink-0", isRTL && "flex-row-reverse")}>
-                            <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                              {rec.roi} ROI
-                            </Badge>
-                            {getEffortBadge(rec.effort)}
+                        )}>
+                          <div className={cn("flex items-start justify-between gap-2", isRTL && "flex-row-reverse")}>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium">{isArabic ? rec.title.ar : rec.title.en}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{isArabic ? rec.impact.ar : rec.impact.en}</p>
+                            </div>
+                            <div className={cn("flex items-center gap-2 shrink-0", isRTL && "flex-row-reverse")}>
+                              <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                                {rec.roi} ROI
+                              </Badge>
+                              {getEffortBadge(rec.effort)}
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      </Link>
                     ))}
                     <Link to="/employer/recommendations">
                       <Button variant="ghost" size="sm" className="w-full text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10">
@@ -558,6 +480,137 @@ export default function EmployerDashboard() {
                 </Card>
               </div>
             )}
+
+            {/* Financial Health + Competitive Position */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Financial Health Summary */}
+              {showFinancialSummary && (
+                <Card className="border-border/50 bg-gradient-to-br from-card via-card to-primary/5">
+                  <CardHeader className="pb-2">
+                    <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+                      <CardTitle className={cn(
+                        "text-base font-display font-semibold flex items-center gap-2",
+                        isRTL && "flex-row-reverse"
+                      )}>
+                        <DollarSign className="w-5 h-5 text-primary" />
+                        {isArabic ? 'ملخص الصحة المالية' : 'Financial Health Summary'}
+                      </CardTitle>
+                      <InfoTooltip 
+                        formula="Overview of budget allocation, spending, and utilization status." 
+                        dataSource="Finance System" 
+                      />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className={cn("space-y-1", isRTL && "text-right")}>
+                        <div className="flex items-center gap-1">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                            {isArabic ? 'الميزانية السنوية' : 'Annual Budget'}
+                          </p>
+                          <InfoTooltip formula="Total allocated benefits budget for FY2024." dataSource="Finance" />
+                        </div>
+                        <p className="text-xl font-bold">{formatCurrency(metrics.annualBudget)}</p>
+                      </div>
+                      <div className={cn("space-y-1", isRTL && "text-right")}>
+                        <div className="flex items-center gap-1">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                            {isArabic ? 'المستخدم حتى الآن' : 'Spent YTD'}
+                          </p>
+                          <InfoTooltip formula="Sum of all approved claims and disbursements YTD." dataSource="Finance" />
+                        </div>
+                        <p className="text-xl font-bold text-blue-600">{formatCurrency(metrics.budgetUsed)}</p>
+                      </div>
+                      <div className={cn("space-y-1", isRTL && "text-right")}>
+                        <div className="flex items-center gap-1">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                            {isArabic ? 'المتبقي' : 'Remaining'}
+                          </p>
+                          <InfoTooltip formula="Annual Budget - Spent YTD." dataSource="Calculated" />
+                        </div>
+                        <p className="text-xl font-bold text-emerald-600">{formatCurrency(metrics.budgetRemaining)}</p>
+                      </div>
+                      <div className={cn("space-y-1", isRTL && "text-right")}>
+                        <div className="flex items-center gap-1">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                            {isArabic ? 'الاستخدام' : 'Utilization'}
+                          </p>
+                          <InfoTooltip formula="(Spent YTD / Annual Budget) × 100. Target: 75%." dataSource="Calculated" />
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                          <p className={cn(
+                            "text-xl font-bold",
+                            metrics.utilizationRate >= metrics.utilizationTarget ? "text-emerald-600" : "text-amber-600"
+                          )}>
+                            {metrics.utilizationRate}%
+                          </p>
+                          <span className="text-xs text-muted-foreground">/ {metrics.utilizationTarget}%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className={cn("flex justify-between text-xs", isRTL && "flex-row-reverse")}>
+                        <span className="text-muted-foreground">{isArabic ? 'تقدم الميزانية' : 'Budget Progress'}</span>
+                        <span className="font-medium">{budgetUtilization.toFixed(0)}% {isArabic ? 'مُنفذ' : 'deployed'}</span>
+                      </div>
+                      <Progress value={budgetUtilization} className="h-2" />
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Competitive Position */}
+              <Card className="border-border/50">
+                <CardHeader className="pb-2">
+                  <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+                    <CardTitle className={cn(
+                      "text-base font-display font-semibold flex items-center gap-2",
+                      isRTL && "flex-row-reverse"
+                    )}>
+                      <BarChart3 className="w-5 h-5 text-primary" />
+                      {isArabic ? 'الموقع التنافسي' : 'Competitive Position'}
+                    </CardTitle>
+                    <InfoTooltip 
+                      formula="Comparison of your metrics against UAE industry averages and top 10% performers." 
+                      dataSource="Industry Benchmarks Q4 2024" 
+                    />
+                  </div>
+                  <CardDescription>{isArabic ? 'مقارنة بمعايير الصناعة' : 'vs Industry Benchmarks'}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {industryBenchmarks.map((item, index) => (
+                      <div key={index} className={cn(
+                        "flex items-center justify-between p-2 rounded-lg bg-muted/30",
+                        isRTL && "flex-row-reverse"
+                      )}>
+                        <span className="text-sm font-medium flex-1">
+                          {isArabic ? item.metric.ar : item.metric.en}
+                        </span>
+                        <div className={cn("flex items-center gap-3 text-sm", isRTL && "flex-row-reverse")}>
+                          <span className="font-bold text-primary">{item.you}%</span>
+                          <span className="text-muted-foreground">{item.industry}%</span>
+                          <span className="text-emerald-600 font-medium">{item.top}%</span>
+                          <Badge variant="outline" className={cn(
+                            "text-[9px]",
+                            item.status === 'optimal' ? 'bg-emerald-500/10 text-emerald-600' :
+                            item.status === 'near-top' ? 'bg-blue-500/10 text-blue-600' :
+                            'bg-amber-500/10 text-amber-600'
+                          )}>
+                            {item.status === 'optimal' ? '✓' : item.status === 'near-top' ? '★' : '○'}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className={cn("flex items-center justify-center gap-4 text-[10px] text-muted-foreground mt-3", isRTL && "flex-row-reverse")}>
+                    <span className="flex items-center gap-1"><span className="font-bold text-primary">●</span> {isArabic ? 'أنت' : 'You'}</span>
+                    <span className="flex items-center gap-1"><span className="text-muted-foreground">●</span> {isArabic ? 'الصناعة' : 'Industry'}</span>
+                    <span className="flex items-center gap-1"><span className="text-emerald-600">●</span> {isArabic ? 'الأفضل' : 'Top 10%'}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
             {/* AI Strategic Insights */}
             <AIInsightsPanel
@@ -599,10 +652,13 @@ export default function EmployerDashboard() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <Card className="border-border/50">
                   <CardHeader className="pb-2">
-                    <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                      <TrendingUp className="w-4 h-4 text-primary" />
-                      {isArabic ? 'اتجاه الاستخدام' : 'Utilization Trend'}
-                    </CardTitle>
+                    <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+                      <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                        <TrendingUp className="w-4 h-4 text-primary" />
+                        {isArabic ? 'اتجاه الاستخدام' : 'Utilization Trend'}
+                      </CardTitle>
+                      <InfoTooltip formula="Monthly utilization percentage over the last 6 months." dataSource="Analytics" />
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <AnimatedLineChart 
@@ -616,10 +672,13 @@ export default function EmployerDashboard() {
 
                 <Card className="border-border/50">
                   <CardHeader className="pb-2">
-                    <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                      {isArabic ? 'الأعلى أداءً' : 'Top Performers'}
-                    </CardTitle>
+                    <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+                      <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                        {isArabic ? 'الأعلى أداءً' : 'Top Performers'}
+                      </CardTitle>
+                      <InfoTooltip formula="Benefits with highest utilization rates (>70%)." dataSource="Analytics" />
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <ProgressBarList items={topBenefits} />
@@ -628,10 +687,13 @@ export default function EmployerDashboard() {
 
                 <Card className="border-border/50">
                   <CardHeader className="pb-2">
-                    <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                      <AlertTriangle className="w-4 h-4 text-amber-500" />
-                      {isArabic ? 'يحتاج اهتمام' : 'Needs Attention'}
-                    </CardTitle>
+                    <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+                      <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                        <AlertTriangle className="w-4 h-4 text-amber-500" />
+                        {isArabic ? 'يحتاج اهتمام' : 'Needs Attention'}
+                      </CardTitle>
+                      <InfoTooltip formula="Benefits with low utilization rates (<60%) - potential zombie spend." dataSource="Analytics" />
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <ProgressBarList items={bottomBenefits} />
@@ -659,7 +721,10 @@ export default function EmployerDashboard() {
                       <FileCheck className="w-5 h-5 text-amber-500" />
                     </div>
                     <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
-                      <p className="text-2xl font-bold tracking-tight text-amber-600">{metrics.pendingClaims}</p>
+                      <div className="flex items-center gap-1">
+                        <p className="text-2xl font-bold tracking-tight text-amber-600">{metrics.pendingClaims}</p>
+                        <InfoTooltip formula="Count of claims in 'pending' status." dataSource="Claims System" />
+                      </div>
                       <p className="text-xs text-muted-foreground">{isArabic ? 'مطالبات معلقة' : 'Pending Claims'}</p>
                     </div>
                   </div>
@@ -678,7 +743,10 @@ export default function EmployerDashboard() {
                       <Users className="w-5 h-5 text-primary" />
                     </div>
                     <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
-                      <p className="text-2xl font-bold tracking-tight">{metrics.totalEmployees}</p>
+                      <div className="flex items-center gap-1">
+                        <p className="text-2xl font-bold tracking-tight">{metrics.totalEmployees}</p>
+                        <InfoTooltip formula="Total active employees enrolled in benefits." dataSource="HR System" />
+                      </div>
                       <p className="text-xs text-muted-foreground">{isArabic ? 'إجمالي الموظفين' : 'Total Employees'}</p>
                     </div>
                   </div>
@@ -696,7 +764,10 @@ export default function EmployerDashboard() {
                       <Smile className="w-5 h-5 text-violet-500" />
                     </div>
                     <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
-                      <p className="text-2xl font-bold tracking-tight">{metrics.satisfactionScore}<span className="text-base text-muted-foreground font-normal">/5</span></p>
+                      <div className="flex items-center gap-1">
+                        <p className="text-2xl font-bold tracking-tight">{metrics.satisfactionScore}<span className="text-base text-muted-foreground font-normal">/5</span></p>
+                        <InfoTooltip formula="Average rating from employee satisfaction surveys." dataSource="Survey System" />
+                      </div>
                       <p className="text-xs text-muted-foreground">{isArabic ? 'الرضا' : 'Satisfaction'}</p>
                     </div>
                   </div>
@@ -710,7 +781,10 @@ export default function EmployerDashboard() {
                       <Target className="w-5 h-5 text-emerald-500" />
                     </div>
                     <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
-                      <p className="text-2xl font-bold tracking-tight text-emerald-600">{metrics.retentionRate}%</p>
+                      <div className="flex items-center gap-1">
+                        <p className="text-2xl font-bold tracking-tight text-emerald-600">{metrics.retentionRate}%</p>
+                        <InfoTooltip formula="(Employees at end of period / Employees at start) × 100." dataSource="HR Analytics" />
+                      </div>
                       <p className="text-xs text-muted-foreground">{isArabic ? 'معدل الاحتفاظ' : 'Retention Rate'}</p>
                     </div>
                   </div>
@@ -724,126 +798,135 @@ export default function EmployerDashboard() {
               <Card className="border-amber-500/20">
                 <CardHeader className="pb-3">
                   <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                    <CardTitle className={cn("text-base font-display font-semibold flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                      <FileCheck className="w-5 h-5 text-amber-500" />
+                    <CardTitle className={cn(
+                      "text-base font-display font-semibold flex items-center gap-2",
+                      isRTL && "flex-row-reverse"
+                    )}>
+                      <FileCheck className="w-4 h-4 text-amber-500" />
                       {isArabic ? 'قائمة المطالبات' : 'Claims Queue'}
                     </CardTitle>
-                    <Badge className="bg-amber-500/10 text-amber-600 border-0">
-                      {metrics.pendingClaims} {isArabic ? 'معلقة' : 'pending'}
-                    </Badge>
+                    <InfoTooltip formula="Pending claims sorted by submission date." dataSource="Claims System" />
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {urgentActions.filter(a => a.type === 'claims').map((action) => (
-                    <Link key={action.id} to={action.link}>
-                      <div className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 transition-colors">
-                        <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                          <div className={cn(isRTL && "text-right")}>
-                            <p className="font-medium">{isArabic ? action.title.ar : action.title.en}</p>
-                            <p className="text-sm text-muted-foreground">{isArabic ? action.subtitle.ar : action.subtitle.en}</p>
-                          </div>
-                          <ArrowRight className={cn("w-5 h-5 text-amber-500", isRTL && "rotate-180")} />
-                        </div>
+                  <div className={cn("flex items-center justify-between p-3 rounded-lg bg-amber-500/5 border border-amber-500/20", isRTL && "flex-row-reverse")}>
+                    <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+                      <Clock className="w-4 h-4 text-amber-500" />
+                      <div className={isRTL ? "text-right" : ""}>
+                        <p className="text-sm font-medium">{isArabic ? 'متوسط وقت المعالجة' : 'Avg Processing Time'}</p>
+                        <p className="text-xs text-muted-foreground">{isArabic ? 'الهدف: 3 أيام' : 'Target: 3 days'}</p>
                       </div>
-                    </Link>
-                  ))}
+                    </div>
+                    <div className={cn("text-right", isRTL && "text-left")}>
+                      <p className="text-lg font-bold text-amber-600">{metrics.avgProcessingDays} {isArabic ? 'أيام' : 'days'}</p>
+                      <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                        {isArabic ? 'ضمن الهدف' : 'On Target'}
+                      </Badge>
+                    </div>
+                  </div>
+                  
                   <Link to="/employer/claims">
                     <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">
-                      {isArabic ? 'عرض كل المطالبات' : 'View All Claims'}
+                      <FileCheck className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                      {isArabic ? 'مراجعة المطالبات المعلقة' : 'Review Pending Claims'}
+                      <Badge className="ml-2 bg-white/20 text-white">{metrics.pendingClaims}</Badge>
                     </Button>
                   </Link>
                 </CardContent>
               </Card>
 
-              {/* Budget Overview */}
+              {/* Quick Actions */}
               <Card className="border-border/50">
                 <CardHeader className="pb-3">
-                  <CardTitle className={cn("text-base font-display font-semibold flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                    <DollarSign className="w-5 h-5 text-primary" />
-                    {isArabic ? 'نظرة عامة على الميزانية' : 'Budget Overview'}
+                  <CardTitle className={cn(
+                    "text-base font-display font-semibold flex items-center gap-2",
+                    isRTL && "flex-row-reverse"
+                  )}>
+                    <Zap className="w-4 h-4 text-primary" />
+                    {isArabic ? 'إجراءات سريعة' : 'Quick Actions'}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className={cn("p-3 rounded-lg bg-muted/30", isRTL && "text-right")}>
-                      <p className="text-xs text-muted-foreground">{isArabic ? 'الميزانية' : 'Budget'}</p>
-                      <p className="text-lg font-bold">{formatCurrency(metrics.annualBudget)}</p>
-                    </div>
-                    <div className={cn("p-3 rounded-lg bg-muted/30", isRTL && "text-right")}>
-                      <p className="text-xs text-muted-foreground">{isArabic ? 'المُنفق' : 'Spent'}</p>
-                      <p className="text-lg font-bold text-blue-600">{formatCurrency(metrics.budgetUsed)}</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className={cn("flex justify-between text-sm", isRTL && "flex-row-reverse")}>
-                      <span>{isArabic ? 'الاستخدام' : 'Utilization'}</span>
-                      <span className="font-medium">{metrics.utilizationRate}% / {metrics.utilizationTarget}%</span>
-                    </div>
-                    <Progress value={metrics.utilizationRate} className="h-3" />
-                  </div>
+                <CardContent className="space-y-2">
                   <Link to="/employer/spend">
-                    <Button variant="outline" className="w-full">
-                      {isArabic ? 'عرض التفاصيل' : 'View Details'} →
+                    <Button variant="outline" className="w-full justify-start">
+                      <DollarSign className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                      {isArabic ? 'عرض تفاصيل الإنفاق' : 'View Spend Details'}
+                    </Button>
+                  </Link>
+                  <Link to="/employer/zombie">
+                    <Button variant="outline" className="w-full justify-start">
+                      <Recycle className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                      {isArabic ? 'تحليل الهدر' : 'Analyze Zombie Spend'}
+                    </Button>
+                  </Link>
+                  <Link to="/employer/segments">
+                    <Button variant="outline" className="w-full justify-start">
+                      <Users className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                      {isArabic ? 'عرض شرائح الموظفين' : 'View Employee Segments'}
+                    </Button>
+                  </Link>
+                  <Link to="/employer/satisfaction">
+                    <Button variant="outline" className="w-full justify-start">
+                      <Smile className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                      {isArabic ? 'نتائج الاستبيان' : 'Survey Results'}
                     </Button>
                   </Link>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Team Health + Quick Links */}
-            {showTeamHealth && (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <Card className="border-border/50">
-                  <CardHeader className="pb-2">
-                    <CardTitle className={cn("text-sm font-medium", isRTL && "text-right")}>
+            {/* Utilization & Alerts */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <Card className="border-border/50">
+                <CardHeader className="pb-2">
+                  <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+                    <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                      <TrendingUp className="w-4 h-4 text-primary" />
+                      {isArabic ? 'اتجاه الاستخدام' : 'Utilization Trend'}
+                    </CardTitle>
+                    <InfoTooltip formula="Monthly utilization percentage over the last 6 months." dataSource="Analytics" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <AnimatedLineChart 
+                    data={utilizationTrend} 
+                    height={120}
+                    showGrid={false}
+                    showLegend={false}
+                  />
+                </CardContent>
+              </Card>
+
+              <Card className="border-border/50">
+                <CardHeader className="pb-2">
+                  <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+                    <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                       {isArabic ? 'الأعلى أداءً' : 'Top Performers'}
                     </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ProgressBarList items={topBenefits} />
-                  </CardContent>
-                </Card>
+                    <InfoTooltip formula="Benefits with highest utilization rates (>70%)." dataSource="Analytics" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ProgressBarList items={topBenefits} />
+                </CardContent>
+              </Card>
 
-                <Card className="border-border/50">
-                  <CardHeader className="pb-2">
-                    <CardTitle className={cn("text-sm font-medium", isRTL && "text-right")}>
+              <Card className="border-border/50">
+                <CardHeader className="pb-2">
+                  <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+                    <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                      <AlertTriangle className="w-4 h-4 text-amber-500" />
                       {isArabic ? 'يحتاج اهتمام' : 'Needs Attention'}
                     </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ProgressBarList items={bottomBenefits} />
-                  </CardContent>
-                </Card>
-
-                <Card className="border-border/50">
-                  <CardHeader className="pb-2">
-                    <CardTitle className={cn("text-sm font-medium", isRTL && "text-right")}>
-                      {isArabic ? 'روابط سريعة' : 'Quick Links'}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <Link to="/employer/segments">
-                      <Button variant="ghost" size="sm" className="w-full justify-start">
-                        <Users className="w-4 h-4 mr-2" />
-                        {isArabic ? 'شرائح الموظفين' : 'Employee Segments'}
-                      </Button>
-                    </Link>
-                    <Link to="/employer/zombie">
-                      <Button variant="ghost" size="sm" className="w-full justify-start">
-                        <Recycle className="w-4 h-4 mr-2" />
-                        {isArabic ? 'استرداد الهدر' : 'Waste Recovery'}
-                      </Button>
-                    </Link>
-                    <Link to="/employer/recommendations">
-                      <Button variant="ghost" size="sm" className="w-full justify-start">
-                        <Lightbulb className="w-4 h-4 mr-2" />
-                        {isArabic ? 'التوصيات' : 'Recommendations'}
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+                    <InfoTooltip formula="Benefits with low utilization rates (<60%) - potential zombie spend." dataSource="Analytics" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ProgressBarList items={bottomBenefits} />
+                </CardContent>
+              </Card>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

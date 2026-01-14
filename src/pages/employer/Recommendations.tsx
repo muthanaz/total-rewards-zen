@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Lightbulb, TrendingUp, Users, DollarSign, MessageSquare, Target, ArrowRight, CheckCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface Recommendation {
   id: string;
@@ -14,6 +16,7 @@ interface Recommendation {
   affectedEmployees?: number;
   action: string;
   rationale: string;
+  link?: string;
 }
 
 const recommendations: Recommendation[] = [
@@ -28,6 +31,7 @@ const recommendations: Recommendation[] = [
     affectedEmployees: 45,
     action: 'Create internal newsletter featuring top courses and success stories',
     rationale: 'Low-effort campaign can increase utilization by 20-30% based on industry benchmarks.',
+    link: '/employer/zombie',
   },
   {
     id: '2',
@@ -40,6 +44,7 @@ const recommendations: Recommendation[] = [
     affectedEmployees: 60,
     action: 'Implement one-click app-based wellness rewards system',
     rationale: 'Current 5-step process has 60% drop-off. Simplification expected to recover 60% of zombie spend.',
+    link: '/employer/policies',
   },
   {
     id: '3',
@@ -51,6 +56,7 @@ const recommendations: Recommendation[] = [
     affectedEmployees: 42,
     action: 'Create "Benefits Champion" program with parent employees as advocates',
     rationale: 'Peer-to-peer learning more effective than corporate communications.',
+    link: '/employer/segments',
   },
   {
     id: '4',
@@ -63,6 +69,7 @@ const recommendations: Recommendation[] = [
     affectedEmployees: 15,
     action: 'Allow conversion to travel/experience vouchers at 80% value',
     rationale: 'Increases perceived value while reducing zombie spend. Net positive for employer and employee.',
+    link: '/employer/zombie',
   },
   {
     id: '5',
@@ -75,6 +82,7 @@ const recommendations: Recommendation[] = [
     affectedEmployees: 32,
     action: 'Negotiate with 3 additional gym chains or add home fitness alternatives',
     rationale: 'Location proximity is #1 factor in gym membership usage.',
+    link: '/employer/marketplace',
   },
   {
     id: '6',
@@ -86,6 +94,7 @@ const recommendations: Recommendation[] = [
     affectedEmployees: 130,
     action: 'Add FAQ section, flowcharts for pre-approval, and video explainers',
     rationale: 'Reduce HR ticket volume by 50% and improve employee satisfaction.',
+    link: '/employer/policies',
   },
   {
     id: '7',
@@ -97,6 +106,7 @@ const recommendations: Recommendation[] = [
     potentialSavings: 45000,
     action: 'Renegotiate contracts or convert to opt-in with company matching',
     rationale: 'Current blanket coverage is inefficient. Opt-in model aligns cost with actual demand.',
+    link: '/employer/spend',
   },
 ];
 
@@ -163,8 +173,11 @@ export default function RecommendationsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <Target className="h-8 w-8 text-primary" />
-              <div>
-                <p className="text-2xl font-bold">{recommendations.length}</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-1">
+                  <p className="text-2xl font-bold">{recommendations.length}</p>
+                  <InfoTooltip formula="Total number of active AI-generated recommendations." dataSource="AI Analytics" />
+                </div>
                 <p className="text-sm text-muted-foreground">Active Recommendations</p>
               </div>
             </div>
@@ -174,8 +187,11 @@ export default function RecommendationsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <DollarSign className="h-8 w-8 text-green-500" />
-              <div>
-                <p className="text-2xl font-bold text-green-600">AED {(totalPotentialSavings / 1000).toFixed(0)}K</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-1">
+                  <p className="text-2xl font-bold text-green-600">AED {(totalPotentialSavings / 1000).toFixed(0)}K</p>
+                  <InfoTooltip formula="Sum of estimated savings if all recommendations are implemented." dataSource="AI Analytics" />
+                </div>
                 <p className="text-sm text-muted-foreground">Potential Savings</p>
               </div>
             </div>
@@ -185,8 +201,11 @@ export default function RecommendationsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <Lightbulb className="h-8 w-8 text-amber-500" />
-              <div>
-                <p className="text-2xl font-bold">3</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-1">
+                  <p className="text-2xl font-bold">3</p>
+                  <InfoTooltip formula="Recommendations with 'Low Effort' that can be implemented quickly." dataSource="AI Analytics" />
+                </div>
                 <p className="text-sm text-muted-foreground">Quick Wins Available</p>
               </div>
             </div>
@@ -196,8 +215,11 @@ export default function RecommendationsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <CheckCircle className="h-8 w-8 text-accent" />
-              <div>
-                <p className="text-2xl font-bold">4</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-1">
+                  <p className="text-2xl font-bold">4</p>
+                  <InfoTooltip formula="Recommendations rated as 'High Impact' based on potential ROI and employee coverage." dataSource="AI Analytics" />
+                </div>
                 <p className="text-sm text-muted-foreground">High Impact Items</p>
               </div>
             </div>
@@ -208,8 +230,13 @@ export default function RecommendationsPage() {
       {/* Priority Matrix */}
       <Card className="card-elevated">
         <CardHeader>
-          <CardTitle className="text-lg">Priority Matrix</CardTitle>
-          <CardDescription>Recommendations sorted by impact vs effort</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg">Priority Matrix</CardTitle>
+              <CardDescription>Recommendations sorted by impact vs effort</CardDescription>
+            </div>
+            <InfoTooltip formula="Recommendations categorized by impact (potential value) and effort (implementation complexity)." dataSource="AI Analytics" />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -220,9 +247,11 @@ export default function RecommendationsPage() {
               </h3>
               <div className="space-y-2">
                 {recommendations.filter(r => r.impact === 'high' && r.effort === 'low').map(r => (
-                  <div key={r.id} className="text-sm p-2 bg-background rounded">
-                    {r.title}
-                  </div>
+                  <Link key={r.id} to={r.link || '#'}>
+                    <div className="text-sm p-2 bg-background rounded hover:bg-muted/50 transition-colors cursor-pointer">
+                      {r.title}
+                    </div>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -233,9 +262,11 @@ export default function RecommendationsPage() {
               </h3>
               <div className="space-y-2">
                 {recommendations.filter(r => r.impact === 'high' && r.effort === 'high').map(r => (
-                  <div key={r.id} className="text-sm p-2 bg-background rounded">
-                    {r.title}
-                  </div>
+                  <Link key={r.id} to={r.link || '#'}>
+                    <div className="text-sm p-2 bg-background rounded hover:bg-muted/50 transition-colors cursor-pointer">
+                      {r.title}
+                    </div>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -246,8 +277,13 @@ export default function RecommendationsPage() {
       {/* Detailed Recommendations */}
       <Card className="card-elevated">
         <CardHeader>
-          <CardTitle className="text-lg">All Recommendations</CardTitle>
-          <CardDescription>Actionable insights based on your benefits data (demo logic)</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg">All Recommendations</CardTitle>
+              <CardDescription>Actionable insights based on your benefits data</CardDescription>
+            </div>
+            <InfoTooltip formula="AI-generated recommendations based on utilization patterns, employee feedback, and industry benchmarks." dataSource="AI Analytics Engine" />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -269,13 +305,19 @@ export default function RecommendationsPage() {
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-3">
                         {rec.potentialSavings && (
                           <div>
-                            <p className="text-muted-foreground">Potential Savings</p>
+                            <div className="flex items-center gap-1">
+                              <p className="text-muted-foreground">Potential Savings</p>
+                              <InfoTooltip formula="Estimated annual savings based on current waste and projected improvement." dataSource="AI Model" />
+                            </div>
                             <p className="font-medium text-green-600">AED {rec.potentialSavings.toLocaleString()}</p>
                           </div>
                         )}
                         {rec.affectedEmployees && (
                           <div>
-                            <p className="text-muted-foreground">Affected Employees</p>
+                            <div className="flex items-center gap-1">
+                              <p className="text-muted-foreground">Affected Employees</p>
+                              <InfoTooltip formula="Number of employees who would benefit from this change." dataSource="HR System" />
+                            </div>
                             <p className="font-medium">{rec.affectedEmployees}</p>
                           </div>
                         )}
@@ -298,10 +340,19 @@ export default function RecommendationsPage() {
                     </div>
                   </div>
                   
-                  <Button variant="outline" size="sm" className="shrink-0">
-                    Take Action
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
+                  {rec.link ? (
+                    <Link to={rec.link}>
+                      <Button variant="outline" size="sm" className="shrink-0">
+                        Take Action
+                        <ArrowRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button variant="outline" size="sm" className="shrink-0">
+                      Take Action
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
