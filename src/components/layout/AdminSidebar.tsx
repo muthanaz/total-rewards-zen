@@ -7,7 +7,6 @@ import {
   TrendingUp,
   Users,
   Building2,
-  Store,
   FileBarChart,
   Settings,
   Menu,
@@ -15,11 +14,10 @@ import {
   LogOut,
   Shield,
   ChevronDown,
-  Database,
-  Target,
   Wallet,
   Sliders,
   FileSpreadsheet,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -46,7 +44,7 @@ const navigationGroups: NavGroup[] = [
     title: 'Platform Overview',
     titleAr: 'نظرة عامة على المنصة',
     items: [
-      { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/admin', icon: LayoutDashboard },
+      { label: 'Super Admin Dashboard', labelAr: 'لوحة المشرف العام', path: '/admin', icon: LayoutDashboard },
     ],
   },
   {
@@ -97,6 +95,7 @@ export function AdminSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<string[]>(navigationGroups.map(g => g.title));
   const isRTL = direction === 'rtl';
+  const isArabic = language === 'ar';
 
   const handleSignOut = async () => {
     await signOut();
@@ -125,13 +124,15 @@ export function AdminSidebar() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shrink-0">
               <Shield className="w-4 h-4 text-white" />
             </div>
-            <span className="font-display text-xl font-bold text-sidebar-foreground">bnft.</span>
-            <span className={cn(
-              "px-2 py-0.5 text-xs font-medium rounded-full bg-red-500/20 text-red-400 shrink-0",
-              isRTL ? "mr-1" : "ml-1"
-            )}>
-              Admin
-            </span>
+            <div className="flex flex-col">
+              <span className="font-display text-base font-bold text-sidebar-foreground leading-tight">
+                {isArabic ? 'المكافآت الشاملة' : 'Total Rewards'}
+              </span>
+              <span className="text-[10px] text-sidebar-foreground/60 font-medium flex items-center gap-1">
+                <Sparkles className="w-2.5 h-2.5" />
+                {isArabic ? 'المشرف العام' : 'Super Admin'}
+              </span>
+            </div>
           </div>
         </div>
         {/* Theme & Language Controls */}
