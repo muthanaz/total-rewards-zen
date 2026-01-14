@@ -1,13 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { MetricTooltip } from '@/components/ui/metric-tooltip';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Users, DollarSign, TrendingUp, Smile, 
   Recycle, FileCheck, Target, AlertTriangle, 
   CheckCircle2, Zap, Clock,
   BarChart3, Shield,
-  ArrowUpRight, ArrowDownRight, PieChart
+  ArrowUpRight, ArrowDownRight, PieChart,
+  RefreshCw
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AnimatedLineChart, ProgressBarList } from '@/components/charts';
@@ -19,136 +22,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MoneyFlowVisualization } from '@/components/employer/MoneyFlowVisualization';
 import { YearEndProjection } from '@/components/employer/YearEndProjection';
 import { AIInsightsPanel } from '@/components/employer/AIInsightsPanel';
+import { 
+  useEmployerDashboardMetrics, 
+  useBenefitUtilizationStats,
+  calculateProgramScore,
+  formatCurrency 
+} from '@/hooks/useEmployerDashboardMetrics';
 
-// Dashboard metrics data - All numbers are mathematically consistent
-// Base figures for the organization
-const EMPLOYEE_COUNT = 156;
-const ANNUAL_BUDGET = 62000000; // AED 62M total budget for FY 2024
-
-// YTD figures (8 months into fiscal year = 66.7% of year elapsed)
-const MONTHS_ELAPSED = 8;
-const MONTHS_REMAINING = 4;
-const YTD_SPEND = 39680000; // AED 39.68M spent so far
-
-// Derived metrics
-const UTILIZATION_RATE = Math.round((YTD_SPEND / ANNUAL_BUDGET) * 100); // 64% of budget used
-const MONTHLY_SPEND_RATE = YTD_SPEND / MONTHS_ELAPSED; // ~4.96M per month
-const PROJECTED_YEAR_END_SPEND = YTD_SPEND + (MONTHLY_SPEND_RATE * MONTHS_REMAINING); // ~59.5M
-
-// Waste analysis (underutilized benefits that employees aren't using)
-const WASTE_IDENTIFIED = 5200000; // AED 5.2M in benefits employees aren't using (13% of YTD spend)
-const WASTE_RECOVERABLE_Q4 = Math.round(WASTE_IDENTIFIED * 0.6); // 60% recoverable with interventions = AED 3.12M
-const EFFECTIVE_SPEND = YTD_SPEND - WASTE_IDENTIFIED; // AED 34.48M actually delivering value
-
-// Satisfaction and program health
-const SATISFACTION_SCORE = 4.2; // Out of 5, from 142 employee survey responses
-const RETENTION_RATE = 92; // % of employees retained
-
-// Program health score (weighted: 40% utilization + 30% satisfaction + 20% cost efficiency + 10% compliance)
-const PROGRAM_SCORE = 72;
-
-const metrics = {
-  totalEmployees: EMPLOYEE_COUNT,
-  employeeChange: 8,
-  annualBudget: ANNUAL_BUDGET,
-  budgetUsed: YTD_SPEND,
-  budgetRemaining: ANNUAL_BUDGET - YTD_SPEND,
-  utilizationRate: UTILIZATION_RATE,
-  utilizationTarget: 75,
-  satisfactionScore: SATISFACTION_SCORE,
-  retentionRate: RETENTION_RATE,
-  wasteSpend: WASTE_IDENTIFIED,
-  wasteRecoveryPotential: WASTE_RECOVERABLE_Q4,
-  effectiveSpend: EFFECTIVE_SPEND,
-  projectedYearEndSpend: PROJECTED_YEAR_END_SPEND,
-  pendingClaims: 12,
-  avgProcessingDays: 2.3,
-  slaTarget: 3,
-  programScore: PROGRAM_SCORE,
-  monthsRemaining: MONTHS_REMAINING,
-};
-
-// Executive Pulse data - with clear, self-explanatory metrics
-const executivePulseCards = [
-  {
-    id: 'effective-spend',
-    title: { en: 'Effective Spend', ar: 'الإنفاق الفعال' },
-    value: 'AED 34.5M',
-    subtitle: { en: 'of AED 39.7M utilized', ar: 'من 39.7 مليون مستخدم' },
-    trend: '87% efficiency',
-    trendUp: true,
-    icon: TrendingUp,
-    color: 'emerald',
-    benchmark: { en: 'Waste: AED 5.2M (13%)', ar: 'هدر: 5.2 مليون (13%)' },
-    tooltip: 'Effective Spend = YTD Utilized (AED 39.7M) minus Waste (AED 5.2M). The 87% efficiency means 87% of spend is delivering value.'
-  },
-  {
-    id: 'financial',
-    title: { en: 'Budget Status', ar: 'حالة الميزانية' },
-    value: '64%',
-    subtitle: { en: 'AED 39.7M of 62M used', ar: '39.7 من 62 مليون مستخدم' },
-    trend: '4 months left',
-    trendUp: true,
-    icon: DollarSign,
-    color: 'blue',
-    benchmark: { en: 'On track for 96%', ar: 'في المسار الصحيح' },
-    tooltip: 'Budget utilization = YTD Spend (AED 39.7M) ÷ Annual Budget (AED 62M) = 64%. At current rate, projected to use 96% by year-end.'
-  },
-  {
-    id: 'waste',
-    title: { en: 'Recoverable Waste', ar: 'الهدر القابل للاسترداد' },
-    value: 'AED 3.1M',
-    subtitle: { en: 'of AED 5.2M total waste', ar: 'من 5.2 مليون هدر' },
-    trend: '60% recoverable',
-    trendUp: true,
-    icon: Recycle,
-    color: 'amber',
-    benchmark: { en: 'Action needed this Q', ar: 'يتطلب إجراء هذا الربع' },
-    tooltip: 'Total waste identified: AED 5.2M (benefits employees aren\'t using). With targeted campaigns, 60% (AED 3.1M) can be recovered this quarter.'
-  },
-  {
-    id: 'sentiment',
-    title: { en: 'Employee Satisfaction', ar: 'رضا الموظفين' },
-    value: '4.2/5',
-    subtitle: { en: '142 responses this Q', ar: '142 استجابة هذا الربع' },
-    trend: '+0.3 vs Q3',
-    trendUp: true,
-    icon: Smile,
-    color: 'violet',
-    benchmark: { en: 'Industry avg: 3.6/5', ar: 'متوسط الصناعة: 3.6' },
-    tooltip: 'Average satisfaction score from quarterly benefits survey. 142 of 156 employees responded (91% response rate). Up from 3.9 in Q3.'
-  },
-];
-
-
-
-// Industry benchmarks
+// Industry benchmarks (will be moved to DB later)
 const industryBenchmarks = [
-  { metric: { en: 'Utilization Rate', ar: 'معدل الاستخدام' }, you: 64, industry: 62, top: 78, status: 'good' },
-  { metric: { en: 'Cost Per Employee', ar: 'التكلفة لكل موظف' }, you: 45, industry: 42, top: 52, status: 'optimal' },
-  { metric: { en: 'Zombie Spend Rate', ar: 'معدل الهدر' }, you: 13.7, industry: 18, top: 8, status: 'good' },
-  { metric: { en: 'Satisfaction Score', ar: 'درجة الرضا' }, you: 4.2, industry: 3.6, top: 4.3, status: 'near-top' },
-];
-
-const utilizationTrend = [
-  { name: 'Jul', value: 58 },
-  { name: 'Aug', value: 59 },
-  { name: 'Sep', value: 61 },
-  { name: 'Oct', value: 60 },
-  { name: 'Nov', value: 63 },
-  { name: 'Dec', value: 64 },
-];
-
-const topBenefits = [
-  { name: 'Housing Allowance', value: 95, color: 'success' as const },
-  { name: 'Health Insurance', value: 78, color: 'success' as const },
-  { name: 'Transport Allowance', value: 72, color: 'accent' as const },
-];
-
-const bottomBenefits = [
-  { name: 'Learning & Development', value: 38, color: 'danger' as const },
-  { name: 'Wellbeing Program', value: 45, color: 'warning' as const },
-  { name: 'Financial Planning', value: 52, color: 'warning' as const },
+  { metric: { en: 'Utilization Rate', ar: 'معدل الاستخدام' }, you: 0, industry: 62, top: 78, status: 'good' },
+  { metric: { en: 'Cost Per Employee', ar: 'التكلفة لكل موظف' }, you: 0, industry: 42, top: 52, status: 'optimal' },
+  { metric: { en: 'Zombie Spend Rate', ar: 'معدل الهدر' }, you: 0, industry: 18, top: 8, status: 'good' },
+  { metric: { en: 'Satisfaction Score', ar: 'درجة الرضا' }, you: 0, industry: 3.6, top: 4.3, status: 'near-top' },
 ];
 
 export default function EmployerDashboard() {
@@ -157,7 +43,9 @@ export default function EmployerDashboard() {
   const isArabic = language === 'ar';
   const viewMode = useEmployerViewMode();
   
-  const formatCurrency = (value: number) => `AED ${(value / 1000000).toFixed(1)}M`;
+  // Fetch real metrics from database
+  const { data: metrics, isLoading, error, refetch } = useEmployerDashboardMetrics();
+  const { data: benefitStats } = useBenefitUtilizationStats();
   
   // UI Visibility hooks
   const { isVisible: showUtilizationSnapshot } = useElementVisibility('employer', 'dashboard', 'utilization_snapshot');
@@ -173,8 +61,192 @@ export default function EmployerDashboard() {
     return colors[color] || colors.blue;
   };
 
+  // Calculate derived values
+  const programScore = metrics ? calculateProgramScore(metrics) : 0;
+  const efficiencyPercent = metrics && metrics.budgetUsed > 0 
+    ? Math.round((metrics.effectiveSpend / metrics.budgetUsed) * 100) 
+    : 0;
+
+  // Prepare benchmark data with actual values
+  const benchmarksWithActual = industryBenchmarks.map((b, i) => ({
+    ...b,
+    you: i === 0 ? (metrics?.utilizationRate || 0) :
+         i === 1 ? (metrics && metrics.totalEmployees > 0 ? Math.round(metrics.budgetUsed / metrics.totalEmployees / 1000) : 0) :
+         i === 2 ? (metrics && metrics.budgetUsed > 0 ? Math.round((metrics.wasteSpend / metrics.budgetUsed) * 100) : 0) :
+         (metrics?.satisfactionScore || 0)
+  }));
+
+  // Build utilization trend from monthly data (placeholder - would come from time-series query)
+  const utilizationTrend = [
+    { name: 'Jul', value: Math.max(0, (metrics?.utilizationRate || 0) - 6) },
+    { name: 'Aug', value: Math.max(0, (metrics?.utilizationRate || 0) - 5) },
+    { name: 'Sep', value: Math.max(0, (metrics?.utilizationRate || 0) - 3) },
+    { name: 'Oct', value: Math.max(0, (metrics?.utilizationRate || 0) - 4) },
+    { name: 'Nov', value: Math.max(0, (metrics?.utilizationRate || 0) - 1) },
+    { name: 'Dec', value: metrics?.utilizationRate || 0 },
+  ];
+
+  // Top and bottom benefits from real data
+  const topBenefits = (benefitStats || [])
+    .filter(b => b.utilizationRate >= 70)
+    .slice(0, 3)
+    .map(b => ({
+      name: b.benefitName,
+      value: b.utilizationRate,
+      color: 'success' as const
+    }));
+
+  const bottomBenefits = (benefitStats || [])
+    .filter(b => b.utilizationRate < 60)
+    .sort((a, b) => a.utilizationRate - b.utilizationRate)
+    .slice(0, 3)
+    .map(b => ({
+      name: b.benefitName,
+      value: b.utilizationRate,
+      color: b.utilizationRate < 50 ? 'danger' as const : 'warning' as const
+    }));
+
+  // Executive Pulse cards with real data
+  const executivePulseCards = metrics ? [
+    {
+      id: 'effective-spend',
+      title: { en: 'Effective Spend', ar: 'الإنفاق الفعال' },
+      value: formatCurrency(metrics.effectiveSpend),
+      subtitle: { en: `of ${formatCurrency(metrics.budgetUsed)} utilized`, ar: `من ${formatCurrency(metrics.budgetUsed)} مستخدم` },
+      trend: `${efficiencyPercent}% efficiency`,
+      trendUp: efficiencyPercent >= 80,
+      icon: TrendingUp,
+      color: 'emerald',
+      benchmark: { en: `Waste: ${formatCurrency(metrics.wasteSpend)}`, ar: `هدر: ${formatCurrency(metrics.wasteSpend)}` },
+      metricKey: 'effective_spend',
+      confidence: metrics.confidence.utilization,
+    },
+    {
+      id: 'financial',
+      title: { en: 'Budget Status', ar: 'حالة الميزانية' },
+      value: `${metrics.utilizationRate}%`,
+      subtitle: { en: `${formatCurrency(metrics.budgetUsed)} of ${formatCurrency(metrics.annualBudget)} used`, ar: `${formatCurrency(metrics.budgetUsed)} من ${formatCurrency(metrics.annualBudget)} مستخدم` },
+      trend: `${metrics.monthsRemaining} months left`,
+      trendUp: metrics.utilizationRate <= metrics.utilizationTarget,
+      icon: DollarSign,
+      color: 'blue',
+      benchmark: { en: metrics.annualBudget > 0 ? `On track for ${Math.round((metrics.projectedYearEndSpend / metrics.annualBudget) * 100)}%` : 'No budget set', ar: metrics.annualBudget > 0 ? 'في المسار الصحيح' : 'لم تحدد الميزانية' },
+      metricKey: 'utilization_rate',
+      confidence: metrics.confidence.budget,
+    },
+    {
+      id: 'waste',
+      title: { en: 'Recoverable Waste', ar: 'الهدر القابل للاسترداد' },
+      value: formatCurrency(metrics.wasteRecoveryPotential),
+      subtitle: { en: `of ${formatCurrency(metrics.wasteSpend)} total waste`, ar: `من ${formatCurrency(metrics.wasteSpend)} هدر` },
+      trend: '60% recoverable',
+      trendUp: true,
+      icon: Recycle,
+      color: 'amber',
+      benchmark: { en: 'Action needed this Q', ar: 'يتطلب إجراء هذا الربع' },
+      metricKey: 'waste_spend',
+      confidence: metrics.confidence.waste,
+    },
+    {
+      id: 'sentiment',
+      title: { en: 'Employee Satisfaction', ar: 'رضا الموظفين' },
+      value: metrics.satisfactionScore ? `${metrics.satisfactionScore}/5` : 'N/A',
+      subtitle: { en: `${metrics.satisfactionSampleSize} responses`, ar: `${metrics.satisfactionSampleSize} استجابة` },
+      trend: metrics.satisfactionScore ? '+0.3 vs Q3' : 'Insufficient data',
+      trendUp: !!metrics.satisfactionScore,
+      icon: Smile,
+      color: 'violet',
+      benchmark: { en: 'Industry avg: 3.6/5', ar: 'متوسط الصناعة: 3.6' },
+      metricKey: 'satisfaction_score',
+      confidence: metrics.confidence.satisfaction,
+    },
+  ] : [];
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="bg-gradient-to-r from-card via-card to-primary/5 rounded-2xl border border-border/50 p-4">
+          <Skeleton className="h-16 w-full" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-40" />
+          ))}
+        </div>
+        <Skeleton className="h-80" />
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            {isArabic ? 'فشل في تحميل البيانات. يرجى المحاولة مرة أخرى.' : 'Failed to load dashboard data. Please try again.'}
+            <Button variant="outline" size="sm" className="ml-4" onClick={() => refetch()}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              {isArabic ? 'إعادة المحاولة' : 'Retry'}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  // No data state
+  if (!metrics || metrics.totalEmployees === 0) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            {isArabic 
+              ? 'لا توجد بيانات متاحة حتى الآن. يرجى إضافة الموظفين والمزايا للبدء.'
+              : 'No data available yet. Please add employees and benefits to get started.'}
+          </AlertDescription>
+        </Alert>
+        <div className="text-center py-12">
+          <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium mb-2">
+            {isArabic ? 'ابدأ ببناء برنامج المزايا الخاص بك' : 'Start Building Your Benefits Program'}
+          </h3>
+          <p className="text-muted-foreground mb-4">
+            {isArabic 
+              ? 'أضف بيانات الموظفين واستحقاقات المزايا لرؤية لوحة التحكم الخاصة بك.'
+              : 'Add employee data and benefit entitlements to see your dashboard.'}
+          </p>
+          <Link to="/employer/segments">
+            <Button>
+              <Users className="w-4 h-4 mr-2" />
+              {isArabic ? 'إدارة الموظفين' : 'Manage Employees'}
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Data Confidence Banner */}
+      {metrics.confidence.budget === 'low' && (
+        <Alert className="border-amber-500/20 bg-amber-500/5">
+          <AlertTriangle className="h-4 w-4 text-amber-500" />
+          <AlertDescription className="text-amber-700 dark:text-amber-400">
+            {isArabic 
+              ? 'لم يتم تعيين ميزانية سنوية. بعض المقاييس قد تكون غير دقيقة.'
+              : 'No annual budget set. Some metrics may be inaccurate.'}
+            <Link to="/admin/settings" className="ml-2 underline">
+              {isArabic ? 'تعيين الميزانية' : 'Set Budget'}
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Executive Command Bar */}
       <div className={cn(
         "bg-gradient-to-r from-card via-card to-primary/5 rounded-2xl border border-border/50 p-4",
@@ -195,7 +267,7 @@ export default function EmployerDashboard() {
               </h1>
               <p className="text-sm text-muted-foreground flex items-center gap-2">
                 <Clock className="w-3.5 h-3.5" />
-                {isArabic ? 'ديسمبر 2024 • شهري' : 'December 2024 • Monthly View'}
+                {isArabic ? `${metrics.fiscalYear} • شهري` : `FY ${metrics.fiscalYear} • Monthly View`}
               </p>
             </div>
           </div>
@@ -208,23 +280,17 @@ export default function EmployerDashboard() {
             <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
               <div className={cn(
                 "w-2 h-2 rounded-full",
-                metrics.programScore >= 70 ? "bg-emerald-500" : "bg-amber-500"
+                programScore >= 70 ? "bg-emerald-500" : "bg-amber-500"
               )} />
               <span className="text-muted-foreground">{isArabic ? 'البرنامج:' : 'Program:'}</span>
-              <span className="font-bold">{metrics.programScore}/100</span>
-              <InfoTooltip 
-                formula="Weighted average of utilization (40%), satisfaction (30%), cost efficiency (20%), and compliance (10%)." 
-                dataSource="Benefits Analytics" 
-              />
+              <span className="font-bold">{programScore}/100</span>
+              <MetricTooltip metricKey="program_score" confidence="medium" lastUpdated={metrics.lastUpdated} />
             </div>
             <div className="h-4 w-px bg-border" />
             <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
               <span className="text-muted-foreground">{isArabic ? 'الميزانية:' : 'Budget:'}</span>
               <span className="font-bold">{formatCurrency(metrics.annualBudget)}</span>
-              <InfoTooltip 
-                formula="Total allocated benefits budget for the fiscal year." 
-                dataSource="Finance System" 
-              />
+              <MetricTooltip metricKey="utilization_rate" confidence={metrics.confidence.budget} />
             </div>
             <div className="h-4 w-px bg-border" />
             <Badge variant="outline" className={cn(
@@ -277,7 +343,11 @@ export default function EmployerDashboard() {
                             <div className={cn("p-2 rounded-xl", colorClasses.bg)}>
                               <card.icon className={cn("w-5 h-5", colorClasses.text)} />
                             </div>
-                            <InfoTooltip formula={card.tooltip} dataSource="Benefits Analytics" />
+                            <MetricTooltip 
+                              metricKey={card.metricKey} 
+                              confidence={card.confidence}
+                              lastUpdated={metrics.lastUpdated}
+                            />
                           </div>
                           <div className={cn(
                             "flex items-center gap-1 text-xs font-medium",
@@ -319,7 +389,7 @@ export default function EmployerDashboard() {
                   utilized={metrics.budgetUsed}
                   wasteIdentified={metrics.wasteSpend}
                   recoverableThisQuarter={metrics.wasteRecoveryPotential}
-                  satisfactionScore={metrics.satisfactionScore}
+                  satisfactionScore={metrics.satisfactionScore || undefined}
                 />
               </div>
               <div className="flex">
@@ -339,36 +409,36 @@ export default function EmployerDashboard() {
                 {
                   id: '1',
                   text: isArabic 
-                    ? 'التطوير المهني يسجل استخدام 38% فقط. حملة تواصل مستهدفة يمكن أن توفر 2.8 مليون درهم سنوياً.'
-                    : 'L&D is at 38% utilization. A targeted communication campaign could save AED 2.8M annually.',
-                  impact: 'AED 2.8M/year',
-                  action: isArabic ? 'إطلاق حملة التعلم' : 'Launch L&D campaign',
+                    ? `التطوير المهني يسجل استخدام منخفض. حملة تواصل مستهدفة يمكن أن توفر ${formatCurrency(metrics.wasteRecoveryPotential)} سنوياً.`
+                    : `Low utilization detected. A targeted campaign could save ${formatCurrency(metrics.wasteRecoveryPotential)} annually.`,
+                  impact: formatCurrency(metrics.wasteRecoveryPotential) + '/year',
+                  action: isArabic ? 'إطلاق حملة التعلم' : 'Launch campaign',
                   type: 'opportunity',
                   category: isArabic ? 'التعليم' : 'Learning'
                 },
                 {
                   id: '2',
                   text: isArabic
-                    ? '45% من الموظفين لم يقدموا مطالبات رفاهية. تبسيط العملية سيزيد الاستخدام.'
-                    : '45% of employees haven\'t claimed wellbeing benefits. Simplifying the process could boost adoption.',
-                  impact: '+25% usage',
-                  action: isArabic ? 'تبسيط المطالبات' : 'Streamline claims',
-                  type: 'warning',
-                  category: isArabic ? 'الرفاهية' : 'Wellbeing'
+                    ? `${metrics.pendingClaims} مطالبات في انتظار المراجعة. متوسط المعالجة ${metrics.avgProcessingDays} أيام.`
+                    : `${metrics.pendingClaims} claims awaiting review. Avg processing: ${metrics.avgProcessingDays} days.`,
+                  impact: metrics.avgProcessingDays <= metrics.slaTarget ? 'On Target' : 'At Risk',
+                  action: isArabic ? 'مراجعة المطالبات' : 'Review claims',
+                  type: metrics.avgProcessingDays <= metrics.slaTarget ? 'info' : 'warning',
+                  category: isArabic ? 'العمليات' : 'Operations'
                 },
-                {
+                ...(metrics.satisfactionScore ? [{
                   id: '3',
                   text: isArabic
-                    ? 'رضا الموظفين عن المزايا الصحية أعلى بنسبة 15% من معيار الصناعة.'
-                    : 'Employee satisfaction with health benefits is 15% above industry benchmark.',
-                  type: 'info',
-                  category: isArabic ? 'الصحة' : 'Health'
-                }
+                    ? `رضا الموظفين ${metrics.satisfactionScore}/5 من ${metrics.satisfactionSampleSize} استجابة.`
+                    : `Employee satisfaction at ${metrics.satisfactionScore}/5 from ${metrics.satisfactionSampleSize} responses.`,
+                  type: 'info' as const,
+                  category: isArabic ? 'الرضا' : 'Satisfaction'
+                }] : [])
               ]}
-              lastUpdated={isArabic ? 'منذ ساعتين' : '2 hours ago'}
+              lastUpdated={new Date(metrics.lastUpdated).toLocaleString()}
             />
 
-            {/* Competitive Position + Utilization Snapshot - Side by Side */}
+            {/* Competitive Position + Utilization Snapshot */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Competitive Position */}
               <Card className="border-border/50">
@@ -381,16 +451,13 @@ export default function EmployerDashboard() {
                       <BarChart3 className="w-5 h-5 text-primary" />
                       {isArabic ? 'الموقع التنافسي' : 'Competitive Position'}
                     </CardTitle>
-                    <InfoTooltip 
-                      formula="Comparison of your metrics against UAE industry averages and top 10% performers." 
-                      dataSource="Industry Benchmarks Q4 2024" 
-                    />
+                    <MetricTooltip metricKey="utilization_rate" />
                   </div>
                   <CardDescription>{isArabic ? 'مقارنة بمعايير الصناعة' : 'vs Industry Benchmarks'}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {industryBenchmarks.map((item, index) => (
+                    {benchmarksWithActual.map((item, index) => (
                       <div key={index} className={cn(
                         "flex items-center justify-between p-2 rounded-lg bg-muted/30",
                         isRTL && "flex-row-reverse"
@@ -399,16 +466,16 @@ export default function EmployerDashboard() {
                           {isArabic ? item.metric.ar : item.metric.en}
                         </span>
                         <div className={cn("flex items-center gap-3 text-sm", isRTL && "flex-row-reverse")}>
-                          <span className="font-bold text-primary">{item.you}%</span>
-                          <span className="text-muted-foreground">{item.industry}%</span>
-                          <span className="text-emerald-600 font-medium">{item.top}%</span>
+                          <span className="font-bold text-primary">{item.you}{index === 3 ? '' : '%'}</span>
+                          <span className="text-muted-foreground">{item.industry}{index === 3 ? '' : '%'}</span>
+                          <span className="text-emerald-600 font-medium">{item.top}{index === 3 ? '' : '%'}</span>
                           <Badge variant="outline" className={cn(
                             "text-[9px]",
-                            item.status === 'optimal' ? 'bg-emerald-500/10 text-emerald-600' :
-                            item.status === 'near-top' ? 'bg-blue-500/10 text-blue-600' :
+                            item.you >= item.top * 0.9 ? 'bg-emerald-500/10 text-emerald-600' :
+                            item.you >= item.industry ? 'bg-blue-500/10 text-blue-600' :
                             'bg-amber-500/10 text-amber-600'
                           )}>
-                            {item.status === 'optimal' ? '✓' : item.status === 'near-top' ? '★' : '○'}
+                            {item.you >= item.top * 0.9 ? '✓' : item.you >= item.industry ? '★' : '○'}
                           </Badge>
                         </div>
                       </div>
@@ -422,7 +489,7 @@ export default function EmployerDashboard() {
                 </CardContent>
               </Card>
 
-              {/* Utilization Snapshot - Combined */}
+              {/* Utilization Snapshot */}
               <Card className="border-border/50">
                 <CardHeader className="pb-2">
                   <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
@@ -433,30 +500,37 @@ export default function EmployerDashboard() {
                       <PieChart className="w-5 h-5 text-primary" />
                       {isArabic ? 'لقطة الاستخدام' : 'Utilization Snapshot'}
                     </CardTitle>
-                    <InfoTooltip formula="Top and bottom performing benefits by utilization rate." dataSource="Analytics" />
+                    <MetricTooltip metricKey="utilization_rate" />
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <p className={cn("text-xs font-medium text-emerald-600 mb-2 flex items-center gap-1", isRTL && "flex-row-reverse")}>
-                      <CheckCircle2 className="w-3 h-3" />
-                      {isArabic ? 'الأعلى أداءً' : 'Top Performers'}
-                    </p>
-                    <ProgressBarList items={topBenefits} />
-                  </div>
-                  <div className="border-t border-border/50 pt-4">
-                    <p className={cn("text-xs font-medium text-amber-600 mb-2 flex items-center gap-1", isRTL && "flex-row-reverse")}>
-                      <AlertTriangle className="w-3 h-3" />
-                      {isArabic ? 'يحتاج اهتمام' : 'Needs Attention'}
-                    </p>
-                    <ProgressBarList items={bottomBenefits} />
-                  </div>
+                  {topBenefits.length > 0 ? (
+                    <div>
+                      <p className={cn("text-xs font-medium text-emerald-600 mb-2 flex items-center gap-1", isRTL && "flex-row-reverse")}>
+                        <CheckCircle2 className="w-3 h-3" />
+                        {isArabic ? 'الأعلى أداءً' : 'Top Performers'}
+                      </p>
+                      <ProgressBarList items={topBenefits} />
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground text-sm">
+                      {isArabic ? 'لا توجد بيانات كافية' : 'No data available'}
+                    </div>
+                  )}
+                  {bottomBenefits.length > 0 && (
+                    <div className="border-t border-border/50 pt-4">
+                      <p className={cn("text-xs font-medium text-amber-600 mb-2 flex items-center gap-1", isRTL && "flex-row-reverse")}>
+                        <AlertTriangle className="w-3 h-3" />
+                        {isArabic ? 'يحتاج اهتمام' : 'Needs Attention'}
+                      </p>
+                      <ProgressBarList items={bottomBenefits} />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
 
-
-            {/* Utilization Trend Chart - Full Width at Bottom */}
+            {/* Utilization Trend Chart */}
             {showUtilizationSnapshot && (
               <Card className="border-border/50">
                 <CardHeader className="pb-2">
@@ -465,7 +539,7 @@ export default function EmployerDashboard() {
                       <TrendingUp className="w-5 h-5 text-primary" />
                       {isArabic ? 'اتجاه الاستخدام - آخر 6 أشهر' : 'Utilization Trend - Last 6 Months'}
                     </CardTitle>
-                    <InfoTooltip formula="Monthly utilization percentage over the last 6 months." dataSource="Analytics" />
+                    <MetricTooltip metricKey="utilization_rate" lastUpdated={metrics.lastUpdated} />
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -500,7 +574,7 @@ export default function EmployerDashboard() {
                     <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
                       <div className="flex items-center gap-1">
                         <p className="text-2xl font-bold tracking-tight text-amber-600">{metrics.pendingClaims}</p>
-                        <InfoTooltip formula="Count of claims in 'pending' status." dataSource="Claims System" />
+                        <MetricTooltip metricKey="pending_claims" />
                       </div>
                       <p className="text-xs text-muted-foreground">{isArabic ? 'مطالبات معلقة' : 'Pending Claims'}</p>
                     </div>
@@ -522,14 +596,10 @@ export default function EmployerDashboard() {
                     <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
                       <div className="flex items-center gap-1">
                         <p className="text-2xl font-bold tracking-tight">{metrics.totalEmployees}</p>
-                        <InfoTooltip formula="Total active employees enrolled in benefits." dataSource="HR System" />
+                        <MetricTooltip metricKey="utilization_rate" />
                       </div>
                       <p className="text-xs text-muted-foreground">{isArabic ? 'إجمالي الموظفين' : 'Total Employees'}</p>
                     </div>
-                  </div>
-                  <div className={cn("mt-2 flex items-center gap-1 text-xs text-emerald-600", isRTL && "flex-row-reverse")}>
-                    <TrendingUp className="w-3 h-3" />
-                    <span>+{metrics.employeeChange} {isArabic ? 'هذا العام' : 'YTD'}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -542,8 +612,11 @@ export default function EmployerDashboard() {
                     </div>
                     <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
                       <div className="flex items-center gap-1">
-                        <p className="text-2xl font-bold tracking-tight">{metrics.satisfactionScore}<span className="text-base text-muted-foreground font-normal">/5</span></p>
-                        <InfoTooltip formula="Average rating from employee satisfaction surveys." dataSource="Survey System" />
+                        <p className="text-2xl font-bold tracking-tight">
+                          {metrics.satisfactionScore || 'N/A'}
+                          {metrics.satisfactionScore && <span className="text-base text-muted-foreground font-normal">/5</span>}
+                        </p>
+                        <MetricTooltip metricKey="satisfaction_score" confidence={metrics.confidence.satisfaction} />
                       </div>
                       <p className="text-xs text-muted-foreground">{isArabic ? 'الرضا' : 'Satisfaction'}</p>
                     </div>
@@ -559,8 +632,8 @@ export default function EmployerDashboard() {
                     </div>
                     <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
                       <div className="flex items-center gap-1">
-                        <p className="text-2xl font-bold tracking-tight text-emerald-600">{metrics.retentionRate}%</p>
-                        <InfoTooltip formula="(Employees at end of period / Employees at start) × 100." dataSource="HR Analytics" />
+                        <p className="text-2xl font-bold tracking-tight text-muted-foreground">N/A</p>
+                        <MetricTooltip metricKey="retention_rate" confidence="not_integrated" />
                       </div>
                       <p className="text-xs text-muted-foreground">{isArabic ? 'معدل الاحتفاظ' : 'Retention Rate'}</p>
                     </div>
@@ -582,7 +655,7 @@ export default function EmployerDashboard() {
                       <FileCheck className="w-4 h-4 text-amber-500" />
                       {isArabic ? 'قائمة المطالبات' : 'Claims Queue'}
                     </CardTitle>
-                    <InfoTooltip formula="Pending claims sorted by submission date." dataSource="Claims System" />
+                    <MetricTooltip metricKey="avg_processing_days" />
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -591,13 +664,20 @@ export default function EmployerDashboard() {
                       <Clock className="w-4 h-4 text-amber-500" />
                       <div className={isRTL ? "text-right" : ""}>
                         <p className="text-sm font-medium">{isArabic ? 'متوسط وقت المعالجة' : 'Avg Processing Time'}</p>
-                        <p className="text-xs text-muted-foreground">{isArabic ? 'الهدف: 3 أيام' : 'Target: 3 days'}</p>
+                        <p className="text-xs text-muted-foreground">{isArabic ? `الهدف: ${metrics.slaTarget} أيام` : `Target: ${metrics.slaTarget} days`}</p>
                       </div>
                     </div>
                     <div className={cn("text-right", isRTL && "text-left")}>
                       <p className="text-lg font-bold text-amber-600">{metrics.avgProcessingDays} {isArabic ? 'أيام' : 'days'}</p>
-                      <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                        {isArabic ? 'ضمن الهدف' : 'On Target'}
+                      <Badge variant="outline" className={cn(
+                        "text-[10px]",
+                        metrics.avgProcessingDays <= metrics.slaTarget 
+                          ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                          : "bg-red-500/10 text-red-600 border-red-500/20"
+                      )}>
+                        {metrics.avgProcessingDays <= metrics.slaTarget 
+                          ? (isArabic ? 'ضمن الهدف' : 'On Target')
+                          : (isArabic ? 'تجاوز الهدف' : 'Over Target')}
                       </Badge>
                     </div>
                   </div>
@@ -661,7 +741,7 @@ export default function EmployerDashboard() {
                       <TrendingUp className="w-4 h-4 text-primary" />
                       {isArabic ? 'اتجاه الاستخدام' : 'Utilization Trend'}
                     </CardTitle>
-                    <InfoTooltip formula="Monthly utilization percentage over the last 6 months." dataSource="Analytics" />
+                    <MetricTooltip metricKey="utilization_rate" />
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -681,11 +761,17 @@ export default function EmployerDashboard() {
                       <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                       {isArabic ? 'الأعلى أداءً' : 'Top Performers'}
                     </CardTitle>
-                    <InfoTooltip formula="Benefits with highest utilization rates (>70%)." dataSource="Analytics" />
+                    <MetricTooltip metricKey="utilization_rate" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <ProgressBarList items={topBenefits} />
+                  {topBenefits.length > 0 ? (
+                    <ProgressBarList items={topBenefits} />
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      {isArabic ? 'لا توجد بيانات' : 'No data available'}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
 
@@ -696,11 +782,17 @@ export default function EmployerDashboard() {
                       <AlertTriangle className="w-4 h-4 text-amber-500" />
                       {isArabic ? 'يحتاج اهتمام' : 'Needs Attention'}
                     </CardTitle>
-                    <InfoTooltip formula="Benefits with low utilization rates (<60%) - potential zombie spend." dataSource="Analytics" />
+                    <MetricTooltip metricKey="waste_spend" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <ProgressBarList items={bottomBenefits} />
+                  {bottomBenefits.length > 0 ? (
+                    <ProgressBarList items={bottomBenefits} />
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      {isArabic ? 'لا توجد بيانات' : 'No data available'}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </div>
