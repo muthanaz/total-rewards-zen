@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
-  Sparkles, 
   Lightbulb, 
   TrendingUp, 
   ArrowRight, 
   FileText,
-  ChevronRight
+  ChevronRight,
+  AlertCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -46,7 +46,7 @@ export function AIInsightsPanel({ insights, lastUpdated = "2 hours ago" }: AIIns
           bg: 'bg-amber-500/10',
           text: 'text-amber-600',
           border: 'border-amber-500/20',
-          icon: Lightbulb
+          icon: AlertCircle
         };
       default:
         return {
@@ -66,11 +66,11 @@ export function AIInsightsPanel({ insights, lastUpdated = "2 hours ago" }: AIIns
           isRTL && "flex-row-reverse"
         )}>
           <div className="p-1.5 rounded-lg bg-violet-500/10">
-            <Sparkles className="w-5 h-5 text-violet-500" />
+            <Lightbulb className="w-5 h-5 text-violet-500" />
           </div>
-          AI Strategic Insights
+          {isRTL ? 'التوصيات الذكية' : 'Strategic Recommendations'}
           <Badge variant="outline" className="ml-auto text-[10px] bg-violet-500/10 text-violet-600 border-violet-500/20">
-            Updated {lastUpdated}
+            {isRTL ? `تحديث ${lastUpdated}` : `Updated ${lastUpdated}`}
           </Badge>
         </CardTitle>
       </CardHeader>

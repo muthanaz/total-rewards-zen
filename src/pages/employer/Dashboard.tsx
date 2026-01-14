@@ -20,76 +20,103 @@ import { MoneyFlowVisualization } from '@/components/employer/MoneyFlowVisualiza
 import { YearEndProjection } from '@/components/employer/YearEndProjection';
 import { AIInsightsPanel } from '@/components/employer/AIInsightsPanel';
 
-// Dashboard metrics data
+// Dashboard metrics data - All numbers are mathematically consistent
+// Base figures for the organization
+const EMPLOYEE_COUNT = 156;
+const ANNUAL_BUDGET = 62000000; // AED 62M total budget for FY 2024
+
+// YTD figures (8 months into fiscal year = 66.7% of year elapsed)
+const MONTHS_ELAPSED = 8;
+const MONTHS_REMAINING = 4;
+const YTD_SPEND = 39680000; // AED 39.68M spent so far
+
+// Derived metrics
+const UTILIZATION_RATE = Math.round((YTD_SPEND / ANNUAL_BUDGET) * 100); // 64% of budget used
+const MONTHLY_SPEND_RATE = YTD_SPEND / MONTHS_ELAPSED; // ~4.96M per month
+const PROJECTED_YEAR_END_SPEND = YTD_SPEND + (MONTHLY_SPEND_RATE * MONTHS_REMAINING); // ~59.5M
+
+// Waste analysis (underutilized benefits that employees aren't using)
+const WASTE_IDENTIFIED = 5200000; // AED 5.2M in benefits employees aren't using (13% of YTD spend)
+const WASTE_RECOVERABLE_Q4 = Math.round(WASTE_IDENTIFIED * 0.6); // 60% recoverable with interventions = AED 3.12M
+const EFFECTIVE_SPEND = YTD_SPEND - WASTE_IDENTIFIED; // AED 34.48M actually delivering value
+
+// Satisfaction and program health
+const SATISFACTION_SCORE = 4.2; // Out of 5, from 142 employee survey responses
+const RETENTION_RATE = 92; // % of employees retained
+
+// Program health score (weighted: 40% utilization + 30% satisfaction + 20% cost efficiency + 10% compliance)
+const PROGRAM_SCORE = 72;
+
 const metrics = {
-  totalEmployees: 156,
+  totalEmployees: EMPLOYEE_COUNT,
   employeeChange: 8,
-  annualBudget: 62000000,
-  budgetUsed: 39680000,
-  budgetRemaining: 22320000,
-  utilizationRate: 64,
+  annualBudget: ANNUAL_BUDGET,
+  budgetUsed: YTD_SPEND,
+  budgetRemaining: ANNUAL_BUDGET - YTD_SPEND,
+  utilizationRate: UTILIZATION_RATE,
   utilizationTarget: 75,
-  satisfactionScore: 4.2,
-  retentionRate: 92,
-  wasteSpend: 8500000,
-  wasteRecoveryPotential: 5100000,
+  satisfactionScore: SATISFACTION_SCORE,
+  retentionRate: RETENTION_RATE,
+  wasteSpend: WASTE_IDENTIFIED,
+  wasteRecoveryPotential: WASTE_RECOVERABLE_Q4,
+  effectiveSpend: EFFECTIVE_SPEND,
+  projectedYearEndSpend: PROJECTED_YEAR_END_SPEND,
   pendingClaims: 12,
   avgProcessingDays: 2.3,
   slaTarget: 3,
-  programScore: 72,
-  roiScore: 3.2,
-  riskExposure: 8500000,
+  programScore: PROGRAM_SCORE,
+  monthsRemaining: MONTHS_REMAINING,
 };
 
-// Executive Pulse data
+// Executive Pulse data - with clear, self-explanatory metrics
 const executivePulseCards = [
   {
-    id: 'roi',
-    title: { en: 'Benefits ROI', ar: 'عائد المزايا' },
-    value: '3.2x',
-    subtitle: { en: 'Return on investment', ar: 'العائد على الاستثمار' },
-    trend: '+0.4x',
+    id: 'effective-spend',
+    title: { en: 'Effective Spend', ar: 'الإنفاق الفعال' },
+    value: 'AED 34.5M',
+    subtitle: { en: 'of AED 39.7M utilized', ar: 'من 39.7 مليون مستخدم' },
+    trend: '87% efficiency',
     trendUp: true,
     icon: TrendingUp,
     color: 'emerald',
-    benchmark: { en: 'vs Industry: +12%', ar: 'مقارنة بالصناعة: +12%' },
-    tooltip: 'Calculated as (Value Delivered / Total Spend). Based on employee valuations and productivity metrics.'
+    benchmark: { en: 'Waste: AED 5.2M (13%)', ar: 'هدر: 5.2 مليون (13%)' },
+    tooltip: 'Effective Spend = YTD Utilized (AED 39.7M) minus Waste (AED 5.2M). The 87% efficiency means 87% of spend is delivering value.'
   },
   {
     id: 'financial',
-    title: { en: 'Financial Health', ar: 'الصحة المالية' },
+    title: { en: 'Budget Status', ar: 'حالة الميزانية' },
     value: '64%',
-    subtitle: { en: 'Budget utilized', ar: 'الميزانية المستخدمة' },
-    trend: '-11% to target',
-    trendUp: false,
+    subtitle: { en: 'AED 39.7M of 62M used', ar: '39.7 من 62 مليون مستخدم' },
+    trend: '4 months left',
+    trendUp: true,
     icon: DollarSign,
-    color: 'amber',
-    benchmark: { en: 'Target: 75%', ar: 'الهدف: 75%' },
-    tooltip: 'Percentage of annual budget spent year-to-date (YTD Spend / Annual Budget × 100).'
+    color: 'blue',
+    benchmark: { en: 'On track for 96%', ar: 'في المسار الصحيح' },
+    tooltip: 'Budget utilization = YTD Spend (AED 39.7M) ÷ Annual Budget (AED 62M) = 64%. At current rate, projected to use 96% by year-end.'
   },
   {
-    id: 'risk',
-    title: { en: 'Risk Exposure', ar: 'التعرض للمخاطر' },
-    value: 'AED 8.5M',
-    subtitle: { en: 'Zombie + SLA risks', ar: 'مخاطر الهدر والخدمة' },
-    trend: 'AED 5.1M recoverable',
+    id: 'waste',
+    title: { en: 'Recoverable Waste', ar: 'الهدر القابل للاسترداد' },
+    value: 'AED 3.1M',
+    subtitle: { en: 'of AED 5.2M total waste', ar: 'من 5.2 مليون هدر' },
+    trend: '60% recoverable',
     trendUp: true,
-    icon: Shield,
-    color: 'red',
-    benchmark: { en: 'Action needed', ar: 'يتطلب إجراء' },
-    tooltip: 'Sum of underutilized benefits (zombie spend) and potential SLA penalty exposure.'
+    icon: Recycle,
+    color: 'amber',
+    benchmark: { en: 'Action needed this Q', ar: 'يتطلب إجراء هذا الربع' },
+    tooltip: 'Total waste identified: AED 5.2M (benefits employees aren\'t using). With targeted campaigns, 60% (AED 3.1M) can be recovered this quarter.'
   },
   {
     id: 'sentiment',
-    title: { en: 'Workforce Sentiment', ar: 'رضا الموظفين' },
+    title: { en: 'Employee Satisfaction', ar: 'رضا الموظفين' },
     value: '4.2/5',
-    subtitle: { en: '+0.3 since Q3', ar: '+0.3 منذ الربع الثالث' },
-    trend: '+7.7%',
+    subtitle: { en: '142 responses this Q', ar: '142 استجابة هذا الربع' },
+    trend: '+0.3 vs Q3',
     trendUp: true,
     icon: Smile,
     color: 'violet',
-    benchmark: { en: '142 responses', ar: '142 استجابة' },
-    tooltip: 'Average satisfaction rating from employee surveys. Based on 142 responses this quarter.'
+    benchmark: { en: 'Industry avg: 3.6/5', ar: 'متوسط الصناعة: 3.6' },
+    tooltip: 'Average satisfaction score from quarterly benefits survey. 142 of 156 employees responded (91% response rate). Up from 3.9 in Q3.'
   },
 ];
 
@@ -299,9 +326,9 @@ export default function EmployerDashboard() {
                 <YearEndProjection
                   currentSpend={metrics.budgetUsed}
                   budget={metrics.annualBudget}
-                  projectedSpend={61200000}
+                  projectedSpend={metrics.projectedYearEndSpend}
                   currentUtilization={metrics.utilizationRate}
-                  monthsRemaining={4}
+                  monthsRemaining={metrics.monthsRemaining}
                 />
               </div>
             </div>
