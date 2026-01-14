@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 interface YearEndProjectionProps {
   currentSpend: number;
@@ -221,13 +222,15 @@ export function YearEndProjection({
         </div>
 
         {/* Action Button */}
-        <Button 
-          variant="outline" 
-          className="w-full border-primary/30 text-primary hover:bg-primary/10"
-        >
-          {isRTL ? "عرض التوقعات التفصيلية" : "View Detailed Forecast"}
-          <ChevronRight className={cn("w-4 h-4", isRTL ? "mr-2 rotate-180" : "ml-2")} />
-        </Button>
+        <Link to="/employer/forecasting" className="w-full">
+          <Button 
+            variant="outline" 
+            className="w-full border-primary/30 text-primary hover:bg-primary/10"
+          >
+            {isRTL ? "عرض التوقعات التفصيلية" : "View Detailed Forecast"}
+            <ChevronRight className={cn("w-4 h-4", isRTL ? "mr-2 rotate-180" : "ml-2")} />
+          </Button>
+        </Link>
       </CardContent>
     </Card>
   );

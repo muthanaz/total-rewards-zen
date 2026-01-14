@@ -209,7 +209,7 @@ const operationalNavigation: NavGroup[] = [
       },
       { 
         labelKey: 'recommendations', 
-        label: { en: 'Recommendations', ar: 'التوصيات' },
+        label: { en: 'Smart Recommendations', ar: 'التوصيات الذكية' },
         path: '/employer/recommendations', 
         icon: Lightbulb 
       },
@@ -488,23 +488,7 @@ export function EmployerSidebar() {
           </Link>
         </div>
 
-        {/* Integrations - Only in Operational View as Heading Style */}
-        {viewMode === 'operational' && (
-          <Link
-            to="/employer/integrations"
-            onClick={() => setMobileOpen(false)}
-            className={cn(
-              'flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors font-semibold text-sm mt-1',
-              isActive('/employer/integrations') 
-                ? 'bg-sidebar-primary text-sidebar-primary-foreground' 
-                : 'text-sidebar-foreground hover:bg-sidebar-accent',
-              isRTL && 'flex-row-reverse text-right'
-            )}
-          >
-            <Settings className="w-4 h-4 shrink-0" />
-            <span className="flex-1">{isArabic ? 'التكاملات' : 'Integrations'}</span>
-          </Link>
-        )}
+        {/* Integrations link removed - already in Configuration group */}
       </nav>
 
       {/* Sign Out */}
