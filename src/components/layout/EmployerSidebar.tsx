@@ -108,11 +108,17 @@ const strategicNavigation: NavGroup[] = [
       },
       { 
         labelKey: 'recommendations', 
-        label: { en: 'Smart Recommendations', ar: 'التوصيات الذكية' },
+        label: { en: 'bnft Insights', ar: 'رؤى bnft' },
         path: '/employer/recommendations', 
         icon: Lightbulb,
         badge: 8,
         badgeColor: 'primary'
+      },
+      { 
+        labelKey: 'action_plan', 
+        label: { en: 'Action Plan', ar: 'خطة العمل' },
+        path: '/employer/actions', 
+        icon: Zap
       },
     ],
     defaultOpen: true,

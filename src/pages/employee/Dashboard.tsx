@@ -12,6 +12,7 @@ import { BENEFIT_TYPE_COLORS } from '@/lib/constants';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
 import { BenefitActionButtons } from '@/components/employee/BenefitActionButtons';
 import { BenefitsDrillDownSheet, SmartInsights } from '@/components/dashboard';
+import { NextActionsPanel } from '@/components/employee/NextActionsPanel';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CompensationGrid } from '@/components/ui/compensation-summary-card';
 import { BenefitsUtilizationCard } from '@/components/ui/benefits-utilization-card';
@@ -19,6 +20,7 @@ import { useUIVisibility } from '@/contexts/UIVisibilityContext';
 import { usePrivacy } from '@/components/ui/privacy-toggle';
 import { cn } from '@/lib/utils';
 import { CompensationBreakdownModal } from '@/components/employee/CompensationBreakdownModal';
+import { PageHeader } from '@/components/ui/page-header';
 
 // Demo data - core salary info
 const salaryData = {
@@ -239,16 +241,23 @@ export default function EmployeeDashboard() {
   
   return (
     <div className="space-y-5 animate-fade-in">
-      {/* Header - Simplified without Date Filter */}
-      <div className={cn(
-        "flex flex-col md:flex-row md:items-center justify-between gap-4",
-        isRTL && "md:flex-row-reverse"
-      )}>
-        <div className={cn("space-y-1", isRTL && "text-right")}>
-          <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">{t('employee.dashboard.title')}</h1>
-          <p className="text-muted-foreground">{t('employee.dashboard.subtitle')}</p>
-        </div>
-      </div>
+      {/* Page Header */}
+      <PageHeader
+        title={t('employee.dashboard.title')}
+        subtitle={t('employee.dashboard.subtitle')}
+      />
+
+      {/* Next Actions - Action-based guidance */}
+      <NextActionsPanel
+        benefits={benefits.map(b => ({
+          name: b.name,
+          value: b.value,
+          utilized: b.utilized,
+          route: b.route,
+          category: b.category,
+        }))}
+        leaveBalance={{ used: salaryData.leaveUsed, total: salaryData.leaveBalance }}
+      />
 
       {/* Compensation Summary Grid */}
       {showCompensationSummary && (

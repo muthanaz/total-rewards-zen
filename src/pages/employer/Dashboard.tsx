@@ -282,8 +282,11 @@ export default function EmployerDashboard() {
                 "w-2 h-2 rounded-full",
                 programScore >= 70 ? "bg-emerald-500" : "bg-amber-500"
               )} />
-              <span className="text-muted-foreground">{isArabic ? 'البرنامج:' : 'Program:'}</span>
+              <span className="text-muted-foreground">{isArabic ? 'صحة البرنامج:' : 'Health:'}</span>
               <span className="font-bold">{programScore}/100</span>
+              <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-blue-500/10 text-blue-600 border-blue-500/20">
+                {isArabic ? 'تجريبي' : 'beta'}
+              </Badge>
               <MetricTooltip metricKey="program_score" confidence="medium" lastUpdated={metrics.lastUpdated} />
             </div>
             <div className="h-4 w-px bg-border" />
