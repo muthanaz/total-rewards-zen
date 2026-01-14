@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
   Home, GraduationCap, Heart, Car, Dumbbell, PiggyBank, 
-  BookOpen, Search, ChevronRight, Filter, CheckCircle2, TrendingUp, Award, Clock, AlertCircle
+  BookOpen, Search, ChevronRight, Filter, CheckCircle2, TrendingUp, Award, Clock, AlertCircle, Landmark
 } from 'lucide-react';
 import { BENEFIT_CATEGORIES } from '@/lib/benefitCategories';
 import { getRAGIndicator, getProgressColorClass } from '@/lib/colorUtils';
@@ -31,6 +31,7 @@ const benefits = [
   { name: 'Financial Planning', nameKey: 'benefit.financial', icon: PiggyBank, value: 36000, utilized: 18000, category: 'financial', route: '/employee/financial', description: 'Retirement savings with employer match', bullets: ['5% employer match', 'Multiple fund options'] },
   { name: 'Wellbeing Program', nameKey: 'benefit.wellbeing', icon: Dumbbell, value: 6000, utilized: 3200, category: 'wellbeing', route: '/employee/wellbeing', description: 'Health and wellness benefits', bullets: ['Gym membership covered', 'Wellness app subscription'] },
   { name: 'Learning & Development', nameKey: 'benefit.learning', icon: BookOpen, value: 12000, utilized: 4500, category: 'learning', route: '/employee/learning', description: 'Professional development budget', bullets: ['Courses and certifications', 'Pre-approval required'] },
+  { name: 'End of Service Gratuity', nameKey: 'benefit.gratuity', icon: Landmark, value: 102083, utilized: 102083, category: 'gratuity', route: '/employee/gratuity', description: 'Statutory end of service payment', bullets: ['UAE Labor Law entitlement', 'Paid on end of service'] },
 ];
 
 const categoryFilters = [

@@ -321,6 +321,17 @@ export const BENEFIT_DEFINITIONS: BenefitDefinition[] = [
     bullets: ['30 days annual leave', 'Carry over up to 5 days'],
     bulletsAr: ['٣٠ يوم إجازة سنوية', 'ترحيل حتى ٥ أيام'],
   },
+  {
+    key: 'gratuity',
+    name: 'End of Service Gratuity',
+    nameKey: 'benefit.gratuity',
+    category: 'gratuity',
+    icon: Landmark,
+    route: '/employee/gratuity',
+    description: 'Statutory end of service payment under UAE Labor Law',
+    bullets: ['21 days per year (first 5 years)', '30 days per year (after 5 years)'],
+    bulletsAr: ['٢١ يوم لكل سنة (أول ٥ سنوات)', '٣٠ يوم لكل سنة (بعد ٥ سنوات)'],
+  },
 ];
 
 // =============================================================================
@@ -364,6 +375,10 @@ export const BENEFIT_TO_CATEGORY: Record<string, BenefitCategoryKey> = {
   'Leave': 'timeoff',
   'leave': 'timeoff',
   'timeoff': 'timeoff',
+  'End of Service Gratuity': 'gratuity',
+  'End of Service': 'gratuity',
+  'Gratuity': 'gratuity',
+  'gratuity': 'gratuity',
 };
 
 export function getBenefitCategory(benefitName: string): BenefitCategory {
@@ -387,6 +402,7 @@ export function getSidebarIconColor(path: string): string {
     '/employee/bonus': 'rewards',
     '/employee/equity': 'equity',
     '/employee/leave': 'timeoff',
+    '/employee/gratuity': 'gratuity',
   };
   
   const categoryKey = pathMap[path];
