@@ -67,7 +67,10 @@ export function AIInsightsPanel({ insights, lastUpdated = "2 hours ago" }: AIIns
           <div className="p-1.5 rounded-lg bg-violet-500/10">
             <Lightbulb className="w-5 h-5 text-violet-500" />
           </div>
-          {isRTL ? 'التوصيات الذكية' : 'Strategic Recommendations'}
+          {isRTL ? 'رؤى bnft' : 'bnft Insights'}
+          <Badge variant="outline" className="text-[10px] bg-blue-500/10 text-blue-600 border-blue-500/20">
+            {isRTL ? 'قائم على القواعد' : 'rules-based'}
+          </Badge>
           <Badge variant="outline" className="ml-auto text-[10px] bg-violet-500/10 text-violet-600 border-violet-500/20">
             {isRTL ? `تحديث ${lastUpdated}` : `Updated ${lastUpdated}`}
           </Badge>
@@ -76,8 +79,8 @@ export function AIInsightsPanel({ insights, lastUpdated = "2 hours ago" }: AIIns
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
           {isRTL 
-            ? "بناءً على بياناتك، إليك أهم الرؤى:"
-            : "Based on your data, here are the top insights:"
+            ? "توصيات مستندة إلى قواعد محددة من بياناتك:"
+            : "Rule-based recommendations derived from your data:"
           }
         </p>
 

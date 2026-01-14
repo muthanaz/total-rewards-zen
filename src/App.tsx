@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
 import { UIVisibilityProvider } from "@/contexts/UIVisibilityContext";
+import { PeriodProvider } from "@/contexts/PeriodContext";
 import { PrivacyProvider } from "@/components/ui/privacy-toggle";
 
 import Index from "./pages/Index";
@@ -54,6 +55,9 @@ import SatisfactionPulsePage from "./pages/employer/SatisfactionPulse";
 import ComplianceAuditPage from "./pages/employer/ComplianceAudit";
 import KnowledgeCenterPage from "./pages/employer/KnowledgeCenter";
 
+import MetricsDictionaryPage from "./pages/employer/MetricsDictionary";
+import ActionPlanPage from "./pages/employer/ActionPlan";
+
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminBenchmarks from "./pages/admin/Benchmarks";
 import AdminMarketIntelligence from "./pages/admin/MarketIntelligence";
@@ -65,7 +69,6 @@ import AdminOrganizationSettings from "./pages/admin/OrganizationSettings";
 import AdminUIConfiguration from "./pages/admin/UIConfiguration";
 import AdminDataMigration from "./pages/admin/DataMigration";
 import AdminTenantIsolationTest from "./pages/admin/TenantIsolationTest";
-import MetricsDictionaryPage from "./pages/employer/MetricsDictionary";
 import VendorDashboard from "./pages/vendor/Dashboard";
 import VendorOffers from "./pages/vendor/Offers";
 import VendorTransactions from "./pages/vendor/Transactions";
@@ -75,7 +78,15 @@ import VendorCreateOffer from "./pages/vendor/CreateOffer";
 import VendorProfile from "./pages/vendor/Profile";
 import VendorSettings from "./pages/vendor/Settings";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 1000 * 60 * 5, // 5 minutes default
+    },
+  },
+});
 
 type UserRole = 'employee' | 'employer' | 'admin' | 'vendor';
 
@@ -151,6 +162,7 @@ function AppRoutes() {
         <Route path="compliance" element={<ComplianceAuditPage />} />
         <Route path="knowledge" element={<KnowledgeCenterPage />} />
         <Route path="metrics" element={<MetricsDictionaryPage />} />
+        <Route path="actions" element={<ActionPlanPage />} />
       </Route>
       
       {/* Admin Routes - Platform owner only */}
@@ -192,15 +204,17 @@ const App = () => (
         <AuthProvider>
           <ProfileProvider>
             <PrivacyProvider>
-              <UIVisibilityProvider>
-                <SecurityProvider enableSessionTimeout={true}>
-                  <TooltipProvider>
-                    <Toaster />
-                    <Sonner />
-                    <AppRoutes />
-                  </TooltipProvider>
-                </SecurityProvider>
-              </UIVisibilityProvider>
+              <PeriodProvider>
+                <UIVisibilityProvider>
+                  <SecurityProvider enableSessionTimeout={true}>
+                    <TooltipProvider>
+                      <Toaster />
+                      <Sonner />
+                      <AppRoutes />
+                    </TooltipProvider>
+                  </SecurityProvider>
+                </UIVisibilityProvider>
+              </PeriodProvider>
             </PrivacyProvider>
           </ProfileProvider>
         </AuthProvider>
