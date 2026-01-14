@@ -152,15 +152,15 @@ const utilizationTrend = [
 ];
 
 const topBenefits = [
-  { name: 'Housing Allowance', value: 95, color: chartColors.health },
-  { name: 'Health Insurance', value: 78, color: chartColors.housing },
-  { name: 'Transport Allowance', value: 72, color: chartColors.transport },
+  { name: 'Housing Allowance', value: 95, color: 'success' as const },
+  { name: 'Health Insurance', value: 78, color: 'success' as const },
+  { name: 'Transport Allowance', value: 72, color: 'accent' as const },
 ];
 
 const bottomBenefits = [
-  { name: 'Learning & Development', value: 38, color: chartColors.education },
-  { name: 'Wellbeing Program', value: 45, color: chartColors.wellbeing },
-  { name: 'Financial Planning', value: 52, color: chartColors.financial },
+  { name: 'Learning & Development', value: 38, color: 'danger' as const },
+  { name: 'Wellbeing Program', value: 45, color: 'warning' as const },
+  { name: 'Financial Planning', value: 52, color: 'warning' as const },
 ];
 
 export default function EmployerDashboard() {
@@ -545,12 +545,12 @@ export default function EmployerDashboard() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ChartContainer height={120}>
-                      <AnimatedLineChart 
-                        data={utilizationTrend} 
-                        color={chartColors.primary}
-                      />
-                    </ChartContainer>
+                    <AnimatedLineChart 
+                      data={utilizationTrend} 
+                      height={120}
+                      showGrid={false}
+                      showLegend={false}
+                    />
                   </CardContent>
                 </Card>
 
