@@ -11,19 +11,17 @@ import { InfoTooltip } from '@/components/ui/info-tooltip';
 interface MoneyFlowProps {
   allocated: number;
   utilized: number;
-  valueDelivered: number;
   wasteIdentified: number;
   recoverableThisQuarter: number;
-  employeeValuationNote?: string;
+  satisfactionScore?: number;
 }
 
 export function MoneyFlowVisualization({ 
   allocated, 
   utilized, 
-  valueDelivered, 
   wasteIdentified,
   recoverableThisQuarter,
-  employeeValuationNote = "Based on employee valuations"
+  satisfactionScore = 4.2
 }: MoneyFlowProps) {
   const { direction } = useLanguage();
   const isRTL = direction === 'rtl';
@@ -36,12 +34,13 @@ export function MoneyFlowVisualization({
   };
 
   const utilizationRate = ((utilized / allocated) * 100).toFixed(0);
-  const valueMultiplier = (valueDelivered / utilized).toFixed(1);
+  const effectiveSpend = utilized - wasteIdentified;
 
   const flowSteps = [
     {
       label: 'Allocated',
       value: allocated,
+      displayValue: formatCurrency(allocated),
       icon: DollarSign,
       color: 'bg-primary/10 text-primary',
       borderColor: 'border-primary/20'
@@ -49,25 +48,27 @@ export function MoneyFlowVisualization({
     {
       label: 'Utilized',
       value: utilized,
+      displayValue: formatCurrency(utilized),
       icon: Users,
       color: 'bg-blue-500/10 text-blue-600',
       borderColor: 'border-blue-500/20',
       badge: `${utilizationRate}%`
     },
     {
-      label: 'Value Delivered',
-      value: valueDelivered,
+      label: 'Effective Spend',
+      value: effectiveSpend,
+      displayValue: formatCurrency(effectiveSpend),
       icon: Sparkles,
       color: 'bg-emerald-500/10 text-emerald-600',
       borderColor: 'border-emerald-500/20',
-      badge: `${valueMultiplier}x`,
+      badge: `${satisfactionScore}/5 ★`,
       showTooltip: true,
-      tooltipText: 'Calculated by multiplying utilized benefits by employee-perceived value ratings from satisfaction surveys. Formula: Σ(Utilized Amount × Value Rating) for each benefit category.'
+      tooltipText: 'Effective spend = Utilized - Waste. The star rating reflects employee satisfaction with benefits (from surveys). Higher satisfaction indicates better value-for-money.'
     }
   ];
 
   return (
-    <Card className="border-border/50 bg-gradient-to-br from-card via-card to-primary/5">
+    <Card className="border-border/50 bg-gradient-to-br from-card via-card to-primary/5 flex-1 flex flex-col">
       <CardHeader className="pb-2">
         <CardTitle className={cn(
           "text-lg font-display font-semibold flex items-center gap-2",
@@ -80,7 +81,7 @@ export function MoneyFlowVisualization({
           </Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 flex-1 flex flex-col justify-between">
         {/* Flow Visualization */}
         <div className={cn(
           "flex items-center justify-between gap-2",
@@ -116,7 +117,7 @@ export function MoneyFlowVisualization({
                   )}
                 </div>
                 <p className={cn("text-xl lg:text-2xl font-bold tracking-tight", isRTL && "text-right")}>
-                  {formatCurrency(step.value)}
+                  {step.displayValue}
                 </p>
               </div>
               

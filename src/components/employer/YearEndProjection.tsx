@@ -69,7 +69,7 @@ export function YearEndProjection({
   const risk = getRiskLevel();
 
   return (
-    <Card className={cn("border-border/50", risk.border)}>
+    <Card className={cn("border-border/50 flex-1 flex flex-col", risk.border)}>
       <CardHeader className="pb-3">
         <CardTitle className={cn(
           "text-lg font-display font-semibold flex items-center gap-2",
@@ -84,7 +84,7 @@ export function YearEndProjection({
           </Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-5 flex-1 flex flex-col">
         {/* Current Trajectory */}
         <motion.div 
           initial={{ opacity: 0, y: 10 }}

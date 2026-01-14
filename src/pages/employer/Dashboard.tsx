@@ -285,24 +285,25 @@ export default function EmployerDashboard() {
             </div>
 
             {/* Money Flow + Year-End Projection */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+              <div className="lg:col-span-2 flex">
                 <MoneyFlowVisualization
                   allocated={metrics.annualBudget}
                   utilized={metrics.budgetUsed}
-                  valueDelivered={52000000}
                   wasteIdentified={metrics.wasteSpend}
                   recoverableThisQuarter={metrics.wasteRecoveryPotential}
-                  employeeValuationNote={isArabic ? "بناءً على تقييمات الموظفين" : "Based on employee valuations"}
+                  satisfactionScore={metrics.satisfactionScore}
                 />
               </div>
-              <YearEndProjection
-                currentSpend={metrics.budgetUsed}
-                budget={metrics.annualBudget}
-                projectedSpend={61200000}
-                currentUtilization={metrics.utilizationRate}
-                monthsRemaining={4}
-              />
+              <div className="flex">
+                <YearEndProjection
+                  currentSpend={metrics.budgetUsed}
+                  budget={metrics.annualBudget}
+                  projectedSpend={61200000}
+                  currentUtilization={metrics.utilizationRate}
+                  monthsRemaining={4}
+                />
+              </div>
             </div>
 
             {/* AI Strategic Insights */}
