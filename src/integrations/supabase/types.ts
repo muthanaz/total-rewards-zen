@@ -387,6 +387,65 @@ export type Database = {
         }
         Relationships: []
       }
+      employer_actions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          expected_impact: Json | null
+          id: string
+          metric_keys: string[] | null
+          organization_id: string
+          owner_user_id: string | null
+          priority: string | null
+          source_insight: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          expected_impact?: Json | null
+          id?: string
+          metric_keys?: string[] | null
+          organization_id: string
+          owner_user_id?: string | null
+          priority?: string | null
+          source_insight?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          expected_impact?: Json | null
+          id?: string
+          metric_keys?: string[] | null
+          organization_id?: string
+          owner_user_id?: string | null
+          priority?: string | null
+          source_insight?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employer_actions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       health_providers: {
         Row: {
           address: string | null
