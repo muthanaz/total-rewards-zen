@@ -1,9 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
+import { BenefitGuide } from '@/components/employee/BenefitGuide';
 import { Car, Fuel, Plane, CreditCard, CheckCircle, Wallet, TrendingDown, Percent } from 'lucide-react';
+
 const allowances = [
   {
     name: 'Fuel Allowance',
@@ -50,6 +51,31 @@ export default function TransportPage() {
   const totalUtilized = allowances.reduce((sum, a) => sum + a.utilized, 0);
   const totalRemaining = totalAnnual - totalUtilized;
   const totalUtilization = Math.round((totalUtilized / totalAnnual) * 100);
+
+  const guideSteps = [
+    {
+      title: 'Automatic Credit',
+      description: 'Fuel and car allowances are auto-credited to your salary monthly',
+      highlight: 'auto-credited',
+    },
+    {
+      title: 'Flight Booking',
+      description: 'Book annual tickets through the approved travel portal or HR',
+    },
+    {
+      title: 'Family Included',
+      description: 'Flight tickets cover you and your registered dependents',
+    },
+  ];
+
+  const policyPoints = [
+    'Fuel allowance paid monthly with salary',
+    'Car allowance for Grade 5+ employees',
+    'Annual tickets to home country for family',
+    'Business class available for Grade 8+',
+    'Unused ticket allowance non-encashable',
+    'Advance booking recommended for best fares',
+  ];
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -101,46 +127,14 @@ export default function TransportPage() {
         />
       </div>
 
-      {/* How It Works */}
-      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <Car className="w-5 h-5 text-accent" />
-            How Your Transport Benefits Work
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
-              <div>
-                <p className="font-medium text-sm">Automatic Credit</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Fuel and car allowances are <span className="font-semibold text-accent">auto-credited</span> to your salary monthly
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
-              <div>
-                <p className="font-medium text-sm">Flight Booking</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Book annual tickets through the approved travel portal or HR
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
-              <div>
-                <p className="font-medium text-sm">Family Included</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Flight tickets cover you and your registered dependents
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Comprehensive Benefit Guide */}
+      <BenefitGuide
+        icon={Car}
+        title="Transport Benefits Guide"
+        steps={guideSteps}
+        policyPoints={policyPoints}
+        policyButtonText="View Transport Policy"
+      />
 
       {/* Allowance Cards */}
       <div className="grid md:grid-cols-3 gap-6">
@@ -177,7 +171,7 @@ export default function TransportPage() {
                 </div>
 
                 <div className="pt-4 border-t border-border/50">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Policy Details</p>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Details</p>
                   <ul className="space-y-1.5">
                     {allowance.bullets.map((bullet, i) => (
                       <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
@@ -193,83 +187,9 @@ export default function TransportPage() {
         })}
       </div>
 
-      {/* How to Use */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-display">How to Use Your Transport Benefits</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <Fuel className="w-4 h-4 text-accent" />
-                Fuel Allowance
-              </h4>
-              <p className="text-sm text-muted-foreground">
-                Automatically credited to your salary each month. No action required.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <Car className="w-4 h-4 text-accent" />
-                Car Allowance
-              </h4>
-              <p className="text-sm text-muted-foreground">
-                Submit car lease/loan documents to HR for monthly credit, or request lump sum for purchase.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <Plane className="w-4 h-4 text-accent" />
-                Flight Tickets
-              </h4>
-              <p className="text-sm text-muted-foreground">
-                Book through the approved travel portal or contact HR for travel agent details.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Policy Highlights */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-display">Policy Highlights</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Fuel allowance paid monthly with salary
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Car allowance for Grade 5+ employees
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Annual tickets to home country for family
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Business class available for Grade 8+
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Unused ticket allowance non-encashable
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Advance booking recommended for best fares
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-
       {/* Actions */}
-      <div className="flex items-center justify-center gap-4">
+      <div className="flex items-center justify-center">
         <SubmitClaimButton category="Transport" buttonText="Submit Transport Claim" />
-        <Button variant="outline">View Full Transport Policy</Button>
       </div>
     </div>
   );

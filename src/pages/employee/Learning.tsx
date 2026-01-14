@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
+import { BenefitGuide } from '@/components/employee/BenefitGuide';
 import { NoData } from '@/components/ui/empty-state';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -67,6 +68,32 @@ export default function LearningPage() {
     setDialogOpen(false);
   };
 
+  const guideSteps = [
+    {
+      title: 'Request Approval',
+      description: 'Submit a course request with justification — most under AED 2,000 auto-approved',
+      highlight: 'AED 2,000',
+    },
+    {
+      title: 'Complete & Submit',
+      description: 'Finish your course and submit receipts plus completion certificate',
+    },
+    {
+      title: 'Get Reimbursed',
+      description: 'Receive reimbursement within 30 days of submission',
+      highlight: '30 days',
+    },
+  ];
+
+  const policyPoints = [
+    'AED 12,000 annual learning budget',
+    'Pre-approval required for courses over AED 2,000',
+    'Covers courses, certifications, conferences',
+    'Must be job-related or career-advancing',
+    'Reimbursement within 30 days of completion',
+    'Study leave: up to 5 days for certifications',
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -117,7 +144,7 @@ export default function LearningPage() {
         </Dialog>
       </div>
 
-      {/* Summary Cards with SummaryStatsCard */}
+      {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <SummaryStatsCard
           variant="primary"
@@ -158,46 +185,14 @@ export default function LearningPage() {
         />
       </div>
 
-      {/* How It Works */}
-      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-accent" />
-            How Your L&D Budget Works
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
-              <div>
-                <p className="font-medium text-sm">Request Approval</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Submit a course request with justification — most under <span className="font-semibold text-accent">AED 2,000</span> auto-approved
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
-              <div>
-                <p className="font-medium text-sm">Complete & Submit</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Finish your course and submit receipts plus completion certificate
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
-              <div>
-                <p className="font-medium text-sm">Get Reimbursed</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Receive reimbursement within 30 days of submission
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Comprehensive Benefit Guide */}
+      <BenefitGuide
+        icon={BookOpen}
+        title="Learning & Development Guide"
+        steps={guideSteps}
+        policyPoints={policyPoints}
+        policyButtonText="View L&D Policy"
+      />
 
       {/* Your Learning */}
       <Card>
@@ -278,45 +273,9 @@ export default function LearningPage() {
         </CardContent>
       </Card>
 
-      {/* Policy Highlights */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-display">Policy Highlights</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              AED 12,000 annual learning budget
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              Pre-approval required for courses over AED 2,000
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              Covers courses, certifications, conferences
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              Must be job-related or career-advancing
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              Reimbursement within 30 days of completion
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              Study leave: up to 5 days for certifications
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-
       {/* Actions */}
-      <div className="flex items-center justify-center gap-4">
+      <div className="flex items-center justify-center">
         <SubmitClaimButton category="Learning & Development" buttonText="Submit L&D Claim" />
-        <Button variant="outline">View Full L&D Policy</Button>
       </div>
     </div>
   );

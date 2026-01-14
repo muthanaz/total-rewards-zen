@@ -1,13 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { TrendingUp, Calendar, DollarSign, CheckCircle, Clock, Award, Gem } from 'lucide-react';
+import { BenefitGuide } from '@/components/employee/BenefitGuide';
+import { TrendingUp, DollarSign, CheckCircle, Award, Gem } from 'lucide-react';
 
 const TOTAL_SHARES = 5000;
 const VESTED_SHARES = 2500;
-const SHARE_PRICE = 12.50; // Demo share price
+const SHARE_PRICE = 12.50;
 
 const vestingSchedule = [
   { date: 'Jan 2024', shares: 1250, status: 'vested' },
@@ -27,6 +27,31 @@ export default function EquityPage() {
   const totalValue = TOTAL_SHARES * SHARE_PRICE;
   const vestedPercent = Math.round((VESTED_SHARES / TOTAL_SHARES) * 100);
 
+  const guideSteps = [
+    {
+      title: 'Receive Grants',
+      description: 'Share options are awarded based on performance and tenure',
+    },
+    {
+      title: 'Vesting Period',
+      description: 'Shares vest over 4 years with a 1-year cliff period',
+      highlight: '4 years',
+    },
+    {
+      title: 'Exercise Options',
+      description: 'Once vested, exercise your options at exit events (IPO, acquisition)',
+    },
+  ];
+
+  const policyPoints = [
+    'Share options give you the right to buy company shares',
+    'Vesting happens over time (usually 4 years)',
+    'Cliff period: first vesting only after 1 year',
+    'Exercise window: 90 days after leaving',
+    'Value realized at exit event (IPO, acquisition)',
+    'Tax implications: consult a financial advisor',
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -40,7 +65,7 @@ export default function EquityPage() {
         </p>
       </div>
 
-      {/* Summary Cards with SummaryStatsCard */}
+      {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <SummaryStatsCard
           variant="primary"
@@ -80,6 +105,15 @@ export default function EquityPage() {
         />
       </div>
 
+      {/* Comprehensive Benefit Guide */}
+      <BenefitGuide
+        icon={TrendingUp}
+        title="Equity Plan Guide"
+        steps={guideSteps}
+        policyPoints={policyPoints}
+        policyButtonText="View Equity Plan"
+      />
+
       {/* Vesting Progress */}
       <Card>
         <CardHeader>
@@ -94,20 +128,18 @@ export default function EquityPage() {
         </CardContent>
       </Card>
 
-      {/* Vesting Schedule Chart */}
+      {/* Vesting Schedule */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base font-display">Vesting Schedule</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="relative">
-            {/* Timeline */}
             <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
             
             <div className="space-y-6 pl-12">
               {vestingSchedule.map((event, i) => (
                 <div key={i} className="relative">
-                  {/* Timeline dot */}
                   <div className={`absolute -left-[30px] w-4 h-4 rounded-full border-2 ${
                     event.status === 'vested' 
                       ? 'bg-success border-success' 
@@ -169,46 +201,6 @@ export default function EquityPage() {
           </div>
         </CardContent>
       </Card>
-
-      {/* How It Works */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-display">How Equity Works</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              Share options give you the right to buy company shares
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              Vesting happens over time (usually 4 years)
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              Cliff period: first vesting only after 1 year
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              Exercise window: 90 days after leaving
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              Value realized at exit event (IPO, acquisition)
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              Tax implications: consult a financial advisor
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-
-      {/* View Full Policy */}
-      <div className="text-center">
-        <Button variant="outline">View Full Equity Plan</Button>
-      </div>
     </div>
   );
 }

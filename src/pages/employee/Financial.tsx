@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { BenefitGuide } from '@/components/employee/BenefitGuide';
 import { Slider } from '@/components/ui/slider';
-import { PiggyBank, TrendingUp, Wallet, Target, Calculator, CheckCircle, Gift } from 'lucide-react';
+import { PiggyBank, TrendingUp, Wallet, Target, Calculator, Gift } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 
@@ -27,15 +27,6 @@ const pageTranslations = {
     dataSourceHR: 'HR Policy',
     dataSourceSystem: 'System',
     dataSourceProjection: 'Projection',
-    howItWorks: 'How Your Savings Plan Works',
-    step1Title: 'You Contribute',
-    step1Desc: 'Choose 1-20% of your salary to save each month via payroll deduction',
-    step2Title: 'Employer Matches',
-    step2Desc: 'Company matches',
-    step2Highlight: '100% up to 5%',
-    step2Suffix: "— that's free money!",
-    step3Title: 'Grow Tax-Free',
-    step3Desc: 'Your savings grow tax-efficiently with professional fund management',
     calculatorTitle: 'Savings Calculator (Demo)',
     yourContribution: 'Your Contribution',
     maxMatch: '5% (max match)',
@@ -50,14 +41,6 @@ const pageTranslations = {
     yourContributionCol: 'Your Contribution',
     employerMatchCol: 'Employer Match',
     total: 'Total',
-    policyHighlights: 'Policy Highlights',
-    policy1: '5% employer match on your contributions',
-    policy2: 'Multiple fund options (conservative to aggressive)',
-    policy3: 'Quarterly rebalancing available',
-    policy4: 'Vesting: 2 years for full employer match',
-    policy5: 'Withdrawal allowed after 1 year (conditions apply)',
-    policy6: 'Tax-efficient structure',
-    viewFullPolicy: 'View Full Savings Plan Policy',
     months: {
       Jul: 'Jul',
       Aug: 'Aug',
@@ -66,6 +49,20 @@ const pageTranslations = {
       Nov: 'Nov',
       Dec: 'Dec',
     },
+    guideTitle: 'Savings Plan Guide',
+    step1Title: 'You Contribute',
+    step1Desc: 'Choose 1-20% of your salary to save each month via payroll deduction',
+    step2Title: 'Employer Matches',
+    step2Desc: 'Company matches 100% up to 5% — that\'s free money!',
+    step3Title: 'Grow Tax-Free',
+    step3Desc: 'Your savings grow tax-efficiently with professional fund management',
+    policy1: '5% employer match on your contributions',
+    policy2: 'Multiple fund options (conservative to aggressive)',
+    policy3: 'Quarterly rebalancing available',
+    policy4: 'Vesting: 2 years for full employer match',
+    policy5: 'Withdrawal allowed after 1 year (conditions apply)',
+    policy6: 'Tax-efficient structure',
+    viewPolicy: 'View Savings Policy',
   },
   ar: {
     title: 'التخطيط المالي',
@@ -82,15 +79,6 @@ const pageTranslations = {
     dataSourceHR: 'سياسة الموارد البشرية',
     dataSourceSystem: 'النظام',
     dataSourceProjection: 'التوقعات',
-    howItWorks: 'كيف تعمل خطة الادخار الخاصة بك',
-    step1Title: 'أنت تساهم',
-    step1Desc: 'اختر من 1-20% من راتبك للادخار شهرياً عبر خصم الراتب',
-    step2Title: 'صاحب العمل يطابق',
-    step2Desc: 'الشركة تطابق',
-    step2Highlight: '100% حتى 5%',
-    step2Suffix: '— هذه أموال مجانية!',
-    step3Title: 'نمو معفي من الضرائب',
-    step3Desc: 'مدخراتك تنمو بكفاءة ضريبية مع إدارة صناديق احترافية',
     calculatorTitle: 'حاسبة الادخار (تجريبي)',
     yourContribution: 'مساهمتك',
     maxMatch: '5% (الحد الأقصى للمطابقة)',
@@ -105,14 +93,6 @@ const pageTranslations = {
     yourContributionCol: 'مساهمتك',
     employerMatchCol: 'مطابقة صاحب العمل',
     total: 'الإجمالي',
-    policyHighlights: 'أبرز بنود السياسة',
-    policy1: 'مطابقة 5% من صاحب العمل على مساهماتك',
-    policy2: 'خيارات صناديق متعددة (من المحافظ إلى العدواني)',
-    policy3: 'إعادة التوازن ربع السنوية متاحة',
-    policy4: 'الاستحقاق: سنتان للحصول على كامل مطابقة صاحب العمل',
-    policy5: 'السحب مسموح بعد سنة واحدة (تطبق الشروط)',
-    policy6: 'هيكل ذو كفاءة ضريبية',
-    viewFullPolicy: 'عرض سياسة خطة الادخار الكاملة',
     months: {
       Jul: 'يوليو',
       Aug: 'أغسطس',
@@ -121,6 +101,20 @@ const pageTranslations = {
       Nov: 'نوفمبر',
       Dec: 'ديسمبر',
     },
+    guideTitle: 'دليل خطة الادخار',
+    step1Title: 'أنت تساهم',
+    step1Desc: 'اختر من 1-20% من راتبك للادخار شهرياً عبر خصم الراتب',
+    step2Title: 'صاحب العمل يطابق',
+    step2Desc: 'الشركة تطابق 100% حتى 5% — هذه أموال مجانية!',
+    step3Title: 'نمو معفي من الضرائب',
+    step3Desc: 'مدخراتك تنمو بكفاءة ضريبية مع إدارة صناديق احترافية',
+    policy1: 'مطابقة 5% من صاحب العمل على مساهماتك',
+    policy2: 'خيارات صناديق متعددة (من المحافظ إلى العدواني)',
+    policy3: 'إعادة التوازن ربع السنوية متاحة',
+    policy4: 'الاستحقاق: سنتان للحصول على كامل مطابقة صاحب العمل',
+    policy5: 'السحب مسموح بعد سنة واحدة (تطبق الشروط)',
+    policy6: 'هيكل ذو كفاءة ضريبية',
+    viewPolicy: 'عرض سياسة الادخار',
   },
 };
 
@@ -150,6 +144,14 @@ export default function FinancialPage() {
 
   const totalContributed = savingsHistory.reduce((sum, m) => sum + m.employee + m.employer, 0);
   const totalEmployerMatch = savingsHistory.reduce((sum, m) => sum + m.employer, 0);
+
+  const guideSteps = [
+    { title: t.step1Title, description: t.step1Desc },
+    { title: t.step2Title, description: t.step2Desc, highlight: '100%' },
+    { title: t.step3Title, description: t.step3Desc },
+  ];
+
+  const policyPoints = [t.policy1, t.policy2, t.policy3, t.policy4, t.policy5, t.policy6];
 
   return (
     <div className={cn("space-y-6 animate-fade-in", isRTL && "text-right")}>
@@ -203,58 +205,14 @@ export default function FinancialPage() {
         />
       </div>
 
-      {/* How It Works */}
-      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
-        <CardHeader className="pb-3">
-          <CardTitle className={cn(
-            "text-base font-display flex items-center gap-2",
-            isRTL && "flex-row-reverse"
-          )}>
-            <PiggyBank className="w-5 h-5 text-accent" />
-            {t.howItWorks}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className={cn(
-              "flex items-start gap-3 p-3 rounded-lg bg-card border",
-              isRTL && "flex-row-reverse text-right"
-            )}>
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
-              <div>
-                <p className="font-medium text-sm">{t.step1Title}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t.step1Desc}
-                </p>
-              </div>
-            </div>
-            <div className={cn(
-              "flex items-start gap-3 p-3 rounded-lg bg-card border",
-              isRTL && "flex-row-reverse text-right"
-            )}>
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
-              <div>
-                <p className="font-medium text-sm">{t.step2Title}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t.step2Desc} <span className="font-semibold text-success">{t.step2Highlight}</span> {t.step2Suffix}
-                </p>
-              </div>
-            </div>
-            <div className={cn(
-              "flex items-start gap-3 p-3 rounded-lg bg-card border",
-              isRTL && "flex-row-reverse text-right"
-            )}>
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
-              <div>
-                <p className="font-medium text-sm">{t.step3Title}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t.step3Desc}
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Comprehensive Benefit Guide */}
+      <BenefitGuide
+        icon={PiggyBank}
+        title={t.guideTitle}
+        steps={guideSteps}
+        policyPoints={policyPoints}
+        policyButtonText={t.viewPolicy}
+      />
 
       {/* Savings Calculator */}
       <Card className="bg-accent/5 border-accent/20">
@@ -357,31 +315,6 @@ export default function FinancialPage() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Policy Highlights */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-display">{t.policyHighlights}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-            {[t.policy1, t.policy2, t.policy3, t.policy4, t.policy5, t.policy6].map((policy, index) => (
-              <li key={index} className={cn(
-                "flex items-start gap-2",
-                isRTL && "flex-row-reverse text-right"
-              )}>
-                <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-                {policy}
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-
-      {/* View Full Policy */}
-      <div className="text-center">
-        <Button variant="outline">{t.viewFullPolicy}</Button>
-      </div>
     </div>
   );
 }
