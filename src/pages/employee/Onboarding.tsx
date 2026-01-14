@@ -18,6 +18,7 @@ import {
   Dumbbell,
   Upload,
   Check,
+  Landmark,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -101,6 +102,8 @@ const pageTranslations = {
     wellbeingDesc: 'Gym membership and wellness activities',
     financialPlanning: 'Financial Planning',
     financialDesc: 'Access to financial advisors and tools',
+    gratuityBenefit: 'End of Service Gratuity',
+    gratuityDesc: 'Statutory payment under UAE Labor Law',
     annualValue: 'Annual Value',
     included: 'Included',
     optional: 'Optional',
@@ -205,6 +208,8 @@ const pageTranslations = {
     wellbeingDesc: 'عضوية صالة رياضية وأنشطة صحية',
     financialPlanning: 'التخطيط المالي',
     financialDesc: 'الوصول إلى مستشارين ماليين وأدوات',
+    gratuityBenefit: 'مكافأة نهاية الخدمة',
+    gratuityDesc: 'دفعة قانونية بموجب قانون العمل الإماراتي',
     annualValue: 'القيمة السنوية',
     included: 'مشمول',
     optional: 'اختياري',
@@ -258,6 +263,7 @@ const benefits = [
   { id: 'transport', icon: Car, nameKey: 'transportAllowance', descKey: 'transportDesc', value: 30000, included: true },
   { id: 'wellbeing', icon: Dumbbell, nameKey: 'wellbeingProgram', descKey: 'wellbeingDesc', value: 8000, included: false },
   { id: 'financial', icon: PiggyBank, nameKey: 'financialPlanning', descKey: 'financialDesc', value: 0, included: false },
+  { id: 'gratuity', icon: Landmark, nameKey: 'gratuityBenefit', descKey: 'gratuityDesc', value: 0, included: true },
 ];
 
 export default function OnboardingPage() {

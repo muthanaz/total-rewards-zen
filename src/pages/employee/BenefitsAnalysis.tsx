@@ -80,6 +80,7 @@ const benefits = [
 const fullyUtilizedBenefits = [
   { name: 'Housing Allowance', nameAr: 'بدل السكن', value: 120000 },
   { name: 'Transport & Mobility', nameAr: 'النقل والتنقل', value: 39000 },
+  { name: 'End of Service Gratuity', nameAr: 'مكافأة نهاية الخدمة', value: 102083 },
 ];
 
 export default function BenefitsAnalysis() {

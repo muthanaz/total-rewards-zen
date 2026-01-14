@@ -52,8 +52,9 @@ export const SPEND_BY_BENEFIT_TYPE = [
   { name: 'Schooling', spend: 7_700_000, budget: 9_560_000, utilization: 80.5 },
   { name: 'Health', spend: 5_100_000, budget: 5_750_000, utilization: 88.7 },
   { name: 'Transport', spend: 4_850_000, budget: 6_060_000, utilization: 80.0 },
+  { name: 'End of Service', spend: 3_200_000, budget: 3_200_000, utilization: 100.0 },
   { name: 'Learning', spend: 2_480_000, budget: 6_300_000, utilization: 39.4 },
-  { name: 'Wellbeing', spend: 4_150_000, budget: 9_200_000, utilization: 45.1 },
+  { name: 'Wellbeing', spend: 950_000, budget: 6_000_000, utilization: 15.8 },
 ] as const;
 
 // Monthly spend trend data
@@ -131,11 +132,12 @@ export const WASTE_RISK_INDICATORS = [
 
 // Spend distribution percentages
 export const SPEND_DISTRIBUTION = [
-  { name: 'Cash Allowances', value: 45, color: 'hsl(160 84% 39%)' },
-  { name: 'Health & Protection', value: 20, color: 'hsl(217 91% 60%)' },
-  { name: 'Time Off', value: 15, color: 'hsl(271 81% 56%)' },
+  { name: 'Cash Allowances', value: 40, color: 'hsl(160 84% 39%)' },
+  { name: 'Health & Protection', value: 18, color: 'hsl(217 91% 60%)' },
+  { name: 'End of Service', value: 12, color: 'hsl(45 90% 50%)' },
+  { name: 'Time Off', value: 12, color: 'hsl(271 81% 56%)' },
   { name: 'Growth & Career', value: 10, color: 'hsl(38 92% 50%)' },
-  { name: 'Wellbeing', value: 10, color: 'hsl(330 81% 60%)' },
+  { name: 'Wellbeing', value: 8, color: 'hsl(330 81% 60%)' },
 ] as const;
 
 // Helper functions

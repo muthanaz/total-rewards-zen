@@ -54,6 +54,7 @@ const benefitTypeBenchmarks = [
   { type: 'Education', avgAllocation: 45000, utilizationRate: 87, marketPenetration: 72 },
   { type: 'Health Insurance', avgAllocation: 32000, utilizationRate: 96, marketPenetration: 95 },
   { type: 'Transport', avgAllocation: 18000, utilizationRate: 78, marketPenetration: 65 },
+  { type: 'End of Service', avgAllocation: 95000, utilizationRate: 100, marketPenetration: 100 },
   { type: 'Wellness', avgAllocation: 8000, utilizationRate: 65, marketPenetration: 45 },
   { type: 'Professional Dev', avgAllocation: 12000, utilizationRate: 42, marketPenetration: 38 },
 ];
