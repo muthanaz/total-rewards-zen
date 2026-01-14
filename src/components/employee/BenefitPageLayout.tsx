@@ -27,7 +27,7 @@ export interface BenefitStat {
   labelAr?: string;
   value: string | number;
   icon: LucideIcon;
-  variant?: 'default' | 'success' | 'warning' | 'info';
+  variant?: 'primary' | 'utilized' | 'remaining' | 'utilization' | 'info';
   suffix?: string;
 }
 
@@ -211,8 +211,8 @@ export function BenefitPageLayout({
             label={isArabic && stat.labelAr ? stat.labelAr : stat.label}
             value={typeof stat.value === 'number' ? stat.value.toLocaleString(isArabic ? 'ar-AE' : 'en-AE') : stat.value}
             icon={stat.icon}
-            variant={stat.variant || 'default'}
-            suffix={stat.suffix}
+            variant={stat.variant || 'primary'}
+            index={index}
           />
         ))}
       </div>

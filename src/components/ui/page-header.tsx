@@ -2,14 +2,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
-import { Calendar, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Calendar, ChevronRight, ChevronLeft, LucideIcon } from 'lucide-react';
 import { ReactNode } from 'react';
 
-interface PageHeaderProps {
+export interface PageHeaderProps {
   title: string;
   titleAr?: string;
   subtitle?: string;
   subtitleAr?: string;
+  icon?: LucideIcon;
   period?: {
     label: string;
     labelAr?: string;
@@ -31,6 +32,7 @@ interface PageHeaderProps {
     labelAr?: string;
     href?: string;
   };
+  action?: ReactNode;
   className?: string;
   children?: ReactNode;
 }
@@ -40,10 +42,12 @@ export function PageHeader({
   titleAr,
   subtitle,
   subtitleAr,
+  icon: Icon,
   period,
   primaryAction,
   secondaryAction,
   breadcrumb,
+  action,
   className,
   children,
 }: PageHeaderProps) {
@@ -71,6 +75,11 @@ export function PageHeader({
       )}>
         <div className={cn("space-y-1", isRTL && "text-right")}>
           <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+            {Icon && (
+              <div className="p-2 rounded-lg bg-accent/10">
+                <Icon className="w-6 h-6 text-accent" />
+              </div>
+            )}
             <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">
               {isArabic && titleAr ? titleAr : title}
             </h1>
@@ -89,9 +98,10 @@ export function PageHeader({
         </div>
 
         {/* Actions */}
-        {(primaryAction || secondaryAction || children) && (
+        {(primaryAction || secondaryAction || action || children) && (
           <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
             {children}
+            {action}
             {secondaryAction && (
               <Button variant="outline" onClick={secondaryAction.onClick}>
                 {isArabic && secondaryAction.labelAr ? secondaryAction.labelAr : secondaryAction.label}
