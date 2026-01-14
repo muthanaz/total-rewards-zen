@@ -6,6 +6,7 @@ import { ArrowRight, DollarSign, Users, Sparkles, Recycle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 
 interface MoneyFlowProps {
   allocated: number;
@@ -54,12 +55,14 @@ export function MoneyFlowVisualization({
       badge: `${utilizationRate}%`
     },
     {
-      label: 'Value Delivered*',
+      label: 'Value Delivered',
       value: valueDelivered,
       icon: Sparkles,
       color: 'bg-emerald-500/10 text-emerald-600',
       borderColor: 'border-emerald-500/20',
-      badge: `${valueMultiplier}x`
+      badge: `${valueMultiplier}x`,
+      showTooltip: true,
+      tooltipText: 'Calculated by multiplying utilized benefits by employee-perceived value ratings from satisfaction surveys. Formula: Σ(Utilized Amount × Value Rating) for each benefit category.'
     }
   ];
 
@@ -106,7 +109,12 @@ export function MoneyFlowVisualization({
                     </Badge>
                   )}
                 </div>
-                <p className={cn("text-xs text-muted-foreground mb-1", isRTL && "text-right")}>{step.label}</p>
+                <div className={cn("flex items-center gap-1 mb-1", isRTL && "flex-row-reverse")}>
+                  <p className={cn("text-xs text-muted-foreground", isRTL && "text-right")}>{step.label}</p>
+                  {step.showTooltip && (
+                    <InfoTooltip formula={step.tooltipText} dataSource="Employee Valuations Survey" />
+                  )}
+                </div>
                 <p className={cn("text-xl lg:text-2xl font-bold tracking-tight", isRTL && "text-right")}>
                   {formatCurrency(step.value)}
                 </p>
@@ -122,9 +130,6 @@ export function MoneyFlowVisualization({
           ))}
         </div>
 
-        <p className={cn("text-xs text-muted-foreground italic", isRTL && "text-right")}>
-          *{employeeValuationNote}
-        </p>
 
         {/* Waste Recovery Section */}
         <div className="pt-4 border-t border-border/50">

@@ -185,7 +185,6 @@ export default function EmployerDashboard() {
   
   // UI Visibility hooks
   const { isVisible: showAlerts } = useElementVisibility('employer', 'dashboard', 'alerts');
-  const { isVisible: showFinancialSummary } = useElementVisibility('employer', 'dashboard', 'financial_summary');
   const { isVisible: showActionMatrix } = useElementVisibility('employer', 'dashboard', 'action_matrix');
   const { isVisible: showTeamHealth } = useElementVisibility('employer', 'dashboard', 'team_health');
   const { isVisible: showUtilizationSnapshot } = useElementVisibility('employer', 'dashboard', 'utilization_snapshot');
@@ -481,84 +480,8 @@ export default function EmployerDashboard() {
               </div>
             )}
 
-            {/* Financial Health + Competitive Position */}
+            {/* Competitive Position + AI Insights - Side by Side */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Financial Health Summary */}
-              {showFinancialSummary && (
-                <Card className="border-border/50 bg-gradient-to-br from-card via-card to-primary/5">
-                  <CardHeader className="pb-2">
-                    <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                      <CardTitle className={cn(
-                        "text-base font-display font-semibold flex items-center gap-2",
-                        isRTL && "flex-row-reverse"
-                      )}>
-                        <DollarSign className="w-5 h-5 text-primary" />
-                        {isArabic ? 'ملخص الصحة المالية' : 'Financial Health Summary'}
-                      </CardTitle>
-                      <InfoTooltip 
-                        formula="Overview of budget allocation, spending, and utilization status." 
-                        dataSource="Finance System" 
-                      />
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className={cn("space-y-1", isRTL && "text-right")}>
-                        <div className="flex items-center gap-1">
-                          <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                            {isArabic ? 'الميزانية السنوية' : 'Annual Budget'}
-                          </p>
-                          <InfoTooltip formula="Total allocated benefits budget for FY2024." dataSource="Finance" />
-                        </div>
-                        <p className="text-xl font-bold">{formatCurrency(metrics.annualBudget)}</p>
-                      </div>
-                      <div className={cn("space-y-1", isRTL && "text-right")}>
-                        <div className="flex items-center gap-1">
-                          <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                            {isArabic ? 'المستخدم حتى الآن' : 'Spent YTD'}
-                          </p>
-                          <InfoTooltip formula="Sum of all approved claims and disbursements YTD." dataSource="Finance" />
-                        </div>
-                        <p className="text-xl font-bold text-blue-600">{formatCurrency(metrics.budgetUsed)}</p>
-                      </div>
-                      <div className={cn("space-y-1", isRTL && "text-right")}>
-                        <div className="flex items-center gap-1">
-                          <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                            {isArabic ? 'المتبقي' : 'Remaining'}
-                          </p>
-                          <InfoTooltip formula="Annual Budget - Spent YTD." dataSource="Calculated" />
-                        </div>
-                        <p className="text-xl font-bold text-emerald-600">{formatCurrency(metrics.budgetRemaining)}</p>
-                      </div>
-                      <div className={cn("space-y-1", isRTL && "text-right")}>
-                        <div className="flex items-center gap-1">
-                          <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                            {isArabic ? 'الاستخدام' : 'Utilization'}
-                          </p>
-                          <InfoTooltip formula="(Spent YTD / Annual Budget) × 100. Target: 75%." dataSource="Calculated" />
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                          <p className={cn(
-                            "text-xl font-bold",
-                            metrics.utilizationRate >= metrics.utilizationTarget ? "text-emerald-600" : "text-amber-600"
-                          )}>
-                            {metrics.utilizationRate}%
-                          </p>
-                          <span className="text-xs text-muted-foreground">/ {metrics.utilizationTarget}%</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className={cn("flex justify-between text-xs", isRTL && "flex-row-reverse")}>
-                        <span className="text-muted-foreground">{isArabic ? 'تقدم الميزانية' : 'Budget Progress'}</span>
-                        <span className="font-medium">{budgetUtilization.toFixed(0)}% {isArabic ? 'مُنفذ' : 'deployed'}</span>
-                      </div>
-                      <Progress value={budgetUtilization} className="h-2" />
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
               {/* Competitive Position */}
               <Card className="border-border/50">
                 <CardHeader className="pb-2">
@@ -610,9 +533,41 @@ export default function EmployerDashboard() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Utilization Snapshot - Combined */}
+              <Card className="border-border/50">
+                <CardHeader className="pb-2">
+                  <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+                    <CardTitle className={cn(
+                      "text-base font-display font-semibold flex items-center gap-2",
+                      isRTL && "flex-row-reverse"
+                    )}>
+                      <PieChart className="w-5 h-5 text-primary" />
+                      {isArabic ? 'لقطة الاستخدام' : 'Utilization Snapshot'}
+                    </CardTitle>
+                    <InfoTooltip formula="Top and bottom performing benefits by utilization rate." dataSource="Analytics" />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className={cn("text-xs font-medium text-emerald-600 mb-2 flex items-center gap-1", isRTL && "flex-row-reverse")}>
+                      <CheckCircle2 className="w-3 h-3" />
+                      {isArabic ? 'الأعلى أداءً' : 'Top Performers'}
+                    </p>
+                    <ProgressBarList items={topBenefits} />
+                  </div>
+                  <div className="border-t border-border/50 pt-4">
+                    <p className={cn("text-xs font-medium text-amber-600 mb-2 flex items-center gap-1", isRTL && "flex-row-reverse")}>
+                      <AlertTriangle className="w-3 h-3" />
+                      {isArabic ? 'يحتاج اهتمام' : 'Needs Attention'}
+                    </p>
+                    <ProgressBarList items={bottomBenefits} />
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
-            {/* AI Strategic Insights */}
+            {/* AI Strategic Insights - Compact */}
             <AIInsightsPanel
               insights={[
                 {
@@ -647,59 +602,27 @@ export default function EmployerDashboard() {
               lastUpdated={isArabic ? 'منذ ساعتين' : '2 hours ago'}
             />
 
-            {/* Utilization Snapshot */}
+            {/* Utilization Trend Chart - Full Width at Bottom */}
             {showUtilizationSnapshot && (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <Card className="border-border/50">
-                  <CardHeader className="pb-2">
-                    <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                      <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                        <TrendingUp className="w-4 h-4 text-primary" />
-                        {isArabic ? 'اتجاه الاستخدام' : 'Utilization Trend'}
-                      </CardTitle>
-                      <InfoTooltip formula="Monthly utilization percentage over the last 6 months." dataSource="Analytics" />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <AnimatedLineChart 
-                      data={utilizationTrend} 
-                      height={120}
-                      showGrid={false}
-                      showLegend={false}
-                    />
-                  </CardContent>
-                </Card>
-
-                <Card className="border-border/50">
-                  <CardHeader className="pb-2">
-                    <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                      <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                        {isArabic ? 'الأعلى أداءً' : 'Top Performers'}
-                      </CardTitle>
-                      <InfoTooltip formula="Benefits with highest utilization rates (>70%)." dataSource="Analytics" />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <ProgressBarList items={topBenefits} />
-                  </CardContent>
-                </Card>
-
-                <Card className="border-border/50">
-                  <CardHeader className="pb-2">
-                    <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                      <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                        <AlertTriangle className="w-4 h-4 text-amber-500" />
-                        {isArabic ? 'يحتاج اهتمام' : 'Needs Attention'}
-                      </CardTitle>
-                      <InfoTooltip formula="Benefits with low utilization rates (<60%) - potential zombie spend." dataSource="Analytics" />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <ProgressBarList items={bottomBenefits} />
-                  </CardContent>
-                </Card>
-              </div>
+              <Card className="border-border/50">
+                <CardHeader className="pb-2">
+                  <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+                    <CardTitle className={cn("text-base font-display font-semibold flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                      <TrendingUp className="w-5 h-5 text-primary" />
+                      {isArabic ? 'اتجاه الاستخدام - آخر 6 أشهر' : 'Utilization Trend - Last 6 Months'}
+                    </CardTitle>
+                    <InfoTooltip formula="Monthly utilization percentage over the last 6 months." dataSource="Analytics" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <AnimatedLineChart 
+                    data={utilizationTrend} 
+                    height={150}
+                    showGrid={true}
+                    showLegend={false}
+                  />
+                </CardContent>
+              </Card>
             )}
           </motion.div>
         ) : (
