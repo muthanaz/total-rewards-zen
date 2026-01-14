@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { 
   DollarSign, Home, GraduationCap, 
-  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote, AlertCircle, CheckCircle2, Clock, Landmark
+  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote, AlertCircle, CheckCircle2, Clock, Landmark, TrendingUp
 } from 'lucide-react';
 import { BENEFIT_TYPE_COLORS } from '@/lib/constants';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
@@ -46,6 +46,7 @@ const benefits = [
   { name: 'Wellbeing Program', nameKey: 'benefit.wellbeing', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', valueType: 'budget' as BenefitValueType, area: 'health', route: '/employee/wellbeing', category: 'wellbeing', claimable: true, bullets: ['Gym membership covered', 'Wellness app subscription'], bulletsAr: ['عضوية النادي الرياضي مغطاة', 'اشتراك تطبيق العافية'] },
   { name: 'Learning & Development', nameKey: 'benefit.learning', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', valueType: 'budget' as BenefitValueType, area: 'career', route: '/employee/learning', category: 'learning', claimable: true, bullets: ['Courses and certifications', 'Pre-approval required'], bulletsAr: ['الدورات والشهادات', 'يتطلب موافقة مسبقة'] },
   { name: 'End of Service Gratuity', nameKey: 'benefit.gratuity', icon: Landmark, value: 102083, utilized: 102083, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'money', route: '/employee/gratuity', category: 'gratuity', claimable: false, bullets: ['UAE Labor Law entitlement', 'Paid on end of service'], bulletsAr: ['استحقاق قانون العمل الإماراتي', 'يُدفع عند نهاية الخدمة'] },
+  { name: 'Equity & Options', nameKey: 'benefit.equity', icon: TrendingUp, value: 85000, utilized: 42500, type: 'wealth_ownership', valueType: 'performance' as BenefitValueType, area: 'money', route: '/employee/equity', category: 'equity', claimable: false, bullets: ['Stock options vest over 4 years', 'RSUs granted annually'], bulletsAr: ['خيارات الأسهم تستحق على مدى ٤ سنوات', 'وحدات الأسهم المقيدة تُمنح سنوياً'] },
 ];
 
 export default function EmployeeDashboard() {
@@ -278,7 +279,7 @@ export default function EmployeeDashboard() {
               <ChevronIcon className={cn("w-3 h-3", isRTL ? "mr-1" : "ml-1")} />
             </Button>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
             {benefits.map((benefit, index) => {
               const utilization = Math.round((benefit.utilized / benefit.value) * 100);
               const remaining = benefit.value - benefit.utilized;
