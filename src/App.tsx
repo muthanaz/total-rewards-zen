@@ -37,7 +37,6 @@ import ProfilePage from "./pages/employee/Profile";
 import BenefitsPage from "./pages/employee/Benefits";
 import OnboardingPage from "./pages/employee/Onboarding";
 import KnowledgeHubPage from "./pages/employee/KnowledgeHub";
-import SecuritySettingsPage from "./pages/employee/SecuritySettings";
 import BenefitsAnalysisPage from "./pages/employee/BenefitsAnalysis";
 
 import EmployerDashboard from "./pages/employer/Dashboard";

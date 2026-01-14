@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { 
   Lightbulb, TrendingUp, Users, DollarSign, Heart, GraduationCap,
-  Baby, Plane, Car, Briefcase, Shield, ArrowRight, CheckCircle,
-  Calculator, Sparkles, Target
+  Baby, Briefcase, Shield, ArrowRight,
+  Calculator, Sparkles
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
