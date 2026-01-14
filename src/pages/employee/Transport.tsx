@@ -3,7 +3,10 @@ import { Progress } from '@/components/ui/progress';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { BenefitGuide } from '@/components/employee/BenefitGuide';
+import { PageHeader } from '@/components/ui/page-header';
 import { Car, Fuel, Plane, CreditCard, CheckCircle, Wallet, TrendingDown, Percent } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 
 const allowances = [
   {
@@ -45,6 +48,10 @@ const allowances = [
 ];
 
 export default function TransportPage() {
+  const { language, direction } = useLanguage();
+  const isRTL = direction === 'rtl';
+  const isArabic = language === 'ar';
+  
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
 
   const totalAnnual = allowances.reduce((sum, a) => sum + a.annual, 0);
@@ -78,17 +85,15 @@ export default function TransportPage() {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className={cn("space-y-6 animate-fade-in", isRTL && "text-right")}>
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-          <Car className="w-7 h-7 text-accent" />
-          Transport & Mobility
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Fuel, car allowance, and annual flight tickets
-        </p>
-      </div>
+      <PageHeader
+        title={isArabic ? 'النقل والتنقل' : 'Transport & Mobility'}
+        titleAr="النقل والتنقل"
+        subtitle={isArabic ? 'بدل الوقود، بدل السيارة، وتذاكر الطيران السنوية' : 'Fuel, car allowance, and annual flight tickets'}
+        subtitleAr="بدل الوقود، بدل السيارة، وتذاكر الطيران السنوية"
+        icon={Car}
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

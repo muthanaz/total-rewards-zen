@@ -6,9 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { BenefitGuide } from '@/components/employee/BenefitGuide';
+import { PageHeader } from '@/components/ui/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile, Wallet, TrendingDown, Percent } from 'lucide-react';
 import { useHealthProviders } from '@/hooks/useSupabaseData';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 
 const ANNUAL_VALUE = 45000;
 const UTILIZED = 12500;
@@ -61,6 +64,9 @@ const faqs = [
 
 export default function HealthPage() {
   const { data: providers = [] } = useHealthProviders();
+  const { language, direction } = useLanguage();
+  const isRTL = direction === 'rtl';
+  const isArabic = language === 'ar';
   
   const [searchTerm, setSearchTerm] = useState('');
   const [providerType, setProviderType] = useState<string>('all');
@@ -140,17 +146,15 @@ export default function HealthPage() {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className={cn("space-y-6 animate-fade-in", isRTL && "text-right")}>
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-          <Heart className="w-7 h-7 text-accent" />
-          Health Insurance
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Comprehensive coverage for you and your family
-        </p>
-      </div>
+      <PageHeader
+        title={isArabic ? 'التأمين الصحي' : 'Health Insurance'}
+        titleAr="التأمين الصحي"
+        subtitle={isArabic ? 'تغطية شاملة لك ولعائلتك' : 'Comprehensive coverage for you and your family'}
+        subtitleAr="تغطية شاملة لك ولعائلتك"
+        icon={Heart}
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

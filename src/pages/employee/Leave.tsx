@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { BenefitGuide } from '@/components/employee/BenefitGuide';
+import { PageHeader } from '@/components/ui/page-header';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -13,7 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar, Plus, Clock, CheckCircle, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { LEAVE_TYPES } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 
 // Base leave balances - will be filtered by gender
 const allLeaveBalances = [
@@ -34,6 +37,9 @@ const recentRequests = [
 export default function LeavePage() {
   const { toast } = useToast();
   const { profile } = useProfile();
+  const { language, direction } = useLanguage();
+  const isRTL = direction === 'rtl';
+  const isArabic = language === 'ar';
   const [dialogOpen, setDialogOpen] = useState(false);
 
   // Filter leave balances based on user's gender
@@ -153,17 +159,15 @@ export default function LeavePage() {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className={cn("space-y-6 animate-fade-in", isRTL && "text-right")}>
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-          <Calendar className="w-7 h-7 text-accent" />
-          Leave Management
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          View balances and request time off
-        </p>
-      </div>
+      <PageHeader
+        title={isArabic ? 'إدارة الإجازات' : 'Leave Management'}
+        titleAr="إدارة الإجازات"
+        subtitle={isArabic ? 'عرض الأرصدة وطلب إجازة' : 'View balances and request time off'}
+        subtitleAr="عرض الأرصدة وطلب إجازة"
+        icon={Calendar}
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-3 gap-3">
