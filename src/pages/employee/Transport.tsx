@@ -145,12 +145,20 @@ export default function TransportPage() {
           return (
             <Card key={allowance.name} className="benefit-card">
               <CardHeader className="pb-4">
-                <CardTitle className="text-base font-display flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-accent/10">
-                    <allowance.icon className="w-5 h-5 text-accent" />
-                  </div>
-                  {allowance.name}
-                </CardTitle>
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle className="text-base font-display flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-accent/10">
+                      <allowance.icon className="w-5 h-5 text-accent" />
+                    </div>
+                    {allowance.name}
+                  </CardTitle>
+                  <SubmitClaimButton 
+                    category={allowance.name} 
+                    buttonText="Claim"
+                    buttonSize="sm"
+                    showIcon={false}
+                  />
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
@@ -185,11 +193,6 @@ export default function TransportPage() {
             </Card>
           );
         })}
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center justify-center">
-        <SubmitClaimButton category="Transport" buttonText="Submit Transport Claim" />
       </div>
     </div>
   );

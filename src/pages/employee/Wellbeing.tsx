@@ -132,6 +132,8 @@ export default function WellbeingPage() {
         steps={guideSteps}
         policyPoints={policyPoints}
         policyButtonText="View Wellbeing Policy"
+        claimCategory="Wellbeing"
+        claimButtonText="Submit Claim"
       />
 
       {/* Programs Grid */}
@@ -187,10 +189,6 @@ export default function WellbeingPage() {
         ))}
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center justify-center">
-        <SubmitClaimButton category="Wellbeing" buttonText="Submit Wellbeing Claim" />
-      </div>
     </div>
   );
 }

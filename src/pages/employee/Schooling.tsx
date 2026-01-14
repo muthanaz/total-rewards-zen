@@ -231,6 +231,8 @@ export default function SchoolingPage() {
           'Excess fees deducted from monthly salary',
         ]}
         policyButtonText="View Education Policy"
+        claimCategory="Education"
+        claimButtonText="Submit Claim"
       />
 
       {/* Children Allocation Cards */}
