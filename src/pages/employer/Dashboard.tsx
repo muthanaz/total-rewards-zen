@@ -19,8 +19,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MoneyFlowVisualization } from '@/components/employer/MoneyFlowVisualization';
 import { YearEndProjection } from '@/components/employer/YearEndProjection';
 import { AIInsightsPanel } from '@/components/employer/AIInsightsPanel';
-import { EngagementHeatmap } from '@/components/employer/EngagementHeatmap';
-import { ROIMetrics } from '@/components/employer/ROIMetrics';
 
 // Dashboard metrics data - All numbers are mathematically consistent
 // Base figures for the organization
@@ -369,12 +367,6 @@ export default function EmployerDashboard() {
               ]}
               lastUpdated={isArabic ? 'منذ ساعتين' : '2 hours ago'}
             />
-
-            {/* Engagement Heatmap + ROI Metrics */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <EngagementHeatmap />
-              <ROIMetrics />
-            </div>
 
             {/* Competitive Position + Utilization Snapshot - Side by Side */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

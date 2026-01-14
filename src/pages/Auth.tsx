@@ -28,12 +28,11 @@ const signUpSchema = z.object({
 
 type UserRole = 'employee' | 'employer' | 'admin' | 'vendor';
 
-// New role display names for Total Rewards Hub
-const roleConfig: Record<UserRole, { label: string; labelAr: string; description: string; icon: React.ElementType; color: string }> = {
-  employee: { label: 'People', labelAr: 'الأفراد', description: 'Access your rewards & benefits', icon: User, color: 'text-teal-500' },
-  employer: { label: 'HR Manager', labelAr: 'مدير الموارد البشرية', description: 'Manage programs & analytics', icon: Building2, color: 'text-indigo-500' },
-  admin: { label: 'Super Admin', labelAr: 'مسؤول النظام', description: 'Platform administration', icon: Shield, color: 'text-coral-500' },
-  vendor: { label: 'Rewards Partner', labelAr: 'شريك المكافآت', description: 'Manage offers & performance', icon: Store, color: 'text-purple-500' },
+const roleConfig: Record<UserRole, { label: string; icon: React.ElementType; color: string }> = {
+  employee: { label: 'Employee', icon: User, color: 'text-blue-500' },
+  employer: { label: 'Employer', icon: Building2, color: 'text-green-500' },
+  admin: { label: 'Admin', icon: Shield, color: 'text-red-500' },
+  vendor: { label: 'Vendor', icon: Store, color: 'text-purple-500' },
 };
 
 export default function Auth() {
@@ -269,7 +268,7 @@ export default function Auth() {
       if (error) {
         toast.error(error.message || 'Failed to login with demo account');
       } else {
-        toast.success(`Welcome to Total Rewards Hub as ${roleConfig[selectedRole].label}!`);
+        toast.success(`Welcome to bnft. as a demo ${selectedRole}!`);
         navigate(getRedirectPath(selectedRole));
       }
     } catch (err) {
@@ -321,12 +320,12 @@ export default function Auth() {
         {/* Logo */}
         <div className="text-center">
           <div className="inline-flex items-center gap-2 mb-2">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-accent flex items-center justify-center shadow-glow">
-              <span className="text-white font-bold text-2xl">T</span>
+            <div className="w-10 h-10 rounded-xl bg-gradient-accent flex items-center justify-center shadow-glow">
+              <span className="text-primary font-bold text-xl">b</span>
             </div>
-            <span className="font-display text-3xl font-bold text-primary-foreground">Total Rewards</span>
+            <span className="font-display text-3xl font-bold text-primary-foreground">bnft.</span>
           </div>
-          <p className="text-primary-foreground/70 text-sm">Your Engagement & Retention Hub</p>
+          <p className="text-primary-foreground/70 text-sm">Your Total Rewards Platform</p>
         </div>
 
         {/* Role Selection */}
@@ -356,8 +355,8 @@ export default function Auth() {
                 </CardTitle>
                 <CardDescription>
                   {isLogin 
-                    ? `Sign in as ${roleConfig[selectedRole].label}` 
-                    : roleConfig[selectedRole].description
+                    ? `Sign in to your ${selectedRole} account` 
+                    : `Register as ${selectedRole === 'employee' ? 'an employee' : selectedRole === 'admin' ? 'an admin' : `a ${selectedRole}`}`
                   }
                 </CardDescription>
               </CardHeader>

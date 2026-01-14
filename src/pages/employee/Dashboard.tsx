@@ -12,7 +12,6 @@ import { BENEFIT_TYPE_COLORS } from '@/lib/constants';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
 import { BenefitActionButtons } from '@/components/employee/BenefitActionButtons';
 import { BenefitsDrillDownSheet, SmartInsights } from '@/components/dashboard';
-import { TotalRewardsValueCard, ActionCenter, RecognitionStream, PersonalizedPerksWidget, QuickActionsGrid } from '@/components/dashboard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CompensationGrid } from '@/components/ui/compensation-summary-card';
 import { BenefitsUtilizationCard } from '@/components/ui/benefits-utilization-card';
@@ -121,6 +120,7 @@ export default function EmployeeDashboard() {
   const formatCurrencyHidden = (value: number) => salaryHidden ? '•••,•••' : formatCurrency(value);
   const formatCurrencyShort = (value: number) => `${(value / 1000).toFixed(0)}${isRTL ? 'ألف' : 'K'}`;
 
+
   const ChevronIcon = isRTL ? ChevronLeft : ChevronRight;
 
   const handleBenefitClick = (benefitName: string) => {
@@ -163,43 +163,106 @@ export default function EmployeeDashboard() {
     }
     return null;
   };
+
+  // 4 Key Metrics with info tooltips - Now showing guaranteed values prominently
+  const hiddenValue = `${isRTL ? '' : 'AED '}•••,•••${isRTL ? ' درهم' : ''}`;
+  const keyMetrics = [
+    { 
+      icon: Banknote, 
+      value: salaryHidden ? hiddenValue : formatCurrency(salaryData.monthlySalary), 
+      label: isRTL ? 'الراتب الشهري' : 'Monthly Salary',
+      formula: isRTL ? 'الراتب الأساسي الشهري قبل الخصومات' : 'Base monthly salary before deductions',
+      dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR Payroll System',
+      variant: 'primary' as const,
+      isSensitive: true,
+    },
+    { 
+      icon: DollarSign, 
+      value: salaryHidden ? hiddenValue : formatCurrency(salaryData.annualSalary), 
+      label: isRTL ? 'الراتب السنوي' : 'Annual Salary',
+      formula: isRTL ? 'الراتب الشهري × ١٢ شهر' : 'Monthly Salary × 12 months',
+      dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR Payroll System',
+      variant: 'primary' as const,
+      isSensitive: true,
+    },
+    { 
+      icon: Gift, 
+      value: salaryHidden ? hiddenValue : formatCurrency(calculatedMetrics.guaranteedBenefitValue), 
+      label: isRTL ? 'المزايا المضمونة' : 'Guaranteed Benefits',
+      formula: isRTL 
+        ? `البدلات النقدية المضمونة (السكن + التعليم + النقل) = ${formatCurrency(calculatedMetrics.guaranteedBenefitValue)}. لا تشمل: المكافآت والميزانيات المتغيرة`
+        : `Fixed cash allowances (Housing + Education + Transport) = ${formatCurrency(calculatedMetrics.guaranteedBenefitValue)}. Excludes: bonuses and variable budgets`,
+      dataSource: isRTL ? 'نظام المزايا - مضمون' : 'Benefits System - Guaranteed',
+      variant: 'benefits' as const,
+      isSensitive: true,
+      subtitle: salaryHidden ? undefined : (isRTL 
+        ? `حتى ${formatCurrencyShort(calculatedMetrics.totalBenefitValue)} شاملة المتغيرة`
+        : `Up to ${formatCurrencyShort(calculatedMetrics.totalBenefitValue)} incl. variable`),
+    },
+    { 
+      icon: Wallet, 
+      value: salaryHidden ? '••%' : `${calculatedMetrics.guaranteedBenefitsAsPercentOfComp}%`, 
+      label: isRTL ? 'المزايا من التعويضات' : 'Benefits % of Package',
+      formula: isRTL 
+        ? `(المزايا المضمونة ÷ إجمالي التعويضات المضمونة) × ١٠٠ = (${formatCurrency(calculatedMetrics.guaranteedBenefitValue)} ÷ ${formatCurrency(calculatedMetrics.guaranteedCompensation)}) × 100`
+        : `(Guaranteed Benefits ÷ Guaranteed Compensation) × 100 = (${formatCurrency(calculatedMetrics.guaranteedBenefitValue)} ÷ ${formatCurrency(calculatedMetrics.guaranteedCompensation)}) × 100`,
+      dataSource: isRTL ? 'محسوب - مضمون فقط' : 'Calculated - Guaranteed only',
+      variant: 'benefits' as const,
+      isSensitive: true,
+    },
+  ];
+
+  const totalCompensationData = {
+    value: salaryHidden ? `${isRTL ? '' : 'AED '}•••,•••${isRTL ? ' درهم' : ''}` : formatCurrency(calculatedMetrics.guaranteedCompensation),
+    formula: isRTL 
+      ? `الراتب السنوي (${formatCurrency(salaryData.annualSalary)}) + المزايا المضمونة (${formatCurrency(calculatedMetrics.guaranteedBenefitValue)}) = ${formatCurrency(calculatedMetrics.guaranteedCompensation)}`
+      : `Annual Salary (${formatCurrency(salaryData.annualSalary)}) + Guaranteed Benefits (${formatCurrency(calculatedMetrics.guaranteedBenefitValue)}) = ${formatCurrency(calculatedMetrics.guaranteedCompensation)}`,
+    dataSource: isRTL ? 'الراتب السنوي + المزايا المضمونة' : 'Annual Salary + Guaranteed Benefits',
+    subtitle: salaryHidden ? undefined : (isRTL 
+      ? `الإجمالي المحتمل: ${formatCurrency(calculatedMetrics.potentialCompensation)} شاملة المتغيرة`
+      : `Potential total: ${formatCurrency(calculatedMetrics.potentialCompensation)} incl. variable`),
+    salaryHidden,
+    onTogglePrivacy: toggleSalaryVisibility,
+    salaryPercent: calculatedMetrics.salaryAsPercentOfGuaranteed,
+    benefitsPercent: calculatedMetrics.guaranteedBenefitsAsPercentOfComp,
+    onCardClick: () => setCompensationModalOpen(true),
+  };
+
+  const utilizationData = {
+    used: formatCurrency(calculatedMetrics.totalUtilized),
+    usedPercent: calculatedMetrics.utilizationPercent,
+    remaining: formatCurrency(calculatedMetrics.totalRemaining),
+    remainingPercent: 100 - calculatedMetrics.utilizationPercent,
+    formula: isRTL ? 'إجمالي المزايا المستخدمة من القيمة السنوية' : 'Total benefits claimed from annual value',
+    dataSource: isRTL ? 'نظام المطالبات' : 'Claims System',
+  };
   
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
+    <div className="space-y-5 animate-fade-in">
+      {/* Header - Simplified without Date Filter */}
       <div className={cn(
         "flex flex-col md:flex-row md:items-center justify-between gap-4",
         isRTL && "md:flex-row-reverse"
       )}>
         <div className={cn("space-y-1", isRTL && "text-right")}>
-          <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">
-            {isRTL ? 'مركز المكافآت الشاملة' : 'My Total Rewards Hub'}
-          </h1>
-          <p className="text-muted-foreground">
-            {isRTL ? 'عرض وإدارة حزمة المكافآت الكاملة الخاصة بك' : 'View and manage your complete rewards package'}
-          </p>
+          <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">{t('employee.dashboard.title')}</h1>
+          <p className="text-muted-foreground">{t('employee.dashboard.subtitle')}</p>
         </div>
       </div>
 
-      {/* Total Rewards Value Card - Hero Section */}
-      <TotalRewardsValueCard 
-        totalValue={calculatedMetrics.potentialCompensation}
-        salaryValue={salaryData.annualSalary}
-        benefitsValue={calculatedMetrics.guaranteedBenefitValue}
-        variableValue={calculatedMetrics.potentialBenefitValue}
-      />
-
-      {/* Quick Actions Grid */}
-      <QuickActionsGrid />
-
-      {/* Two-Column Layout: Action Center + Recognition */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ActionCenter />
-        <RecognitionStream />
-      </div>
-
-      {/* Personalized Perks Widget */}
-      <PersonalizedPerksWidget />
+      {/* Compensation Summary Grid */}
+      {showCompensationSummary && (
+        <div>
+          <h2 className={cn("text-base font-display font-semibold mb-3", isRTL && "text-right")}>
+            {isRTL ? 'ملخص التعويضات' : 'Compensation Summary'}
+          </h2>
+          <CompensationGrid 
+            metrics={keyMetrics}
+            totalCompensation={totalCompensationData}
+            isRTL={isRTL}
+          />
+        </div>
+      )}
 
       {/* Benefits Grid - Your Benefits */}
       {showYourBenefits && (
@@ -225,63 +288,53 @@ export default function EmployeeDashboard() {
               return (
                 <Card 
                   key={benefit.name} 
-                  className={cn(
-                    "p-3 hover:shadow-md transition-all cursor-pointer border-border/50 group relative overflow-hidden",
-                    isFullyUsed && "bg-emerald-500/5 border-emerald-500/20"
-                  )}
+                  className="benefit-card group cursor-pointer hover:border-accent/40 hover:shadow-sm transition-all duration-200 flex flex-col p-2.5"
+                  style={{ animationDelay: `${index * 30}ms` }}
                   onClick={() => handleBenefitClick(benefit.name)}
                 >
-                  {/* Subtle gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-transparent to-muted/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className={cn("flex items-start gap-2", isRTL && "flex-row-reverse")}>
+                    <div className="p-1.5 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors shrink-0">
+                      <benefit.icon className="w-3 h-3 text-accent" />
+                    </div>
+                    <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
+                      <div className={cn("flex items-center gap-1 flex-wrap", isRTL && "flex-row-reverse justify-end")}>
+                        <h3 className="font-medium text-xs truncate group-hover:text-accent transition-colors leading-tight">
+                          {t(benefit.nameKey)}
+                        </h3>
+                        {getUtilizationBadge(utilization)}
+                      </div>
+                      <span className={`${BENEFIT_TYPE_COLORS[benefit.type]} text-[9px]`}>
+                        {t(`benefit.${benefit.type}`)}
+                      </span>
+                    </div>
+                    <ChevronIcon className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                  </div>
                   
-                  <div className={cn("relative flex flex-col gap-2", isRTL && "items-end")}>
-                    {/* Header with icon and status */}
-                    <div className={cn("flex items-start justify-between w-full", isRTL && "flex-row-reverse")}>
-                      <div className={cn(
-                        "p-1.5 rounded-lg transition-colors",
-                        `bg-${BENEFIT_TYPE_COLORS[benefit.type as keyof typeof BENEFIT_TYPE_COLORS]}/10`
-                      )}>
-                        <benefit.icon className={cn(
-                          "w-4 h-4",
-                          `text-${BENEFIT_TYPE_COLORS[benefit.type as keyof typeof BENEFIT_TYPE_COLORS]}`
-                        )} />
-                      </div>
-                      {getUtilizationBadge(utilization)}
+                  <div className="mt-2 space-y-1 flex-1">
+                    <div className={cn("flex justify-between text-[10px]", isRTL && "flex-row-reverse")}>
+                      <span className="text-muted-foreground">{formatCurrency(benefit.utilized)}</span>
+                      <span className={isFullyUsed ? 'text-emerald-600 font-semibold' : 'font-medium'}>{utilization}%</span>
                     </div>
-                    
-                    {/* Benefit name */}
-                    <h3 className={cn(
-                      "text-xs font-medium text-foreground leading-tight line-clamp-2",
-                      isRTL && "text-right"
-                    )}>
-                      {benefit.name}
-                    </h3>
-                    
-                    {/* Value display */}
-                    <div className={cn("w-full", isRTL && "text-right")}>
-                      <div className="text-sm font-bold text-foreground">
-                        {formatCurrencyHidden(benefit.value)}
-                      </div>
-                      <div className={cn(
-                        "text-[10px]",
-                        isFullyUsed ? "text-emerald-600" : "text-muted-foreground"
-                      )}>
-                        {isFullyUsed 
-                          ? (isRTL ? 'مستخدم بالكامل' : 'Fully utilized')
-                          : (isRTL ? `${formatCurrencyShort(remaining)} متبقي` : `${formatCurrencyShort(remaining)} remaining`)
-                        }
-                      </div>
-                    </div>
-                    
-                    {/* Progress bar */}
                     <Progress 
                       value={utilization} 
-                      className={cn(
-                        "h-1 w-full",
-                        isFullyUsed ? "[&>div]:bg-emerald-500" : ""
-                      )}
+                      className={`h-1 ${isFullyUsed ? '[&>div]:bg-emerald-500' : '[&>div]:bg-accent'}`}
                     />
+                    <p className={cn("text-[9px] text-muted-foreground", isRTL && "text-right")}>
+                      {t('employee.dashboard.remaining')}: {formatCurrency(remaining)}
+                    </p>
                   </div>
+                  
+                  {/* Action Buttons - only show for claimable benefits */}
+                  {benefit.claimable && (
+                    <div className="mt-2 pt-1.5 border-t border-border/30">
+                      <BenefitActionButtons
+                        benefitName={benefit.name}
+                        benefitCategory={benefit.category}
+                        isRTL={isRTL}
+                        compact={true}
+                      />
+                    </div>
+                  )}
                 </Card>
               );
             })}
@@ -289,26 +342,58 @@ export default function EmployeeDashboard() {
         </div>
       )}
 
-      {/* Smart Insights */}
-      <SmartInsights benefits={benefits} />
+      {/* Benefits Utilization Section */}
+      {showCompensationSummary && (
+        <div>
+          <h2 className={cn("text-base font-display font-semibold mb-3", isRTL && "text-right")}>
+            {isRTL ? 'استخدام المزايا' : 'Benefits Utilization'}
+          </h2>
+          <BenefitsUtilizationCard
+            utilization={utilizationData}
+            isRTL={isRTL}
+            salaryHidden={salaryHidden}
+          />
+        </div>
+      )}
 
-      {/* Satisfaction Survey */}
-      {showSatisfactionSurvey && <SatisfactionSurvey />}
+      {/* Smart Insights - AI-powered recommendations replacing Benefit Highlights */}
+      {showCompensationSummary && (
+        <SmartInsights 
+          benefits={benefits.map(b => ({
+            name: b.name,
+            value: b.value,
+            utilized: b.utilized,
+            route: b.route,
+            valueType: b.valueType,
+          }))}
+        />
+      )}
 
-      {/* Benefits Drill Down Sheet */}
+      {/* Satisfaction Survey Section */}
+      {showSatisfactionSurvey && (
+        <SatisfactionSurvey compact={true} />
+      )}
+
+      {/* Benefits Drill-down Sheet */}
       <BenefitsDrillDownSheet
         open={benefitsSheetOpen}
         onOpenChange={setBenefitsSheetOpen}
         category={benefitsSheetCategory}
         benefits={benefits}
       />
-      
+
       {/* Compensation Breakdown Modal */}
-      <CompensationBreakdownModal 
+      <CompensationBreakdownModal
         open={compensationModalOpen}
         onOpenChange={setCompensationModalOpen}
+        isRTL={isRTL}
         salaryData={salaryData}
-        benefits={benefits}
+        benefits={benefits.map(b => ({
+          name: b.name,
+          value: b.value,
+          utilized: b.utilized,
+          valueType: b.valueType,
+        }))}
       />
     </div>
   );

@@ -24,12 +24,8 @@ import {
   X,
   LogOut,
   ShoppingBag,
-  FileCheck,
-  Target,
-  Sparkles,
+  Shield,
   Receipt,
-  Star,
-  Landmark,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -37,82 +33,43 @@ import { Button } from '@/components/ui/button';
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
-
 interface NavGroup {
   labelKey: string;
-  label: { en: string; ar: string };
-  icon: React.ElementType;
   items: NavItem[];
-  highlighted?: boolean;
 }
 
 interface NavItem {
   labelKey: string;
-  label: { en: string; ar: string };
   path: string;
   icon: React.ElementType;
-  badge?: string;
-  badgeColor?: string;
 }
 
-// Total Rewards Hub Navigation Structure for People
+// Main Navigation Structure
 const navigation: NavGroup[] = [
   {
-    labelKey: 'nav.myRewards',
-    label: { en: 'My Rewards Dashboard', ar: 'لوحة مكافآتي' },
-    icon: LayoutDashboard,
+    labelKey: 'nav.dashboard',
     items: [
-      { labelKey: 'nav.overview', label: { en: 'Overview', ar: 'نظرة عامة' }, path: '/employee', icon: LayoutDashboard },
-      { labelKey: 'nav.totalStatement', label: { en: 'My Total Statement', ar: 'كشف حسابي الشامل' }, path: '/employee/benefits-analysis', icon: FileCheck },
+      { labelKey: 'nav.overview', path: '/employee', icon: LayoutDashboard },
     ],
   },
   {
-    labelKey: 'nav.compensation',
-    label: { en: 'Compensation', ar: 'التعويضات' },
-    icon: Gift,
+    labelKey: 'nav.myBenefits',
     items: [
-      { labelKey: 'nav.allBenefits', label: { en: 'All Benefits', ar: 'جميع المزايا' }, path: '/employee/benefits', icon: Gift },
-      { labelKey: 'nav.housing', label: { en: 'Housing', ar: 'السكن' }, path: '/employee/housing', icon: Home },
-      { labelKey: 'nav.education', label: { en: 'Education', ar: 'التعليم' }, path: '/employee/schooling', icon: GraduationCap },
-      { labelKey: 'nav.transport', label: { en: 'Transport', ar: 'النقل' }, path: '/employee/transport', icon: Car },
-      { labelKey: 'nav.gratuity', label: { en: 'End of Service', ar: 'نهاية الخدمة' }, path: '/employee/gratuity', icon: Landmark },
-      { labelKey: 'nav.bonus', label: { en: 'Bonus & Equity', ar: 'المكافآت والأسهم' }, path: '/employee/bonus', icon: TrendingUp },
+      { labelKey: 'nav.allBenefits', path: '/employee/benefits', icon: Gift },
+      { labelKey: 'nav.benefitsAnalysis', path: '/employee/benefits-analysis', icon: TrendingUp },
     ],
   },
   {
-    labelKey: 'nav.wellbeingPerks',
-    label: { en: 'Wellbeing & Perks', ar: 'الرفاهية والامتيازات' },
-    icon: Sparkles,
+    labelKey: 'nav.leaves',
     items: [
-      { labelKey: 'nav.health', label: { en: 'Health Coverage', ar: 'التغطية الصحية' }, path: '/employee/health', icon: Heart },
-      { labelKey: 'nav.wellbeing', label: { en: 'Wellness Programs', ar: 'برامج العافية' }, path: '/employee/wellbeing', icon: Dumbbell },
-      { labelKey: 'nav.financial', label: { en: 'Financial Wellness', ar: 'الرفاهية المالية' }, path: '/employee/financial', icon: PiggyBank },
-    ],
-  },
-  {
-    labelKey: 'nav.careerGrowth',
-    label: { en: 'Career & Growth', ar: 'المسار الوظيفي' },
-    icon: Target,
-    items: [
-      { labelKey: 'nav.learning', label: { en: 'Learning Hub', ar: 'مركز التعلم' }, path: '/employee/learning', icon: BookOpen },
-      { labelKey: 'nav.equity', label: { en: 'Equity & Options', ar: 'الأسهم والخيارات' }, path: '/employee/equity', icon: TrendingUp },
-    ],
-  },
-  {
-    labelKey: 'nav.timeOff',
-    label: { en: 'Time Off', ar: 'الإجازات' },
-    icon: Calendar,
-    items: [
-      { labelKey: 'nav.leave', label: { en: 'Leave Balance', ar: 'رصيد الإجازات' }, path: '/employee/leave', icon: Calendar },
+      { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
     ],
   },
   {
     labelKey: 'nav.hrServices',
-    label: { en: 'HR Services', ar: 'خدمات الموارد البشرية' },
-    icon: FileText,
     items: [
-      { labelKey: 'nav.documents', label: { en: 'Documents & Letters', ar: 'الوثائق والخطابات' }, path: '/employee/documents', icon: FileText },
-      { labelKey: 'nav.govConnect', label: { en: 'Government Services', ar: 'الخدمات الحكومية' }, path: '/employee/gov-connect', icon: Building2 },
+      { labelKey: 'nav.documentsClaims', path: '/employee/documents', icon: FileText },
+      { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
     ],
   },
 ];
@@ -121,11 +78,10 @@ export function EmployeeSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut } = useAuth();
-  const { language, direction } = useLanguage();
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['nav.myRewards', 'nav.compensation']);
+  const { t, direction } = useLanguage();
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['nav.dashboard', 'nav.myBenefits']);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isRTL = direction === 'rtl';
-  const isArabic = language === 'ar';
 
   const handleSignOut = async () => {
     await signOut();
@@ -146,20 +102,17 @@ export function EmployeeSidebar() {
 
   const sidebarContent = (
     <>
-      {/* Logo - Total Rewards Hub */}
+      {/* Logo */}
       <div className="px-4 py-5 border-b border-sidebar-border">
         <div className={cn(
           "flex items-center justify-between",
           isRTL && "flex-row-reverse"
         )}>
           <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-            <div className="w-9 h-9 rounded-xl bg-gradient-accent flex items-center justify-center shrink-0 shadow-glow">
-              <span className="text-white font-bold text-lg">T</span>
+            <div className="w-8 h-8 rounded-lg bg-gradient-accent flex items-center justify-center shrink-0">
+              <span className="text-sidebar-background font-bold text-lg">b</span>
             </div>
-            <div className={cn("flex flex-col", isRTL && "items-end")}>
-              <span className="font-display text-lg font-bold text-sidebar-foreground leading-tight">Total Rewards</span>
-              <span className="text-[10px] text-sidebar-foreground/50 uppercase tracking-wider">People Portal</span>
-            </div>
+            <span className="font-display text-xl font-bold text-sidebar-foreground">bnft.</span>
           </div>
         </div>
         {/* Theme & Language Controls */}
@@ -179,18 +132,18 @@ export function EmployeeSidebar() {
         isRTL && "text-right"
       )}>
         {navigation.map((group, index) => (
-          <div key={group.labelKey} className={cn("mb-1", index > 0 && "mt-4")}>
+          <div key={group.labelKey} className={cn("mb-1", index > 0 && "mt-6")}>
             <button
               onClick={() => toggleGroup(group.labelKey)}
               className={cn(
-                "flex items-center justify-between w-full px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors rounded-lg group",
-                "text-sidebar-primary hover:bg-sidebar-accent/50",
+                "flex items-center justify-between w-full px-3 py-2 text-[11px] font-bold uppercase tracking-[0.15em] transition-colors rounded-md group",
+                "text-sidebar-primary hover:bg-sidebar-primary/10",
                 isRTL && "flex-row-reverse text-right"
               )}
             >
               <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                <group.icon className="w-3.5 h-3.5" />
-                <span>{isArabic ? group.label.ar : group.label.en}</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
+                <span>{t(group.labelKey)}</span>
               </div>
               {expandedGroups.includes(group.labelKey) ? (
                 <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
@@ -213,17 +166,7 @@ export function EmployeeSidebar() {
                     )}
                   >
                     <item.icon className="w-4 h-4 shrink-0" />
-                    <span className={cn("text-sm flex-1", isRTL && "text-right")}>
-                      {isArabic ? item.label.ar : item.label.en}
-                    </span>
-                    {item.badge && (
-                      <span className={cn(
-                        "text-[10px] px-1.5 py-0.5 rounded-full",
-                        item.badgeColor === 'action' ? "bg-action/20 text-action" : "bg-accent/20 text-accent"
-                      )}>
-                        {item.badge}
-                      </span>
-                    )}
+                    <span className={cn("text-sm flex-1", isRTL && "text-right")}>{t(item.labelKey)}</span>
                   </Link>
                 ))}
               </div>
@@ -239,32 +182,32 @@ export function EmployeeSidebar() {
           onClick={() => setMobileOpen(false)}
           className={cn(
             "flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200",
-            "bg-gradient-to-r from-accent/10 via-teal-500/10 to-accent/5",
-            "hover:from-accent/20 hover:via-teal-500/20 hover:to-accent/10",
-            "border border-accent/20 hover:border-accent/40",
+            "bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-pink-500/10",
+            "hover:from-violet-500/20 hover:via-fuchsia-500/20 hover:to-pink-500/20",
+            "border border-violet-500/20 hover:border-violet-500/40",
             "group",
-            isActive('/employee/marketplace') && "from-accent/20 via-teal-500/20 to-accent/10 border-accent/40",
+            isActive('/employee/marketplace') && "from-violet-500/20 via-fuchsia-500/20 to-pink-500/20 border-violet-500/40",
             isRTL && "flex-row-reverse"
           )}
         >
-          <div className="p-2 rounded-lg bg-gradient-accent shadow-lg shadow-accent/25">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/25">
             <ShoppingBag className="w-4 h-4 text-white" />
           </div>
           <div className={cn("flex-1", isRTL && "text-right")}>
             <span className={cn(
               "text-sm font-medium block",
               isActive('/employee/marketplace') 
-                ? "text-accent" 
-                : "text-sidebar-foreground group-hover:text-accent"
+                ? "text-violet-600 dark:text-violet-400" 
+                : "text-sidebar-foreground group-hover:text-violet-600 dark:group-hover:text-violet-400"
             )}>
-              {isArabic ? 'السوق والامتيازات' : 'Perks Marketplace'}
+              {t('nav.perksPartners')}
             </span>
             <span className="text-[10px] text-muted-foreground">
-              {isArabic ? 'خصومات وعروض حصرية' : 'Exclusive deals & discounts'}
+              {isRTL ? 'خصومات وعروض حصرية' : 'Exclusive deals & discounts'}
             </span>
           </div>
           <ChevronCollapsed className={cn(
-            "w-4 h-4 text-accent/50 group-hover:text-accent transition-all",
+            "w-4 h-4 text-violet-500/50 group-hover:text-violet-500 transition-all",
             "group-hover:translate-x-0.5",
             isRTL && "rotate-180 group-hover:-translate-x-0.5"
           )} />
@@ -278,32 +221,32 @@ export function EmployeeSidebar() {
           onClick={() => setMobileOpen(false)}
           className={cn(
             "flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200",
-            "bg-gradient-to-r from-primary/10 via-indigo-500/10 to-primary/5",
-            "hover:from-primary/20 hover:via-indigo-500/20 hover:to-primary/10",
-            "border border-primary/20 hover:border-primary/40",
+            "bg-gradient-to-r from-teal-500/10 via-emerald-500/10 to-cyan-500/10",
+            "hover:from-teal-500/20 hover:via-emerald-500/20 hover:to-cyan-500/20",
+            "border border-teal-500/20 hover:border-teal-500/40",
             "group",
-            isActive('/employee/profile') && "from-primary/20 via-indigo-500/20 to-primary/10 border-primary/40",
+            isActive('/employee/profile') && "from-teal-500/20 via-emerald-500/20 to-cyan-500/20 border-teal-500/40",
             isRTL && "flex-row-reverse"
           )}
         >
-          <div className="p-2 rounded-lg bg-gradient-primary shadow-lg shadow-primary/25">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-teal-500 to-emerald-500 shadow-lg shadow-teal-500/25">
             <User className="w-4 h-4 text-white" />
           </div>
           <div className={cn("flex-1", isRTL && "text-right")}>
             <span className={cn(
               "text-sm font-medium block",
               isActive('/employee/profile') 
-                ? "text-primary" 
-                : "text-sidebar-foreground group-hover:text-primary"
+                ? "text-teal-600 dark:text-teal-400" 
+                : "text-sidebar-foreground group-hover:text-teal-600 dark:group-hover:text-teal-400"
             )}>
-              {isArabic ? 'ملفي الشخصي' : 'My Profile'}
+              {t('nav.profile')}
             </span>
             <span className="text-[10px] text-muted-foreground">
-              {isArabic ? 'إدارة الحساب والأمان' : 'Account & security settings'}
+              {isRTL ? 'إدارة الحساب والأمان' : 'Manage account & security'}
             </span>
           </div>
           <ChevronCollapsed className={cn(
-            "w-4 h-4 text-primary/50 group-hover:text-primary transition-all",
+            "w-4 h-4 text-teal-500/50 group-hover:text-teal-500 transition-all",
             "group-hover:translate-x-0.5",
             isRTL && "rotate-180 group-hover:-translate-x-0.5"
           )} />
@@ -321,7 +264,7 @@ export function EmployeeSidebar() {
           )}
         >
           <LogOut className={cn("w-4 h-4 shrink-0", isRTL ? "ml-3" : "mr-3")} />
-          <span className={isRTL ? "text-right" : "text-left"}>{isArabic ? 'تسجيل الخروج' : 'Sign Out'}</span>
+          <span className={isRTL ? "text-right" : "text-left"}>{t('common.signOut')}</span>
         </Button>
       </div>
     </>

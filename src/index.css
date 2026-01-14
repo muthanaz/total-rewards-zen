@@ -6,36 +6,32 @@
 
 @layer base {
   :root {
-    /* Total Rewards Hub Design System - Indigo & Teal Professional Palette */
-    --background: 220 20% 98%;
-    --foreground: 231 40% 18%;
+    /* bnft. Design System - Premium Navy & Teal */
+    --background: 220 20% 97%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 231 40% 18%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 231 40% 18%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Deep Indigo Primary - Trust & Authority */
-    --primary: 231 38% 27%;
-    --primary-foreground: 0 0% 100%;
+    /* Navy Primary */
+    --primary: 222 47% 11%;
+    --primary-foreground: 210 40% 98%;
 
-    /* Vibrant Teal Accent - Action & Energy */
-    --accent: 174 85% 32%;
+    /* Teal Accent */
+    --accent: 174 60% 45%;
     --accent-foreground: 0 0% 100%;
 
-    /* Coral Action - CTAs & Recognition */
-    --action: 0 79% 72%;
-    --action-foreground: 0 0% 100%;
-
     --secondary: 220 14% 96%;
-    --secondary-foreground: 231 40% 18%;
+    --secondary-foreground: 222 47% 11%;
 
     --muted: 220 14% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted-foreground: 220 9% 46%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 210 40% 98%;
 
     --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
@@ -48,103 +44,91 @@
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 174 85% 32%;
+    --ring: 174 60% 45%;
 
     --radius: 0.75rem;
 
-    /* Chart Colors - Professional Palette */
-    --chart-1: 174 85% 32%;
-    --chart-2: 231 38% 27%;
+    /* Chart Colors - Vibrant Palette */
+    --chart-1: 174 60% 45%;
+    --chart-2: 199 89% 48%;
     --chart-3: 262 52% 55%;
     --chart-4: 38 92% 50%;
-    --chart-5: 0 79% 72%;
+    --chart-5: 340 65% 55%;
     --chart-6: 160 84% 39%;
-    --chart-7: 199 89% 48%;
+    --chart-7: 24 75% 55%;
     --chart-8: 280 55% 55%;
 
-    /* Total Rewards Pillars Colors */
-    --pillar-compensation: 160 84% 39%;
-    --pillar-benefits: 199 89% 48%;
-    --pillar-wellbeing: 174 85% 32%;
-    --pillar-recognition: 0 79% 72%;
-    --pillar-career: 262 52% 55%;
-
-    /* Sidebar - Dark Indigo */
-    --sidebar-background: 231 45% 12%;
+    /* Sidebar */
+    --sidebar-background: 222 47% 8%;
     --sidebar-foreground: 220 14% 96%;
-    --sidebar-primary: 174 85% 42%;
+    --sidebar-primary: 174 60% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 231 40% 18%;
+    --sidebar-accent: 222 47% 14%;
     --sidebar-accent-foreground: 220 14% 96%;
-    --sidebar-border: 231 40% 20%;
-    --sidebar-ring: 174 85% 42%;
+    --sidebar-border: 222 47% 16%;
+    --sidebar-ring: 174 60% 45%;
 
     /* Custom Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(231 38% 27%) 0%, hsl(231 45% 40%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(174 85% 32%) 0%, hsl(174 70% 45%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(222 47% 11%) 0%, hsl(222 47% 20%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(174 60% 45%) 0%, hsl(174 60% 55%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 20% 98%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(231 45% 12%) 0%, hsl(231 40% 22%) 50%, hsl(174 50% 25%) 100%);
-    --gradient-rewards: linear-gradient(135deg, hsl(174 85% 32%) 0%, hsl(231 38% 27%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(222 47% 8%) 0%, hsl(222 47% 15%) 50%, hsl(174 40% 20%) 100%);
     
-    /* Premium Shadows */
+    /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.08);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    --shadow-glow: 0 0 30px hsl(174 85% 32% / 0.25);
-    --shadow-glow-primary: 0 0 30px hsl(231 38% 27% / 0.2);
+    --shadow-glow: 0 0 20px hsl(174 60% 45% / 0.3);
   }
 
   .dark {
-    --background: 231 45% 7%;
+    --background: 222 47% 6%;
     --foreground: 220 14% 96%;
 
-    --card: 231 45% 11%;
+    --card: 222 47% 10%;
     --card-foreground: 220 14% 96%;
 
-    --popover: 231 45% 11%;
+    --popover: 222 47% 10%;
     --popover-foreground: 220 14% 96%;
 
-    --primary: 174 85% 42%;
-    --primary-foreground: 231 45% 8%;
+    --primary: 174 60% 45%;
+    --primary-foreground: 222 47% 8%;
 
-    --accent: 174 85% 42%;
-    --accent-foreground: 231 45% 8%;
+    --accent: 174 60% 45%;
+    --accent-foreground: 222 47% 8%;
 
-    --action: 0 79% 72%;
-    --action-foreground: 231 45% 8%;
-
-    --secondary: 231 40% 16%;
+    --secondary: 222 47% 14%;
     --secondary-foreground: 220 14% 96%;
 
-    --muted: 231 40% 16%;
-    --muted-foreground: 215 16% 63%;
+    --muted: 222 47% 14%;
+    --muted-foreground: 220 9% 60%;
 
     --destructive: 0 62% 50%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 231 40% 20%;
-    --input: 231 40% 20%;
-    --ring: 174 85% 42%;
+    --border: 222 47% 18%;
+    --input: 222 47% 18%;
+    --ring: 174 60% 45%;
 
-    /* Chart Colors - Dark Mode */
-    --chart-1: 174 85% 45%;
-    --chart-2: 231 50% 55%;
+    /* Chart Colors - Vibrant Palette (Dark Mode) */
+    --chart-1: 174 65% 50%;
+    --chart-2: 199 89% 55%;
     --chart-3: 262 60% 62%;
     --chart-4: 38 95% 55%;
-    --chart-5: 0 85% 75%;
+    --chart-5: 340 70% 60%;
     --chart-6: 160 84% 45%;
-    --chart-7: 199 89% 55%;
+    --chart-7: 24 80% 60%;
     --chart-8: 280 60% 60%;
 
-    --sidebar-background: 231 45% 6%;
+    --sidebar-background: 222 47% 5%;
     --sidebar-foreground: 220 14% 96%;
-    --sidebar-primary: 174 85% 42%;
+    --sidebar-primary: 174 60% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 231 40% 14%;
+    --sidebar-accent: 222 47% 12%;
     --sidebar-accent-foreground: 220 14% 96%;
-    --sidebar-border: 231 40% 16%;
-    --sidebar-ring: 174 85% 42%;
+    --sidebar-border: 222 47% 14%;
+    --sidebar-ring: 174 60% 45%;
   }
 }
 
@@ -188,82 +172,26 @@
 }
 
 @layer components {
-  /* Premium Glass Cards */
   .glass-card {
-    @apply bg-card/90 backdrop-blur-xl border border-border/50 shadow-lg rounded-xl;
+    @apply bg-card/80 backdrop-blur-xl border border-border/50 shadow-lg;
   }
 
-  /* Total Rewards Value Card */
-  .rewards-value-card {
-    @apply relative overflow-hidden bg-gradient-to-br from-primary via-primary to-accent/30 text-primary-foreground rounded-2xl p-6 shadow-xl;
-  }
-
-  .rewards-value-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, hsl(174 85% 42% / 0.3) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  /* Metric Cards with Context */
   .metric-card {
+    @apply bg-card rounded-xl p-5 border border-border/50 shadow-sm hover:shadow-md transition-all duration-200;
+  }
+
+  .benefit-card {
     @apply bg-card rounded-xl p-5 border border-border/50 shadow-sm hover:shadow-md hover:border-accent/30 transition-all duration-200;
   }
 
-  .metric-card-elevated {
-    @apply bg-card rounded-2xl p-6 border border-border/30 shadow-lg hover:shadow-xl transition-all duration-300;
-  }
-
-  /* Benefit Cards */
-  .benefit-card {
-    @apply bg-card rounded-xl p-5 border border-border/50 shadow-sm hover:shadow-lg hover:border-accent/40 hover:-translate-y-0.5 transition-all duration-200;
-  }
-
-  /* Action Cards for Quick Links */
-  .action-card {
-    @apply bg-gradient-to-br from-card to-secondary/50 rounded-xl p-4 border border-border/50 shadow-sm hover:shadow-md hover:border-action/40 cursor-pointer transition-all duration-200;
-  }
-
-  /* Recognition Stream Card */
-  .recognition-card {
-    @apply bg-gradient-to-r from-card via-card to-action/5 rounded-xl p-4 border-l-4 border-l-action border border-border/30 shadow-sm;
-  }
-
-  /* Navigation Items */
   .nav-item {
     @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-150;
   }
 
   .nav-item-active {
-    @apply bg-sidebar-accent text-sidebar-primary font-medium;
+    @apply bg-sidebar-accent text-sidebar-foreground font-medium;
   }
 
-  /* Total Rewards Pillar Tags */
-  .tag-compensation {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400;
-  }
-
-  .tag-benefits {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/15 text-blue-600 dark:text-blue-400;
-  }
-
-  .tag-wellbeing {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-teal-500/15 text-teal-600 dark:text-teal-400;
-  }
-
-  .tag-recognition {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-coral-500/15 text-coral-500 dark:text-coral-400;
-  }
-
-  .tag-career {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/15 text-purple-600 dark:text-purple-400;
-  }
-
-  /* Legacy Tags */
   .tag-primary {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent;
   }
@@ -288,6 +216,10 @@
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-600;
   }
 
+  .tag-wellbeing {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-600;
+  }
+
   .within-allowance {
     @apply text-success font-medium;
   }
@@ -296,78 +228,41 @@
     @apply text-warning font-medium;
   }
 
-  /* Enhanced Progress Bars */
   .progress-bar {
-    @apply h-2.5 rounded-full bg-muted overflow-hidden;
+    @apply h-2 rounded-full bg-muted overflow-hidden;
   }
 
   .progress-fill {
     @apply h-full rounded-full bg-gradient-to-r from-accent to-accent/80 transition-all duration-500;
   }
 
-  /* Stats with Context */
   .stat-value {
-    @apply text-3xl font-bold tracking-tight;
+    @apply text-2xl font-bold tracking-tight;
   }
 
   .stat-label {
     @apply text-sm text-muted-foreground;
   }
 
-  .stat-context {
-    @apply text-xs text-muted-foreground flex items-center gap-1;
-  }
-
-  .stat-trend-up {
-    @apply text-success flex items-center gap-0.5 text-xs font-medium;
-  }
-
-  .stat-trend-down {
-    @apply text-destructive flex items-center gap-0.5 text-xs font-medium;
-  }
-
-  /* Executive Cards */
+  /* Executive Card Styles */
   .executive-card {
-    @apply bg-gradient-to-br from-card via-card to-accent/5 rounded-2xl p-6 border border-border/30 shadow-lg hover:shadow-xl transition-all duration-300;
+    @apply bg-gradient-to-br from-card via-card to-accent/5 rounded-2xl p-6 border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300;
   }
 
-  /* Insight Badges */
   .insight-badge {
     @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold;
   }
 
   .insight-badge-success {
-    @apply bg-emerald-500/15 text-emerald-600 border border-emerald-500/20;
+    @apply bg-emerald-500/10 text-emerald-600 border border-emerald-500/20;
   }
 
   .insight-badge-warning {
-    @apply bg-amber-500/15 text-amber-600 border border-amber-500/20;
+    @apply bg-amber-500/10 text-amber-600 border border-amber-500/20;
   }
 
   .insight-badge-info {
-    @apply bg-blue-500/15 text-blue-600 border border-blue-500/20;
-  }
-
-  .insight-badge-action {
-    @apply bg-action/15 text-action border border-action/20;
-  }
-
-  /* Action Center Todo Items */
-  .todo-item {
-    @apply flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border/30 hover:bg-secondary transition-colors cursor-pointer;
-  }
-
-  .todo-urgent {
-    @apply border-l-4 border-l-action;
-  }
-
-  /* Perk Feed Cards */
-  .perk-card {
-    @apply bg-card rounded-xl overflow-hidden border border-border/50 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300;
-  }
-
-  .perk-card-featured {
-    @apply ring-2 ring-accent/50;
+    @apply bg-blue-500/10 text-blue-600 border border-blue-500/20;
   }
 
   /* RTL specific component overrides */
@@ -379,10 +274,12 @@
     text-align: right;
   }
 
+  /* RTL flex reversals */
   html.rtl .flex-items-gap {
     @apply flex-row-reverse;
   }
 
+  /* RTL icon margins */
   html.rtl .icon-margin-end {
     margin-left: 0.75rem;
     margin-right: 0;
@@ -393,32 +290,39 @@
     margin-left: 0;
   }
 
+  /* RTL Progress bar direction */
   html.rtl .progress-bar,
   html.rtl [role="progressbar"] {
     direction: rtl;
   }
 
+  /* RTL Chevron auto-flip */
   html.rtl .chevron-end {
     transform: scaleX(-1);
   }
 
+  /* RTL card content alignment */
   html.rtl .card-content {
     text-align: right;
   }
 
+  /* RTL list bullets */
   html.rtl ul li {
     text-align: right;
   }
 
+  /* RTL badge alignment */
   html.rtl .badge-container {
     @apply flex-row-reverse;
   }
 
+  /* RTL spacing adjustments */
   html.rtl .space-x-reverse > * + * {
     margin-right: var(--tw-space-x-reverse);
     margin-left: 0;
   }
 
+  /* RTL border radius adjustments */
   html.rtl .rounded-l-lg {
     border-radius: 0 0.5rem 0.5rem 0;
   }
@@ -427,6 +331,7 @@
     border-radius: 0.5rem 0 0 0.5rem;
   }
 
+  /* RTL text alignment helpers */
   html.rtl .text-start {
     text-align: right;
   }
@@ -435,6 +340,7 @@
     text-align: left;
   }
 
+  /* RTL padding adjustments */
   html.rtl .ps-4 {
     padding-right: 1rem;
     padding-left: 0;
@@ -445,6 +351,7 @@
     padding-right: 0;
   }
 
+  /* RTL margin adjustments */
   html.rtl .ms-auto {
     margin-right: auto;
     margin-left: 0;
@@ -455,6 +362,7 @@
     margin-right: 0;
   }
 
+  /* RTL Grid adjustments */
   html.rtl .grid {
     direction: rtl;
   }
@@ -464,11 +372,6 @@
   .text-gradient {
     @apply bg-clip-text text-transparent;
     background-image: var(--gradient-accent);
-  }
-
-  .text-gradient-primary {
-    @apply bg-clip-text text-transparent;
-    background-image: var(--gradient-primary);
   }
 
   .bg-gradient-primary {
@@ -487,16 +390,8 @@
     background-image: var(--gradient-card);
   }
 
-  .bg-gradient-rewards {
-    background-image: var(--gradient-rewards);
-  }
-
   .shadow-glow {
     box-shadow: var(--shadow-glow);
-  }
-
-  .shadow-glow-primary {
-    box-shadow: var(--shadow-glow-primary);
   }
 
   .animate-in {
@@ -526,19 +421,6 @@
     to {
       opacity: 1;
       transform: translateX(0);
-    }
-  }
-
-  .animate-pulse-slow {
-    animation: pulseSlow 3s ease-in-out infinite;
-  }
-
-  @keyframes pulseSlow {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.7;
     }
   }
 
@@ -607,11 +489,16 @@
     border-inline-end-width: 1px;
   }
 
+  /* RTL-aware flex utilities */
   .flex-row-rtl {
     flex-direction: row;
   }
 
   html.rtl .flex-row-rtl {
     flex-direction: row-reverse;
+  }
+
+  .gap-rtl-3 > * + * {
+    margin-inline-start: 0.75rem;
   }
 }

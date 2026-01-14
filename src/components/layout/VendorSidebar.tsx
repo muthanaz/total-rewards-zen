@@ -14,7 +14,6 @@ import {
   Store,
   FileText,
   ChevronDown,
-  Handshake,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -41,7 +40,7 @@ const navigationGroups: NavGroup[] = [
     title: 'Overview',
     titleAr: 'نظرة عامة',
     items: [
-      { label: 'Partner Dashboard', labelAr: 'لوحة الشريك', path: '/vendor', icon: LayoutDashboard },
+      { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/vendor', icon: LayoutDashboard },
     ],
   },
   {
@@ -79,7 +78,6 @@ export function VendorSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<string[]>(navigationGroups.map(g => g.title));
   const isRTL = direction === 'rtl';
-  const isArabic = language === 'ar';
 
   const handleSignOut = async () => {
     await signOut();
@@ -106,16 +104,15 @@ export function VendorSidebar() {
         )}>
           <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0">
-              <Handshake className="w-4 h-4 text-white" />
+              <Store className="w-4 h-4 text-white" />
             </div>
-            <div className="flex flex-col">
-              <span className="font-display text-base font-bold text-sidebar-foreground leading-tight">
-                {isArabic ? 'المكافآت الشاملة' : 'Total Rewards'}
-              </span>
-              <span className="text-[10px] text-sidebar-foreground/60 font-medium">
-                {isArabic ? 'بوابة الشريك' : 'Rewards Partner Portal'}
-              </span>
-            </div>
+            <span className="font-display text-xl font-bold text-sidebar-foreground">bnft.</span>
+            <span className={cn(
+              "px-2 py-0.5 text-xs font-medium rounded-full bg-purple-500/20 text-purple-400 shrink-0",
+              isRTL ? "mr-1" : "ml-1"
+            )}>
+              Vendor
+            </span>
           </div>
         </div>
         {/* Theme & Language Controls */}

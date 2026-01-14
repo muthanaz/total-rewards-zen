@@ -24,8 +24,6 @@ import {
   Shield,
   Activity,
   Zap,
-  Megaphone,
-  UserCog,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -61,6 +59,7 @@ interface NavGroup {
 }
 
 // Strategic View Navigation - For C-Suite/Board/Leadership
+// Sequence: Financial Overview → Workforce Insights → Governance (strategic flow)
 const strategicNavigation: NavGroup[] = [
   {
     titleKey: 'financial_intelligence',
@@ -97,7 +96,7 @@ const strategicNavigation: NavGroup[] = [
     items: [
       { 
         labelKey: 'segments', 
-        label: { en: 'People Segments', ar: 'شرائح الموظفين' },
+        label: { en: 'Team Segments', ar: 'شرائح الفريق' },
         path: '/employer/segments', 
         icon: Users 
       },
@@ -147,6 +146,7 @@ const strategicNavigation: NavGroup[] = [
 ];
 
 // Operational View Navigation - For HR Teams
+// Sequence: Urgent Actions → Day-to-day Spend → Employee Data → Configuration (operational flow)
 const operationalNavigation: NavGroup[] = [
   {
     titleKey: 'action_queue',
@@ -160,20 +160,6 @@ const operationalNavigation: NavGroup[] = [
         icon: FileCheck,
         badge: 12,
         badgeColor: 'amber'
-      },
-    ],
-    defaultOpen: true,
-  },
-  {
-    titleKey: 'program_management',
-    title: { en: 'Program Management', ar: 'إدارة البرامج' },
-    icon: Settings2,
-    items: [
-      { 
-        labelKey: 'campaigns', 
-        label: { en: 'Campaigns & Recognition', ar: 'الحملات والتقدير' },
-        path: '/employer/campaigns', 
-        icon: Megaphone
       },
     ],
     defaultOpen: true,
@@ -205,13 +191,13 @@ const operationalNavigation: NavGroup[] = [
     defaultOpen: true,
   },
   {
-    titleKey: 'people_teams',
-    title: { en: 'People & Teams', ar: 'الأشخاص والفرق' },
+    titleKey: 'workforce_data',
+    title: { en: 'Workforce Data', ar: 'بيانات القوى العاملة' },
     icon: Users,
     items: [
       { 
         labelKey: 'segments', 
-        label: { en: 'People Segments', ar: 'شرائح الموظفين' },
+        label: { en: 'Employee Segments', ar: 'شرائح الموظفين' },
         path: '/employer/segments', 
         icon: Users 
       },
@@ -322,17 +308,10 @@ export function EmployerSidebar() {
           isRTL && "flex-row-reverse"
         )}>
           <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0">
-              <UserCog className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-accent flex items-center justify-center shrink-0">
+              <span className="text-sidebar-background font-bold text-lg">b</span>
             </div>
-            <div className="flex flex-col">
-              <span className="font-display text-base font-bold text-sidebar-foreground leading-tight">
-                {isArabic ? 'المكافآت الشاملة' : 'Total Rewards'}
-              </span>
-              <span className="text-[10px] text-sidebar-foreground/60 font-medium">
-                {isArabic ? 'مدير الموارد البشرية' : 'HR Manager Portal'}
-              </span>
-            </div>
+            <span className="font-display text-xl font-bold text-sidebar-foreground">bnft.</span>
           </div>
         </div>
 
@@ -408,7 +387,7 @@ export function EmployerSidebar() {
           )}
         >
           <LayoutDashboard className="w-4 h-4 shrink-0" />
-          <span className="flex-1">{isArabic ? 'لوحة التحكم' : 'Company Dashboard'}</span>
+          <span className="flex-1">{isArabic ? 'لوحة التحكم' : 'Dashboard'}</span>
         </Link>
 
         <Separator className="my-3 bg-sidebar-border/50" />
@@ -491,7 +470,7 @@ export function EmployerSidebar() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Partner Marketplace Analytics - Heading Style Link */}
+        {/* Marketplace Analytics - Heading Style Link (both views) */}
         <div className="mt-4 pt-4 border-t border-sidebar-border/50">
           <Link
             to="/employer/marketplace"
@@ -505,9 +484,11 @@ export function EmployerSidebar() {
             )}
           >
             <ShoppingBag className="w-4 h-4 shrink-0" />
-            <span className="flex-1">{isArabic ? 'تحليلات الشركاء' : 'Partner Analytics'}</span>
+            <span className="flex-1">{isArabic ? 'تحليلات السوق' : 'Marketplace Analytics'}</span>
           </Link>
         </div>
+
+        {/* Integrations link removed - already in Configuration group */}
       </nav>
 
       {/* Sign Out */}
@@ -521,7 +502,9 @@ export function EmployerSidebar() {
           )}
         >
           <LogOut className={cn("w-4 h-4 shrink-0", isRTL ? "ml-3" : "mr-3")} />
-          <span>{isArabic ? 'تسجيل الخروج' : 'Sign Out'}</span>
+          <span className={isRTL ? "text-right" : "text-left"}>
+            {isArabic ? 'تسجيل الخروج' : 'Sign Out'}
+          </span>
         </Button>
       </div>
     </>
@@ -564,8 +547,8 @@ export function EmployerSidebar() {
   );
 }
 
-// Hook for accessing view mode from other components
-export function useEmployerViewMode(): ViewMode {
+// Export hook for other components to use
+export function useEmployerViewMode() {
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem('employer-view-mode');
     return (saved as ViewMode) || 'strategic';
@@ -580,20 +563,8 @@ export function useEmployerViewMode(): ViewMode {
     };
 
     window.addEventListener('storage', handleStorageChange);
-    
-    // Poll for changes (for same-tab updates)
-    const interval = setInterval(() => {
-      const saved = localStorage.getItem('employer-view-mode');
-      if (saved && saved !== viewMode) {
-        setViewMode(saved as ViewMode);
-      }
-    }, 500);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
-    };
-  }, [viewMode]);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   return viewMode;
 }
