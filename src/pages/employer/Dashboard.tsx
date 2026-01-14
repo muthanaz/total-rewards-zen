@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { 
   Users, DollarSign, TrendingUp, TrendingDown, Smile, 
-  Recycle, FileCheck, Target, ArrowRight, AlertTriangle, 
-  CheckCircle2, Sparkles, Zap, Clock, ExternalLink,
-  BarChart3, Shield, Activity, Eye, Lightbulb, Building2,
-  ArrowUpRight, ArrowDownRight, Gauge, PieChart, Calendar
+  Recycle, FileCheck, Target, AlertTriangle, 
+  CheckCircle2, Zap, Clock, ExternalLink,
+  BarChart3, Shield,
+  ArrowUpRight, ArrowDownRight, PieChart
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ChartContainer, AnimatedLineChart, ProgressBarList } from '@/components/charts';
@@ -120,30 +120,6 @@ const urgentActions = [
   },
 ];
 
-// Smart recommendations
-const smartRecommendations = [
-  { 
-    title: { en: 'Boost L&D communication', ar: 'تعزيز التواصل حول التطوير' },
-    impact: { en: 'Could save AED 2.8M', ar: 'يمكن توفير 2.8 مليون درهم' },
-    roi: '3.2x',
-    effort: 'low',
-    link: '/employer/recommendations',
-  },
-  { 
-    title: { en: 'Simplify wellbeing claims', ar: 'تبسيط مطالبات الرفاهية' },
-    impact: { en: 'Could increase usage by 25%', ar: 'يمكن زيادة الاستخدام بنسبة 25%' },
-    roi: '2.1x',
-    effort: 'medium',
-    link: '/employer/recommendations',
-  },
-  { 
-    title: { en: 'Launch flex benefits pilot', ar: 'إطلاق برنامج المزايا المرنة' },
-    impact: { en: 'Improve satisfaction 15%', ar: 'تحسين الرضا بنسبة 15%' },
-    roi: '2.8x',
-    effort: 'high',
-    link: '/employer/recommendations',
-  },
-];
 
 // Industry benchmarks
 const industryBenchmarks = [
@@ -189,19 +165,6 @@ export default function EmployerDashboard() {
   const { isVisible: showTeamHealth } = useElementVisibility('employer', 'dashboard', 'team_health');
   const { isVisible: showUtilizationSnapshot } = useElementVisibility('employer', 'dashboard', 'utilization_snapshot');
 
-  const getEffortBadge = (effort: string) => {
-    const styles = {
-      low: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
-      medium: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
-      high: 'bg-red-500/10 text-red-600 border-red-500/20',
-    };
-    const labels = {
-      low: isArabic ? 'سريع' : 'Quick Win',
-      medium: isArabic ? 'متوسط' : 'Medium',
-      high: isArabic ? 'مشروع' : 'Project',
-    };
-    return <Badge variant="outline" className={cn("text-[10px]", styles[effort as keyof typeof styles])}>{labels[effort as keyof typeof labels]}</Badge>;
-  };
 
   const getColorClasses = (color: string) => {
     const colors: Record<string, { bg: string; text: string; border: string }> = {
@@ -372,115 +335,42 @@ export default function EmployerDashboard() {
               />
             </div>
 
-            {/* Action Priority Matrix */}
-            {showActionMatrix && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Urgent Actions */}
-                <Card className="border-amber-500/20 bg-gradient-to-br from-card to-amber-500/5">
-                  <CardHeader className="pb-3">
-                    <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                      <CardTitle className={cn(
-                        "text-base font-display font-semibold flex items-center gap-2",
-                        isRTL && "flex-row-reverse"
-                      )}>
-                        <Zap className="w-4 h-4 text-amber-500" />
-                        {isArabic ? 'يتطلب إجراء' : 'Action Required'}
-                      </CardTitle>
-                      <InfoTooltip 
-                        formula="Items requiring immediate attention based on SLA timelines and financial impact." 
-                        dataSource="System Alerts" 
-                      />
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {urgentActions.map((action) => (
-                      <Link key={action.id} to={action.link}>
-                        <div className={cn(
-                          "p-3 rounded-lg border border-border/50 bg-card hover:bg-accent/5 transition-colors cursor-pointer group",
-                          "flex items-center gap-3",
-                          isRTL && "flex-row-reverse"
-                        )}>
-                          <div className={cn(
-                            "p-2 rounded-lg shrink-0",
-                            action.color === 'amber' ? "bg-amber-500/10" : "bg-blue-500/10"
-                          )}>
-                            <action.icon className={cn(
-                              "w-4 h-4",
-                              action.color === 'amber' ? "text-amber-500" : "text-blue-500"
-                            )} />
-                          </div>
-                          <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
-                            <p className="text-sm font-medium truncate">
-                              {isArabic ? action.title.ar : action.title.en}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {isArabic ? action.subtitle.ar : action.subtitle.en}
-                            </p>
-                          </div>
-                          <ExternalLink className={cn(
-                            "w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0",
-                            isRTL && "rotate-180"
-                          )} />
-                        </div>
-                      </Link>
-                    ))}
-                  </CardContent>
-                </Card>
+            {/* AI Strategic Insights */}
+            <AIInsightsPanel
+              insights={[
+                {
+                  id: '1',
+                  text: isArabic 
+                    ? 'التطوير المهني يسجل استخدام 38% فقط. حملة تواصل مستهدفة يمكن أن توفر 2.8 مليون درهم سنوياً.'
+                    : 'L&D is at 38% utilization. A targeted communication campaign could save AED 2.8M annually.',
+                  impact: 'AED 2.8M/year',
+                  action: isArabic ? 'إطلاق حملة التعلم' : 'Launch L&D campaign',
+                  type: 'opportunity',
+                  category: isArabic ? 'التعليم' : 'Learning'
+                },
+                {
+                  id: '2',
+                  text: isArabic
+                    ? '45% من الموظفين لم يقدموا مطالبات رفاهية. تبسيط العملية سيزيد الاستخدام.'
+                    : '45% of employees haven\'t claimed wellbeing benefits. Simplifying the process could boost adoption.',
+                  impact: '+25% usage',
+                  action: isArabic ? 'تبسيط المطالبات' : 'Streamline claims',
+                  type: 'warning',
+                  category: isArabic ? 'الرفاهية' : 'Wellbeing'
+                },
+                {
+                  id: '3',
+                  text: isArabic
+                    ? 'رضا الموظفين عن المزايا الصحية أعلى بنسبة 15% من معيار الصناعة.'
+                    : 'Employee satisfaction with health benefits is 15% above industry benchmark.',
+                  type: 'info',
+                  category: isArabic ? 'الصحة' : 'Health'
+                }
+              ]}
+              lastUpdated={isArabic ? 'منذ ساعتين' : '2 hours ago'}
+            />
 
-                {/* Smart Recommendations */}
-                <Card className="border-emerald-500/20 bg-gradient-to-br from-card to-emerald-500/5">
-                  <CardHeader className="pb-3">
-                    <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                      <CardTitle className={cn(
-                        "text-base font-display font-semibold flex items-center gap-2",
-                        isRTL && "flex-row-reverse"
-                      )}>
-                        <Sparkles className="w-4 h-4 text-emerald-500" />
-                        {isArabic ? 'توصيات ذكية' : 'Smart Recommendations'}
-                        <Badge variant="outline" className="ml-auto text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                          {isArabic ? 'بالذكاء الاصطناعي' : 'AI Powered'}
-                        </Badge>
-                      </CardTitle>
-                      <InfoTooltip 
-                        formula="AI-generated recommendations based on utilization patterns, industry benchmarks, and cost analysis." 
-                        dataSource="AI Analytics Engine" 
-                      />
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {smartRecommendations.map((rec, idx) => (
-                      <Link key={idx} to={rec.link}>
-                        <div className={cn(
-                          "p-3 rounded-lg border border-border/50 bg-card hover:bg-accent/5 transition-colors cursor-pointer",
-                          isRTL && "text-right"
-                        )}>
-                          <div className={cn("flex items-start justify-between gap-2", isRTL && "flex-row-reverse")}>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium">{isArabic ? rec.title.ar : rec.title.en}</p>
-                              <p className="text-xs text-muted-foreground mt-1">{isArabic ? rec.impact.ar : rec.impact.en}</p>
-                            </div>
-                            <div className={cn("flex items-center gap-2 shrink-0", isRTL && "flex-row-reverse")}>
-                              <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                                {rec.roi} ROI
-                              </Badge>
-                              {getEffortBadge(rec.effort)}
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                    <Link to="/employer/recommendations">
-                      <Button variant="ghost" size="sm" className="w-full text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10">
-                        {isArabic ? 'عرض كل التوصيات' : 'View All Recommendations'} 
-                        <ArrowRight className={cn("w-4 h-4 ml-1", isRTL && "rotate-180 mr-1 ml-0")} />
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
-            {/* Competitive Position + AI Insights - Side by Side */}
+            {/* Competitive Position + Utilization Snapshot - Side by Side */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Competitive Position */}
               <Card className="border-border/50">
@@ -567,7 +457,7 @@ export default function EmployerDashboard() {
               </Card>
             </div>
 
-            {/* AI Strategic Insights - Compact */}
+            {/* Utilization Trend Chart - Full Width at Bottom */}
             <AIInsightsPanel
               insights={[
                 {
