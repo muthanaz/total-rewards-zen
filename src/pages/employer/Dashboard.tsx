@@ -1,24 +1,21 @@
-import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { 
-  Users, DollarSign, TrendingUp, TrendingDown, Smile, 
+  Users, DollarSign, TrendingUp, Smile, 
   Recycle, FileCheck, Target, AlertTriangle, 
-  CheckCircle2, Zap, Clock, ExternalLink,
+  CheckCircle2, Zap, Clock,
   BarChart3, Shield,
   ArrowUpRight, ArrowDownRight, PieChart
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { ChartContainer, AnimatedLineChart, ProgressBarList } from '@/components/charts';
+import { AnimatedLineChart, ProgressBarList } from '@/components/charts';
 import { useElementVisibility } from '@/contexts/UIVisibilityContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { useEmployerViewMode } from '@/components/layout/EmployerSidebar';
 import { motion, AnimatePresence } from 'framer-motion';
-import chartColors from '@/lib/chartColors';
 import { MoneyFlowVisualization } from '@/components/employer/MoneyFlowVisualization';
 import { YearEndProjection } from '@/components/employer/YearEndProjection';
 import { AIInsightsPanel } from '@/components/employer/AIInsightsPanel';
@@ -96,29 +93,6 @@ const executivePulseCards = [
   },
 ];
 
-// Urgent actions
-const urgentActions = [
-  { 
-    id: 1, 
-    type: 'claims', 
-    title: { en: '12 claims pending review', ar: '12 مطالبة قيد المراجعة' },
-    subtitle: { en: 'Avg wait: 2.3 days (SLA: 3 days)', ar: 'متوسط الانتظار: 2.3 يوم (الهدف: 3 أيام)' },
-    icon: FileCheck,
-    color: 'amber',
-    link: '/employer/claims',
-    urgent: true,
-  },
-  { 
-    id: 2, 
-    type: 'waste', 
-    title: { en: 'AED 8.5M waste identified', ar: 'تم تحديد 8.5 مليون درهم هدر' },
-    subtitle: { en: 'AED 5.1M recoverable this quarter', ar: '5.1 مليون درهم قابلة للاسترداد' },
-    icon: Recycle,
-    color: 'amber',
-    link: '/employer/zombie',
-    urgent: true,
-  },
-];
 
 
 // Industry benchmarks
@@ -157,14 +131,9 @@ export default function EmployerDashboard() {
   const viewMode = useEmployerViewMode();
   
   const formatCurrency = (value: number) => `AED ${(value / 1000000).toFixed(1)}M`;
-  const budgetUtilization = (metrics.budgetUsed / metrics.annualBudget) * 100;
   
   // UI Visibility hooks
-  const { isVisible: showAlerts } = useElementVisibility('employer', 'dashboard', 'alerts');
-  const { isVisible: showActionMatrix } = useElementVisibility('employer', 'dashboard', 'action_matrix');
-  const { isVisible: showTeamHealth } = useElementVisibility('employer', 'dashboard', 'team_health');
   const { isVisible: showUtilizationSnapshot } = useElementVisibility('employer', 'dashboard', 'utilization_snapshot');
-
 
   const getColorClasses = (color: string) => {
     const colors: Record<string, { bg: string; text: string; border: string }> = {
@@ -232,17 +201,18 @@ export default function EmployerDashboard() {
             </div>
             <div className="h-4 w-px bg-border" />
             <Badge variant="outline" className={cn(
-              "px-3 py-1",
+              "px-3 py-1 flex items-center gap-1.5",
               metrics.utilizationRate >= 70 
                 ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" 
-                : "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                : "bg-amber-500/10 text-amber-600 border-amber-500/20",
+              isRTL && "flex-row-reverse"
             )}>
               {metrics.utilizationRate >= 70 ? (
-                <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                <CheckCircle2 className="w-3.5 h-3.5" />
               ) : (
-                <AlertTriangle className="w-3.5 h-3.5 mr-1.5" />
+                <AlertTriangle className="w-3.5 h-3.5" />
               )}
-              {metrics.utilizationRate}% {isArabic ? 'استخدام' : 'utilized'}
+              <span>{metrics.utilizationRate}% {isArabic ? 'استخدام' : 'utilized'}</span>
             </Badge>
           </div>
         </div>
@@ -457,40 +427,6 @@ export default function EmployerDashboard() {
               </Card>
             </div>
 
-            {/* Utilization Trend Chart - Full Width at Bottom */}
-            <AIInsightsPanel
-              insights={[
-                {
-                  id: '1',
-                  text: isArabic 
-                    ? 'التطوير المهني يسجل استخدام 38% فقط. حملة تواصل مستهدفة يمكن أن توفر 2.8 مليون درهم سنوياً.'
-                    : 'L&D is at 38% utilization. A targeted communication campaign could save AED 2.8M annually.',
-                  impact: 'AED 2.8M/year',
-                  action: isArabic ? 'إطلاق حملة التعلم' : 'Launch L&D campaign',
-                  type: 'opportunity',
-                  category: isArabic ? 'التعليم' : 'Learning'
-                },
-                {
-                  id: '2',
-                  text: isArabic
-                    ? '45% من الموظفين لم يقدموا مطالبات رفاهية. تبسيط العملية سيزيد الاستخدام.'
-                    : '45% of employees haven\'t claimed wellbeing benefits. Simplifying the process could boost adoption.',
-                  impact: '+25% usage',
-                  action: isArabic ? 'تبسيط المطالبات' : 'Streamline claims',
-                  type: 'warning',
-                  category: isArabic ? 'الرفاهية' : 'Wellbeing'
-                },
-                {
-                  id: '3',
-                  text: isArabic
-                    ? 'رضا الموظفين عن المزايا الصحية أعلى بنسبة 15% من معيار الصناعة.'
-                    : 'Employee satisfaction with health benefits is 15% above industry benchmark.',
-                  type: 'info',
-                  category: isArabic ? 'الصحة' : 'Health'
-                }
-              ]}
-              lastUpdated={isArabic ? 'منذ ساعتين' : '2 hours ago'}
-            />
 
             {/* Utilization Trend Chart - Full Width at Bottom */}
             {showUtilizationSnapshot && (
