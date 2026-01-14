@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import type { Json } from '@/integrations/supabase/types';
 
 export interface EmployerAction {
   id: string;
@@ -14,7 +15,7 @@ export interface EmployerAction {
     target?: string;
     savings?: number;
     improvement?: string;
-  };
+  } | null;
   owner_user_id: string | null;
   status: 'planned' | 'in_progress' | 'completed' | 'blocked' | 'cancelled';
   priority: 'low' | 'medium' | 'high' | 'critical';
@@ -29,7 +30,7 @@ export interface CreateActionInput {
   title: string;
   description?: string;
   metric_keys?: string[];
-  expected_impact?: Record<string, unknown>;
+  expected_impact?: { metric?: string; target?: string; savings?: number; improvement?: string };
   owner_user_id?: string;
   priority?: 'low' | 'medium' | 'high' | 'critical';
   due_date?: string;
@@ -94,7 +95,7 @@ export function useCreateAction() {
           title: input.title,
           description: input.description || null,
           metric_keys: input.metric_keys || [],
-          expected_impact: input.expected_impact || {},
+          expected_impact: (input.expected_impact || {}) as Json,
           owner_user_id: input.owner_user_id || null,
           priority: input.priority || 'medium',
           due_date: input.due_date || null,
