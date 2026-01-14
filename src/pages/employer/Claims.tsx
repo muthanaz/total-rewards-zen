@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { MetricTooltip } from '@/components/ui/metric-tooltip';
 import { PageHeader } from '@/components/ui/page-header';
 import { PaginationControls } from '@/components/ui/pagination-controls';
@@ -15,6 +16,7 @@ import { RequestTimeline } from '@/components/employer/RequestTimeline';
 import { usePagination } from '@/hooks/usePagination';
 import { useOrgRequests, useUpdateRequest, useRequestStats, type Request } from '@/hooks/useRequests';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
 import { 
   ClipboardCheck, 
   Clock, 
@@ -29,7 +31,10 @@ import {
   Archive,
   Timer,
   User,
-  UserCheck
+  UserCheck,
+  Users,
+  CheckSquare,
+  AlertTriangle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow, differenceInHours } from 'date-fns';
@@ -57,6 +62,7 @@ export default function ClaimsPage() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
   const isArabic = language === 'ar';
+  const { toast } = useToast();
   
   const { data: requests, isLoading, error } = useOrgRequests();
   const { data: stats } = useRequestStats();
@@ -69,6 +75,13 @@ export default function ClaimsPage() {
   const [reviewNotes, setReviewNotes] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
   const [dialogTab, setDialogTab] = useState<'details' | 'timeline'>('details');
+  
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkActionDialog, setBulkActionDialog] = useState<'approve' | 'reject' | null>(null);
+  
+  // Low-risk threshold for bulk approve
+  const LOW_RISK_THRESHOLD = 5000;
 
   // Filter requests first
   const filteredRequests = useMemo(() => {
@@ -87,6 +100,39 @@ export default function ClaimsPage() {
   // Apply pagination to filtered requests
   const pagination = usePagination(filteredRequests, { initialPageSize: 10 });
 
+  // Get pending low-risk claims for bulk approval
+  const lowRiskPendingClaims = useMemo(() => {
+    return filteredRequests.filter(req => 
+      ['pending', 'submitted'].includes(req.status || '') &&
+      req.request_type === 'claim' &&
+      (req.amount || 0) <= LOW_RISK_THRESHOLD
+    );
+  }, [filteredRequests]);
+
+  // Toggle selection
+  const toggleSelection = (id: string) => {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedIds(newSet);
+  };
+
+  // Select all pending
+  const selectAllPending = () => {
+    const pendingIds = filteredRequests
+      .filter(req => ['pending', 'submitted'].includes(req.status || ''))
+      .map(req => req.id);
+    setSelectedIds(new Set(pendingIds));
+  };
+
+  // Clear selection
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+  };
+
   const handleAction = async (action: 'approved' | 'rejected' | 'in_review' | 'paid') => {
     if (!selectedRequest) return;
     
@@ -100,6 +146,35 @@ export default function ClaimsPage() {
     setSelectedRequest(null);
     setReviewNotes('');
     setInternalNotes('');
+  };
+
+  // Bulk action handler
+  const handleBulkAction = async (action: 'approved' | 'rejected') => {
+    const idsToProcess = Array.from(selectedIds);
+    let successCount = 0;
+    
+    for (const id of idsToProcess) {
+      try {
+        await updateRequest.mutateAsync({
+          requestId: id,
+          status: action,
+          reviewerNotes: action === 'approved' ? 'Bulk approved' : 'Bulk rejected',
+        });
+        successCount++;
+      } catch (e) {
+        console.error(`Failed to ${action} request ${id}`, e);
+      }
+    }
+    
+    toast({
+      title: isArabic ? 'تم الإجراء' : 'Action Completed',
+      description: isArabic 
+        ? `تم ${action === 'approved' ? 'الموافقة على' : 'رفض'} ${successCount} من ${idsToProcess.length} طلب`
+        : `${successCount} of ${idsToProcess.length} requests ${action}`,
+    });
+    
+    setSelectedIds(new Set());
+    setBulkActionDialog(null);
   };
 
   const getStatusBadge = (status: RequestStatus | null) => {
@@ -320,10 +395,84 @@ export default function ClaimsPage() {
         </CardContent>
       </Card>
 
+      {/* Bulk Actions Bar */}
+      {selectedIds.size > 0 && (
+        <Card className="card-elevated border-primary/30 bg-primary/5">
+          <CardContent className="py-3">
+            <div className={cn("flex items-center justify-between gap-4", isRTL && "flex-row-reverse")}>
+              <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+                <CheckSquare className="w-5 h-5 text-primary" />
+                <span className="font-medium">
+                  {selectedIds.size} {isArabic ? 'محدد' : 'selected'}
+                </span>
+                <Button variant="ghost" size="sm" onClick={clearSelection}>
+                  {isArabic ? 'إلغاء التحديد' : 'Clear'}
+                </Button>
+              </div>
+              <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setBulkActionDialog('reject')}
+                  className="text-red-600 hover:text-red-600"
+                >
+                  <XCircle className="w-4 h-4 mr-1" />
+                  {isArabic ? 'رفض المحدد' : 'Reject Selected'}
+                </Button>
+                <Button 
+                  size="sm"
+                  onClick={() => setBulkActionDialog('approve')}
+                >
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  {isArabic ? 'موافقة على المحدد' : 'Approve Selected'}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Low-Risk Quick Approve */}
+      {lowRiskPendingClaims.length > 0 && selectedIds.size === 0 && (
+        <Card className="card-elevated border-emerald-500/20 bg-emerald-500/5">
+          <CardContent className="py-3">
+            <div className={cn("flex items-center justify-between gap-4", isRTL && "flex-row-reverse")}>
+              <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+                <CheckCircle className="w-5 h-5 text-emerald-600" />
+                <div className={cn(isRTL && "text-right")}>
+                  <p className="font-medium text-sm">
+                    {lowRiskPendingClaims.length} {isArabic ? 'مطالبات منخفضة المخاطر' : 'low-risk claims'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {isArabic ? `أقل من ${LOW_RISK_THRESHOLD.toLocaleString()} درهم` : `Under AED ${LOW_RISK_THRESHOLD.toLocaleString()}`}
+                  </p>
+                </div>
+              </div>
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
+                onClick={() => {
+                  setSelectedIds(new Set(lowRiskPendingClaims.map(c => c.id)));
+                }}
+              >
+                {isArabic ? 'تحديد الكل للموافقة السريعة' : 'Select for Quick Approve'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Requests Table */}
       <Card className="card-elevated">
-        <CardHeader>
+        <CardHeader className={cn("flex flex-row items-center justify-between", isRTL && "flex-row-reverse")}>
           <CardTitle className="text-lg">{isArabic ? 'كل الطلبات' : 'All Requests'}</CardTitle>
+          {filteredRequests.filter(r => ['pending', 'submitted'].includes(r.status || '')).length > 0 && (
+            <Button variant="ghost" size="sm" onClick={selectAllPending}>
+              <Users className="w-4 h-4 mr-1" />
+              {isArabic ? 'تحديد كل المعلق' : 'Select All Pending'}
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -344,6 +493,9 @@ export default function ClaimsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
+                    <th className="py-3 px-2 w-10">
+                      <span className="sr-only">{isArabic ? 'تحديد' : 'Select'}</span>
+                    </th>
                     <th className={cn("text-left py-3 px-4 font-medium", isArabic && "text-right")}>
                       {isArabic ? 'الموظف' : 'Employee'}
                     </th>
@@ -372,7 +524,18 @@ export default function ClaimsPage() {
                 </thead>
                 <tbody>
                   {pagination.currentData.map((request) => (
-                    <tr key={request.id} className="border-b border-border/50 hover:bg-muted/30">
+                    <tr key={request.id} className={cn(
+                      "border-b border-border/50 hover:bg-muted/30",
+                      selectedIds.has(request.id) && "bg-primary/5"
+                    )}>
+                      <td className="py-3 px-2">
+                        {['pending', 'submitted', 'in_review'].includes(request.status || '') && (
+                          <Checkbox
+                            checked={selectedIds.has(request.id)}
+                            onCheckedChange={() => toggleSelection(request.id)}
+                          />
+                        )}
+                      </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -619,6 +782,56 @@ export default function ClaimsPage() {
                 {isArabic ? 'إغلاق' : 'Close'}
               </Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Action Confirmation Dialog */}
+      <Dialog open={!!bulkActionDialog} onOpenChange={() => setBulkActionDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {bulkActionDialog === 'approve' 
+                ? (isArabic ? 'تأكيد الموافقة الجماعية' : 'Confirm Bulk Approval')
+                : (isArabic ? 'تأكيد الرفض الجماعي' : 'Confirm Bulk Rejection')}
+            </DialogTitle>
+            <DialogDescription>
+              {bulkActionDialog === 'approve'
+                ? (isArabic 
+                    ? `سيتم الموافقة على ${selectedIds.size} طلب. هل أنت متأكد؟`
+                    : `${selectedIds.size} requests will be approved. Are you sure?`)
+                : (isArabic 
+                    ? `سيتم رفض ${selectedIds.size} طلب. هل أنت متأكد؟`
+                    : `${selectedIds.size} requests will be rejected. Are you sure?`)}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className={cn(
+              "p-3 rounded-lg flex items-center gap-3",
+              bulkActionDialog === 'approve' ? 'bg-emerald-500/10' : 'bg-red-500/10',
+              isRTL && "flex-row-reverse"
+            )}>
+              {bulkActionDialog === 'approve' 
+                ? <CheckCircle className="w-5 h-5 text-emerald-600" />
+                : <AlertTriangle className="w-5 h-5 text-red-600" />}
+              <span className="text-sm">
+                {isArabic ? 'لا يمكن التراجع عن هذا الإجراء.' : 'This action cannot be undone.'}
+              </span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkActionDialog(null)}>
+              {isArabic ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button 
+              variant={bulkActionDialog === 'reject' ? 'destructive' : 'default'}
+              onClick={() => handleBulkAction(bulkActionDialog === 'approve' ? 'approved' : 'rejected')}
+              disabled={updateRequest.isPending}
+            >
+              {bulkActionDialog === 'approve' 
+                ? (isArabic ? 'تأكيد الموافقة' : 'Confirm Approval')
+                : (isArabic ? 'تأكيد الرفض' : 'Confirm Rejection')}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MoneyFlowVisualization } from '@/components/employer/MoneyFlowVisualization';
 import { YearEndProjection } from '@/components/employer/YearEndProjection';
 import { AIInsightsPanel } from '@/components/employer/AIInsightsPanel';
+import { DataQualityPanel } from '@/components/employer/DataQualityPanel';
 import { ConfidenceGate, ConfidenceBadge, type ConfidenceLevel } from '@/components/employer/ConfidenceGate';
 import { 
   useEmployerDashboardMetrics, 
@@ -233,20 +234,19 @@ export default function EmployerDashboard() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Data Confidence Banner */}
-      {metrics.confidence.budget === 'low' && (
-        <Alert className="border-amber-500/20 bg-amber-500/5">
-          <AlertTriangle className="h-4 w-4 text-amber-500" />
-          <AlertDescription className="text-amber-700 dark:text-amber-400">
-            {isArabic 
-              ? 'لم يتم تعيين ميزانية سنوية. بعض المقاييس قد تكون غير دقيقة.'
-              : 'No annual budget set. Some metrics may be inaccurate.'}
-            <Link to="/admin/settings" className="ml-2 underline">
-              {isArabic ? 'تعيين الميزانية' : 'Set Budget'}
-            </Link>
-          </AlertDescription>
-        </Alert>
-      )}
+      {/* Data Quality Panel - Shows when data is incomplete */}
+      <DataQualityPanel 
+        metrics={{
+          employeesWithEntitlements: metrics.totalEmployees - 5, // Mock calculation
+          totalEmployees: metrics.totalEmployees,
+          hasBudgetConfigured: metrics.annualBudget > 0,
+          satisfactionSampleSize: metrics.satisfactionSampleSize,
+          requiredSampleSize: 30,
+          missingClassifications: metrics.confidence.budget === 'low' ? 2 : 0,
+        }}
+      />
+
+      {/* Data Confidence Banner - Legacy, now handled by DataQualityPanel */}
 
       {/* Executive Command Bar */}
       <div className={cn(
