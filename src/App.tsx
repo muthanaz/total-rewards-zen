@@ -64,6 +64,8 @@ import AdminOrganizations from "./pages/admin/Organizations";
 import AdminOrganizationSettings from "./pages/admin/OrganizationSettings";
 import AdminUIConfiguration from "./pages/admin/UIConfiguration";
 import AdminDataMigration from "./pages/admin/DataMigration";
+import AdminTenantIsolationTest from "./pages/admin/TenantIsolationTest";
+import MetricsDictionaryPage from "./pages/employer/MetricsDictionary";
 import VendorDashboard from "./pages/vendor/Dashboard";
 import VendorOffers from "./pages/vendor/Offers";
 import VendorTransactions from "./pages/vendor/Transactions";

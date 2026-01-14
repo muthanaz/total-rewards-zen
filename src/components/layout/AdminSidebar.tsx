@@ -78,6 +78,7 @@ const navigationGroups: NavGroup[] = [
     items: [
       { label: 'UI Configuration', labelAr: 'تكوين الواجهة', path: '/admin/ui-config', icon: Sliders },
       { label: 'Data Migration', labelAr: 'ترحيل البيانات', path: '/admin/data-migration', icon: FileSpreadsheet },
+      { label: 'Tenant Isolation Test', labelAr: 'اختبار عزل المستأجرين', path: '/admin/tenant-test', icon: Shield },
     ],
   },
   {
