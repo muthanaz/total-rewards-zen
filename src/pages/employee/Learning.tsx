@@ -9,7 +9,7 @@ import { NoData } from '@/components/ui/empty-state';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { BookOpen, Award, Clock, CheckCircle, Plus, ExternalLink, Wallet, TrendingUp, Calculator } from 'lucide-react';
+import { BookOpen, Award, Clock, CheckCircle, Plus, ExternalLink, Wallet, TrendingUp, Calculator, GraduationCap, Play, Star, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const ANNUAL_BUDGET = 12000;
@@ -49,6 +49,114 @@ const suggestedCourses = [
   { name: 'Data Analytics with Python', provider: 'Coursera', cost: 1200, duration: '6 weeks' },
   { name: 'Project Management Professional', provider: 'PMI', cost: 3000, duration: '3 months' },
   { name: 'Design Thinking', provider: 'IDEO', cost: 800, duration: '4 weeks' },
+];
+
+const learningPlatforms = [
+  {
+    name: 'LinkedIn Learning',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/LinkedIn_Logo.svg/200px-LinkedIn_Logo.svg.png',
+    url: 'https://www.linkedin.com/learning/',
+    description: 'Business, tech & creative courses',
+    courses: '16,000+',
+    color: 'bg-[#0A66C2]',
+  },
+  {
+    name: 'Coursera',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Coursera-Logo_600x600.svg/200px-Coursera-Logo_600x600.svg.png',
+    url: 'https://www.coursera.org/',
+    description: 'University degrees & certifications',
+    courses: '7,000+',
+    color: 'bg-[#0056D2]',
+  },
+  {
+    name: 'Udemy',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Udemy_logo.svg/200px-Udemy_logo.svg.png',
+    url: 'https://www.udemy.com/',
+    description: 'Practical skills & development',
+    courses: '200,000+',
+    color: 'bg-[#A435F0]',
+  },
+  {
+    name: 'edX',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/EdX.svg/200px-EdX.svg.png',
+    url: 'https://www.edx.org/',
+    description: 'Harvard, MIT & top universities',
+    courses: '3,000+',
+    color: 'bg-[#02262B]',
+  },
+  {
+    name: 'Pluralsight',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Pluralsight_logo_no_background.svg/200px-Pluralsight_logo_no_background.svg.png',
+    url: 'https://www.pluralsight.com/',
+    description: 'Tech & IT skills platform',
+    courses: '7,500+',
+    color: 'bg-[#F15B2A]',
+  },
+  {
+    name: 'Skillshare',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Skillshare_Symbol.svg/200px-Skillshare_Symbol.svg.png',
+    url: 'https://www.skillshare.com/',
+    description: 'Creative & business classes',
+    courses: '30,000+',
+    color: 'bg-[#00FF84]',
+  },
+];
+
+const featuredCourses = [
+  {
+    title: 'Google Project Management Certificate',
+    platform: 'Coursera',
+    url: 'https://www.coursera.org/professional-certificates/google-project-management',
+    rating: 4.8,
+    students: '1.2M',
+    duration: '6 months',
+    level: 'Beginner',
+  },
+  {
+    title: 'AWS Certified Solutions Architect',
+    platform: 'Udemy',
+    url: 'https://www.udemy.com/course/aws-certified-solutions-architect-associate/',
+    rating: 4.7,
+    students: '900K',
+    duration: '27 hours',
+    level: 'Intermediate',
+  },
+  {
+    title: 'Excel Skills for Business',
+    platform: 'Coursera',
+    url: 'https://www.coursera.org/specializations/excel',
+    rating: 4.9,
+    students: '500K',
+    duration: '6 months',
+    level: 'All Levels',
+  },
+  {
+    title: 'Leadership & Management',
+    platform: 'LinkedIn Learning',
+    url: 'https://www.linkedin.com/learning/paths/become-a-manager',
+    rating: 4.6,
+    students: '350K',
+    duration: '15 hours',
+    level: 'Intermediate',
+  },
+  {
+    title: 'Python for Data Science',
+    platform: 'edX',
+    url: 'https://www.edx.org/learn/python',
+    rating: 4.7,
+    students: '800K',
+    duration: '10 weeks',
+    level: 'Beginner',
+  },
+  {
+    title: 'UX Design Professional Certificate',
+    platform: 'Coursera',
+    url: 'https://www.coursera.org/professional-certificates/google-ux-design',
+    rating: 4.8,
+    students: '600K',
+    duration: '6 months',
+    level: 'Beginner',
+  },
 ];
 
 export default function LearningPage() {
@@ -248,10 +356,100 @@ export default function LearningPage() {
         </CardContent>
       </Card>
 
+      {/* Learning Platforms */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <GraduationCap className="w-5 h-5 text-accent" />
+            Learning Platforms
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Access courses from our trusted partner platforms. All eligible for reimbursement.
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {learningPlatforms.map((platform) => (
+              <a
+                key={platform.name}
+                href={platform.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex flex-col items-center p-4 rounded-xl border border-border/50 hover:border-accent/50 hover:shadow-md transition-all bg-card hover:bg-muted/30"
+              >
+                <div className={`w-12 h-12 rounded-lg ${platform.color} flex items-center justify-center mb-3`}>
+                  <Play className="w-5 h-5 text-white" />
+                </div>
+                <h4 className="font-medium text-sm text-center group-hover:text-accent transition-colors">
+                  {platform.name}
+                </h4>
+                <p className="text-xs text-muted-foreground text-center mt-1">
+                  {platform.courses} courses
+                </p>
+              </a>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Featured Courses & Certifications */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <Award className="w-5 h-5 text-accent" />
+            Featured Courses & Certifications
+          </CardTitle>
+          <Badge variant="outline" className="text-xs">Recommended</Badge>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {featuredCourses.map((course, i) => (
+              <a
+                key={i}
+                href={course.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group p-4 rounded-xl border border-border/50 hover:border-accent/50 hover:shadow-md transition-all bg-card"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {course.platform}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {course.level}
+                  </Badge>
+                </div>
+                <h4 className="font-medium text-sm mb-2 group-hover:text-accent transition-colors line-clamp-2">
+                  {course.title}
+                </h4>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                  <span className="flex items-center gap-1">
+                    <Star className="w-3.5 h-3.5 text-warning fill-warning" />
+                    {course.rating}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Users className="w-3.5 h-3.5" />
+                    {course.students}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" />
+                    {course.duration}
+                  </span>
+                </div>
+                <Button size="sm" variant="outline" className="w-full group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
+                  <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                  View Course
+                </Button>
+              </a>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Suggested Courses */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base font-display">Suggested for You</CardTitle>
+          <CardTitle className="text-base font-display">Personalized Suggestions</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-3 gap-4">
