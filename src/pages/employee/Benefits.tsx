@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const benefits = [
   { name: 'Housing Allowance', nameKey: 'benefit.housing', icon: Home, value: 120000, utilized: 120000, category: 'housing', route: '/employee/housing', description: 'Monthly housing allowance paid with salary', bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'] },
@@ -53,6 +54,8 @@ const RAGIcon = ({ status }: { status: 'green' | 'amber' | 'red' }) => {
 
 export default function BenefitsPage() {
   const navigate = useNavigate();
+  const { direction } = useLanguage();
+  const isRTL = direction === 'rtl';
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [utilizationFilter, setUtilizationFilter] = useState('all');
@@ -83,14 +86,18 @@ export default function BenefitsPage() {
   const overallUtilization = Math.round((totalUtilized / totalValue) * 100);
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className={cn("space-y-6 animate-fade-in", isRTL && "text-right")}>
       <div className="space-y-1">
-        <h1 className="text-2xl font-display font-bold">All Benefits</h1>
-        <p className="text-muted-foreground">{benefits.length} benefits • {formatCurrency(totalValue)} total value • {overallUtilization}% utilized</p>
+        <h1 className={cn("text-2xl font-display font-bold", isRTL && "text-right")}>
+          {isRTL ? 'جميع المزايا' : 'All Benefits'}
+        </h1>
+        <p className="text-muted-foreground">
+          {benefits.length} {isRTL ? 'مزايا' : 'benefits'} • {formatCurrency(totalValue)} {isRTL ? 'القيمة الإجمالية' : 'total value'} • {overallUtilization}% {isRTL ? 'مستخدم' : 'utilized'}
+        </p>
       </div>
 
       {/* RAG Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className={cn("grid grid-cols-1 md:grid-cols-3 gap-3", isRTL && "direction-rtl")}>
         <Card 
           className={cn(
             "cursor-pointer bg-gradient-to-br from-emerald-500/5 to-emerald-500/10 border-emerald-500/20 hover:border-emerald-500/40 transition-all",
@@ -98,11 +105,15 @@ export default function BenefitsPage() {
           )}
           onClick={() => setUtilizationFilter(utilizationFilter === 'fully-utilized' ? 'all' : 'fully-utilized')}
         >
-          <CardContent className="p-4 flex items-start gap-3">
+          <CardContent className={cn("p-4 flex items-start gap-3", isRTL && "flex-row-reverse")}>
             <div className="p-2 rounded-lg bg-emerald-500/10"><CheckCircle2 className="w-5 h-5 text-emerald-600" /></div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-sm text-emerald-700 dark:text-emerald-400">Fully Utilized</h3>
-              <p className="text-xs text-muted-foreground">{benefitHighlights.fullyUtilizedCount} benefits at 80%+</p>
+            <div className={cn("flex-1", isRTL && "text-right")}>
+              <h3 className="font-semibold text-sm text-emerald-700 dark:text-emerald-400">
+                {isRTL ? 'مستخدم بالكامل' : 'Fully Utilized'}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {benefitHighlights.fullyUtilizedCount} {isRTL ? 'مزايا عند 80%+' : 'benefits at 80%+'}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -113,11 +124,15 @@ export default function BenefitsPage() {
           )}
           onClick={() => setUtilizationFilter(utilizationFilter === 'partial' ? 'all' : 'partial')}
         >
-          <CardContent className="p-4 flex items-start gap-3">
+          <CardContent className={cn("p-4 flex items-start gap-3", isRTL && "flex-row-reverse")}>
             <div className="p-2 rounded-lg bg-amber-500/10"><Clock className="w-5 h-5 text-amber-600" /></div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-sm text-amber-700 dark:text-amber-400">Partially Used</h3>
-              <p className="text-xs text-muted-foreground">{formatCurrency(benefitHighlights.totalRemaining)} available</p>
+            <div className={cn("flex-1", isRTL && "text-right")}>
+              <h3 className="font-semibold text-sm text-amber-700 dark:text-amber-400">
+                {isRTL ? 'مستخدم جزئياً' : 'Partially Used'}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {formatCurrency(benefitHighlights.totalRemaining)} {isRTL ? 'متاح' : 'available'}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -128,11 +143,15 @@ export default function BenefitsPage() {
           )}
           onClick={() => setUtilizationFilter(utilizationFilter === 'underutilized' ? 'all' : 'underutilized')}
         >
-          <CardContent className="p-4 flex items-start gap-3">
+          <CardContent className={cn("p-4 flex items-start gap-3", isRTL && "flex-row-reverse")}>
             <div className="p-2 rounded-lg bg-rose-500/10"><AlertCircle className="w-5 h-5 text-rose-600" /></div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-sm text-rose-700 dark:text-rose-400">Underutilized</h3>
-              <p className="text-xs text-muted-foreground">Needs attention</p>
+            <div className={cn("flex-1", isRTL && "text-right")}>
+              <h3 className="font-semibold text-sm text-rose-700 dark:text-rose-400">
+                {isRTL ? 'غير مستغل' : 'Underutilized'}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {isRTL ? 'يحتاج انتباه' : 'Needs attention'}
+              </p>
             </div>
           </CardContent>
         </Card>

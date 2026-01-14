@@ -128,10 +128,13 @@ export function MoneyFlowVisualization({
                 </p>
               </div>
               
-              {/* Arrow between steps */}
+              {/* Arrow between steps - visible on all screen sizes */}
               {index < flowSteps.length - 1 && (
-                <div className="absolute top-1/2 -translate-y-1/2 -right-3 hidden lg:block">
-                  <ArrowRight className={cn("w-5 h-5 text-muted-foreground/50", isRTL && "rotate-180")} />
+                <div className={cn(
+                  "absolute top-1/2 -translate-y-1/2 hidden sm:block",
+                  isRTL ? "-left-3" : "-right-3"
+                )}>
+                  <ArrowRight className={cn("w-4 h-4 lg:w-5 lg:h-5 text-muted-foreground/50", isRTL && "rotate-180")} />
                 </div>
               )}
             </motion.div>

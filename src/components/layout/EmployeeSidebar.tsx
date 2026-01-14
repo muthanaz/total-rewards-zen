@@ -68,7 +68,7 @@ const navigation: NavGroup[] = [
   {
     labelKey: 'nav.hrServices',
     items: [
-      { labelKey: 'nav.hrClaims', path: '/employee/documents', icon: FileText },
+      { labelKey: 'nav.documentsClaims', path: '/employee/documents', icon: FileText },
       { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
     ],
   },

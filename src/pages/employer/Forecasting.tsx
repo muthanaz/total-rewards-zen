@@ -110,7 +110,7 @@ export default function ForecastingPage() {
         {[
           { 
             label: isRTL ? 'الإنفاق حتى تاريخه' : 'Spend YTD', 
-            value: 'AED 40.5M',
+            value: 'AED 39.7M',
             change: '+2.3%',
             trend: 'up',
             icon: DollarSign,

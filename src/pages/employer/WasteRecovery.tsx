@@ -4,54 +4,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { Ghost, AlertTriangle, TrendingDown, Lightbulb, Users, Target } from 'lucide-react';
+import { Ghost, AlertTriangle, TrendingDown, Lightbulb, Users, Target, Recycle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useState } from 'react';
 import { DrillDownModal } from '@/components/dashboard';
 import { Link } from 'react-router-dom';
+import { WASTE_BY_CATEGORY, WASTE_RISK_INDICATORS, formatCurrency } from '@/lib/employerMetrics';
 
-const zombieCategories = [
-  { 
-    benefit: 'Learning & Development', 
-    allocated: 300000, 
-    utilized: 150000, 
-    zombie: 150000,
-    utilizationRate: 50,
-    affectedEmployees: 45,
-    reason: 'Low awareness of available courses',
-    recommendation: 'Launch internal L&D campaign with featured courses'
-  },
-  { 
-    benefit: 'Wellbeing Program', 
-    allocated: 150000, 
-    utilized: 80000, 
-    zombie: 70000,
-    utilizationRate: 53.3,
-    affectedEmployees: 60,
-    reason: 'Complex redemption process',
-    recommendation: 'Simplify app-based wellness reward system'
-  },
-  { 
-    benefit: 'Annual Flight Tickets', 
-    allocated: 200000, 
-    utilized: 140000, 
-    zombie: 60000,
-    utilizationRate: 70,
-    affectedEmployees: 15,
-    reason: 'Unused by single employees without dependents',
-    recommendation: 'Allow conversion to travel vouchers'
-  },
-  { 
-    benefit: 'Gym Membership', 
-    allocated: 80000, 
-    utilized: 48000, 
-    zombie: 32000,
-    utilizationRate: 60,
-    affectedEmployees: 32,
-    reason: 'Limited partner gym locations',
-    recommendation: 'Expand gym network or offer home fitness alternatives'
-  },
-];
+// Use centralized waste data
+const zombieCategories = [...WASTE_BY_CATEGORY];
 
 const chartData = zombieCategories.map(c => ({
   name: c.benefit,
@@ -65,11 +26,7 @@ const chartData = zombieCategories.map(c => ({
   recommendation: c.recommendation,
 }));
 
-const riskIndicators = [
-  { label: 'High Risk', value: 2, description: '<60% utilization', color: 'text-red-500', bgColor: 'bg-red-500/10' },
-  { label: 'Medium Risk', value: 2, description: '60-75% utilization', color: 'text-amber-500', bgColor: 'bg-amber-500/10' },
-  { label: 'Healthy', value: 8, description: '>75% utilization', color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
-];
+const riskIndicators = [...WASTE_RISK_INDICATORS];
 
 // Custom legend component
 const CustomLegend = () => (
@@ -121,8 +78,8 @@ export default function ZombieSpendPage() {
       {/* Header */}
       <div>
         <div className="flex items-center gap-3">
-          <Ghost className="h-8 w-8 text-amber-500" />
-          <h1 className="text-2xl font-display font-bold text-foreground">Zombie Spend Analysis</h1>
+          <Recycle className="h-8 w-8 text-amber-500" />
+          <h1 className="text-2xl font-display font-bold text-foreground">Waste Recovery Analysis</h1>
         </div>
         <p className="text-muted-foreground mt-1">Identify and recover underutilized benefit allocations</p>
       </div>
@@ -131,10 +88,10 @@ export default function ZombieSpendPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <SummaryStatsCard
           variant="info"
-          label="Total Zombie Spend"
-          value={`AED ${(totalZombie / 1000).toFixed(0)}K`}
-          icon={Ghost}
-          formula="Sum of allocated but unused benefits across all categories with <75% utilization"
+          label="Total Waste Identified"
+          value={formatCurrency(totalZombie)}
+          icon={Recycle}
+          formula="Sum of allocated but unused benefits across all categories with <70% utilization"
           dataSource="Benefits Analytics"
           index={0}
         />
@@ -150,9 +107,9 @@ export default function ZombieSpendPage() {
         <SummaryStatsCard
           variant="remaining"
           label="Recovery Potential"
-          value={`AED ${(recoveryPotential / 1000).toFixed(0)}K`}
+          value={formatCurrency(recoveryPotential)}
           icon={TrendingDown}
-          formula="Estimated recoverable amount (60% of zombie spend based on industry benchmarks)"
+          formula="Estimated recoverable amount (60% of waste based on industry benchmarks)"
           dataSource="Analytics Model"
           index={2}
         />
