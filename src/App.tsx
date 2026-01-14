@@ -150,6 +150,7 @@ function AppRoutes() {
         <Route path="satisfaction" element={<SatisfactionPulsePage />} />
         <Route path="compliance" element={<ComplianceAuditPage />} />
         <Route path="knowledge" element={<KnowledgeCenterPage />} />
+        <Route path="metrics" element={<MetricsDictionaryPage />} />
       </Route>
       
       {/* Admin Routes - Platform owner only */}
@@ -164,6 +165,7 @@ function AppRoutes() {
         <Route path="settings" element={<AdminSettings />} />
         <Route path="ui-config" element={<AdminUIConfiguration />} />
         <Route path="data-migration" element={<AdminDataMigration />} />
+        <Route path="tenant-test" element={<AdminTenantIsolationTest />} />
       </Route>
       
       {/* Vendor Routes */}

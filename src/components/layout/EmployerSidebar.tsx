@@ -135,6 +135,12 @@ const strategicNavigation: NavGroup[] = [
         icon: Shield 
       },
       { 
+        labelKey: 'metrics_dictionary', 
+        label: { en: 'Metrics Dictionary', ar: 'قاموس المقاييس' },
+        path: '/employer/metrics', 
+        icon: BookOpen 
+      },
+      { 
         labelKey: 'knowledge', 
         label: { en: 'Knowledge Center', ar: 'مركز المعرفة' },
         path: '/employer/knowledge', 
