@@ -544,55 +544,38 @@ export default function ProfilePage() {
         </TabsContent>
 
         <TabsContent value="lifestyle" className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2"><PawPrint className="w-4 h-4 text-accent" />Pets</CardTitle>
-              <Button size="sm" variant="outline" onClick={addPet}><Plus className="w-4 h-4 mr-1" />Add Pet</Button>
+          {/* Life Stage - Important for Benefits Personalization */}
+          <Card className="border-accent/30 bg-accent/5">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Heart className="w-4 h-4 text-accent" />
+                Life Stage
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">This helps personalize your benefits recommendations</p>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {pets.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">No pets added yet. Click "Add Pet" to add your furry friends.</p>
-              ) : (
-                pets.map((pet, index) => (
-                  <div key={pet.id} className="p-4 border rounded-lg space-y-3 relative bg-muted/30">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-muted-foreground">Pet {index + 1}</span>
-                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => removePet(pet.id)}><Trash2 className="w-4 h-4" /></Button>
-                    </div>
-                    <div className="grid md:grid-cols-3 gap-3">
-                      <div className="space-y-1.5"><Label className="text-xs">Pet Name</Label><Input value={pet.name} onChange={(e) => updatePet(pet.id, 'name', e.target.value)} placeholder="Pet's name" /></div>
-                      <div className="space-y-1.5"><Label className="text-xs">Type</Label>
-                        <Select value={pet.type} onValueChange={(v) => updatePet(pet.id, 'type', v)}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Dog">Dog</SelectItem>
-                            <SelectItem value="Cat">Cat</SelectItem>
-                            <SelectItem value="Bird">Bird</SelectItem>
-                            <SelectItem value="Fish">Fish</SelectItem>
-                            <SelectItem value="Rabbit">Rabbit</SelectItem>
-                            <SelectItem value="Hamster">Hamster</SelectItem>
-                            <SelectItem value="Guinea Pig">Guinea Pig</SelectItem>
-                            <SelectItem value="Turtle">Turtle</SelectItem>
-                            <SelectItem value="Reptile">Reptile</SelectItem>
-                            <SelectItem value="Horse">Horse</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-1.5"><Label className="text-xs">Breed</Label><Input value={pet.breed} onChange={(e) => updatePet(pet.id, 'breed', e.target.value)} placeholder="Breed (optional)" /></div>
-                    </div>
-                  </div>
-                ))
-              )}
+            <CardContent>
+              <Select defaultValue="single">
+                <SelectTrigger className="w-full max-w-xs">
+                  <SelectValue placeholder="Select your life stage" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="single">Single</SelectItem>
+                  <SelectItem value="married">Married</SelectItem>
+                  <SelectItem value="married_kids">Married with Children</SelectItem>
+                  <SelectItem value="expecting">Expecting</SelectItem>
+                  <SelectItem value="caregiver">Caregiver (for parents/family)</SelectItem>
+                </SelectContent>
+              </Select>
             </CardContent>
           </Card>
 
+          {/* Interests - Collapsible */}
           <Card>
             <CardHeader><CardTitle className="text-base">Interests & Hobbies</CardTitle></CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">Select your interests to help us personalize marketplace recommendations. Click to toggle.</p>
-              <div className="flex flex-wrap gap-2">
-                {INTERESTS_OPTIONS.map(interest => (
+              <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto">
+                {INTERESTS_OPTIONS.slice(0, 30).map(interest => (
                   <Button 
                     key={interest} 
                     variant={selectedInterests.includes(interest) ? "default" : "outline"} 
@@ -611,6 +594,53 @@ export default function ProfilePage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Pets - Hidden by default, can be expanded */}
+          <details className="group">
+            <summary className="cursor-pointer p-4 bg-muted/30 rounded-lg flex items-center justify-between hover:bg-muted/50 transition-colors">
+              <span className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <PawPrint className="w-4 h-4" />
+                Pets (optional)
+              </span>
+              <span className="text-xs text-muted-foreground">{pets.length > 0 ? `${pets.length} pet(s)` : 'Click to expand'}</span>
+            </summary>
+            <Card className="mt-2">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2"><PawPrint className="w-4 h-4 text-accent" />Pets</CardTitle>
+                <Button size="sm" variant="outline" onClick={addPet}><Plus className="w-4 h-4 mr-1" />Add Pet</Button>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {pets.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">No pets added yet. Click "Add Pet" to add your furry friends.</p>
+                ) : (
+                  pets.map((pet, index) => (
+                    <div key={pet.id} className="p-4 border rounded-lg space-y-3 relative bg-muted/30">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-muted-foreground">Pet {index + 1}</span>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => removePet(pet.id)}><Trash2 className="w-4 h-4" /></Button>
+                      </div>
+                      <div className="grid md:grid-cols-3 gap-3">
+                        <div className="space-y-1.5"><Label className="text-xs">Pet Name</Label><Input value={pet.name} onChange={(e) => updatePet(pet.id, 'name', e.target.value)} placeholder="Pet's name" /></div>
+                        <div className="space-y-1.5"><Label className="text-xs">Type</Label>
+                          <Select value={pet.type} onValueChange={(v) => updatePet(pet.id, 'type', v)}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Dog">Dog</SelectItem>
+                              <SelectItem value="Cat">Cat</SelectItem>
+                              <SelectItem value="Bird">Bird</SelectItem>
+                              <SelectItem value="Fish">Fish</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5"><Label className="text-xs">Breed</Label><Input value={pet.breed} onChange={(e) => updatePet(pet.id, 'breed', e.target.value)} placeholder="Breed (optional)" /></div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </details>
         </TabsContent>
 
         <TabsContent value="security" className="space-y-6">

@@ -12,6 +12,11 @@ import {
   MessageSquare,
   Edit,
   Eye,
+  History,
+  Bell,
+  Download,
+  Send,
+  UserCheck,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,9 +26,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Policy Insights Data
+// Policy Insights Data with versioning and acknowledgement tracking
 const policyInsights = [
   {
     policy: 'Housing Allowance Policy',
@@ -32,6 +38,9 @@ const policyInsights = [
     suggestions: ['Clarify top-up eligibility', 'Add area-specific guidance'],
     lastUpdated: '2023-09-15',
     status: 'good',
+    version: '2.1',
+    acknowledgementRate: 94,
+    pendingAcknowledgements: 12,
   },
   {
     policy: 'Health Insurance Policy',
@@ -40,6 +49,9 @@ const policyInsights = [
     suggestions: ['Simplify pre-approval process', 'Add dental coverage FAQ', 'Clarify maternity benefits'],
     lastUpdated: '2023-06-20',
     status: 'warning',
+    version: '3.0',
+    acknowledgementRate: 88,
+    pendingAcknowledgements: 24,
   },
   {
     policy: 'Learning & Development Policy',
@@ -48,6 +60,9 @@ const policyInsights = [
     suggestions: ['Define eligible courses clearly', 'Simplify reimbursement process', 'Add budget calculator'],
     lastUpdated: '2022-11-10',
     status: 'critical',
+    version: '1.5',
+    acknowledgementRate: 65,
+    pendingAcknowledgements: 70,
   },
   {
     policy: 'Leave Policy',
@@ -56,6 +71,9 @@ const policyInsights = [
     suggestions: ['Add carry-forward rules clarity'],
     lastUpdated: '2024-01-01',
     status: 'good',
+    version: '4.0',
+    acknowledgementRate: 98,
+    pendingAcknowledgements: 4,
   },
   {
     policy: 'Wellbeing Program Policy',
@@ -64,6 +82,9 @@ const policyInsights = [
     suggestions: ['List all eligible activities', 'Simplify redemption', 'Add partner directory'],
     lastUpdated: '2023-03-15',
     status: 'warning',
+    version: '2.0',
+    acknowledgementRate: 76,
+    pendingAcknowledgements: 48,
   },
 ];
 
