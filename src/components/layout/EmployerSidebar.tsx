@@ -20,7 +20,6 @@ import {
   Eye,
   Settings2,
   TrendingUp,
-  Target,
   BarChart3,
   Shield,
   Activity,
@@ -59,7 +58,8 @@ interface NavGroup {
   operationalOnly?: boolean;
 }
 
-// Strategic View Navigation - For C-Suite/Leadership
+// Strategic View Navigation - For C-Suite/Board/Leadership
+// Sequence: Financial Overview → Workforce Insights → Governance (strategic flow)
 const strategicNavigation: NavGroup[] = [
   {
     titleKey: 'financial_intelligence',
@@ -108,7 +108,7 @@ const strategicNavigation: NavGroup[] = [
       },
       { 
         labelKey: 'recommendations', 
-        label: { en: 'AI Recommendations', ar: 'توصيات الذكاء الاصطناعي' },
+        label: { en: 'Smart Recommendations', ar: 'التوصيات الذكية' },
         path: '/employer/recommendations', 
         icon: Lightbulb,
         badge: 8,
@@ -146,6 +146,7 @@ const strategicNavigation: NavGroup[] = [
 ];
 
 // Operational View Navigation - For HR Teams
+// Sequence: Urgent Actions → Day-to-day Spend → Employee Data → Configuration (operational flow)
 const operationalNavigation: NavGroup[] = [
   {
     titleKey: 'action_queue',
@@ -213,7 +214,7 @@ const operationalNavigation: NavGroup[] = [
         icon: Lightbulb 
       },
     ],
-    defaultOpen: true,
+    defaultOpen: false,
   },
   {
     titleKey: 'configuration',
@@ -246,16 +247,6 @@ const operationalNavigation: NavGroup[] = [
       },
     ],
     defaultOpen: false,
-  },
-];
-
-// Shared items that appear in both views
-const sharedBottomItems: NavItem[] = [
-  { 
-    labelKey: 'marketplace', 
-    label: { en: 'Marketplace Analytics', ar: 'تحليلات السوق' },
-    path: '/employer/marketplace', 
-    icon: ShoppingBag 
   },
 ];
 
@@ -307,14 +298,6 @@ export function EmployerSidebar() {
 
   const ChevronCollapsed = isRTL ? ChevronLeft : ChevronRight;
 
-  // Program Health Score (mock - would come from API)
-  const programScore = 72;
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-emerald-500 bg-emerald-500/10';
-    if (score >= 60) return 'text-amber-500 bg-amber-500/10';
-    return 'text-red-500 bg-red-500/10';
-  };
-
   const sidebarContent = (
     <>
       {/* Logo & View Toggle */}
@@ -329,14 +312,6 @@ export function EmployerSidebar() {
               <span className="text-sidebar-background font-bold text-lg">b</span>
             </div>
             <span className="font-display text-xl font-bold text-sidebar-foreground">bnft.</span>
-          </div>
-          {/* Program Score Badge */}
-          <div className={cn(
-            "px-2 py-1 text-xs font-bold rounded-full flex items-center gap-1",
-            getScoreColor(programScore)
-          )}>
-            <Target className="w-3 h-3" />
-            <span>{programScore}</span>
           </div>
         </div>
 
@@ -399,28 +374,23 @@ export function EmployerSidebar() {
         "flex-1 overflow-y-auto py-4 px-3 space-y-1",
         isRTL && "text-right"
       )}>
-        {/* Dashboard Link - Always visible */}
+        {/* Dashboard - Heading Style Link */}
         <Link
           to="/employer"
           onClick={() => setMobileOpen(false)}
           className={cn(
-            'nav-item relative mb-4',
-            isActive('/employer') && 'nav-item-active',
+            'flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors font-semibold text-sm',
+            isActive('/employer') 
+              ? 'bg-sidebar-primary text-sidebar-primary-foreground' 
+              : 'text-sidebar-foreground hover:bg-sidebar-accent',
             isRTL && 'flex-row-reverse text-right'
           )}
         >
           <LayoutDashboard className="w-4 h-4 shrink-0" />
-          <span className={cn("text-sm flex-1 font-medium", isRTL && "text-right")}>
-            {isArabic ? 'لوحة التحكم' : 'Dashboard'}
-          </span>
-          {viewMode === 'strategic' && (
-            <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-primary/10 text-primary border-primary/20">
-              {isArabic ? 'تنفيذي' : 'Executive'}
-            </Badge>
-          )}
+          <span className="flex-1">{isArabic ? 'لوحة التحكم' : 'Dashboard'}</span>
         </Link>
 
-        <Separator className="my-2 bg-sidebar-border/50" />
+        <Separator className="my-3 bg-sidebar-border/50" />
 
         {/* Grouped Navigation */}
         <AnimatePresence mode="wait">
@@ -500,42 +470,39 @@ export function EmployerSidebar() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Shared Bottom Items */}
+        {/* Marketplace Analytics - Heading Style Link (both views) */}
         <div className="mt-4 pt-4 border-t border-sidebar-border/50">
-          {sharedBottomItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => setMobileOpen(false)}
-              className={cn(
-                'nav-item relative',
-                isActive(item.path) && 'nav-item-active',
-                isRTL && 'flex-row-reverse text-right'
-              )}
-            >
-              <item.icon className="w-4 h-4 shrink-0" />
-              <span className={cn("text-sm flex-1", isRTL && "text-right")}>
-                {isArabic ? item.label.ar : item.label.en}
-              </span>
-            </Link>
-          ))}
+          <Link
+            to="/employer/marketplace"
+            onClick={() => setMobileOpen(false)}
+            className={cn(
+              'flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors font-semibold text-sm',
+              isActive('/employer/marketplace') 
+                ? 'bg-sidebar-primary text-sidebar-primary-foreground' 
+                : 'text-sidebar-foreground hover:bg-sidebar-accent',
+              isRTL && 'flex-row-reverse text-right'
+            )}
+          >
+            <ShoppingBag className="w-4 h-4 shrink-0" />
+            <span className="flex-1">{isArabic ? 'تحليلات السوق' : 'Marketplace Analytics'}</span>
+          </Link>
         </div>
 
-        {/* Integrations - Only in Operational View or as subtle link in Strategic */}
-        {viewMode === 'strategic' && (
+        {/* Integrations - Only in Operational View as Heading Style */}
+        {viewMode === 'operational' && (
           <Link
             to="/employer/integrations"
             onClick={() => setMobileOpen(false)}
             className={cn(
-              'nav-item relative text-sidebar-foreground/50 hover:text-sidebar-foreground',
-              isActive('/employer/integrations') && 'nav-item-active',
+              'flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors font-semibold text-sm mt-1',
+              isActive('/employer/integrations') 
+                ? 'bg-sidebar-primary text-sidebar-primary-foreground' 
+                : 'text-sidebar-foreground hover:bg-sidebar-accent',
               isRTL && 'flex-row-reverse text-right'
             )}
           >
             <Settings className="w-4 h-4 shrink-0" />
-            <span className={cn("text-sm flex-1", isRTL && "text-right")}>
-              {isArabic ? 'التكاملات' : 'Integrations'}
-            </span>
+            <span className="flex-1">{isArabic ? 'التكاملات' : 'Integrations'}</span>
           </Link>
         )}
       </nav>
