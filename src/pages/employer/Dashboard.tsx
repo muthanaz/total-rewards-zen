@@ -8,7 +8,7 @@ import {
   Recycle, FileCheck, Target, ArrowRight, AlertTriangle, 
   CheckCircle2, Sparkles, Zap, Clock, ExternalLink,
   BarChart3, Shield, Activity, Eye, Lightbulb, Building2,
-  ArrowUpRight, ArrowDownRight, Gauge, PieChart
+  ArrowUpRight, ArrowDownRight, Gauge, PieChart, Calendar
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ChartContainer, AnimatedLineChart, ProgressBarList } from '@/components/charts';
@@ -18,6 +18,10 @@ import { cn } from '@/lib/utils';
 import { useEmployerViewMode } from '@/components/layout/EmployerSidebar';
 import { motion, AnimatePresence } from 'framer-motion';
 import chartColors from '@/lib/chartColors';
+import { MoneyFlowVisualization } from '@/components/employer/MoneyFlowVisualization';
+import { YearEndProjection } from '@/components/employer/YearEndProjection';
+import { AIInsightsPanel } from '@/components/employer/AIInsightsPanel';
+import { PeriodSelector } from '@/components/employer/PeriodSelector';
 
 // Dashboard metrics data
 const metrics = {
@@ -330,6 +334,27 @@ export default function EmployerDashboard() {
               })}
             </div>
 
+            {/* Money Flow + Year-End Projection */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <MoneyFlowVisualization
+                  allocated={metrics.annualBudget}
+                  utilized={metrics.budgetUsed}
+                  valueDelivered={52000000}
+                  wasteIdentified={metrics.wasteSpend}
+                  recoverableThisQuarter={metrics.wasteRecoveryPotential}
+                  employeeValuationNote={isArabic ? "بناءً على تقييمات الموظفين" : "Based on employee valuations"}
+                />
+              </div>
+              <YearEndProjection
+                currentSpend={metrics.budgetUsed}
+                budget={metrics.annualBudget}
+                projectedSpend={61200000}
+                currentUtilization={metrics.utilizationRate}
+                monthsRemaining={4}
+              />
+            </div>
+
             {/* Financial Health + Competitive Position */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Financial Health Summary */}
@@ -533,6 +558,41 @@ export default function EmployerDashboard() {
                 </Card>
               </div>
             )}
+
+            {/* AI Strategic Insights */}
+            <AIInsightsPanel
+              insights={[
+                {
+                  id: '1',
+                  text: isArabic 
+                    ? 'التطوير المهني يسجل استخدام 38% فقط. حملة تواصل مستهدفة يمكن أن توفر 2.8 مليون درهم سنوياً.'
+                    : 'L&D is at 38% utilization. A targeted communication campaign could save AED 2.8M annually.',
+                  impact: 'AED 2.8M/year',
+                  action: isArabic ? 'إطلاق حملة التعلم' : 'Launch L&D campaign',
+                  type: 'opportunity',
+                  category: isArabic ? 'التعليم' : 'Learning'
+                },
+                {
+                  id: '2',
+                  text: isArabic
+                    ? '45% من الموظفين لم يقدموا مطالبات رفاهية. تبسيط العملية سيزيد الاستخدام.'
+                    : '45% of employees haven\'t claimed wellbeing benefits. Simplifying the process could boost adoption.',
+                  impact: '+25% usage',
+                  action: isArabic ? 'تبسيط المطالبات' : 'Streamline claims',
+                  type: 'warning',
+                  category: isArabic ? 'الرفاهية' : 'Wellbeing'
+                },
+                {
+                  id: '3',
+                  text: isArabic
+                    ? 'رضا الموظفين عن المزايا الصحية أعلى بنسبة 15% من معيار الصناعة.'
+                    : 'Employee satisfaction with health benefits is 15% above industry benchmark.',
+                  type: 'info',
+                  category: isArabic ? 'الصحة' : 'Health'
+                }
+              ]}
+              lastUpdated={isArabic ? 'منذ ساعتين' : '2 hours ago'}
+            />
 
             {/* Utilization Snapshot */}
             {showUtilizationSnapshot && (

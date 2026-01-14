@@ -49,6 +49,10 @@ import MarketplaceAnalyticsPage from "./pages/employer/MarketplaceAnalytics";
 import PolicyHubPage from "./pages/employer/PolicyHub";
 import IntegrationsPage from "./pages/employer/Integrations";
 import RecommendationsPage from "./pages/employer/Recommendations";
+import ForecastingPage from "./pages/employer/Forecasting";
+import SatisfactionPulsePage from "./pages/employer/SatisfactionPulse";
+import ComplianceAuditPage from "./pages/employer/ComplianceAudit";
+import KnowledgeCenterPage from "./pages/employer/KnowledgeCenter";
 
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminBenchmarks from "./pages/admin/Benchmarks";
@@ -139,6 +143,10 @@ function AppRoutes() {
         <Route path="policies" element={<PolicyHubPage />} />
         <Route path="integrations" element={<IntegrationsPage />} />
         <Route path="recommendations" element={<RecommendationsPage />} />
+        <Route path="forecasting" element={<ForecastingPage />} />
+        <Route path="satisfaction" element={<SatisfactionPulsePage />} />
+        <Route path="compliance" element={<ComplianceAuditPage />} />
+        <Route path="knowledge" element={<KnowledgeCenterPage />} />
       </Route>
       
       {/* Admin Routes - Platform owner only */}

@@ -73,10 +73,18 @@ const strategicNavigation: NavGroup[] = [
         icon: BarChart3 
       },
       { 
+        labelKey: 'forecasting', 
+        label: { en: 'Forecasting', ar: 'التوقعات' },
+        path: '/employer/forecasting', 
+        icon: TrendingUp 
+      },
+      { 
         labelKey: 'waste_recovery', 
         label: { en: 'Waste Recovery', ar: 'استرداد الهدر' },
         path: '/employer/zombie', 
-        icon: Recycle 
+        icon: Recycle,
+        badge: 8,
+        badgeColor: 'amber'
       },
     ],
     defaultOpen: true,
@@ -93,10 +101,18 @@ const strategicNavigation: NavGroup[] = [
         icon: Users 
       },
       { 
+        labelKey: 'satisfaction', 
+        label: { en: 'Satisfaction Pulse', ar: 'نبض الرضا' },
+        path: '/employer/satisfaction', 
+        icon: Activity
+      },
+      { 
         labelKey: 'recommendations', 
         label: { en: 'AI Recommendations', ar: 'توصيات الذكاء الاصطناعي' },
         path: '/employer/recommendations', 
-        icon: Lightbulb 
+        icon: Lightbulb,
+        badge: 8,
+        badgeColor: 'primary'
       },
     ],
     defaultOpen: true,
@@ -110,6 +126,18 @@ const strategicNavigation: NavGroup[] = [
         labelKey: 'policy_hub', 
         label: { en: 'Policy Hub', ar: 'مركز السياسات' },
         path: '/employer/policies', 
+        icon: BookOpen 
+      },
+      { 
+        labelKey: 'compliance', 
+        label: { en: 'Compliance & Audit', ar: 'الامتثال والتدقيق' },
+        path: '/employer/compliance', 
+        icon: Shield 
+      },
+      { 
+        labelKey: 'knowledge', 
+        label: { en: 'Knowledge Center', ar: 'مركز المعرفة' },
+        path: '/employer/knowledge', 
         icon: BookOpen 
       },
     ],
@@ -147,6 +175,12 @@ const operationalNavigation: NavGroup[] = [
         icon: BarChart3 
       },
       { 
+        labelKey: 'forecasting', 
+        label: { en: 'Forecasting', ar: 'التوقعات' },
+        path: '/employer/forecasting', 
+        icon: TrendingUp 
+      },
+      { 
         labelKey: 'waste_recovery', 
         label: { en: 'Waste Recovery', ar: 'استرداد الهدر' },
         path: '/employer/zombie', 
@@ -165,6 +199,12 @@ const operationalNavigation: NavGroup[] = [
         label: { en: 'Employee Segments', ar: 'شرائح الموظفين' },
         path: '/employer/segments', 
         icon: Users 
+      },
+      { 
+        labelKey: 'satisfaction', 
+        label: { en: 'Satisfaction Pulse', ar: 'نبض الرضا' },
+        path: '/employer/satisfaction', 
+        icon: Activity
       },
       { 
         labelKey: 'recommendations', 
@@ -187,10 +227,22 @@ const operationalNavigation: NavGroup[] = [
         icon: BookOpen 
       },
       { 
+        labelKey: 'compliance', 
+        label: { en: 'Compliance & Audit', ar: 'الامتثال والتدقيق' },
+        path: '/employer/compliance', 
+        icon: Shield 
+      },
+      { 
         labelKey: 'integrations', 
         label: { en: 'Integrations', ar: 'التكاملات' },
         path: '/employer/integrations', 
         icon: Settings 
+      },
+      { 
+        labelKey: 'knowledge', 
+        label: { en: 'Knowledge Center', ar: 'مركز المعرفة' },
+        path: '/employer/knowledge', 
+        icon: BookOpen 
       },
     ],
     defaultOpen: false,
