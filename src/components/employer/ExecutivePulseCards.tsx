@@ -10,8 +10,7 @@ import {
   Activity, 
   ShieldAlert, 
   Smile,
-  Target,
-  Zap
+  Target
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 

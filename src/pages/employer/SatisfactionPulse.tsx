@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
@@ -13,7 +13,6 @@ import {
   Star,
   ThumbsUp,
   ThumbsDown,
-  AlertCircle,
   Download,
   Filter,
   Smile,
@@ -103,7 +102,7 @@ const recentFeedback = [
 export default function SatisfactionPulsePage() {
   const { direction } = useLanguage();
   const isRTL = direction === 'rtl';
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [_selectedCategory, _setSelectedCategory] = useState('all'); // Reserved for filter functionality
 
   const currentNPS = 56;
   const previousNPS = 48;

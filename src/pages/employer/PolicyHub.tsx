@@ -7,14 +7,11 @@ import {
   DollarSign,
   TrendingUp,
   BarChart3,
-  Target,
-  AlertTriangle,
   CheckCircle2,
   FileText,
   MessageSquare,
   Edit,
   Eye,
-  ExternalLink,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -134,7 +131,7 @@ const bestPractices = [
 ];
 
 export default function PolicyHubPage() {
-  const { t, direction } = useLanguage();
+  const { direction } = useLanguage();
   const isRTL = direction === 'rtl';
   const [searchQuery, setSearchQuery] = useState('');
 
