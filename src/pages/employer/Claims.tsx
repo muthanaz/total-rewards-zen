@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MetricTooltip } from '@/components/ui/metric-tooltip';
+import { PageHeader } from '@/components/ui/page-header';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 import { RequestTimeline } from '@/components/employer/RequestTimeline';
+import { usePagination } from '@/hooks/usePagination';
 import { useOrgRequests, useUpdateRequest, useRequestStats, type Request } from '@/hooks/useRequests';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
@@ -51,7 +54,8 @@ const typeConfig: Record<string, { label: string; labelAr: string; color: string
 };
 
 export default function ClaimsPage() {
-  const { language } = useLanguage();
+  const { language, direction } = useLanguage();
+  const isRTL = direction === 'rtl';
   const isArabic = language === 'ar';
   
   const { data: requests, isLoading, error } = useOrgRequests();
@@ -66,16 +70,22 @@ export default function ClaimsPage() {
   const [internalNotes, setInternalNotes] = useState('');
   const [dialogTab, setDialogTab] = useState<'details' | 'timeline'>('details');
 
-  const filteredRequests = requests?.filter(req => {
-    const employeeName = `${req.profile?.first_name || ''} ${req.profile?.last_name || ''}`.toLowerCase();
-    const matchesSearch = 
-      employeeName.includes(searchQuery.toLowerCase()) ||
-      req.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      req.category.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || req.status === statusFilter;
-    const matchesType = typeFilter === 'all' || req.request_type === typeFilter;
-    return matchesSearch && matchesStatus && matchesType;
-  }) || [];
+  // Filter requests first
+  const filteredRequests = useMemo(() => {
+    return (requests || []).filter(req => {
+      const employeeName = `${req.profile?.first_name || ''} ${req.profile?.last_name || ''}`.toLowerCase();
+      const matchesSearch = 
+        employeeName.includes(searchQuery.toLowerCase()) ||
+        req.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        req.category.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || req.status === statusFilter;
+      const matchesType = typeFilter === 'all' || req.request_type === typeFilter;
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }, [requests, searchQuery, statusFilter, typeFilter]);
+
+  // Apply pagination to filtered requests
+  const pagination = usePagination(filteredRequests, { initialPageSize: 10 });
 
   const handleAction = async (action: 'approved' | 'rejected' | 'in_review' | 'paid') => {
     if (!selectedRequest) return;
@@ -145,15 +155,12 @@ export default function ClaimsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground">
-          {isArabic ? 'المطالبات والموافقات' : 'Claims & Approvals'}
-        </h1>
-        <p className="text-muted-foreground">
-          {isArabic ? 'مراجعة وإدارة طلبات ومطالبات الموظفين' : 'Review and manage employee requests and claims'}
-        </p>
-      </div>
+      {/* Page Header */}
+      <PageHeader
+        title={isArabic ? 'المطالبات والموافقات' : 'Claims & Approvals'}
+        subtitle={isArabic ? 'مراجعة وإدارة طلبات ومطالبات الموظفين' : 'Review and manage employee requests and claims'}
+        icon={ClipboardCheck}
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -364,7 +371,7 @@ export default function ClaimsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredRequests.map((request) => (
+                  {pagination.currentData.map((request) => (
                     <tr key={request.id} className="border-b border-border/50 hover:bg-muted/30">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
@@ -417,6 +424,26 @@ export default function ClaimsPage() {
                   <ClipboardCheck className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>{isArabic ? 'لم يتم العثور على طلبات مطابقة للفلاتر.' : 'No requests found matching your filters.'}</p>
                 </div>
+              )}
+              {/* Pagination Controls */}
+              {filteredRequests.length > 0 && (
+                <PaginationControls
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.totalPages}
+                  pageSize={pagination.pageSize}
+                  totalItems={pagination.totalItems}
+                  startIndex={pagination.startIndex}
+                  endIndex={pagination.endIndex}
+                  pageSizeOptions={pagination.pageSizeOptions}
+                  hasNextPage={pagination.hasNextPage}
+                  hasPrevPage={pagination.hasPrevPage}
+                  onPageChange={pagination.goToPage}
+                  onPageSizeChange={pagination.setPageSize}
+                  onNextPage={pagination.nextPage}
+                  onPrevPage={pagination.prevPage}
+                  onFirstPage={pagination.goToFirstPage}
+                  onLastPage={pagination.goToLastPage}
+                />
               )}
             </div>
           )}

@@ -3,7 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { BenefitGuide } from '@/components/employee/BenefitGuide';
+import { PageHeader } from '@/components/ui/page-header';
 import { Dumbbell, Heart, Brain, Leaf, CheckCircle, ExternalLink, Wallet, TrendingDown, Percent } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 
 const ANNUAL_VALUE = 6000;
 const UTILIZED = 3200;
@@ -44,6 +47,10 @@ const programs = [
 ];
 
 export default function WellbeingPage() {
+  const { language, direction } = useLanguage();
+  const isRTL = direction === 'rtl';
+  const isArabic = language === 'ar';
+  
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
   const remaining = ANNUAL_VALUE - UTILIZED;
   const utilizationPercent = Math.round((UTILIZED / ANNUAL_VALUE) * 100);
@@ -75,17 +82,15 @@ export default function WellbeingPage() {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className={cn("space-y-6 animate-fade-in", isRTL && "text-right")}>
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-          <Dumbbell className="w-7 h-7 text-accent" />
-          Wellbeing Program
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Your health and wellness benefits for mind and body
-        </p>
-      </div>
+      <PageHeader
+        title={isArabic ? 'برنامج العافية' : 'Wellbeing Program'}
+        titleAr="برنامج العافية"
+        subtitle={isArabic ? 'مزايا الصحة والعافية لعقلك وجسمك' : 'Your health and wellness benefits for mind and body'}
+        subtitleAr="مزايا الصحة والعافية لعقلك وجسمك"
+        icon={Dumbbell}
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

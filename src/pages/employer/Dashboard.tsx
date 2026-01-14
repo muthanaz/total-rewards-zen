@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MoneyFlowVisualization } from '@/components/employer/MoneyFlowVisualization';
 import { YearEndProjection } from '@/components/employer/YearEndProjection';
 import { AIInsightsPanel } from '@/components/employer/AIInsightsPanel';
+import { ConfidenceGate, ConfidenceBadge, type ConfidenceLevel } from '@/components/employer/ConfidenceGate';
 import { 
   useEmployerDashboardMetrics, 
   useBenefitUtilizationStats,
