@@ -1,26 +1,22 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { 
   DollarSign, Home, GraduationCap, 
-  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote, AlertCircle, CheckCircle2, Clock, Landmark, TrendingUp
+  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote, AlertCircle, CheckCircle2, Clock, Landmark, TrendingUp, Calendar, Zap, ArrowRight, ArrowLeft, FileText, AlertTriangle, Sparkles
 } from 'lucide-react';
-import { BENEFIT_TYPE_COLORS } from '@/lib/constants';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
-import { BenefitActionButtons } from '@/components/employee/BenefitActionButtons';
-import { BenefitsDrillDownSheet, SmartInsights } from '@/components/dashboard';
-import { NextActionsPanel } from '@/components/employee/NextActionsPanel';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { CompensationGrid } from '@/components/ui/compensation-summary-card';
-import { BenefitsUtilizationCard } from '@/components/ui/benefits-utilization-card';
 import { useUIVisibility } from '@/contexts/UIVisibilityContext';
 import { usePrivacy } from '@/components/ui/privacy-toggle';
 import { cn } from '@/lib/utils';
 import { CompensationBreakdownModal } from '@/components/employee/CompensationBreakdownModal';
 import { PageHeader } from '@/components/ui/page-header';
+import { ConfidenceGate } from '@/components/employer/ConfidenceGate';
+import { motion } from 'framer-motion';
 
 // Demo data - core salary info
 const salaryData = {
@@ -31,365 +27,457 @@ const salaryData = {
   activatedItems: 7,
 };
 
-// Value types: 
-// - guaranteed: Fixed cash paid regardless (Housing, Transport, Education)
-// - employer_cost: Non-cash value paid by employer (Health Insurance premium)
-// - performance: Variable based on performance (Annual Bonus)
-// - budget: Use-it-or-lose-it allocations (Learning, Wellbeing, Financial)
 type BenefitValueType = 'guaranteed' | 'employer_cost' | 'performance' | 'budget';
 
 const benefits = [
-  { name: 'Housing Allowance', nameKey: 'benefit.housing', icon: Home, value: 120000, utilized: 120000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'home_living', route: '/employee/housing', category: 'housing', claimable: true, bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'], bulletsAr: ['يُدفع شهرياً مع الراتب', 'يمكن استخدامه للإيجار أو الرهن العقاري'] },
-  { name: 'Education Allowance', nameKey: 'benefit.education', icon: GraduationCap, value: 60000, utilized: 42000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'family_parenting', route: '/employee/schooling', category: 'education', claimable: true, bullets: ['Per child up to 18 years', 'Covers tuition fees only'], bulletsAr: ['لكل طفل حتى ١٨ عاماً', 'يغطي الرسوم الدراسية فقط'] },
-  { name: 'Health Insurance', nameKey: 'benefit.health', icon: Heart, value: 45000, utilized: 12500, type: 'health_protection', valueType: 'employer_cost' as BenefitValueType, area: 'health', route: '/employee/health', category: 'health', claimable: true, bullets: ['Includes dental and optical', 'Covers spouse and children'], bulletsAr: ['يشمل طب الأسنان والبصريات', 'يغطي الزوج/الزوجة والأطفال'] },
-  { name: 'Transport & Mobility', nameKey: 'benefit.transport', icon: Car, value: 39000, utilized: 33000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'mobility', route: '/employee/transport', category: 'transport', claimable: true, bullets: ['Monthly allowance: AED 2,000', 'Annual flight tickets included', 'Covers fuel, parking & tickets'], bulletsAr: ['بدل شهري: ٢٠٠٠ درهم', 'تذاكر الطيران السنوية مشمولة', 'يغطي الوقود والمواقف والتذاكر'] },
-  { name: 'Annual Bonus', nameKey: 'benefit.bonus', icon: Gift, value: 70000, utilized: 0, type: 'cash_allowances', valueType: 'performance' as BenefitValueType, area: 'money', route: '/employee/bonus', category: 'rewards', claimable: false, bullets: ['Performance-based (0-200%)', 'Paid annually in March', 'Target: 2 months base salary'], bulletsAr: ['مبني على الأداء (٠-٢٠٠٪)', 'يُدفع سنوياً في مارس', 'الهدف: راتب شهرين أساسي'] },
-  { name: 'Financial Planning', nameKey: 'benefit.financial', icon: PiggyBank, value: 36000, utilized: 18000, type: 'wealth_ownership', valueType: 'budget' as BenefitValueType, area: 'money', route: '/employee/financial', category: 'financial', claimable: false, bullets: ['5% employer match', 'Multiple fund options'], bulletsAr: ['مطابقة ٥٪ من صاحب العمل', 'خيارات صناديق متعددة'] },
-  { name: 'Wellbeing Program', nameKey: 'benefit.wellbeing', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', valueType: 'budget' as BenefitValueType, area: 'health', route: '/employee/wellbeing', category: 'wellbeing', claimable: true, bullets: ['Gym membership covered', 'Wellness app subscription'], bulletsAr: ['عضوية النادي الرياضي مغطاة', 'اشتراك تطبيق العافية'] },
-  { name: 'Learning & Development', nameKey: 'benefit.learning', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', valueType: 'budget' as BenefitValueType, area: 'career', route: '/employee/learning', category: 'learning', claimable: true, bullets: ['Courses and certifications', 'Pre-approval required'], bulletsAr: ['الدورات والشهادات', 'يتطلب موافقة مسبقة'] },
-  { name: 'End of Service Gratuity', nameKey: 'benefit.gratuity', icon: Landmark, value: 102083, utilized: 102083, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'money', route: '/employee/gratuity', category: 'gratuity', claimable: false, bullets: ['UAE Labor Law entitlement', 'Paid on end of service'], bulletsAr: ['استحقاق قانون العمل الإماراتي', 'يُدفع عند نهاية الخدمة'] },
-  { name: 'Equity & Options', nameKey: 'benefit.equity', icon: TrendingUp, value: 85000, utilized: 42500, type: 'wealth_ownership', valueType: 'performance' as BenefitValueType, area: 'money', route: '/employee/equity', category: 'equity', claimable: false, bullets: ['Stock options vest over 4 years', 'RSUs granted annually'], bulletsAr: ['خيارات الأسهم تستحق على مدى ٤ سنوات', 'وحدات الأسهم المقيدة تُمنح سنوياً'] },
+  { name: 'Housing Allowance', nameAr: 'بدل السكن', icon: Home, value: 120000, utilized: 120000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, route: '/employee/housing', category: 'housing', deadline: null },
+  { name: 'Education Allowance', nameAr: 'بدل التعليم', icon: GraduationCap, value: 60000, utilized: 42000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, route: '/employee/schooling', category: 'education', deadline: null },
+  { name: 'Health Insurance', nameAr: 'التأمين الصحي', icon: Heart, value: 45000, utilized: 12500, type: 'health_protection', valueType: 'employer_cost' as BenefitValueType, route: '/employee/health', category: 'health', deadline: null },
+  { name: 'Transport & Mobility', nameAr: 'النقل والتنقل', icon: Car, value: 39000, utilized: 33000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, route: '/employee/transport', category: 'transport', deadline: null },
+  { name: 'Annual Bonus', nameAr: 'المكافأة السنوية', icon: Gift, value: 70000, utilized: 0, type: 'cash_allowances', valueType: 'performance' as BenefitValueType, route: '/employee/bonus', category: 'rewards', deadline: '2025-03-31' },
+  { name: 'Savings Plan', nameAr: 'خطة الادخار', icon: PiggyBank, value: 36000, utilized: 18000, type: 'wealth_ownership', valueType: 'budget' as BenefitValueType, route: '/employee/financial', category: 'financial', deadline: null },
+  { name: 'Wellbeing Budget', nameAr: 'ميزانية العافية', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', valueType: 'budget' as BenefitValueType, route: '/employee/wellbeing', category: 'wellbeing', deadline: '2025-12-31' },
+  { name: 'Learning Budget', nameAr: 'ميزانية التعلم', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', valueType: 'budget' as BenefitValueType, route: '/employee/learning', category: 'learning', deadline: '2025-12-31' },
+  { name: 'End of Service', nameAr: 'مكافأة نهاية الخدمة', icon: Landmark, value: 102083, utilized: 102083, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, route: '/employee/gratuity', category: 'gratuity', deadline: null },
+  { name: 'Equity & Options', nameAr: 'الأسهم والخيارات', icon: TrendingUp, value: 85000, utilized: 42500, type: 'wealth_ownership', valueType: 'performance' as BenefitValueType, route: '/employee/equity', category: 'equity', deadline: '2025-06-30' },
+];
+
+// Demo pending requests
+const pendingRequests = [
+  { id: '1', subject: 'Medical Reimbursement', status: 'in_review', amount: 1250, created_at: '2025-01-10' },
+  { id: '2', subject: 'Education Fee Claim', status: 'pending', amount: 8500, created_at: '2025-01-08' },
+];
+
+// Demo marketplace offers expiring
+const expiringOffers = [
+  { id: '1', title: 'Gym Membership - 40% off', merchant: 'Fitness First', expires: '2025-01-20' },
 ];
 
 export default function EmployeeDashboard() {
   const navigate = useNavigate();
-  const { t, language, direction } = useLanguage();
+  const { language, direction } = useLanguage();
   const { isElementVisible } = useUIVisibility();
   const { salaryHidden, toggleSalaryVisibility } = usePrivacy();
   const isRTL = direction === 'rtl';
-  const [benefitsSheetOpen, setBenefitsSheetOpen] = useState(false);
-  const [benefitsSheetCategory, setBenefitsSheetCategory] = useState<'fully-utilized' | 'room-to-use' | null>(null);
+  const isArabic = language === 'ar';
   const [compensationModalOpen, setCompensationModalOpen] = useState(false);
   
-  // Check visibility for each section
-  const showCompensationSummary = isElementVisible('employee', 'dashboard', 'compensation_summary');
-  const showYourBenefits = isElementVisible('employee', 'dashboard', 'your_benefits');
   const showSatisfactionSurvey = isElementVisible('employee', 'dashboard', 'satisfaction_survey');
   
-  // Calculate derived metrics from actual benefit data
-  const calculatedMetrics = useMemo(() => {
-    // Guaranteed benefits = Fixed cash allowances paid regardless
-    const guaranteedBenefitValue = benefits
+  // Calculate metrics
+  const metrics = useMemo(() => {
+    const totalValue = benefits.reduce((sum, b) => sum + b.value, 0);
+    const totalUtilized = benefits.reduce((sum, b) => sum + b.utilized, 0);
+    const unusedValue = totalValue - totalUtilized;
+    
+    // Core benefits = guaranteed cash allowances
+    const coreBenefits = benefits
       .filter(b => b.valueType === 'guaranteed')
       .reduce((sum, b) => sum + b.value, 0);
     
-    // Potential/variable benefits = Employer cost, performance, and budget-based
-    const potentialBenefitValue = benefits
-      .filter(b => b.valueType !== 'guaranteed')
-      .reduce((sum, b) => sum + b.value, 0);
+    // Claimable remaining = budgets with remaining value
+    const claimableRemaining = benefits
+      .filter(b => b.valueType === 'budget')
+      .reduce((sum, b) => sum + (b.value - b.utilized), 0);
     
-    const totalBenefitValue = benefits.reduce((sum, b) => sum + b.value, 0);
-    const totalUtilized = benefits.reduce((sum, b) => sum + b.utilized, 0);
-    const totalRemaining = totalBenefitValue - totalUtilized;
-    const utilizationPercent = Math.round((totalUtilized / totalBenefitValue) * 100);
-    const fullyUtilizedCount = benefits.filter(b => (b.utilized / b.value) >= 1).length;
-    const underutilizedCount = benefits.filter(b => (b.utilized / b.value) < 0.5).length;
-    const avgUtilizationPerBenefit = Math.round(totalUtilized / benefits.length);
-    
-    // Total guaranteed compensation = salary + guaranteed benefits only
-    const guaranteedCompensation = salaryData.annualSalary + guaranteedBenefitValue;
-    // Potential total = salary + all benefits
-    const potentialCompensation = salaryData.annualSalary + totalBenefitValue;
-    
-    // For display, show guaranteed values as the primary metrics
-    const guaranteedBenefitsAsPercentOfComp = Math.round((guaranteedBenefitValue / guaranteedCompensation) * 100);
-    const salaryAsPercentOfGuaranteed = Math.round((salaryData.annualSalary / guaranteedCompensation) * 100);
-    
-    // Trend data (demo - comparing to last month)
-    const lastMonthUtilized = totalUtilized * 0.92; // Demo: 8% growth
-    const lastMonthUtilizationPercent = 52; // Demo value
+    const utilizationPercent = Math.round((totalUtilized / totalValue) * 100);
     
     return {
-      guaranteedBenefitValue,
-      potentialBenefitValue,
-      totalBenefitValue,
+      totalValue,
       totalUtilized,
-      totalRemaining,
+      unusedValue,
+      coreBenefits,
+      claimableRemaining,
       utilizationPercent,
-      fullyUtilizedCount,
-      underutilizedCount,
-      guaranteedCompensation,
-      potentialCompensation,
-      guaranteedBenefitsAsPercentOfComp,
-      salaryAsPercentOfGuaranteed,
-      avgUtilizationPerBenefit,
-      lastMonthUtilized,
-      lastMonthUtilizationPercent
+      totalCompensation: salaryData.annualSalary + coreBenefits,
     };
   }, []);
 
+  // Get prioritized actions for Benefits Maximizer
+  const prioritizedActions = useMemo(() => {
+    const now = new Date();
+    const actions: Array<{
+      id: string;
+      title: string;
+      titleAr: string;
+      value: number;
+      route: string;
+      icon: React.ElementType;
+      urgency: 'high' | 'medium' | 'low';
+      reason: string;
+      reasonAr: string;
+    }> = [];
+
+    // Find underutilized benefits
+    benefits.forEach(b => {
+      const remaining = b.value - b.utilized;
+      const utilization = (b.utilized / b.value) * 100;
+      
+      if (remaining > 0 && utilization < 80 && b.valueType === 'budget') {
+        const hasDeadline = b.deadline && new Date(b.deadline) > now;
+        const daysToDeadline = b.deadline ? Math.ceil((new Date(b.deadline).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
+        
+        actions.push({
+          id: b.category,
+          title: `Use your ${b.name}`,
+          titleAr: `استخدم ${b.nameAr}`,
+          value: remaining,
+          route: b.route,
+          icon: b.icon,
+          urgency: daysToDeadline && daysToDeadline < 60 ? 'high' : utilization < 30 ? 'medium' : 'low',
+          reason: daysToDeadline ? `${daysToDeadline} days left` : `${Math.round(100 - utilization)}% unused`,
+          reasonAr: daysToDeadline ? `${daysToDeadline} يوم متبقي` : `${Math.round(100 - utilization)}% غير مستخدم`,
+        });
+      }
+    });
+
+    return actions.sort((a, b) => {
+      const urgencyOrder = { high: 0, medium: 1, low: 2 };
+      return urgencyOrder[a.urgency] - urgencyOrder[b.urgency];
+    }).slice(0, 3);
+  }, []);
+
+  // Get upcoming deadlines
+  const upcomingDeadlines = useMemo(() => {
+    const items: Array<{
+      id: string;
+      title: string;
+      titleAr: string;
+      type: 'claim' | 'offer' | 'benefit' | 'document';
+      date: string;
+      route: string;
+      icon: React.ElementType;
+      cta: string;
+      ctaAr: string;
+    }> = [];
+
+    // Pending claims
+    pendingRequests.forEach(req => {
+      items.push({
+        id: `claim-${req.id}`,
+        title: req.subject,
+        titleAr: req.subject,
+        type: 'claim',
+        date: req.created_at,
+        route: '/employee/documents',
+        icon: FileText,
+        cta: 'Track',
+        ctaAr: 'تتبع',
+      });
+    });
+
+    // Expiring offers
+    expiringOffers.forEach(offer => {
+      items.push({
+        id: `offer-${offer.id}`,
+        title: offer.title,
+        titleAr: offer.title,
+        type: 'offer',
+        date: offer.expires,
+        route: '/employee/marketplace',
+        icon: Gift,
+        cta: 'Claim',
+        ctaAr: 'احصل عليه',
+      });
+    });
+
+    // Benefits with deadlines
+    benefits.filter(b => b.deadline && b.utilized < b.value).forEach(b => {
+      items.push({
+        id: `benefit-${b.category}`,
+        title: `${b.name} expires`,
+        titleAr: `${b.nameAr} ينتهي`,
+        type: 'benefit',
+        date: b.deadline!,
+        route: b.route,
+        icon: Calendar,
+        cta: 'Use',
+        ctaAr: 'استخدم',
+      });
+    });
+
+    return items.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(0, 4);
+  }, []);
+
   const formatCurrency = (value: number) => `${isRTL ? '' : 'AED '}${value.toLocaleString(isRTL ? 'ar-AE' : 'en-AE')}${isRTL ? ' درهم' : ''}`;
-  const formatCurrencyHidden = (value: number) => salaryHidden ? '•••,•••' : formatCurrency(value);
-  const formatCurrencyShort = (value: number) => `${(value / 1000).toFixed(0)}${isRTL ? 'ألف' : 'K'}`;
+  const formatHidden = () => salaryHidden ? '•••,•••' : null;
 
-
+  const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
   const ChevronIcon = isRTL ? ChevronLeft : ChevronRight;
 
-  const handleBenefitClick = (benefitName: string) => {
-    const benefit = benefits.find(b => b.name === benefitName);
-    if (benefit?.route) {
-      navigate(benefit.route);
-    }
-  };
-
-  const handleHighlightClick = (category: 'fully-utilized' | 'room-to-use') => {
-    setBenefitsSheetCategory(category);
-    setBenefitsSheetOpen(true);
-  };
-
-  // Helper to get utilization status badge
-  const getUtilizationBadge = (utilization: number) => {
-    if (utilization >= 100) {
-      return (
-        <Badge className="bg-emerald-500/10 text-emerald-600 border-0 text-[9px] px-1.5 py-0 gap-0.5">
-          <CheckCircle2 className="w-2.5 h-2.5" />
-          {isRTL ? 'مكتمل' : 'Complete'}
-        </Badge>
-      );
-    }
-    if (utilization < 30) {
-      return (
-        <Badge className="bg-amber-500/10 text-amber-600 border-0 text-[9px] px-1.5 py-0 gap-0.5">
-          <AlertCircle className="w-2.5 h-2.5" />
-          {isRTL ? 'فرصة' : 'Opportunity'}
-        </Badge>
-      );
-    }
-    if (utilization < 70) {
-      return (
-        <Badge className="bg-blue-500/10 text-blue-600 border-0 text-[9px] px-1.5 py-0 gap-0.5">
-          <Clock className="w-2.5 h-2.5" />
-          {isRTL ? 'قيد الاستخدام' : 'In Progress'}
-        </Badge>
-      );
-    }
-    return null;
-  };
-
-  // 4 Key Metrics with info tooltips - Now showing guaranteed values prominently
-  const hiddenValue = `${isRTL ? '' : 'AED '}•••,•••${isRTL ? ' درهم' : ''}`;
-  const keyMetrics = [
-    { 
-      icon: Banknote, 
-      value: salaryHidden ? hiddenValue : formatCurrency(salaryData.monthlySalary), 
-      label: isRTL ? 'الراتب الشهري' : 'Monthly Salary',
-      formula: isRTL ? 'الراتب الأساسي الشهري قبل الخصومات' : 'Base monthly salary before deductions',
-      dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR Payroll System',
-      variant: 'primary' as const,
-      isSensitive: true,
-    },
-    { 
-      icon: DollarSign, 
-      value: salaryHidden ? hiddenValue : formatCurrency(salaryData.annualSalary), 
-      label: isRTL ? 'الراتب السنوي' : 'Annual Salary',
-      formula: isRTL ? 'الراتب الشهري × ١٢ شهر' : 'Monthly Salary × 12 months',
-      dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR Payroll System',
-      variant: 'primary' as const,
-      isSensitive: true,
-    },
-    { 
-      icon: Gift, 
-      value: salaryHidden ? hiddenValue : formatCurrency(calculatedMetrics.guaranteedBenefitValue), 
-      label: isRTL ? 'المزايا المضمونة' : 'Guaranteed Benefits',
-      formula: isRTL 
-        ? `البدلات النقدية المضمونة (السكن + التعليم + النقل) = ${formatCurrency(calculatedMetrics.guaranteedBenefitValue)}. لا تشمل: المكافآت والميزانيات المتغيرة`
-        : `Fixed cash allowances (Housing + Education + Transport) = ${formatCurrency(calculatedMetrics.guaranteedBenefitValue)}. Excludes: bonuses and variable budgets`,
-      dataSource: isRTL ? 'نظام المزايا - مضمون' : 'Benefits System - Guaranteed',
-      variant: 'benefits' as const,
-      isSensitive: true,
-      subtitle: salaryHidden ? undefined : (isRTL 
-        ? `حتى ${formatCurrencyShort(calculatedMetrics.totalBenefitValue)} شاملة المتغيرة`
-        : `Up to ${formatCurrencyShort(calculatedMetrics.totalBenefitValue)} incl. variable`),
-    },
-    { 
-      icon: Wallet, 
-      value: salaryHidden ? '••%' : `${calculatedMetrics.guaranteedBenefitsAsPercentOfComp}%`, 
-      label: isRTL ? 'المزايا من التعويضات' : 'Benefits % of Package',
-      formula: isRTL 
-        ? `(المزايا المضمونة ÷ إجمالي التعويضات المضمونة) × ١٠٠ = (${formatCurrency(calculatedMetrics.guaranteedBenefitValue)} ÷ ${formatCurrency(calculatedMetrics.guaranteedCompensation)}) × 100`
-        : `(Guaranteed Benefits ÷ Guaranteed Compensation) × 100 = (${formatCurrency(calculatedMetrics.guaranteedBenefitValue)} ÷ ${formatCurrency(calculatedMetrics.guaranteedCompensation)}) × 100`,
-      dataSource: isRTL ? 'محسوب - مضمون فقط' : 'Calculated - Guaranteed only',
-      variant: 'benefits' as const,
-      isSensitive: true,
-    },
-  ];
-
-  const totalCompensationData = {
-    value: salaryHidden ? `${isRTL ? '' : 'AED '}•••,•••${isRTL ? ' درهم' : ''}` : formatCurrency(calculatedMetrics.guaranteedCompensation),
-    formula: isRTL 
-      ? `الراتب السنوي (${formatCurrency(salaryData.annualSalary)}) + المزايا المضمونة (${formatCurrency(calculatedMetrics.guaranteedBenefitValue)}) = ${formatCurrency(calculatedMetrics.guaranteedCompensation)}`
-      : `Annual Salary (${formatCurrency(salaryData.annualSalary)}) + Guaranteed Benefits (${formatCurrency(calculatedMetrics.guaranteedBenefitValue)}) = ${formatCurrency(calculatedMetrics.guaranteedCompensation)}`,
-    dataSource: isRTL ? 'الراتب السنوي + المزايا المضمونة' : 'Annual Salary + Guaranteed Benefits',
-    subtitle: salaryHidden ? undefined : (isRTL 
-      ? `الإجمالي المحتمل: ${formatCurrency(calculatedMetrics.potentialCompensation)} شاملة المتغيرة`
-      : `Potential total: ${formatCurrency(calculatedMetrics.potentialCompensation)} incl. variable`),
-    salaryHidden,
-    onTogglePrivacy: toggleSalaryVisibility,
-    salaryPercent: calculatedMetrics.salaryAsPercentOfGuaranteed,
-    benefitsPercent: calculatedMetrics.guaranteedBenefitsAsPercentOfComp,
-    onCardClick: () => setCompensationModalOpen(true),
-  };
-
-  const utilizationData = {
-    used: formatCurrency(calculatedMetrics.totalUtilized),
-    usedPercent: calculatedMetrics.utilizationPercent,
-    remaining: formatCurrency(calculatedMetrics.totalRemaining),
-    remainingPercent: 100 - calculatedMetrics.utilizationPercent,
-    formula: isRTL ? 'إجمالي المزايا المستخدمة من القيمة السنوية' : 'Total benefits claimed from annual value',
-    dataSource: isRTL ? 'نظام المطالبات' : 'Claims System',
-  };
-  
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* Page Header */}
       <PageHeader
-        title={t('employee.dashboard.title')}
-        subtitle={t('employee.dashboard.subtitle')}
+        title={isArabic ? 'مرحباً بك' : 'Welcome back'}
+        subtitle={isArabic ? 'إليك ما يمكنك فعله اليوم' : "Here's what you can do today"}
       />
 
-      {/* Next Actions - Action-based guidance */}
-      <NextActionsPanel
-        benefits={benefits.map(b => ({
-          name: b.name,
-          value: b.value,
-          utilized: b.utilized,
-          route: b.route,
-          category: b.category,
-        }))}
-        leaveBalance={{ used: salaryData.leaveUsed, total: salaryData.leaveBalance }}
-      />
-
-      {/* Compensation Summary Grid */}
-      {showCompensationSummary && (
-        <div>
-          <h2 className={cn("text-base font-display font-semibold mb-3", isRTL && "text-right")}>
-            {isRTL ? 'ملخص التعويضات' : 'Compensation Summary'}
-          </h2>
-          <CompensationGrid 
-            metrics={keyMetrics}
-            totalCompensation={totalCompensationData}
-            isRTL={isRTL}
-          />
-        </div>
-      )}
-
-      {/* Benefits Grid - Your Benefits */}
-      {showYourBenefits && (
-        <div>
-          <div className={cn("flex items-center justify-between mb-3", isRTL && "flex-row-reverse")}>
-            <h2 className="text-base font-display font-semibold">{t('employee.dashboard.yourBenefits')}</h2>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className={cn("text-accent hover:text-accent/80 h-7 text-xs", isRTL && "flex-row-reverse")}
-              onClick={() => navigate('/employee/benefits')}
-            >
-              {t('common.seeAll')}
-              <ChevronIcon className={cn("w-3 h-3", isRTL ? "mr-1" : "ml-1")} />
-            </Button>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
-            {benefits.map((benefit, index) => {
-              const utilization = Math.round((benefit.utilized / benefit.value) * 100);
-              const remaining = benefit.value - benefit.utilized;
-              const isFullyUsed = utilization >= 100;
-              
-              return (
-                <Card 
-                  key={benefit.name} 
-                  className="benefit-card group cursor-pointer hover:border-accent/40 hover:shadow-sm transition-all duration-200 flex flex-col p-2.5"
-                  style={{ animationDelay: `${index * 30}ms` }}
-                  onClick={() => handleBenefitClick(benefit.name)}
+      {/* SECTION 1: Benefits Maximizer Hero */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <Card className="overflow-hidden border-2 border-accent/20 bg-gradient-to-br from-accent/5 via-background to-primary/5">
+          <CardContent className="p-6">
+            <div className={cn("flex flex-col lg:flex-row gap-6", isRTL && "lg:flex-row-reverse")}>
+              {/* Left: Unused Value Hero */}
+              <div className={cn("flex-1", isRTL && "text-right")}>
+                <div className={cn("flex items-center gap-2 mb-2", isRTL && "flex-row-reverse")}>
+                  <Sparkles className="w-5 h-5 text-accent" />
+                  <h2 className="text-lg font-display font-semibold">
+                    {isArabic ? 'حاسب المزايا' : 'Benefits Maximizer'}
+                  </h2>
+                </div>
+                
+                <ConfidenceGate 
+                  confidence={metrics.claimableRemaining > 0 ? 'high' : 'medium'}
+                  showEstimatedLabel={metrics.claimableRemaining === 0}
+                  metricName={isArabic ? 'القيمة غير المستخدمة' : 'Unused value'}
                 >
-                  <div className={cn("flex items-start gap-2", isRTL && "flex-row-reverse")}>
-                    <div className="p-1.5 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors shrink-0">
-                      <benefit.icon className="w-3 h-3 text-accent" />
-                    </div>
-                    <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
-                      <div className={cn("flex items-center gap-1 flex-wrap", isRTL && "flex-row-reverse justify-end")}>
-                        <h3 className="font-medium text-xs truncate group-hover:text-accent transition-colors leading-tight">
-                          {t(benefit.nameKey)}
-                        </h3>
-                        {getUtilizationBadge(utilization)}
-                      </div>
-                      <span className={`${BENEFIT_TYPE_COLORS[benefit.type]} text-[9px]`}>
-                        {t(`benefit.${benefit.type}`)}
-                      </span>
-                    </div>
-                    <ChevronIcon className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-                  </div>
-                  
-                  <div className="mt-2 space-y-1 flex-1">
-                    <div className={cn("flex justify-between text-[10px]", isRTL && "flex-row-reverse")}>
-                      <span className="text-muted-foreground">{formatCurrency(benefit.utilized)}</span>
-                      <span className={isFullyUsed ? 'text-emerald-600 font-semibold' : 'font-medium'}>{utilization}%</span>
-                    </div>
-                    <Progress 
-                      value={utilization} 
-                      className={`h-1 ${isFullyUsed ? '[&>div]:bg-emerald-500' : '[&>div]:bg-accent'}`}
-                    />
-                    <p className={cn("text-[9px] text-muted-foreground", isRTL && "text-right")}>
-                      {t('employee.dashboard.remaining')}: {formatCurrency(remaining)}
+                  <div className="mb-4">
+                    <p className="text-sm text-muted-foreground mb-1">
+                      {isArabic ? 'قيمة غير مستخدمة تقديرية' : 'Estimated unused value'}
+                    </p>
+                    <p className="text-4xl font-bold text-accent tracking-tight">
+                      {formatHidden() || formatCurrency(metrics.unusedValue)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {isArabic ? `${metrics.utilizationPercent}% مستخدم من الإجمالي` : `${metrics.utilizationPercent}% used of total`}
                     </p>
                   </div>
-                  
-                  {/* Action Buttons - only show for claimable benefits */}
-                  {benefit.claimable && (
-                    <div className="mt-2 pt-1.5 border-t border-border/30">
-                      <BenefitActionButtons
-                        benefitName={benefit.name}
-                        benefitCategory={benefit.category}
-                        isRTL={isRTL}
-                        compact={true}
-                      />
+                </ConfidenceGate>
+
+                <div className="flex items-center gap-2">
+                  <Progress value={metrics.utilizationPercent} className="flex-1 h-2" />
+                  <span className="text-sm font-medium">{metrics.utilizationPercent}%</span>
+                </div>
+              </div>
+
+              {/* Right: 3 Prioritized Actions */}
+              <div className="flex-1 space-y-3">
+                <p className={cn("text-sm font-medium text-muted-foreground", isRTL && "text-right")}>
+                  {isArabic ? 'إجراءات مقترحة' : 'Suggested Actions'}
+                </p>
+                {prioritizedActions.map((action, i) => (
+                  <motion.div
+                    key={action.id}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                  >
+                    <Card 
+                      className={cn(
+                        "cursor-pointer hover:border-accent/40 transition-all",
+                        action.urgency === 'high' && "border-amber-500/30 bg-amber-500/5"
+                      )}
+                      onClick={() => navigate(action.route)}
+                    >
+                      <CardContent className="p-3">
+                        <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+                          <div className={cn(
+                            "p-2 rounded-lg shrink-0",
+                            action.urgency === 'high' ? "bg-amber-500/10" : "bg-accent/10"
+                          )}>
+                            <action.icon className={cn(
+                              "w-4 h-4",
+                              action.urgency === 'high' ? "text-amber-600" : "text-accent"
+                            )} />
+                          </div>
+                          <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
+                            <p className="text-sm font-medium truncate">
+                              {isArabic ? action.titleAr : action.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatCurrency(action.value)} • {isArabic ? action.reasonAr : action.reason}
+                            </p>
+                          </div>
+                          <ChevronIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* SECTION 2: Upcoming Deadlines */}
+      {upcomingDeadlines.length > 0 && (
+        <div>
+          <div className={cn("flex items-center justify-between mb-3", isRTL && "flex-row-reverse")}>
+            <h2 className="text-base font-display font-semibold flex items-center gap-2">
+              <Clock className="w-4 h-4 text-muted-foreground" />
+              {isArabic ? 'المواعيد القادمة' : 'Upcoming Deadlines'}
+            </h2>
+            <Badge variant="outline" className="text-xs">
+              {upcomingDeadlines.length}
+            </Badge>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            {upcomingDeadlines.map((item, i) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+              >
+                <Card 
+                  className="cursor-pointer hover:border-accent/40 hover:shadow-sm transition-all h-full"
+                  onClick={() => navigate(item.route)}
+                >
+                  <CardContent className="p-4">
+                    <div className={cn("flex items-start gap-3", isRTL && "flex-row-reverse")}>
+                      <div className={cn(
+                        "p-2 rounded-lg shrink-0",
+                        item.type === 'claim' ? "bg-amber-500/10" : 
+                        item.type === 'offer' ? "bg-violet-500/10" : "bg-blue-500/10"
+                      )}>
+                        <item.icon className={cn(
+                          "w-4 h-4",
+                          item.type === 'claim' ? "text-amber-600" : 
+                          item.type === 'offer' ? "text-violet-600" : "text-blue-600"
+                        )} />
+                      </div>
+                      <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
+                        <p className="text-sm font-medium line-clamp-1">
+                          {isArabic ? item.titleAr : item.title}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {new Date(item.date).toLocaleDateString(isArabic ? 'ar-AE' : 'en-AE', { 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </p>
+                      </div>
                     </div>
-                  )}
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className={cn("w-full mt-3 text-xs justify-between", isRTL && "flex-row-reverse")}
+                    >
+                      {isArabic ? item.ctaAr : item.cta}
+                      <ArrowIcon className="w-3 h-3" />
+                    </Button>
+                  </CardContent>
                 </Card>
-              );
-            })}
+              </motion.div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Benefits Utilization Section */}
-      {showCompensationSummary && (
-        <div>
-          <h2 className={cn("text-base font-display font-semibold mb-3", isRTL && "text-right")}>
-            {isRTL ? 'استخدام المزايا' : 'Benefits Utilization'}
+      {/* SECTION 3: My Package Snapshot (Compact) */}
+      <div>
+        <div className={cn("flex items-center justify-between mb-3", isRTL && "flex-row-reverse")}>
+          <h2 className="text-base font-display font-semibold flex items-center gap-2">
+            <Wallet className="w-4 h-4 text-muted-foreground" />
+            {isArabic ? 'ملخص الحزمة' : 'My Package'}
           </h2>
-          <BenefitsUtilizationCard
-            utilization={utilizationData}
-            isRTL={isRTL}
-            salaryHidden={salaryHidden}
-          />
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-xs text-accent"
+            onClick={() => setCompensationModalOpen(true)}
+          >
+            {isArabic ? 'التفاصيل' : 'Details'}
+            <ChevronIcon className="w-3 h-3 ml-1" />
+          </Button>
         </div>
-      )}
 
-      {/* Smart Insights - AI-powered recommendations replacing Benefit Highlights */}
-      {showCompensationSummary && (
-        <SmartInsights 
-          benefits={benefits.map(b => ({
-            name: b.name,
-            value: b.value,
-            utilized: b.utilized,
-            route: b.route,
-            valueType: b.valueType,
-          }))}
-        />
-      )}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Card className="bg-gradient-to-br from-primary/5 to-background">
+            <CardContent className="p-4">
+              <div className={cn(isRTL && "text-right")}>
+                <p className="text-xs text-muted-foreground mb-1">
+                  {isArabic ? 'الراتب السنوي' : 'Annual Salary'}
+                </p>
+                <p className="text-lg font-bold">
+                  {formatHidden() || formatCurrency(salaryData.annualSalary)}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-accent/5 to-background">
+            <CardContent className="p-4">
+              <div className={cn(isRTL && "text-right")}>
+                <p className="text-xs text-muted-foreground mb-1">
+                  {isArabic ? 'المزايا الأساسية' : 'Core Benefits'}
+                </p>
+                <p className="text-lg font-bold">
+                  {formatHidden() || formatCurrency(metrics.coreBenefits)}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-emerald-500/5 to-background">
+            <CardContent className="p-4">
+              <div className={cn(isRTL && "text-right")}>
+                <p className="text-xs text-muted-foreground mb-1">
+                  {isArabic ? 'إجمالي التعويضات' : 'Total Rewards'}
+                </p>
+                <p className="text-lg font-bold text-emerald-600">
+                  {formatHidden() || formatCurrency(metrics.totalCompensation)}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className={cn(isRTL && "text-right")}>
+                <p className="text-xs text-muted-foreground mb-1">
+                  {isArabic ? 'رصيد الإجازات' : 'Leave Balance'}
+                </p>
+                <p className="text-lg font-bold">
+                  {salaryData.leaveBalance - salaryData.leaveUsed} {isArabic ? 'يوم' : 'days'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Quick Links Grid */}
+      <div>
+        <h2 className={cn("text-base font-display font-semibold mb-3", isRTL && "text-right")}>
+          {isArabic ? 'روابط سريعة' : 'Quick Links'}
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {[
+            { label: isArabic ? 'تقديم مطالبة' : 'Submit Claim', icon: FileText, route: '/employee/documents', color: 'bg-blue-500/10 text-blue-600' },
+            { label: isArabic ? 'طلب إجازة' : 'Request Leave', icon: Calendar, route: '/employee/leave', color: 'bg-violet-500/10 text-violet-600' },
+            { label: isArabic ? 'استكشاف المزايا' : 'Browse Benefits', icon: Gift, route: '/employee/benefits', color: 'bg-emerald-500/10 text-emerald-600' },
+            { label: isArabic ? 'السوق' : 'Marketplace', icon: Zap, route: '/employee/marketplace', color: 'bg-amber-500/10 text-amber-600' },
+          ].map((link, i) => (
+            <Card 
+              key={link.route}
+              className="cursor-pointer hover:border-accent/40 transition-all"
+              onClick={() => navigate(link.route)}
+            >
+              <CardContent className="p-3">
+                <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+                  <div className={cn("p-2 rounded-lg", link.color)}>
+                    <link.icon className="w-4 h-4" />
+                  </div>
+                  <span className="text-sm font-medium">{link.label}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
 
       {/* Satisfaction Survey Section */}
       {showSatisfactionSurvey && (
         <SatisfactionSurvey compact={true} />
       )}
-
-      {/* Benefits Drill-down Sheet */}
-      <BenefitsDrillDownSheet
-        open={benefitsSheetOpen}
-        onOpenChange={setBenefitsSheetOpen}
-        category={benefitsSheetCategory}
-        benefits={benefits}
-      />
 
       {/* Compensation Breakdown Modal */}
       <CompensationBreakdownModal
