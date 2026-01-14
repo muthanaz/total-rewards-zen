@@ -212,8 +212,6 @@ export default function FinancialPage() {
         steps={guideSteps}
         policyPoints={policyPoints}
         policyButtonText={t.viewPolicy}
-        claimCategory="Savings Plan"
-        claimButtonText="Submit Claim"
       />
 
       {/* Savings Calculator */}

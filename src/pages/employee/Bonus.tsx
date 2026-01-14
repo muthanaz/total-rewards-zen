@@ -572,10 +572,6 @@ export default function BonusPage() {
         </CardContent>
       </Card>
 
-      {/* View Full Policy */}
-      <div className="text-center">
-        <Button variant="outline">{t.viewFullPolicy}</Button>
-      </div>
     </div>
   );
 }
