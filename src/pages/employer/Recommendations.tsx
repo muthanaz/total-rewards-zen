@@ -162,7 +162,7 @@ export default function RecommendationsPage() {
       <div>
         <div className="flex items-center gap-3">
           <Lightbulb className="h-8 w-8 text-accent" />
-          <h1 className="text-2xl font-display font-bold text-foreground">Recommendations</h1>
+          <h1 className="text-2xl font-display font-bold text-foreground">Smart Recommendations</h1>
         </div>
         <p className="text-muted-foreground mt-1">Data-driven suggestions to optimize your benefits program</p>
       </div>

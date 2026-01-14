@@ -98,13 +98,16 @@ export function YearEndProjection({
           <div className={cn("flex items-start justify-between", isRTL && "flex-row-reverse")}>
             <div className={isRTL ? "text-right" : ""}>
               <p className="text-sm text-muted-foreground mb-1">
-                {isRTL ? "المسار الحالي" : "At Current Trajectory"}
+                {isRTL ? "الإنفاق المتوقع نهاية العام" : "Projected Year-End Spend"}
               </p>
               <p className="text-2xl font-bold tracking-tight">
                 {formatCurrency(projectedSpend)}
               </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {projectedPercent}% {isRTL ? "من الميزانية" : "of budget"}
+              <p className="text-xs text-muted-foreground mt-1">
+                {isRTL 
+                  ? `${formatCurrency(currentSpend)} منفق + ${formatCurrency(projectedSpend - currentSpend)} متبقي`
+                  : `${formatCurrency(currentSpend)} spent + ${formatCurrency(projectedSpend - currentSpend)} remaining`
+                }
               </p>
             </div>
             
@@ -118,25 +121,37 @@ export function YearEndProjection({
                 <TrendingDown className={cn("w-4 h-4", risk.color)} />
               )}
               <span className={cn("text-sm font-semibold", risk.color)}>
-                {isOverBudget ? '+' : '-'}{variancePercent}%
+                {projectedPercent}% of budget
               </span>
             </div>
           </div>
 
-          {isOverBudget && (
-            <div className={cn(
-              "mt-3 pt-3 border-t border-border/50 flex items-center gap-2",
-              isRTL && "flex-row-reverse"
-            )}>
-              <AlertTriangle className="w-4 h-4 text-amber-500" />
-              <span className="text-xs text-muted-foreground">
-                {isRTL 
-                  ? `تجاوز متوقع بقيمة ${formatCurrency(variance)}`
-                  : `Projected overspend of ${formatCurrency(variance)}`
-                }
-              </span>
-            </div>
-          )}
+          <div className={cn(
+            "mt-3 pt-3 border-t border-border/50 flex items-center gap-2",
+            isRTL && "flex-row-reverse"
+          )}>
+            {isOverBudget ? (
+              <>
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                <span className="text-xs text-muted-foreground">
+                  {isRTL 
+                    ? `تجاوز متوقع بقيمة ${formatCurrency(variance)}`
+                    : `Projected to exceed budget by ${formatCurrency(variance)}`
+                  }
+                </span>
+              </>
+            ) : (
+              <>
+                <Target className="w-4 h-4 text-emerald-500" />
+                <span className="text-xs text-muted-foreground">
+                  {isRTL 
+                    ? `متوقع أن يكون أقل من الميزانية بـ ${formatCurrency(Math.abs(variance))}`
+                    : `Projected to be ${formatCurrency(Math.abs(variance))} under budget`
+                  }
+                </span>
+              </>
+            )}
+          </div>
         </motion.div>
 
         {/* Scenario Slider */}

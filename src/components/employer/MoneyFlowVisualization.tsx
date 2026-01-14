@@ -35,24 +35,27 @@ export function MoneyFlowVisualization({
 
   const utilizationRate = ((utilized / allocated) * 100).toFixed(0);
   const effectiveSpend = utilized - wasteIdentified;
+  const efficiencyRate = ((effectiveSpend / utilized) * 100).toFixed(0);
 
   const flowSteps = [
     {
-      label: 'Allocated',
+      label: 'Annual Budget',
       value: allocated,
       displayValue: formatCurrency(allocated),
       icon: DollarSign,
       color: 'bg-primary/10 text-primary',
-      borderColor: 'border-primary/20'
+      borderColor: 'border-primary/20',
+      sublabel: 'FY 2024 Total'
     },
     {
-      label: 'Utilized',
+      label: 'YTD Utilized',
       value: utilized,
       displayValue: formatCurrency(utilized),
       icon: Users,
       color: 'bg-blue-500/10 text-blue-600',
       borderColor: 'border-blue-500/20',
-      badge: `${utilizationRate}%`
+      badge: `${utilizationRate}% of budget`,
+      sublabel: '8 months elapsed'
     },
     {
       label: 'Effective Spend',
@@ -61,9 +64,10 @@ export function MoneyFlowVisualization({
       icon: Sparkles,
       color: 'bg-emerald-500/10 text-emerald-600',
       borderColor: 'border-emerald-500/20',
-      badge: `${satisfactionScore}/5 ★`,
+      badge: `${efficiencyRate}% efficiency`,
+      sublabel: `${satisfactionScore}/5 ★ satisfaction`,
       showTooltip: true,
-      tooltipText: 'Effective spend = Utilized - Waste. The star rating reflects employee satisfaction with benefits (from surveys). Higher satisfaction indicates better value-for-money.'
+      tooltipText: `Effective Spend = Utilized (${formatCurrency(utilized)}) minus Waste (${formatCurrency(wasteIdentified)}). The ${efficiencyRate}% efficiency shows how much of your spend is actually delivering value to employees.`
     }
   ];
 
@@ -110,12 +114,15 @@ export function MoneyFlowVisualization({
                     </Badge>
                   )}
                 </div>
-                <div className={cn("flex items-center gap-1 mb-1", isRTL && "flex-row-reverse")}>
-                  <p className={cn("text-xs text-muted-foreground", isRTL && "text-right")}>{step.label}</p>
+                <div className={cn("flex items-center gap-1 mb-0.5", isRTL && "flex-row-reverse")}>
+                  <p className={cn("text-xs font-medium text-foreground", isRTL && "text-right")}>{step.label}</p>
                   {step.showTooltip && (
-                    <InfoTooltip formula={step.tooltipText} dataSource="Employee Valuations Survey" />
+                    <InfoTooltip formula={step.tooltipText} dataSource="Finance System" />
                   )}
                 </div>
+                {step.sublabel && (
+                  <p className={cn("text-[10px] text-muted-foreground mb-1", isRTL && "text-right")}>{step.sublabel}</p>
+                )}
                 <p className={cn("text-xl lg:text-2xl font-bold tracking-tight", isRTL && "text-right")}>
                   {step.displayValue}
                 </p>
@@ -146,14 +153,16 @@ export function MoneyFlowVisualization({
                 <div className={isRTL ? "text-right" : ""}>
                   <p className="text-xs text-muted-foreground">Waste Identified</p>
                   <p className="font-bold text-amber-600">{formatCurrency(wasteIdentified)}</p>
+                  <p className="text-[10px] text-muted-foreground">{((wasteIdentified / utilized) * 100).toFixed(0)}% of utilized spend</p>
                 </div>
               </div>
               
               <div className="h-8 w-px bg-border/50" />
               
               <div className={isRTL ? "text-right" : ""}>
-                <p className="text-xs text-muted-foreground">Recoverable This Quarter</p>
+                <p className="text-xs text-muted-foreground">Recoverable This Q</p>
                 <p className="font-bold text-emerald-600">{formatCurrency(recoverableThisQuarter)}</p>
+                <p className="text-[10px] text-muted-foreground">{((recoverableThisQuarter / wasteIdentified) * 100).toFixed(0)}% of waste recoverable</p>
               </div>
             </div>
 
