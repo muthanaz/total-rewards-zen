@@ -110,17 +110,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Demo login available everywhere for easy testing
 
     const emailMap: Record<UserRole, string> = {
-      employee: 'demo.employee@bnft.ae',
-      employer: 'demo.employer@bnft.ae',
-      admin: 'demo.admin@bnft.ae',
-      vendor: 'demo.vendor@bnft.ae',
+      employee: 'demo.people@totalrewards.ae',
+      employer: 'demo.hrmanager@totalrewards.ae',
+      admin: 'demo.superadmin@totalrewards.ae',
+      vendor: 'demo.partner@totalrewards.ae',
     };
     
     const nameMap: Record<UserRole, { first: string; last: string }> = {
-      employee: { first: 'Demo', last: 'Employee' },
-      employer: { first: 'HR', last: 'Manager' },
-      admin: { first: 'Platform', last: 'Admin' },
-      vendor: { first: 'Vendor', last: 'Partner' },
+      employee: { first: 'Sarah', last: 'Ahmed' },
+      employer: { first: 'Mohammed', last: 'Al Rashid' },
+      admin: { first: 'Platform', last: 'Administrator' },
+      vendor: { first: 'Rewards', last: 'Partner' },
     };
     
     const email = emailMap[demoRole];

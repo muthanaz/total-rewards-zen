@@ -43,6 +43,10 @@ export default {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
+        action: {
+          DEFAULT: "hsl(var(--action))",
+          foreground: "hsl(var(--action-foreground))",
+        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
@@ -62,6 +66,28 @@ export default {
         info: {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
+        },
+        coral: {
+          400: "hsl(0 79% 72%)",
+          500: "hsl(0 79% 65%)",
+          600: "hsl(0 79% 55%)",
+        },
+        indigo: {
+          DEFAULT: "hsl(231 38% 27%)",
+          light: "hsl(231 38% 40%)",
+          dark: "hsl(231 45% 12%)",
+        },
+        teal: {
+          DEFAULT: "hsl(174 85% 32%)",
+          light: "hsl(174 70% 45%)",
+          dark: "hsl(174 85% 25%)",
+        },
+        pillar: {
+          compensation: "hsl(var(--pillar-compensation))",
+          benefits: "hsl(var(--pillar-benefits))",
+          wellbeing: "hsl(var(--pillar-wellbeing))",
+          recognition: "hsl(var(--pillar-recognition))",
+          career: "hsl(var(--pillar-career))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -101,8 +127,12 @@ export default {
           to: { opacity: "1", transform: "scale(1)" },
         },
         "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px hsl(174 60% 45% / 0.3)" },
-          "50%": { boxShadow: "0 0 30px hsl(174 60% 45% / 0.5)" },
+          "0%, 100%": { boxShadow: "0 0 20px hsl(174 85% 32% / 0.3)" },
+          "50%": { boxShadow: "0 0 35px hsl(174 85% 32% / 0.5)" },
+        },
+        "shimmer": {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
         },
       },
       animation: {
@@ -112,9 +142,12 @@ export default {
         "slide-in": "slide-in 0.4s ease-out",
         "scale-in": "scale-in 0.2s ease-out",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "shimmer": "shimmer 2s linear infinite",
       },
       boxShadow: {
-        glow: "0 0 20px hsl(174 60% 45% / 0.3)",
+        glow: "0 0 30px hsl(174 85% 32% / 0.25)",
+        "glow-primary": "0 0 30px hsl(231 38% 27% / 0.2)",
+        "glow-action": "0 0 20px hsl(0 79% 72% / 0.3)",
       },
     },
   },
