@@ -154,7 +154,22 @@ const bestPractices = [
 export default function PolicyHubPage() {
   const { direction } = useLanguage();
   const isRTL = direction === 'rtl';
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSendReminder = (policyName: string) => {
+    toast({
+      title: 'Reminder Sent',
+      description: `Reminder sent to employees who haven't acknowledged "${policyName}"`,
+    });
+  };
+
+  const handleExportAudit = () => {
+    toast({
+      title: 'Export Started',
+      description: 'Policy acknowledgement audit trail is being generated...',
+    });
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -227,6 +242,20 @@ export default function PolicyHubPage() {
 
         {/* Policies Tab */}
         <TabsContent value="policies" className="space-y-4">
+          {/* Action Bar */}
+          <div className={cn("flex items-center justify-between gap-4 flex-wrap", isRTL && "flex-row-reverse")}>
+            <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+              <Button variant="outline" size="sm" onClick={handleExportAudit}>
+                <Download className="h-4 w-4 mr-1" />
+                Export Audit Trail
+              </Button>
+            </div>
+            <div className={cn("flex items-center gap-2 text-sm text-muted-foreground", isRTL && "flex-row-reverse")}>
+              <UserCheck className="h-4 w-4" />
+              <span>{policyInsights.reduce((sum, p) => sum + p.pendingAcknowledgements, 0)} pending acknowledgements</span>
+            </div>
+          </div>
+
           {policyInsights.map((policy, index) => (
             <Card key={index} className="border-border/50">
               <CardContent className="pt-6">
@@ -235,10 +264,11 @@ export default function PolicyHubPage() {
                     <div className={cn("flex items-center gap-3 mb-3", isRTL && "flex-row-reverse")}>
                       <FileText className="h-5 w-5 text-primary" />
                       <h3 className="font-semibold text-lg">{policy.policy}</h3>
+                      <Badge variant="outline" className="text-[10px] px-1.5">v{policy.version}</Badge>
                       {getStatusBadge(policy.status)}
                     </div>
                     
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
                       <div className={cn(isRTL && "text-right")}>
                         <p className="text-xs text-muted-foreground">Clarity Score</p>
                         <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
@@ -260,6 +290,22 @@ export default function PolicyHubPage() {
                         <p className="font-medium text-sm">{new Date(policy.lastUpdated).toLocaleDateString()}</p>
                       </div>
                       <div className={cn(isRTL && "text-right")}>
+                        <p className="text-xs text-muted-foreground">Acknowledged</p>
+                        <div className={cn("flex items-center gap-1", isRTL && "flex-row-reverse")}>
+                          <span className={cn(
+                            "font-medium text-sm",
+                            policy.acknowledgementRate >= 90 ? 'text-emerald-600' : policy.acknowledgementRate >= 70 ? 'text-amber-600' : 'text-red-500'
+                          )}>
+                            {policy.acknowledgementRate}%
+                          </span>
+                          {policy.pendingAcknowledgements > 0 && (
+                            <Badge variant="secondary" className="text-[9px] px-1 py-0">
+                              {policy.pendingAcknowledgements} pending
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className={cn(isRTL && "text-right")}>
                         <p className="text-xs text-muted-foreground">Improvements</p>
                         <p className="font-medium text-sm">{policy.suggestions.length} suggested</p>
                       </div>
@@ -274,7 +320,22 @@ export default function PolicyHubPage() {
                     </div>
                   </div>
 
-                  <div className={cn("flex gap-2", isRTL && "flex-row-reverse")}>
+                  <div className={cn("flex gap-2 flex-wrap", isRTL && "flex-row-reverse")}>
+                    {policy.pendingAcknowledgements > 0 && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="text-amber-600 border-amber-200 hover:bg-amber-50"
+                        onClick={() => handleSendReminder(policy.policy)}
+                      >
+                        <Send className="h-4 w-4 mr-1" />
+                        Send Reminder
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm">
+                      <History className="h-4 w-4 mr-1" />
+                      History
+                    </Button>
                     <Button variant="outline" size="sm">
                       <Eye className="h-4 w-4 mr-1" />
                       View
