@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { BenefitGuide } from '@/components/employee/BenefitGuide';
 import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
 import { Dumbbell, Heart, Brain, Leaf, CheckCircle, ExternalLink, Wallet, TrendingDown, Percent } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';

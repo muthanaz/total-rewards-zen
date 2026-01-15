@@ -13,6 +13,8 @@ import { WASTE_BY_CATEGORY, WASTE_RISK_INDICATORS, formatCurrency } from '@/lib/
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
+import { PrimaryInsight } from '@/components/ui/primary-insight';
 
 // Use centralized waste data
 const unrealizedCategories = [...WASTE_BY_CATEGORY];

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
 import { 
   Building2, 
   ExternalLink, 
@@ -151,8 +152,12 @@ export default function GovConnectPage() {
         }
         icon={Building2}
       />
-      
-      {/* Search */}
+
+      <StatusStrip
+        confidence="high"
+        lastUpdated={new Date()}
+        dataSource={isArabic ? 'روابط حكومية رسمية' : 'Official government links'}
+      />
       <div className="relative max-w-md">
         <Search className={cn(
           "absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground",

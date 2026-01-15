@@ -4,6 +4,7 @@ import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { BenefitGuide } from '@/components/employee/BenefitGuide';
 import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
 import { Car, Fuel, Plane, CreditCard, CheckCircle, Wallet, TrendingDown, Percent } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
