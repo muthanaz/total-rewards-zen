@@ -217,6 +217,113 @@ export type Database = {
           },
         ]
       }
+      benefit_policy_versions: {
+        Row: {
+          attachment_url: string | null
+          benefit_id: string | null
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_until: string | null
+          id: string
+          organization_id: string | null
+          policy_text: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          attachment_url?: string | null
+          benefit_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          effective_from: string
+          effective_until?: string | null
+          id?: string
+          organization_id?: string | null
+          policy_text?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          attachment_url?: string | null
+          benefit_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_until?: string | null
+          id?: string
+          organization_id?: string | null
+          policy_text?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "benefit_policy_versions_benefit_id_fkey"
+            columns: ["benefit_id"]
+            isOneToOne: false
+            referencedRelation: "benefits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "benefit_policy_versions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      benefit_required_documents: {
+        Row: {
+          benefit_id: string
+          conditions: Json | null
+          created_at: string
+          description: string | null
+          description_ar: string | null
+          document_name: string
+          document_name_ar: string | null
+          document_type: string
+          id: string
+          is_required: boolean | null
+          required_for: string | null
+        }
+        Insert: {
+          benefit_id: string
+          conditions?: Json | null
+          created_at?: string
+          description?: string | null
+          description_ar?: string | null
+          document_name: string
+          document_name_ar?: string | null
+          document_type: string
+          id?: string
+          is_required?: boolean | null
+          required_for?: string | null
+        }
+        Update: {
+          benefit_id?: string
+          conditions?: Json | null
+          created_at?: string
+          description?: string | null
+          description_ar?: string | null
+          document_name?: string
+          document_name_ar?: string | null
+          document_type?: string
+          id?: string
+          is_required?: boolean | null
+          required_for?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "benefit_required_documents_benefit_id_fkey"
+            columns: ["benefit_id"]
+            isOneToOne: false
+            referencedRelation: "benefits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       benefits: {
         Row: {
           annual_value: number | null
@@ -566,6 +673,59 @@ export type Database = {
         }
         Relationships: []
       }
+      integration_runs: {
+        Row: {
+          connector_type: string
+          coverage_percent: number | null
+          created_at: string
+          error_summary: string | null
+          id: string
+          last_sync_at: string | null
+          metadata: Json | null
+          organization_id: string
+          records_failed: number | null
+          records_synced: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          connector_type: string
+          coverage_percent?: number | null
+          created_at?: string
+          error_summary?: string | null
+          id?: string
+          last_sync_at?: string | null
+          metadata?: Json | null
+          organization_id: string
+          records_failed?: number | null
+          records_synced?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          connector_type?: string
+          coverage_percent?: number | null
+          created_at?: string
+          error_summary?: string | null
+          id?: string
+          last_sync_at?: string | null
+          metadata?: Json | null
+          organization_id?: string
+          records_failed?: number | null
+          records_synced?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_runs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leave_balances: {
         Row: {
           created_at: string | null
@@ -831,6 +991,53 @@ export type Database = {
             foreignKeyName: "org_budgets_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_policy_settings: {
+        Row: {
+          created_at: string
+          currency: string | null
+          fiscal_year_start_month: number | null
+          gratuity_calculation_rules: Json | null
+          id: string
+          leave_accrual_rules: Json | null
+          organization_id: string
+          payroll_cycle: string | null
+          timezone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string | null
+          fiscal_year_start_month?: number | null
+          gratuity_calculation_rules?: Json | null
+          id?: string
+          leave_accrual_rules?: Json | null
+          organization_id: string
+          payroll_cycle?: string | null
+          timezone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string | null
+          fiscal_year_start_month?: number | null
+          gratuity_calculation_rules?: Json | null
+          id?: string
+          leave_accrual_rules?: Json | null
+          organization_id?: string
+          payroll_cycle?: string | null
+          timezone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_policy_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -1245,6 +1452,53 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      request_attachments: {
+        Row: {
+          document_type: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          is_required: boolean | null
+          request_id: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          document_type?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          is_required?: boolean | null
+          request_id: string
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          document_type?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          is_required?: boolean | null
+          request_id?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_attachments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
             referencedColumns: ["id"]
           },
         ]
