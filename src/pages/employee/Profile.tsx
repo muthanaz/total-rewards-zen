@@ -551,7 +551,7 @@ export default function ProfilePage() {
                 <Heart className="w-4 h-4 text-accent" />
                 Life Stage
               </CardTitle>
-              <p className="text-xs text-muted-foreground">This helps personalize your benefits recommendations</p>
+              <p className="text-xs text-muted-foreground">This helps personalize your benefits recommendations and dashboard insights</p>
             </CardHeader>
             <CardContent>
               <Select defaultValue="single">
@@ -560,40 +560,57 @@ export default function ProfilePage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="single">Single</SelectItem>
-                  <SelectItem value="married">Married</SelectItem>
+                  <SelectItem value="married">Married without Children</SelectItem>
                   <SelectItem value="married_kids">Married with Children</SelectItem>
-                  <SelectItem value="expecting">Expecting</SelectItem>
+                  <SelectItem value="expecting">Expecting a Child</SelectItem>
+                  <SelectItem value="new_parent">New Parent (child under 2)</SelectItem>
+                  <SelectItem value="school_age">Parent with School-Age Children</SelectItem>
                   <SelectItem value="caregiver">Caregiver (for parents/family)</SelectItem>
+                  <SelectItem value="pre_retirement">Pre-Retirement (5 years to retire)</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground mt-3">
+                Your life stage affects recommended benefits, priority actions, and savings tips shown on your dashboard.
+              </p>
             </CardContent>
           </Card>
 
-          {/* Interests - Collapsible */}
-          <Card>
-            <CardHeader><CardTitle className="text-base">Interests & Hobbies</CardTitle></CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">Select your interests to help us personalize marketplace recommendations. Click to toggle.</p>
-              <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto">
-                {INTERESTS_OPTIONS.slice(0, 30).map(interest => (
-                  <Button 
-                    key={interest} 
-                    variant={selectedInterests.includes(interest) ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => toggleInterest(interest)}
-                    className={selectedInterests.includes(interest) ? "bg-accent text-accent-foreground hover:bg-accent/90" : ""}
-                  >
-                    {interest}
-                  </Button>
-                ))}
-              </div>
-              {selectedInterests.length > 0 && (
-                <p className="text-xs text-muted-foreground mt-4">
-                  Selected: {selectedInterests.length} interest{selectedInterests.length !== 1 ? 's' : ''}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          {/* Interests - Collapsible by default */}
+          <details className="group">
+            <summary className="cursor-pointer p-4 bg-muted/30 rounded-lg flex items-center justify-between hover:bg-muted/50 transition-colors">
+              <span className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Heart className="w-4 h-4" />
+                Interests & Hobbies (optional)
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {selectedInterests.length > 0 ? `${selectedInterests.length} selected` : 'Click to expand'}
+              </span>
+            </summary>
+            <Card className="mt-2">
+              <CardHeader><CardTitle className="text-base">Interests & Hobbies</CardTitle></CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">Select your interests to help us personalize marketplace recommendations. Click to toggle.</p>
+                <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto">
+                  {INTERESTS_OPTIONS.slice(0, 30).map(interest => (
+                    <Button 
+                      key={interest} 
+                      variant={selectedInterests.includes(interest) ? "default" : "outline"} 
+                      size="sm"
+                      onClick={() => toggleInterest(interest)}
+                      className={selectedInterests.includes(interest) ? "bg-accent text-accent-foreground hover:bg-accent/90" : ""}
+                    >
+                      {interest}
+                    </Button>
+                  ))}
+                </div>
+                {selectedInterests.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-4">
+                    Selected: {selectedInterests.length} interest{selectedInterests.length !== 1 ? 's' : ''}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </details>
 
           {/* Pets - Hidden by default, can be expanded */}
           <details className="group">
