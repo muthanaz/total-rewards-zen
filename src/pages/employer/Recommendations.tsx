@@ -9,8 +9,9 @@ import { PrimaryInsight } from '@/components/ui/primary-insight';
 import { ConfidenceGate, ConfidenceBadge } from '@/components/employer/ConfidenceGate';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { useCreateAction } from '@/hooks/useEmployerActions';
 import { cn } from '@/lib/utils';
-import { Lightbulb, TrendingUp, Users, DollarSign, MessageSquare, Target, ArrowRight, CheckCircle, Plus, Database, Sparkles } from 'lucide-react';
+import { Lightbulb, TrendingUp, Users, DollarSign, MessageSquare, Target, ArrowRight, CheckCircle, Plus, Database, Sparkles, User, Calendar, Wallet } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 interface Recommendation {
@@ -135,18 +136,51 @@ const recommendations: Recommendation[] = [
 ];
 
 export default function RecommendationsPage() {
+  const { language, direction } = useLanguage();
+  const isRTL = direction === 'rtl';
+  const isArabic = language === 'ar';
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const createAction = useCreateAction();
+
   const totalPotentialSavings = recommendations
     .filter(r => r.potentialSavings)
     .reduce((sum, r) => sum + (r.potentialSavings || 0), 0);
 
+  const quickWins = recommendations.filter(r => r.impact === 'high' && r.effort === 'low');
+  const highImpact = recommendations.filter(r => r.impact === 'high');
+
+  const handleCreateAction = async (rec: Recommendation) => {
+    try {
+      await createAction.mutateAsync({
+        title: rec.title,
+        description: rec.action,
+        priority: rec.impact === 'high' ? 'high' : rec.impact === 'medium' ? 'medium' : 'low',
+        source_insight: rec.triggerData,
+        expected_impact: rec.potentialSavings ? { savings: rec.potentialSavings } : {},
+        metric_keys: [rec.category],
+      });
+      toast({
+        title: isArabic ? 'تم إنشاء الإجراء' : 'Action Created',
+        description: isArabic ? 'تم إضافة الإجراء إلى خطة العمل' : 'Action added to your action plan',
+      });
+    } catch (e) {
+      toast({
+        title: isArabic ? 'خطأ' : 'Error',
+        description: isArabic ? 'فشل في إنشاء الإجراء' : 'Failed to create action',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const getImpactBadge = (impact: string) => {
     switch (impact) {
       case 'high':
-        return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">High Impact</Badge>;
+        return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">{isArabic ? 'تأثير مرتفع' : 'High Impact'}</Badge>;
       case 'medium':
-        return <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20">Medium Impact</Badge>;
+        return <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20">{isArabic ? 'تأثير متوسط' : 'Medium Impact'}</Badge>;
       case 'low':
-        return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20">Low Impact</Badge>;
+        return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20">{isArabic ? 'تأثير منخفض' : 'Low Impact'}</Badge>;
       default:
         return null;
     }
@@ -155,11 +189,11 @@ export default function RecommendationsPage() {
   const getEffortBadge = (effort: string) => {
     switch (effort) {
       case 'low':
-        return <Badge variant="outline" className="border-green-500/50 text-green-600">Quick Win</Badge>;
+        return <Badge variant="outline" className="border-green-500/50 text-green-600">{isArabic ? 'سريع' : 'Quick Win'}</Badge>;
       case 'medium':
-        return <Badge variant="outline" className="border-amber-500/50 text-amber-600">Some Effort</Badge>;
+        return <Badge variant="outline" className="border-amber-500/50 text-amber-600">{isArabic ? 'جهد معتدل' : 'Some Effort'}</Badge>;
       case 'high':
-        return <Badge variant="outline" className="border-red-500/50 text-red-500">Major Project</Badge>;
+        return <Badge variant="outline" className="border-red-500/50 text-red-500">{isArabic ? 'مشروع كبير' : 'Major Project'}</Badge>;
       default:
         return null;
     }
@@ -181,70 +215,103 @@ export default function RecommendationsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-3">
-          <Lightbulb className="h-8 w-8 text-accent" />
-          <h1 className="text-2xl font-display font-bold text-foreground">Smart Recommendations</h1>
-        </div>
-        <p className="text-muted-foreground mt-1">Data-driven suggestions to optimize your benefits program</p>
-      </div>
+      <PageHeader
+        title={isArabic ? 'التوصيات الذكية' : 'Smart Recommendations'}
+        titleAr="التوصيات الذكية"
+        subtitle={isArabic ? 'اقتراحات مبنية على البيانات لتحسين برنامج المزايا' : 'Data-driven suggestions to optimize your benefits program'}
+        subtitleAr="اقتراحات مبنية على البيانات لتحسين برنامج المزايا"
+        icon={Lightbulb}
+        primaryAction={{
+          label: 'View Action Plan',
+          labelAr: 'عرض خطة العمل',
+          onClick: () => navigate('/employer/actions'),
+        }}
+      />
 
-      {/* Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Status Strip */}
+      <StatusStrip
+        confidence="high"
+        lastUpdated={new Date()}
+        dataSource="AI Analytics"
+        dataSourceAr="تحليلات الذكاء الاصطناعي"
+      />
+
+      {/* Primary Insight */}
+      <PrimaryInsight
+        title={isArabic ? 'إجمالي الوفورات المحتملة' : 'Total Potential Savings'}
+        titleAr="إجمالي الوفورات المحتملة"
+        value={`AED ${(totalPotentialSavings / 1000).toFixed(0)}K`}
+        subtitle={`${recommendations.length} ${isArabic ? 'توصيات فعالة' : 'active recommendations'}`}
+        subtitleAr={`${recommendations.length} توصيات فعالة`}
+        icon={Wallet}
+        iconColor="text-emerald-500"
+        variant="success"
+        confidence="high"
+        source={isArabic ? 'محرك الذكاء الاصطناعي' : 'AI Analytics Engine'}
+        sourceAr="محرك الذكاء الاصطناعي"
+        formula="Sum of estimated savings if all recommendations implemented"
+        formulaAr="مجموع الوفورات المقدرة إذا تم تنفيذ جميع التوصيات"
+        action={{
+          label: isArabic ? 'بدء التنفيذ' : 'Start Implementing',
+          labelAr: 'بدء التنفيذ',
+          onClick: () => navigate('/employer/actions'),
+        }}
+      />
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="card-elevated">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <Target className="h-8 w-8 text-primary" />
-              <div className="flex-1">
-                <div className="flex items-center gap-1">
-                  <p className="text-2xl font-bold">{recommendations.length}</p>
-                  <InfoTooltip formula="Total number of active AI-generated recommendations." dataSource="AI Analytics" />
-                </div>
-                <p className="text-sm text-muted-foreground">Active Recommendations</p>
+            <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+              <Target className="h-8 w-8 text-primary shrink-0" />
+              <div className={cn("flex-1", isRTL && "text-right")}>
+                <p className="text-2xl font-bold">{recommendations.length}</p>
+                <p className="text-sm text-muted-foreground">
+                  {isArabic ? 'توصيات نشطة' : 'Active Recommendations'}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="card-elevated">
+        <Card className="card-elevated border-green-500/20">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <DollarSign className="h-8 w-8 text-green-500" />
-              <div className="flex-1">
-                <div className="flex items-center gap-1">
-                  <p className="text-2xl font-bold text-green-600">AED {(totalPotentialSavings / 1000).toFixed(0)}K</p>
-                  <InfoTooltip formula="Sum of estimated savings if all recommendations are implemented." dataSource="AI Analytics" />
-                </div>
-                <p className="text-sm text-muted-foreground">Potential Savings</p>
+            <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+              <CheckCircle className="h-8 w-8 text-green-500 shrink-0" />
+              <div className={cn("flex-1", isRTL && "text-right")}>
+                <p className="text-2xl font-bold text-green-600">{quickWins.length}</p>
+                <p className="text-sm text-muted-foreground">
+                  {isArabic ? 'انتصارات سريعة' : 'Quick Wins'}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="card-elevated">
+        <Card className="card-elevated border-amber-500/20">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <Lightbulb className="h-8 w-8 text-amber-500" />
-              <div className="flex-1">
-                <div className="flex items-center gap-1">
-                  <p className="text-2xl font-bold">3</p>
-                  <InfoTooltip formula="Recommendations with 'Low Effort' that can be implemented quickly." dataSource="AI Analytics" />
-                </div>
-                <p className="text-sm text-muted-foreground">Quick Wins Available</p>
+            <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+              <TrendingUp className="h-8 w-8 text-amber-500 shrink-0" />
+              <div className={cn("flex-1", isRTL && "text-right")}>
+                <p className="text-2xl font-bold text-amber-600">{highImpact.length}</p>
+                <p className="text-sm text-muted-foreground">
+                  {isArabic ? 'تأثير مرتفع' : 'High Impact'}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="card-elevated">
+        <Card className="card-elevated border-blue-500/20">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="h-8 w-8 text-accent" />
-              <div className="flex-1">
-                <div className="flex items-center gap-1">
-                  <p className="text-2xl font-bold">4</p>
-                  <InfoTooltip formula="Recommendations rated as 'High Impact' based on potential ROI and employee coverage." dataSource="AI Analytics" />
-                </div>
-                <p className="text-sm text-muted-foreground">High Impact Items</p>
+            <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+              <Users className="h-8 w-8 text-blue-500 shrink-0" />
+              <div className={cn("flex-1", isRTL && "text-right")}>
+                <p className="text-2xl font-bold text-blue-600">
+                  {recommendations.reduce((sum, r) => sum + (r.affectedEmployees || 0), 0)}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {isArabic ? 'موظفون متأثرون' : 'Employees Affected'}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -326,57 +393,71 @@ export default function RecommendationsPage() {
                       </div>
                       <p className="text-sm text-muted-foreground mb-3">{rec.description}</p>
                       
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-3">
+                      <div className={cn("grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3", isRTL && "text-right")}>
                         {rec.potentialSavings && (
                           <div>
-                            <div className="flex items-center gap-1">
-                              <p className="text-muted-foreground">Potential Savings</p>
-                              <InfoTooltip formula="Estimated annual savings based on current waste and projected improvement." dataSource="AI Model" />
-                            </div>
+                            <p className="text-muted-foreground text-xs">{isArabic ? 'الوفورات المحتملة' : 'Potential Savings'}</p>
                             <p className="font-medium text-green-600">AED {rec.potentialSavings.toLocaleString()}</p>
                           </div>
                         )}
                         {rec.affectedEmployees && (
                           <div>
-                            <div className="flex items-center gap-1">
-                              <p className="text-muted-foreground">Affected Employees</p>
-                              <InfoTooltip formula="Number of employees who would benefit from this change." dataSource="HR System" />
-                            </div>
+                            <p className="text-muted-foreground text-xs">{isArabic ? 'الموظفون المتأثرون' : 'Affected Employees'}</p>
                             <p className="font-medium">{rec.affectedEmployees}</p>
                           </div>
                         )}
                         <div>
-                          <p className="text-muted-foreground">Category</p>
+                          <p className="text-muted-foreground text-xs">{isArabic ? 'الفئة' : 'Category'}</p>
                           <p className="font-medium capitalize">{rec.category}</p>
                         </div>
+                        <div>
+                          <p className="text-muted-foreground text-xs">{isArabic ? 'الثقة' : 'Confidence'}</p>
+                          <ConfidenceBadge confidence={rec.confidence} />
+                        </div>
+                      </div>
+
+                      {/* Trigger Data - Evidence */}
+                      <div className="p-2 rounded-lg bg-muted/30 border border-border/50 mb-3">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Database className="w-3 h-3" />
+                          <span className="font-medium">{isArabic ? 'مصدر البيانات:' : 'Evidence:'}</span>
+                          {rec.triggerData}
+                        </p>
                       </div>
 
                       <div className="p-3 rounded-lg bg-accent/5 border border-accent/20">
                         <p className="text-sm">
-                          <span className="font-medium text-accent">Recommended Action: </span>
+                          <span className="font-medium text-accent">{isArabic ? 'الإجراء الموصى به:' : 'Recommended Action:'} </span>
                           {rec.action}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          <span className="font-medium">Rationale: </span>
+                          <span className="font-medium">{isArabic ? 'المبررات:' : 'Rationale:'} </span>
                           {rec.rationale}
                         </p>
                       </div>
                     </div>
                   </div>
                   
-                  {rec.link ? (
-                    <Link to={rec.link}>
-                      <Button variant="outline" size="sm" className="shrink-0">
-                        Take Action
-                        <ArrowRight className="h-4 w-4 ml-1" />
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Button variant="outline" size="sm" className="shrink-0">
-                      Take Action
-                      <ArrowRight className="h-4 w-4 ml-1" />
+                  {/* Action Buttons */}
+                  <div className={cn("flex flex-col gap-2 shrink-0", isRTL && "items-start")}>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleCreateAction(rec)}
+                      disabled={createAction.isPending}
+                      className="gap-1.5"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      {isArabic ? 'إنشاء إجراء' : 'Create Action'}
                     </Button>
-                  )}
+                    {rec.link && (
+                      <Link to={rec.link}>
+                        <Button variant="outline" size="sm" className="w-full gap-1.5">
+                          {isArabic ? 'عرض التفاصيل' : 'View Details'}
+                          <ArrowRight className={cn("h-3.5 w-3.5", isRTL && "rotate-180")} />
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
