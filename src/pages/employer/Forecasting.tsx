@@ -2,6 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
+import { PrimaryInsight } from '@/components/ui/primary-insight';
+import { AssumptionsPanel } from '@/components/ui/assumptions-panel';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
@@ -16,7 +20,8 @@ import {
   ArrowDownRight,
   BarChart3,
   LineChart as LineChartIcon,
-  Sparkles
+  Sparkles,
+  AlertTriangle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
@@ -63,9 +68,18 @@ const scenarioModels = [
   { id: 'optimistic', label: 'Optimistic', color: chartColors.success, description: 'Full utilization, max value' },
 ];
 
+// Forecast assumptions
+const forecastAssumptions = [
+  { id: 'headcount', label: 'Headcount Growth', value: '+5% YoY', description: 'Based on approved hiring plan' },
+  { id: 'inflation', label: 'Inflation Adjustment', value: '3.2%', description: 'CPI-linked benefit increases' },
+  { id: 'utilization', label: 'Utilization Trend', value: '+2% monthly', description: 'Historical trend analysis' },
+  { id: 'coverage', label: 'Data Coverage', value: '94%', description: 'Transactions captured in forecast' },
+];
+
 export default function ForecastingPage() {
-  const { direction } = useLanguage();
+  const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
+  const isArabic = language === 'ar';
   
   const [selectedScenario, setSelectedScenario] = useState('expected');
   const [headcountChange, setHeadcountChange] = useState([0]);
@@ -79,31 +93,55 @@ export default function ForecastingPage() {
   const utilizationImpact = (utilizationTarget[0] - 64) * 0.15; // Impact per % change
   const adjustedProjection = baseProjection + headcountImpact + utilizationImpact;
 
+  // Determine if over budget
+  const isOverBudget = adjustedProjection > 62;
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className={cn(
-        "flex flex-col sm:flex-row sm:items-center justify-between gap-4",
-        isRTL && "sm:flex-row-reverse"
-      )}>
-        <div className={isRTL ? "text-right" : ""}>
-          <h1 className="text-2xl font-display font-bold tracking-tight">
-            {isRTL ? "التوقعات المالية" : "Financial Forecasting"}
-          </h1>
-          <p className="text-muted-foreground">
-            {isRTL 
-              ? "توقعات نهاية العام ونمذجة السيناريوهات"
-              : "Year-end projections and scenario modeling"
-            }
-          </p>
-        </div>
-        <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+      {/* Page Header */}
+      <PageHeader
+        title={isArabic ? 'التوقعات المالية' : 'Financial Forecasting'}
+        titleAr="التوقعات المالية"
+        subtitle={isArabic ? 'توقعات نهاية العام ونمذجة السيناريوهات' : 'Year-end projections and scenario modeling'}
+        subtitleAr="توقعات نهاية العام ونمذجة السيناريوهات"
+        icon={LineChartIcon}
+        action={
           <Button variant="outline">
             <Download className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
-            {isRTL ? "تصدير التقرير" : "Export Report"}
+            {isArabic ? "تصدير التقرير" : "Export Report"}
           </Button>
-        </div>
-      </div>
+        }
+      />
+
+      {/* Status Strip */}
+      <StatusStrip
+        confidence="high"
+        lastUpdated={new Date()}
+        dataSource="Financial Analytics"
+        dataSourceAr="التحليلات المالية"
+      />
+
+      {/* Primary Insight */}
+      {isOverBudget && (
+        <PrimaryInsight
+          icon={AlertTriangle}
+          title={isArabic ? 'تحذير الميزانية' : 'Budget Warning'}
+          titleAr="تحذير الميزانية"
+          value={formatCurrency(adjustedProjection - 62)}
+          subtitle={isArabic 
+            ? `التوقعات الحالية تتجاوز الميزانية. فكر في تعديل مستهدفات الاستخدام أو إعادة تخصيص الميزانية.`
+            : `Current projections exceed budget. Consider adjusting utilization targets or reallocating budget.`}
+          subtitleAr="التوقعات الحالية تتجاوز الميزانية. فكر في تعديل مستهدفات الاستخدام أو إعادة تخصيص الميزانية."
+          variant="warning"
+        />
+      )}
+
+      {/* Assumptions Panel */}
+      <AssumptionsPanel
+        title={isArabic ? 'افتراضات التوقعات' : 'Forecast Assumptions'}
+        titleAr="افتراضات التوقعات"
+        assumptions={forecastAssumptions}
+      />
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-4">

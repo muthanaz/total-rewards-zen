@@ -3,8 +3,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
-import { Users, Baby, Briefcase, GraduationCap, Heart, Car, TrendingUp } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
+import { PrimaryInsight } from '@/components/ui/primary-insight';
+import { MetricTooltip } from '@/components/ui/metric-tooltip';
+import { Users, Baby, Briefcase, GraduationCap, Heart, Car, TrendingUp, Sparkles, Target, Lightbulb } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 
 // Vibrant color palette
 const COLORS = {
@@ -116,13 +122,51 @@ const CustomLegend = ({ payload }: any) => (
 );
 
 export default function SegmentsPage() {
+  const { language, direction } = useLanguage();
+  const isRTL = direction === 'rtl';
+  const isArabic = language === 'ar';
+
+  // Find underutilized segment
+  const underutilizedSegment = employeeSegments.reduce((prev, curr) => 
+    prev.utilizationRate < curr.utilizationRate ? prev : curr
+  );
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground">Employee Segments</h1>
-        <p className="text-muted-foreground">Analyze benefit usage patterns across employee groups</p>
-      </div>
+    <div className={cn("space-y-6", isRTL && "text-right")}>
+      {/* Page Header */}
+      <PageHeader
+        title={isArabic ? 'شرائح الموظفين' : 'Employee Segments'}
+        titleAr="شرائح الموظفين"
+        subtitle={isArabic ? 'تحليل أنماط استخدام المزايا عبر مجموعات الموظفين' : 'Analyze benefit usage patterns across employee groups'}
+        subtitleAr="تحليل أنماط استخدام المزايا عبر مجموعات الموظفين"
+        icon={Users}
+      />
+
+      {/* Status Strip */}
+      <StatusStrip
+        confidence="high"
+        lastUpdated={new Date()}
+        dataSource="HR Analytics"
+        dataSourceAr="تحليلات الموارد البشرية"
+      />
+
+      {/* Primary Insight */}
+      <PrimaryInsight
+        icon={Lightbulb}
+        title={isArabic ? 'شريحة تحتاج اهتمام' : 'Segment Needs Attention'}
+        titleAr="شريحة تحتاج اهتمام"
+        value={underutilizedSegment.name}
+        subtitle={isArabic 
+          ? `أدنى معدل استخدام (${underutilizedSegment.utilizationRate}%). فكر في إعادة تصميم عروض المزايا لهذه المجموعة.`
+          : `Lowest utilization rate (${underutilizedSegment.utilizationRate}%). Consider redesigning benefit offerings for this group.`}
+        subtitleAr={`أدنى معدل استخدام (${underutilizedSegment.utilizationRate}%). فكر في إعادة تصميم عروض المزايا لهذه المجموعة.`}
+        action={{
+          label: isArabic ? 'عرض التوصيات' : 'View Recommendations',
+          labelAr: 'عرض التوصيات',
+          onClick: () => window.location.href = '/employer/recommendations',
+        }}
+        variant="warning"
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
