@@ -30,6 +30,8 @@ import {
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
 
 interface Transaction {
   id: string;
@@ -86,21 +88,23 @@ export default function VendorTransactions() {
 
   return (
     <div className={cn("space-y-6", isRTL && "text-right")}>
-      {/* Header */}
-      <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
-        <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">
-            {t('Transactions', 'المعاملات')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('Track all redemptions and commissions', 'تتبع جميع عمليات الاسترداد والعمولات')}
-          </p>
-        </div>
-        <Button variant="outline" className="gap-2" onClick={handleExport}>
-          <Download className="w-4 h-4" />
-          {t('Export CSV', 'تصدير CSV')}
-        </Button>
-      </div>
+      <PageHeader
+        title={t('Transactions', 'المعاملات')}
+        subtitle={t('Track all redemptions and commissions', 'تتبع جميع عمليات الاسترداد والعمولات')}
+        icon={Receipt}
+        action={
+          <Button variant="outline" className="gap-2" onClick={handleExport}>
+            <Download className="w-4 h-4" />
+            {t('Export CSV', 'تصدير CSV')}
+          </Button>
+        }
+      />
+
+      <StatusStrip
+        confidence="high"
+        lastUpdated={new Date()}
+        dataSource={t('Transaction ledger', 'سجل المعاملات')}
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

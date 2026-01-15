@@ -26,6 +26,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
+import { PrimaryInsight } from '@/components/ui/primary-insight';
 
 interface Offer {
   id: number;
@@ -140,23 +143,38 @@ export default function VendorOffers() {
 
   const categories = [...new Set(offers.map(o => o.category))];
 
+  const activeOffers = offers.filter(o => o.status === 'active').length;
+  const totalViews = offers.reduce((sum, o) => sum + o.views, 0);
+  const totalEarnings = offers.reduce((sum, o) => sum + o.earnings, 0);
+
   return (
     <div className={cn("space-y-6", isRTL && "text-right")}>
-      {/* Header */}
-      <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
-        <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">
-            {t('My Offers', 'عروضي')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('Manage and track all your marketplace offers', 'إدارة وتتبع جميع عروضك في السوق')}
-          </p>
-        </div>
-        <Button size="lg" className="gap-2">
-          <Plus className="w-4 h-4" />
-          {t('Create New Offer', 'إنشاء عرض جديد')}
-        </Button>
-      </div>
+      <PageHeader
+        title={t('My Offers', 'عروضي')}
+        subtitle={t('Manage and track all your marketplace offers', 'إدارة وتتبع جميع عروضك في السوق')}
+        icon={Tag}
+        action={
+          <Button size="lg" className="gap-2">
+            <Plus className="w-4 h-4" />
+            {t('Create New Offer', 'إنشاء عرض جديد')}
+          </Button>
+        }
+      />
+
+      <StatusStrip
+        confidence="high"
+        lastUpdated={new Date()}
+        dataSource={t('Marketplace analytics', 'تحليلات السوق')}
+      />
+
+      {activeOffers < 3 && (
+        <PrimaryInsight
+          title={t('Low Active Offers', 'عروض نشطة قليلة')}
+          value={activeOffers}
+          subtitle={t('Consider creating more to increase visibility.', 'فكر في إنشاء المزيد لزيادة الظهور.')}
+          variant="warning"
+        />
+      )}
 
       {/* Filters */}
       <Card>
