@@ -25,11 +25,19 @@ interface DataQualityPanelProps {
     satisfactionSampleSize: number;
     requiredSampleSize: number;
     missingClassifications: number;
+    // Integration status
+    hrisConnected?: boolean;
+    payrollConnected?: boolean;
+    claimsIntegrated?: boolean;
+    surveyEnabled?: boolean;
+    lastHrisSync?: Date | null;
+    lastPayrollSync?: Date | null;
   };
+  showIntegrations?: boolean;
   className?: string;
 }
 
-export function DataQualityPanel({ metrics, className }: DataQualityPanelProps) {
+export function DataQualityPanel({ metrics, showIntegrations = false, className }: DataQualityPanelProps) {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
   const isArabic = language === 'ar';
@@ -42,6 +50,12 @@ export function DataQualityPanel({ metrics, className }: DataQualityPanelProps) 
     satisfactionSampleSize: 0,
     requiredSampleSize: 30,
     missingClassifications: 0,
+    hrisConnected: false,
+    payrollConnected: false,
+    claimsIntegrated: false,
+    surveyEnabled: false,
+    lastHrisSync: null,
+    lastPayrollSync: null,
   };
 
   const entitlementPercent = data.totalEmployees > 0 
