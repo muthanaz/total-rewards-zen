@@ -4,6 +4,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
+import { PrimaryInsight } from '@/components/ui/primary-insight';
 import { 
   Tag, 
   TrendingUp, 
@@ -125,20 +128,36 @@ export default function VendorDashboard() {
   return (
     <div className={cn("space-y-8", isRTL && "text-right")}>
       {/* Header */}
-      <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
-        <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">
-            {t('Vendor Dashboard', 'لوحة تحكم المورد')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('Manage your offers and track performance', 'إدارة عروضك وتتبع الأداء')}
-          </p>
-        </div>
-        <Button size="lg" className="gap-2">
-          <Plus className="w-4 h-4" />
-          {t('Create New Offer', 'إنشاء عرض جديد')}
-        </Button>
-      </div>
+      <PageHeader
+        title={t('Vendor Dashboard', 'لوحة تحكم المورد')}
+        titleAr="لوحة تحكم المورد"
+        subtitle={t('Manage your offers and track performance', 'إدارة عروضك وتتبع الأداء')}
+        subtitleAr="إدارة عروضك وتتبع الأداء"
+        icon={Tag}
+        action={
+          <Button size="lg" className="gap-2">
+            <Plus className="w-4 h-4" />
+            {t('Create New Offer', 'إنشاء عرض جديد')}
+          </Button>
+        }
+      />
+
+      {/* Status Strip */}
+      <StatusStrip
+        confidence="high"
+        lastUpdated={new Date()}
+        dataSource="Vendor Portal"
+      />
+
+      {/* Primary Insight */}
+      <PrimaryInsight
+        icon={TrendingUp}
+        title={t('Strong Performance', 'أداء قوي')}
+        value="847"
+        subtitle={t('Total redemptions this month - 15% better than last month', 'إجمالي عمليات الاسترداد هذا الشهر - أفضل بنسبة 15% من الشهر الماضي')}
+        trend={{ value: 15, direction: 'up' }}
+        variant="success"
+      />
 
       {/* Metrics Cards */}
       {showMetricsCards && (

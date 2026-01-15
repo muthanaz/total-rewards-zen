@@ -2,7 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
+import { PrimaryInsight } from '@/components/ui/primary-insight';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
@@ -129,31 +131,45 @@ export default function SatisfactionPulsePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className={cn(
-        "flex flex-col sm:flex-row sm:items-center justify-between gap-4",
-        isRTL && "sm:flex-row-reverse"
-      )}>
-        <div className={isRTL ? "text-right" : ""}>
-          <h1 className="text-2xl font-display font-bold tracking-tight">
-            {isRTL ? "نبض الرضا" : "Satisfaction Pulse"}
-          </h1>
-          <p className="text-muted-foreground">
-            {isRTL 
-              ? "قياس رضا الموظفين عن برنامج المزايا"
-              : "Employee satisfaction with the benefits program"
-            }
-          </p>
-        </div>
-        <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-          <Button variant="outline" size="sm">
-            <Filter className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
-            {isRTL ? "تصفية" : "Filter"}
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
-            {isRTL ? "تصدير" : "Export"}
-          </Button>
-        </div>
+      <PageHeader
+        title={isRTL ? "نبض الرضا" : "Satisfaction Pulse"}
+        titleAr="نبض الرضا"
+        subtitle={isRTL ? "قياس رضا الموظفين عن برنامج المزايا" : "Employee satisfaction with the benefits program"}
+        subtitleAr="قياس رضا الموظفين عن برنامج المزايا"
+        icon={Heart}
+      />
+
+      {/* Status Strip */}
+      <StatusStrip
+        confidence="high"
+        lastUpdated={new Date()}
+        dataSource="Survey System"
+        sampleSize={312}
+        minSampleSize={100}
+      />
+
+      {/* Primary Insight */}
+      <PrimaryInsight
+        icon={Heart}
+        title={isRTL ? "نتيجة NPS قوية" : "Strong NPS Score"}
+        value={currentNPS}
+        subtitle={isRTL 
+          ? `تحسن صافي نقاط الترويج بمقدار ${npsChange} نقطة مقارنة بالفترة السابقة`
+          : `Net Promoter Score improved by ${npsChange} points vs previous period`}
+        trend={{ value: npsChange, direction: npsChange > 0 ? 'up' : 'down' }}
+        variant={npsChange > 0 ? "success" : "warning"}
+      />
+
+      {/* Action Buttons */}
+      <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+        <Button variant="outline" size="sm">
+          <Filter className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+          {isRTL ? "تصفية" : "Filter"}
+        </Button>
+        <Button variant="outline" size="sm">
+          <Download className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+          {isRTL ? "تصدير" : "Export"}
+        </Button>
       </div>
 
       {/* NPS and Summary Cards */}

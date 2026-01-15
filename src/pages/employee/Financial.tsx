@@ -3,7 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { BenefitGuide } from '@/components/employee/BenefitGuide';
 import { Slider } from '@/components/ui/slider';
-import { PiggyBank, TrendingUp, Wallet, Target, Calculator, Gift } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
+import { AssumptionsPanel } from '@/components/ui/assumptions-panel';
+import { PiggyBank, TrendingUp, Wallet, Target, Calculator, Gift, Lightbulb } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 
@@ -153,21 +156,29 @@ export default function FinancialPage() {
 
   const policyPoints = [t.policy1, t.policy2, t.policy3, t.policy4, t.policy5, t.policy6];
 
+  const financialAssumptions = [
+    { text: t.policy1, icon: Lightbulb as any },
+    { text: 'Based on current contribution rate of ' + savingsPercent[0] + '%', icon: Lightbulb as any },
+    { text: 'Employer match calculated on basic salary only', icon: Lightbulb as any },
+  ];
+
   return (
     <div className={cn("space-y-6 animate-fade-in", isRTL && "text-right")}>
       {/* Header */}
-      <div>
-        <h1 className={cn(
-          "text-2xl font-display font-bold text-foreground flex items-center gap-3",
-          isRTL && "flex-row-reverse"
-        )}>
-          <PiggyBank className="w-7 h-7 text-accent" />
-          {t.title}
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          {t.subtitle}
-        </p>
-      </div>
+      <PageHeader
+        title={t.title}
+        titleAr={pageTranslations.ar.title}
+        subtitle={t.subtitle}
+        subtitleAr={pageTranslations.ar.subtitle}
+        icon={PiggyBank}
+      />
+
+      {/* Status Strip */}
+      <StatusStrip
+        confidence="high"
+        lastUpdated={new Date()}
+        dataSource="Savings Plan"
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
