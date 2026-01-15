@@ -10,12 +10,17 @@ import { BenefitGuide } from '@/components/employee/BenefitGuide';
 import { NoSearchResults } from '@/components/ui/empty-state';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
+import { PrimaryInsight } from '@/components/ui/primary-insight';
 import { 
   GraduationCap, Search, Star, ExternalLink, MapPin, Users, BookOpen, 
   Calculator, Wallet, TrendingUp, User, ChevronRight, Check, Info,
-  School, Baby, Building2
+  School, Baby, Building2, Lightbulb
 } from 'lucide-react';
 import { useSchools, useChildren } from '@/hooks/useSupabaseData';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 
 const ALLOWANCE_PER_CHILD = 30000;
 
@@ -36,6 +41,9 @@ interface ChildAllocation {
 }
 
 export default function SchoolingPage() {
+  const { language, direction } = useLanguage();
+  const isRTL = direction === 'rtl';
+  const isArabic = language === 'ar';
   const { data: schools = [] } = useSchools();
   const { data: dbChildren = [] } = useChildren();
   
@@ -151,17 +159,40 @@ export default function SchoolingPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-          <GraduationCap className="w-7 h-7 text-accent" />
-          Education Allowance
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Configure education for each child individually — each child gets their own AED 30,000 allowance
-        </p>
-      </div>
+    <div className={cn("space-y-6", isRTL && "text-right")}>
+      {/* Page Header */}
+      <PageHeader
+        title={isArabic ? 'بدل التعليم' : 'Education Allowance'}
+        titleAr="بدل التعليم"
+        subtitle={isArabic 
+          ? `قم بتكوين التعليم لكل طفل على حدة — كل طفل يحصل على بدل ${ALLOWANCE_PER_CHILD.toLocaleString()} درهم`
+          : `Configure education for each child individually — each child gets their own AED ${ALLOWANCE_PER_CHILD.toLocaleString()} allowance`}
+        subtitleAr={`قم بتكوين التعليم لكل طفل على حدة — كل طفل يحصل على بدل ${ALLOWANCE_PER_CHILD.toLocaleString()} درهم`}
+        icon={GraduationCap}
+      />
+
+      {/* Status Strip */}
+      <StatusStrip
+        confidence="high"
+        lastUpdated={new Date()}
+        dataSource="HR Policy"
+        dataSourceAr="سياسة الموارد البشرية"
+      />
+
+      {/* Primary Insight - Show if any child needs top-up */}
+      {totalOutOfPocket > 0 && (
+        <PrimaryInsight
+          icon={Lightbulb}
+          title={isArabic ? 'مبلغ إضافي مطلوب' : 'Top-Up Required'}
+          titleAr="مبلغ إضافي مطلوب"
+          value={formatCurrency(totalOutOfPocket)}
+          subtitle={isArabic 
+            ? 'سيتم خصم هذا المبلغ من راتبك لتغطية الرسوم التي تتجاوز البدل'
+            : 'This amount will be deducted from your salary to cover fees exceeding the allowance'}
+          subtitleAr="سيتم خصم هذا المبلغ من راتبك لتغطية الرسوم التي تتجاوز البدل"
+          variant="warning"
+        />
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
