@@ -136,13 +136,13 @@ export default function BenefitsAnalysis() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
+      {/* Header - Renamed to Insights & Optimization */}
       <div className={cn("space-y-1", isRTL && "text-right")}>
         <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">
-          {isRTL ? 'تحليل المزايا' : 'Benefits Analysis'}
+          {isRTL ? 'الرؤى والتحسين' : 'Insights & Optimization'}
         </h1>
         <p className="text-muted-foreground">
-          {isRTL ? 'اكتشف ما يمكنك المطالبة به واتخذ إجراءً' : 'Discover what you can claim and take action'}
+          {isRTL ? 'اكتشف فرص التوفير واتخذ إجراءً بناءً على بياناتك' : 'Discover savings opportunities and take action based on your data'}
         </p>
       </div>
 

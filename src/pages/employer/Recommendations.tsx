@@ -1,9 +1,17 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
-import { Lightbulb, TrendingUp, Users, DollarSign, MessageSquare, Target, ArrowRight, CheckCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
+import { PrimaryInsight } from '@/components/ui/primary-insight';
+import { ConfidenceGate, ConfidenceBadge } from '@/components/employer/ConfidenceGate';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { Lightbulb, TrendingUp, Users, DollarSign, MessageSquare, Target, ArrowRight, CheckCircle, Plus, Database, Sparkles } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface Recommendation {
   id: string;
@@ -17,6 +25,8 @@ interface Recommendation {
   action: string;
   rationale: string;
   link?: string;
+  triggerData: string;
+  confidence: 'high' | 'medium' | 'low';
 }
 
 const recommendations: Recommendation[] = [
@@ -31,6 +41,8 @@ const recommendations: Recommendation[] = [
     affectedEmployees: 45,
     action: 'Create internal newsletter featuring top courses and success stories',
     rationale: 'Low-effort campaign can increase utilization by 20-30% based on industry benchmarks.',
+    triggerData: 'L&D utilization: 50% vs target 70% (6-month trend: declining)',
+    confidence: 'high',
     link: '/employer/zombie',
   },
   {
@@ -44,6 +56,8 @@ const recommendations: Recommendation[] = [
     affectedEmployees: 60,
     action: 'Implement one-click app-based wellness rewards system',
     rationale: 'Current 5-step process has 60% drop-off. Simplification expected to recover 60% of zombie spend.',
+    triggerData: 'Wellbeing utilization: 53% | Redemption drop-off: 60%',
+    confidence: 'high',
     link: '/employer/policies',
   },
   {
@@ -56,6 +70,8 @@ const recommendations: Recommendation[] = [
     affectedEmployees: 42,
     action: 'Create "Benefits Champion" program with parent employees as advocates',
     rationale: 'Peer-to-peer learning more effective than corporate communications.',
+    triggerData: 'Parents utilization: 89% vs avg 64% | Non-parents: 52%',
+    confidence: 'medium',
     link: '/employer/segments',
   },
   {
@@ -69,6 +85,8 @@ const recommendations: Recommendation[] = [
     affectedEmployees: 15,
     action: 'Allow conversion to travel/experience vouchers at 80% value',
     rationale: 'Increases perceived value while reducing zombie spend. Net positive for employer and employee.',
+    triggerData: 'Single employees flight utilization: 70% | AED 60K unused annually',
+    confidence: 'medium',
     link: '/employer/zombie',
   },
   {
@@ -82,6 +100,8 @@ const recommendations: Recommendation[] = [
     affectedEmployees: 32,
     action: 'Negotiate with 3 additional gym chains or add home fitness alternatives',
     rationale: 'Location proximity is #1 factor in gym membership usage.',
+    triggerData: 'Gym utilization: 60% | Employee survey: 45% cite distance as barrier',
+    confidence: 'medium',
     link: '/employer/marketplace',
   },
   {
@@ -94,6 +114,8 @@ const recommendations: Recommendation[] = [
     affectedEmployees: 130,
     action: 'Add FAQ section, flowcharts for pre-approval, and video explainers',
     rationale: 'Reduce HR ticket volume by 50% and improve employee satisfaction.',
+    triggerData: 'Policy clarity score: 72% | Monthly questions: 8 avg',
+    confidence: 'high',
     link: '/employer/policies',
   },
   {
@@ -106,6 +128,8 @@ const recommendations: Recommendation[] = [
     potentialSavings: 45000,
     action: 'Renegotiate contracts or convert to opt-in with company matching',
     rationale: 'Current blanket coverage is inefficient. Opt-in model aligns cost with actual demand.',
+    triggerData: 'Add-on utilization: 28% | AED 45K annual spend on unused coverage',
+    confidence: 'high',
     link: '/employer/spend',
   },
 ];
