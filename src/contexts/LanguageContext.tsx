@@ -100,6 +100,9 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.security': 'Security & Privacy',
     'nav.allBenefits': 'All Benefits',
     'nav.servicesSupport': 'Services & Support',
+    'nav.benefitDetails': 'Benefit Details',
+    'nav.bonus': 'Annual Bonus',
+    'nav.health': 'Health Insurance',
     'nav.timeOff': 'Time Off',
     'nav.myBenefits': 'My Benefits',
     
@@ -302,6 +305,9 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.security': 'الأمان والخصوصية',
     'nav.allBenefits': 'جميع المزايا',
     'nav.servicesSupport': 'الخدمات والدعم',
+    'nav.benefitDetails': 'تفاصيل المزايا',
+    'nav.bonus': 'المكافأة السنوية',
+    'nav.health': 'التأمين الصحي',
     'nav.timeOff': 'الإجازات',
     'nav.myBenefits': 'مزاياي',
     

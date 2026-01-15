@@ -60,6 +60,19 @@ const navigation: NavGroup[] = [
     ],
   },
   {
+    labelKey: 'nav.benefitDetails',
+    items: [
+      { labelKey: 'nav.housing', path: '/employee/housing', icon: Home },
+      { labelKey: 'nav.schooling', path: '/employee/schooling', icon: GraduationCap },
+      { labelKey: 'nav.health', path: '/employee/health', icon: Heart },
+      { labelKey: 'nav.transport', path: '/employee/transport', icon: Car },
+      { labelKey: 'nav.bonus', path: '/employee/bonus', icon: Award },
+      { labelKey: 'nav.financial', path: '/employee/financial', icon: PiggyBank },
+      { labelKey: 'nav.wellbeing', path: '/employee/wellbeing', icon: Dumbbell },
+      { labelKey: 'nav.learning', path: '/employee/learning', icon: BookOpen },
+    ],
+  },
+  {
     labelKey: 'nav.leaves',
     items: [
       { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
