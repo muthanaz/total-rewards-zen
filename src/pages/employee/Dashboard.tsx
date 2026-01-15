@@ -324,7 +324,7 @@ export default function EmployeeDashboard() {
       <CompensationBreakdownModal 
         open={compensationModalOpen}
         salaryData={salaryData}
-        benefits={benefits.map(b => ({ name: b.name, nameAr: b.nameAr, value: b.value, utilized: b.utilized, type: b.type }))}
+        benefits={benefits.map(b => ({ name: b.name, value: b.value, utilized: b.utilized, valueType: b.valueType }))}
         onOpenChange={setCompensationModalOpen} 
       />
     </div>
