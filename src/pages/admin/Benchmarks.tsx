@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
+import { PrimaryInsight } from '@/components/ui/primary-insight';
 import { 
   Globe, 
   TrendingUp, 
@@ -16,6 +19,8 @@ import {
   Bookmark,
   Target,
   Award,
+  Sparkles,
+  AlertTriangle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -70,6 +75,7 @@ const historicalTrends = [
 export default function AdminBenchmarks() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
+  const isArabic = language === 'ar';
   const [selectedRegion, setSelectedRegion] = useState('all');
   const [selectedIndustry, setSelectedIndustry] = useState('all');
 
@@ -85,40 +91,66 @@ export default function AdminBenchmarks() {
     fullMark: 100,
   }));
 
+  // Find outlier region
+  const lowestRegion = regionalData.reduce((prev, curr) => 
+    prev.avgUtilization < curr.avgUtilization ? prev : curr
+  );
+
   return (
     <div className={cn("space-y-8", isRTL && "text-right")}>
-      {/* Header */}
-      <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
-        <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">
-            {t('Regional & Industry Benchmarks', 'المعايير الإقليمية والصناعية')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('Compare performance metrics across regions, industries, and company sizes', 'قارن مقاييس الأداء عبر المناطق والصناعات وأحجام الشركات')}
-          </p>
-        </div>
-        <div className={cn("flex items-center gap-2 flex-wrap", isRTL && "flex-row-reverse")}>
-          <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder={t('Region', 'المنطقة')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('All Regions', 'جميع المناطق')}</SelectItem>
-              {regionalData.map(r => (
-                <SelectItem key={r.region} value={r.region}>{r.region}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button variant="outline" size="sm" onClick={handleSaveReport}>
-            <Bookmark className="w-4 h-4 mr-2" />
-            {t('Save Report', 'حفظ التقرير')}
-          </Button>
-          <Button size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            {t('Export', 'تصدير')}
-          </Button>
-        </div>
-      </div>
+      {/* Page Header */}
+      <PageHeader
+        title={t('Regional & Industry Benchmarks', 'المعايير الإقليمية والصناعية')}
+        titleAr="المعايير الإقليمية والصناعية"
+        subtitle={t('Compare performance metrics across regions, industries, and company sizes', 'قارن مقاييس الأداء عبر المناطق والصناعات وأحجام الشركات')}
+        subtitleAr="قارن مقاييس الأداء عبر المناطق والصناعات وأحجام الشركات"
+        icon={Globe}
+        action={
+          <div className={cn("flex items-center gap-2 flex-wrap", isRTL && "flex-row-reverse")}>
+            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder={t('Region', 'المنطقة')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('All Regions', 'جميع المناطق')}</SelectItem>
+                {regionalData.map(r => (
+                  <SelectItem key={r.region} value={r.region}>{r.region}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="sm" onClick={handleSaveReport}>
+              <Bookmark className="w-4 h-4 mr-2" />
+              {t('Save Report', 'حفظ التقرير')}
+            </Button>
+            <Button size="sm">
+              <Download className="w-4 h-4 mr-2" />
+              {t('Export', 'تصدير')}
+            </Button>
+          </div>
+        }
+      />
+
+      {/* Status Strip */}
+      <StatusStrip
+        confidence="high"
+        lastUpdated={new Date()}
+        dataSource="Platform Analytics"
+        dataSourceAr="تحليلات المنصة"
+      />
+
+      {/* Primary Insight */}
+      <PrimaryInsight
+        icon={AlertTriangle}
+        title={t('Regional Insight', 'رؤية إقليمية')}
+        titleAr="رؤية إقليمية"
+        value={`${lowestRegion.region}: ${lowestRegion.avgUtilization}%`}
+        subtitle={t(
+          `Lowest utilization across GCC. Consider targeted engagement campaigns or benefit restructuring for organizations in this region.`,
+          `أدنى معدل استخدام عبر الخليج. فكر في حملات المشاركة المستهدفة أو إعادة هيكلة المزايا للمنظمات في هذه المنطقة.`
+        )}
+        subtitleAr="أدنى معدل استخدام عبر الخليج. فكر في حملات المشاركة المستهدفة أو إعادة هيكلة المزايا للمنظمات في هذه المنطقة."
+        variant="warning"
+      />
 
       {/* Key Benchmark Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
