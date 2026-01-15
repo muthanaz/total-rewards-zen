@@ -3,9 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -18,7 +21,10 @@ import {
   AlertCircle,
   Wallet,
   BanknoteIcon,
-  FileText
+  FileText,
+  TrendingUp,
+  Info,
+  XCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -35,6 +41,13 @@ const pendingPayouts = [
   { id: '5', amount: 6250, status: 'pending', requestedAt: '2024-01-14', estimatedPayout: '2024-01-17' },
 ];
 
+// Payout tiers/thresholds
+const payoutTiers = [
+  { name: 'Standard', minAmount: 1000, processingDays: 5, fee: 0 },
+  { name: 'Express', minAmount: 5000, processingDays: 2, fee: 25 },
+  { name: 'Instant', minAmount: 10000, processingDays: 0, fee: 50 },
+];
+
 export default function VendorPayoutsPage() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
@@ -43,12 +56,15 @@ export default function VendorPayoutsPage() {
   
   const [payoutDialogOpen, setPayoutDialogOpen] = useState(false);
   const [payoutAmount, setPayoutAmount] = useState('');
+  const [selectedTier, setSelectedTier] = useState<string>('Standard');
   
   // Summary stats
   const availableBalance = 18500;
   const pendingAmount = pendingPayouts.reduce((sum, p) => sum + p.amount, 0);
   const totalPaidThisMonth = 12500;
   const minPayout = 1000;
+  const monthlyTarget = 25000;
+  const progressToTarget = Math.round((totalPaidThisMonth / monthlyTarget) * 100);
 
   const handleRequestPayout = () => {
     const amount = parseFloat(payoutAmount);
@@ -97,6 +113,50 @@ export default function VendorPayoutsPage() {
         subtitle={isArabic ? 'إدارة طلبات السحب والمدفوعات' : 'Manage your withdrawal requests and settlements'}
         icon={CreditCard}
       />
+
+      <StatusStrip
+        confidence="high"
+        lastUpdated={new Date()}
+        dataSource={isArabic ? 'يناير 2024' : 'January 2024'}
+      />
+
+      {/* Payout Progress */}
+      <Card className="card-elevated border-primary/20">
+        <CardContent className="pt-6">
+          <div className={cn("flex items-center justify-between mb-3", isRTL && "flex-row-reverse")}>
+            <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+              <TrendingUp className="h-5 w-5 text-primary" />
+              <span className="font-medium">{isArabic ? 'هدف الشهر' : 'Monthly Target'}</span>
+            </div>
+            <span className="text-sm text-muted-foreground">
+              AED {totalPaidThisMonth.toLocaleString()} / {monthlyTarget.toLocaleString()}
+            </span>
+          </div>
+          <Progress value={progressToTarget} className="h-3" />
+          <p className="text-xs text-muted-foreground mt-2">
+            {isArabic 
+              ? `${progressToTarget}% من هدفك الشهري` 
+              : `${progressToTarget}% of your monthly target`}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Payout Tiers Info */}
+      {availableBalance >= minPayout && (
+        <Alert className="border-blue-500/30 bg-blue-500/5">
+          <Info className="h-4 w-4 text-blue-500" />
+          <AlertDescription className={cn("flex flex-col md:flex-row md:items-center gap-2 justify-between", isRTL && "md:flex-row-reverse")}>
+            <span>
+              {isArabic 
+                ? 'رصيدك مؤهل للسحب. اختر مستوى السرعة المناسب لك.'
+                : 'Your balance qualifies for payout. Choose your preferred speed tier.'}
+            </span>
+            <Button size="sm" onClick={() => setPayoutDialogOpen(true)}>
+              {isArabic ? 'طلب الآن' : 'Request Now'}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -249,18 +309,48 @@ export default function VendorPayoutsPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Request Payout Dialog */}
+      {/* Request Payout Dialog with Tiers */}
       <Dialog open={payoutDialogOpen} onOpenChange={setPayoutDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{isArabic ? 'طلب سحب' : 'Request Payout'}</DialogTitle>
             <DialogDescription>
               {isArabic 
-                ? `الرصيد المتاح: ${availableBalance.toLocaleString()} درهم. الحد الأدنى: ${minPayout.toLocaleString()} درهم.`
-                : `Available balance: AED ${availableBalance.toLocaleString()}. Minimum: AED ${minPayout.toLocaleString()}.`}
+                ? `الرصيد المتاح: ${availableBalance.toLocaleString()} درهم`
+                : `Available balance: AED ${availableBalance.toLocaleString()}`}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {/* Tier Selection */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{isArabic ? 'اختر مستوى السرعة' : 'Select Speed Tier'}</label>
+              <div className="grid grid-cols-3 gap-2">
+                {payoutTiers.map((tier) => (
+                  <button
+                    key={tier.name}
+                    onClick={() => setSelectedTier(tier.name)}
+                    className={cn(
+                      "p-3 rounded-lg border text-center transition-all",
+                      selectedTier === tier.name 
+                        ? "border-primary bg-primary/10" 
+                        : "border-border hover:border-primary/50",
+                      parseFloat(payoutAmount || '0') < tier.minAmount && "opacity-50 cursor-not-allowed"
+                    )}
+                    disabled={parseFloat(payoutAmount || '0') < tier.minAmount && parseFloat(payoutAmount || '0') > 0}
+                  >
+                    <p className="font-medium text-sm">{tier.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {tier.processingDays === 0 ? (isArabic ? 'فوري' : 'Instant') : `${tier.processingDays} ${isArabic ? 'أيام' : 'days'}`}
+                    </p>
+                    {tier.fee > 0 && (
+                      <p className="text-xs text-amber-600 mt-1">AED {tier.fee} {isArabic ? 'رسوم' : 'fee'}</p>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Amount Input */}
             <div className="space-y-2">
               <label className="text-sm font-medium">{isArabic ? 'المبلغ (درهم)' : 'Amount (AED)'}</label>
               <Input
@@ -271,10 +361,37 @@ export default function VendorPayoutsPage() {
                 min={minPayout}
                 max={availableBalance}
               />
+              <p className="text-xs text-muted-foreground">
+                {isArabic ? `الحد الأدنى: ${minPayout.toLocaleString()} درهم` : `Minimum: AED ${minPayout.toLocaleString()}`}
+              </p>
             </div>
+
+            {/* Summary */}
+            {payoutAmount && parseFloat(payoutAmount) >= minPayout && (
+              <div className="p-3 rounded-lg bg-muted/50 border space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">{isArabic ? 'المبلغ' : 'Amount'}</span>
+                  <span>AED {parseFloat(payoutAmount).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">{isArabic ? 'الرسوم' : 'Fee'}</span>
+                  <span>AED {payoutTiers.find(t => t.name === selectedTier)?.fee || 0}</span>
+                </div>
+                <div className="flex justify-between text-sm font-medium border-t pt-2">
+                  <span>{isArabic ? 'الإجمالي' : 'Total'}</span>
+                  <span>AED {(parseFloat(payoutAmount) - (payoutTiers.find(t => t.name === selectedTier)?.fee || 0)).toLocaleString()}</span>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <AlertCircle className="w-4 h-4" />
-              <span>{isArabic ? 'تتم معالجة المدفوعات خلال 2-3 أيام عمل' : 'Payouts are processed within 2-3 business days'}</span>
+              <span>
+                {selectedTier === 'Instant' 
+                  ? (isArabic ? 'سيتم التحويل فوراً' : 'Transfer will be immediate')
+                  : (isArabic ? `تتم المعالجة خلال ${payoutTiers.find(t => t.name === selectedTier)?.processingDays} أيام عمل` 
+                    : `Processing within ${payoutTiers.find(t => t.name === selectedTier)?.processingDays} business days`)}
+              </span>
             </div>
           </div>
           <DialogFooter>

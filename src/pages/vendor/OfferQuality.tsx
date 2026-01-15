@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   FileCheck, 
@@ -15,9 +16,25 @@ import {
   TrendingUp,
   Lightbulb,
   ArrowRight,
-  Star
+  Star,
+  ClipboardCheck,
+  AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+// Compliance checklist items
+const complianceChecklist = [
+  { id: 'title', label: 'Clear, descriptive title (min 10 chars)', required: true },
+  { id: 'description', label: 'Detailed description (min 50 chars)', required: true },
+  { id: 'image', label: 'High-quality image (min 800x600px)', required: true },
+  { id: 'terms', label: 'Terms & conditions specified', required: true },
+  { id: 'expiry', label: 'Valid expiry date set', required: true },
+  { id: 'category', label: 'Category assigned', required: true },
+  { id: 'discount', label: 'Discount percentage or value', required: true },
+  { id: 'location', label: 'Redemption locations listed', required: false },
+  { id: 'restrictions', label: 'Usage restrictions specified', required: false },
+  { id: 'contact', label: 'Support contact provided', required: false },
+];
 
 // Mock data for offer quality
 const offers = [
@@ -94,12 +111,22 @@ export default function VendorOfferQualityPage() {
     return 'text-red-500';
   };
 
+  const requiredChecks = complianceChecklist.filter(c => c.required);
+  const passedRequired = requiredChecks.length - 1; // Mock: 6/7 passed
+  const compliancePercent = Math.round((passedRequired / requiredChecks.length) * 100);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader
         title={isArabic ? 'جودة العروض' : 'Offer Quality'}
         subtitle={isArabic ? 'راجع جودة عروضك واحصل على نصائح للتحسين' : 'Review offer compliance and get improvement tips'}
         icon={FileCheck}
+      />
+
+      <StatusStrip
+        confidence={compliancePercent >= 80 ? 'high' : compliancePercent >= 60 ? 'medium' : 'low'}
+        lastUpdated={new Date()}
+        dataSource={isArabic ? 'جميع العروض النشطة' : 'All active offers'}
       />
 
       {/* Summary Cards */}
@@ -160,6 +187,49 @@ export default function VendorOfferQualityPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Compliance Checklist */}
+      <Card className="card-elevated border-primary/20">
+        <CardHeader>
+          <CardTitle className={cn("text-lg flex items-center gap-2", isRTL && "flex-row-reverse")}>
+            <ClipboardCheck className="h-5 w-5 text-primary" />
+            {isArabic ? 'قائمة متطلبات الامتثال' : 'Compliance Checklist'}
+          </CardTitle>
+          <CardDescription>
+            {isArabic ? 'تأكد من استيفاء جميع المتطلبات قبل نشر العرض' : 'Ensure all requirements are met before publishing offers'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {complianceChecklist.map((item, index) => (
+              <div 
+                key={item.id} 
+                className={cn(
+                  "flex items-center gap-3 p-3 rounded-lg border",
+                  index < 6 ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-border bg-muted/20',
+                  isRTL && "flex-row-reverse"
+                )}
+              >
+                {index < 6 ? (
+                  <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />
+                ) : index === 6 ? (
+                  <XCircle className="w-5 h-5 text-red-500 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 text-muted-foreground shrink-0" />
+                )}
+                <div className={cn("flex-1", isRTL && "text-right")}>
+                  <span className="text-sm">{item.label}</span>
+                  {item.required && (
+                    <Badge variant="outline" className="ml-2 text-[9px] py-0 px-1">
+                      {isArabic ? 'مطلوب' : 'Required'}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Quality Checks Overview */}
       <Card className="card-elevated">

@@ -2,9 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { StatusStrip } from '@/components/ui/status-strip';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   BarChart3, Users, Building2, TrendingUp, AlertTriangle, 
-  CheckCircle2, FileText, Shield
+  CheckCircle2, FileText, Shield, EyeOff
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
@@ -72,6 +74,9 @@ export default function AdminBenchmarkMethodologyPage() {
   const isRTL = direction === 'rtl';
   const isArabic = language === 'ar';
 
+  // Count categories that don't meet thresholds
+  const hiddenCategories = benchmarkCategories.filter(c => c.orgs < 5 || c.employees < 100);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader
@@ -79,6 +84,27 @@ export default function AdminBenchmarkMethodologyPage() {
         subtitle={isArabic ? 'قواعد حجم العينة وإخفاء الهوية والثقة' : 'Sample size rules, anonymization, and confidence bands'}
         icon={BarChart3}
       />
+
+      <StatusStrip
+        confidence="high"
+        lastUpdated={new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)}
+        dataSource={isArabic ? 'السنة المالية 2024' : 'FY 2024'}
+      />
+
+      {/* Hidden Benchmarks Warning */}
+      {hiddenCategories.length > 0 && (
+        <Alert className="border-amber-500/30 bg-amber-500/5">
+          <EyeOff className="h-4 w-4 text-amber-500" />
+          <AlertDescription>
+            <span className="font-medium">{hiddenCategories.length} {isArabic ? 'فئات مخفية' : 'categories hidden'}</span>
+            <span className="text-muted-foreground ml-2">
+              {isArabic 
+                ? 'لا تستوفي الحد الأدنى لحجم العينة (5 منظمات / 100 موظف)'
+                : 'Do not meet minimum sample size (5 orgs / 100 employees)'}
+            </span>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

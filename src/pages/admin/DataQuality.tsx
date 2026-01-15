@@ -3,15 +3,57 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { StatusStrip } from '@/components/ui/status-strip';
 import { 
   Database, AlertTriangle, CheckCircle2, XCircle, 
   Users, DollarSign, BarChart3, Shield, 
-  RefreshCw, Download, ChevronRight
+  RefreshCw, Download, ChevronRight, FileWarning, 
+  Link2Off, AlertCircle
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/ui/page-header';
 import { Link } from 'react-router-dom';
+
+// Additional integrity checks
+const integrityChecks = [
+  {
+    id: 'orphaned_profiles',
+    issue: 'Orphaned profiles (no organization)',
+    issueAr: 'ملفات معزولة (بدون منظمة)',
+    count: 45,
+    severity: 'error',
+    action: 'Assign organizations',
+    actionAr: 'تعيين منظمات',
+  },
+  {
+    id: 'missing_budgets',
+    issue: 'Organizations without budgets',
+    issueAr: 'منظمات بدون ميزانيات',
+    count: 3,
+    severity: 'warning',
+    action: 'Configure budgets',
+    actionAr: 'تكوين الميزانيات',
+  },
+  {
+    id: 'missing_metrics',
+    issue: 'Undefined metric definitions',
+    issueAr: 'تعريفات مقاييس مفقودة',
+    count: 6,
+    severity: 'warning',
+    action: 'Add definitions',
+    actionAr: 'إضافة التعريفات',
+  },
+  {
+    id: 'stale_data',
+    issue: 'Stale sync data (>30 days)',
+    issueAr: 'بيانات مزامنة قديمة (>30 يوم)',
+    count: 2,
+    severity: 'warning',
+    action: 'Trigger sync',
+    actionAr: 'تشغيل المزامنة',
+  },
+];
 
 // Demo data quality checks
 const dataQualityChecks = [
@@ -136,12 +178,20 @@ export default function AdminDataQualityPage() {
     }
   };
 
+  const totalIntegrityIssues = integrityChecks.reduce((sum, c) => sum + c.count, 0);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader
         title={isArabic ? 'جودة البيانات والسلامة' : 'Data Quality & Integrity'}
         subtitle={isArabic ? 'مراقبة صحة البيانات وإصلاح المشكلات' : 'Monitor data health and fix issues across the platform'}
         icon={Database}
+      />
+
+      <StatusStrip
+        confidence={overallScore >= 80 ? 'high' : overallScore >= 50 ? 'medium' : 'low'}
+        lastUpdated={new Date(Date.now() - 5 * 60 * 1000)}
+        dataSource={isArabic ? 'جميع المنظمات' : 'All organizations'}
       />
 
       {/* Overall Health */}
@@ -288,6 +338,55 @@ export default function AdminDataQualityPage() {
                     <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
                 </Link>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Data Integrity Issues */}
+      <Card className="border-amber-500/30">
+        <CardHeader>
+          <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+            <CardTitle className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+              <FileWarning className="w-5 h-5 text-amber-500" />
+              {isArabic ? 'مشاكل سلامة البيانات' : 'Data Integrity Issues'}
+            </CardTitle>
+            <Badge className="bg-amber-500/10 text-amber-600 border-0">
+              {totalIntegrityIssues} {isArabic ? 'مشكلة' : 'issues'}
+            </Badge>
+          </div>
+          <CardDescription>
+            {isArabic ? 'السجلات المعزولة والتكوينات المفقودة' : 'Orphaned records and missing configurations'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {integrityChecks.map((check) => (
+              <div 
+                key={check.id}
+                className={cn(
+                  "flex items-center gap-4 p-4 rounded-xl border",
+                  check.severity === 'error' ? 'border-red-500/30 bg-red-500/5' : 'border-amber-500/30 bg-amber-500/5',
+                  isRTL && "flex-row-reverse"
+                )}
+              >
+                {check.severity === 'error' ? (
+                  <Link2Off className="w-5 h-5 text-red-500" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 text-amber-500" />
+                )}
+                <div className={cn("flex-1", isRTL && "text-right")}>
+                  <p className="font-medium text-sm">
+                    {isArabic ? check.issueAr : check.issue}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {check.count} {isArabic ? 'سجل متأثر' : 'records affected'}
+                  </p>
+                </div>
+                <Button size="sm" variant="outline">
+                  {isArabic ? check.actionAr : check.action}
+                </Button>
               </div>
             ))}
           </div>
