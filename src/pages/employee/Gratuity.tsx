@@ -4,7 +4,9 @@ import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { BenefitGuide } from '@/components/employee/BenefitGuide';
 import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
-import { Landmark, TrendingUp, Calendar, Calculator, Briefcase, Clock, Award, Shield } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { StatusStrip } from '@/components/ui/status-strip';
+import { Landmark, TrendingUp, Calendar, Calculator, Briefcase, Clock, Award, Shield, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { format, differenceInDays, addYears } from 'date-fns';
@@ -155,6 +157,7 @@ function calculateGratuity(yearsOfService: number, monthlySalary: number): numbe
 export default function GratuityPage() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
+  const isArabic = language === 'ar';
   const t = pageTranslations[language];
   
   const today = new Date();
@@ -206,6 +209,51 @@ export default function GratuityPage() {
     { date: addYears(EMPLOYMENT_START_DATE, 5), label: t.year5, icon: TrendingUp, completed: yearsEmployed >= 5, note: t.milestone5Year },
   ];
 
+  // Assumptions for gratuity calculation
+  const gratuityAssumptions = [
+    {
+      id: 'contract_type',
+      label: isArabic ? 'نوع العقد' : 'Contract Type',
+      labelAr: 'نوع العقد',
+      value: isArabic ? 'غير محدد المدة' : 'Unlimited',
+      valueAr: 'غير محدد المدة',
+      source: isArabic ? 'الموارد البشرية' : 'HR Records',
+      sourceAr: 'الموارد البشرية',
+      editable: false,
+    },
+    {
+      id: 'basic_salary',
+      label: isArabic ? 'الراتب الأساسي' : 'Basic Salary Used',
+      labelAr: 'الراتب الأساسي',
+      value: `AED ${MONTHLY_SALARY.toLocaleString()}`,
+      valueAr: `${MONTHLY_SALARY.toLocaleString()} درهم`,
+      source: isArabic ? 'الرواتب' : 'Payroll',
+      sourceAr: 'الرواتب',
+      editable: false,
+      note: isArabic ? 'الراتب الأساسي فقط (بدون البدلات)' : 'Basic salary only (excludes allowances)',
+      noteAr: 'الراتب الأساسي فقط (بدون البدلات)',
+    },
+    {
+      id: 'service_start',
+      label: isArabic ? 'تاريخ بدء الخدمة' : 'Service Start Date',
+      labelAr: 'تاريخ بدء الخدمة',
+      value: format(EMPLOYMENT_START_DATE, 'dd MMM yyyy'),
+      source: isArabic ? 'الموارد البشرية' : 'HR Records',
+      sourceAr: 'الموارد البشرية',
+      editable: false,
+    },
+    {
+      id: 'unpaid_leave',
+      label: isArabic ? 'إجازة بدون راتب' : 'Unpaid Leave Deducted',
+      labelAr: 'إجازة بدون راتب',
+      value: isArabic ? '0 يوم' : '0 days',
+      valueAr: '0 يوم',
+      source: isArabic ? 'الحضور' : 'Attendance',
+      sourceAr: 'الحضور',
+      editable: false,
+    },
+  ];
+
   return (
     <div className={cn("space-y-6 animate-fade-in", isRTL && "text-right")}>
       {/* Header */}
@@ -221,6 +269,14 @@ export default function GratuityPage() {
           {t.subtitle}
         </p>
       </div>
+
+      {/* Status Strip */}
+      <StatusStrip
+        confidence="high"
+        lastUpdated={new Date()}
+        dataSource={isArabic ? 'الموارد البشرية/الرواتب' : 'HR/Payroll'}
+        dataSourceAr="الموارد البشرية/الرواتب"
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -257,6 +313,55 @@ export default function GratuityPage() {
           variant="info"
         />
       </div>
+
+      {/* Assumptions Panel - NEW */}
+      <Card className="border-amber-500/20 bg-amber-500/5">
+        <CardHeader className="pb-3">
+          <CardTitle className={cn(
+            "text-base font-display flex items-center gap-2",
+            isRTL && "flex-row-reverse"
+          )}>
+            <AlertTriangle className="w-5 h-5 text-amber-600" />
+            {isArabic ? 'افتراضات الحساب' : 'Calculation Assumptions'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 gap-3">
+            {gratuityAssumptions.map((assumption) => (
+              <div 
+                key={assumption.id}
+                className={cn(
+                  "p-3 rounded-lg bg-background border border-border/50",
+                  isRTL && "text-right"
+                )}
+              >
+                <div className={cn("flex items-center justify-between mb-1", isRTL && "flex-row-reverse")}>
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {isArabic && assumption.labelAr ? assumption.labelAr : assumption.label}
+                  </span>
+                  <Badge variant="outline" className="text-[9px]">
+                    {isArabic && assumption.sourceAr ? assumption.sourceAr : assumption.source}
+                  </Badge>
+                </div>
+                <p className="font-medium text-sm">
+                  {isArabic && assumption.valueAr ? assumption.valueAr : assumption.value}
+                </p>
+                {assumption.note && (
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {isArabic && assumption.noteAr ? assumption.noteAr : assumption.note}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
+            <Shield className="w-3 h-3" />
+            {isArabic 
+              ? 'هذه القيم للأغراض المعلوماتية. استشر الموارد البشرية للتأكيد النهائي.'
+              : 'These values are for informational purposes. Consult HR for final confirmation.'}
+          </p>
+        </CardContent>
+      </Card>
 
       {/* Comprehensive Benefit Guide */}
       <BenefitGuide

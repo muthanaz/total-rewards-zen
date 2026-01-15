@@ -112,23 +112,39 @@ export default function HousingPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header with category color */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-            <div className={cn("p-2 rounded-xl", housingCategory.bgLightClass)}>
-              <Home className={cn("w-6 h-6", housingCategory.textClass)} />
-            </div>
-            Housing Allowance
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Find the perfect home within your allowance or calculate your top-up
-          </p>
-        </div>
-        <Badge variant="outline" className={cn("gap-1.5", rag.bgClass, rag.textClass, rag.borderClass)}>
-          <CheckCircle2 className="w-4 h-4" />
-          {utilizationPercent}% {rag.label}
-        </Badge>
-      </div>
+      <PageHeader
+        title="Housing Allowance"
+        titleAr="بدل السكن"
+        subtitle="Find the perfect home within your allowance or calculate your top-up"
+        subtitleAr="ابحث عن المنزل المثالي ضمن بدلك أو احسب المبلغ الإضافي"
+        icon={Home}
+        iconColor={housingCategory.textClass}
+        badge={
+          <Badge variant="outline" className={cn("gap-1.5", rag.bgClass, rag.textClass, rag.borderClass)}>
+            <CheckCircle2 className="w-4 h-4" />
+            {utilizationPercent}% {rag.label}
+          </Badge>
+        }
+        explainContent={{
+          title: 'Housing Allowance',
+          titleAr: 'بدل السكن',
+          description: 'Your monthly housing allowance to cover rent or mortgage payments. This page helps you find properties within your budget.',
+          descriptionAr: 'بدل السكن الشهري لتغطية الإيجار أو أقساط الرهن العقاري. تساعدك هذه الصفحة في العثور على عقارات ضمن ميزانيتك.',
+          decisions: [
+            { en: 'Find areas within your allowance', ar: 'ابحث عن المناطق ضمن بدلك' },
+            { en: 'Calculate top-up for preferred areas', ar: 'احسب المبلغ الإضافي للمناطق المفضلة' },
+            { en: 'Compare commute times', ar: 'قارن أوقات التنقل' },
+          ],
+          keyMetrics: [
+            { label: { en: 'Annual Allowance', ar: 'البدل السنوي' }, description: { en: 'Total housing budget per year', ar: 'إجمالي ميزانية السكن سنوياً' } },
+            { label: { en: 'Top-up', ar: 'المبلغ الإضافي' }, description: { en: 'Amount you pay from salary', ar: 'المبلغ الذي تدفعه من الراتب' } },
+          ],
+          dataQualityTips: [
+            { en: 'Listings are informational and may not be live', ar: 'القوائم معلوماتية وقد لا تكون متاحة' },
+            { en: 'Prices are annual rent estimates', ar: 'الأسعار تقديرات للإيجار السنوي' },
+          ],
+        }}
+      />
 
       {/* Category color bar */}
       <div className={cn("h-1 rounded-full", housingCategory.bgClass)} />
