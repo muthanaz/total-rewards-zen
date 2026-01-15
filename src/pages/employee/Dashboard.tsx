@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { 
   DollarSign, Home, GraduationCap, 
-  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote, AlertCircle, CheckCircle2, Clock, Landmark, TrendingUp, Calendar, Zap, ArrowRight, ArrowLeft, FileText, AlertTriangle, Sparkles
+  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote, AlertCircle, CheckCircle2, Clock, Landmark, TrendingUp, Calendar, Zap, ArrowRight, ArrowLeft, FileText, Sparkles
 } from 'lucide-react';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -15,7 +15,11 @@ import { usePrivacy } from '@/components/ui/privacy-toggle';
 import { cn } from '@/lib/utils';
 import { CompensationBreakdownModal } from '@/components/employee/CompensationBreakdownModal';
 import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
+import { PrimaryInsight } from '@/components/ui/primary-insight';
+import { ActionQueue, ActionItem } from '@/components/ui/action-queue';
 import { ConfidenceGate } from '@/components/employer/ConfidenceGate';
+import { AnimatedBarChart } from '@/components/charts';
 import { motion } from 'framer-motion';
 
 // Demo data - core salary info
@@ -44,13 +48,13 @@ const benefits = [
 
 // Demo pending requests
 const pendingRequests = [
-  { id: '1', subject: 'Medical Reimbursement', status: 'in_review', amount: 1250, created_at: '2025-01-10' },
-  { id: '2', subject: 'Education Fee Claim', status: 'pending', amount: 8500, created_at: '2025-01-08' },
+  { id: '1', subject: 'Medical Reimbursement', subjectAr: 'استرداد طبي', status: 'in_review', amount: 1250, created_at: '2025-01-10' },
+  { id: '2', subject: 'Education Fee Claim', subjectAr: 'مطالبة رسوم تعليم', status: 'pending', amount: 8500, created_at: '2025-01-08' },
 ];
 
 // Demo marketplace offers expiring
 const expiringOffers = [
-  { id: '1', title: 'Gym Membership - 40% off', merchant: 'Fitness First', expires: '2025-01-20' },
+  { id: '1', title: 'Gym Membership - 40% off', titleAr: 'اشتراك نادي - خصم 40%', merchant: 'Fitness First', expires: '2025-01-20' },
 ];
 
 export default function EmployeeDashboard() {
@@ -70,9 +74,15 @@ export default function EmployeeDashboard() {
     const totalUtilized = benefits.reduce((sum, b) => sum + b.utilized, 0);
     const unusedValue = totalValue - totalUtilized;
     
-    // Core benefits = guaranteed cash allowances
+    // Core = guaranteed, Variable = performance, Long-term = wealth
     const coreBenefits = benefits
       .filter(b => b.valueType === 'guaranteed')
+      .reduce((sum, b) => sum + b.value, 0);
+    const variableBenefits = benefits
+      .filter(b => b.valueType === 'performance' || b.valueType === 'budget')
+      .reduce((sum, b) => sum + b.value, 0);
+    const longTermBenefits = benefits
+      .filter(b => b.type === 'wealth_ownership')
       .reduce((sum, b) => sum + b.value, 0);
     
     // Claimable remaining = budgets with remaining value
@@ -87,26 +97,18 @@ export default function EmployeeDashboard() {
       totalUtilized,
       unusedValue,
       coreBenefits,
+      variableBenefits,
+      longTermBenefits,
       claimableRemaining,
       utilizationPercent,
       totalCompensation: salaryData.annualSalary + coreBenefits,
     };
   }, []);
 
-  // Get prioritized actions for Benefits Maximizer
-  const prioritizedActions = useMemo(() => {
+  // Build actions for Benefits Maximizer
+  const benefitActions = useMemo((): ActionItem[] => {
     const now = new Date();
-    const actions: Array<{
-      id: string;
-      title: string;
-      titleAr: string;
-      value: number;
-      route: string;
-      icon: React.ElementType;
-      urgency: 'high' | 'medium' | 'low';
-      reason: string;
-      reasonAr: string;
-    }> = [];
+    const actions: ActionItem[] = [];
 
     // Find underutilized benefits
     benefits.forEach(b => {
@@ -121,48 +123,36 @@ export default function EmployeeDashboard() {
           id: b.category,
           title: `Use your ${b.name}`,
           titleAr: `استخدم ${b.nameAr}`,
-          value: remaining,
-          route: b.route,
+          description: daysToDeadline ? `${daysToDeadline} days left` : `${Math.round(100 - utilization)}% unused`,
+          descriptionAr: daysToDeadline ? `${daysToDeadline} يوم متبقي` : `${Math.round(100 - utilization)}% غير مستخدم`,
           icon: b.icon,
-          urgency: daysToDeadline && daysToDeadline < 60 ? 'high' : utilization < 30 ? 'medium' : 'low',
-          reason: daysToDeadline ? `${daysToDeadline} days left` : `${Math.round(100 - utilization)}% unused`,
-          reasonAr: daysToDeadline ? `${daysToDeadline} يوم متبقي` : `${Math.round(100 - utilization)}% غير مستخدم`,
+          route: b.route,
+          value: `AED ${remaining.toLocaleString()}`,
+          priority: daysToDeadline && daysToDeadline < 60 ? 'high' : utilization < 30 ? 'medium' : 'low',
         });
       }
     });
 
     return actions.sort((a, b) => {
-      const urgencyOrder = { high: 0, medium: 1, low: 2 };
-      return urgencyOrder[a.urgency] - urgencyOrder[b.urgency];
+      const priorityOrder = { high: 0, medium: 1, low: 2, undefined: 3 };
+      return (priorityOrder[a.priority || 'undefined'] || 3) - (priorityOrder[b.priority || 'undefined'] || 3);
     }).slice(0, 3);
   }, []);
 
-  // Get upcoming deadlines
-  const upcomingDeadlines = useMemo(() => {
-    const items: Array<{
-      id: string;
-      title: string;
-      titleAr: string;
-      type: 'claim' | 'offer' | 'benefit' | 'document';
-      date: string;
-      route: string;
-      icon: React.ElementType;
-      cta: string;
-      ctaAr: string;
-    }> = [];
+  // Build deadline actions
+  const deadlineActions = useMemo((): ActionItem[] => {
+    const items: ActionItem[] = [];
 
     // Pending claims
     pendingRequests.forEach(req => {
       items.push({
         id: `claim-${req.id}`,
         title: req.subject,
-        titleAr: req.subject,
-        type: 'claim',
-        date: req.created_at,
-        route: '/employee/documents',
+        titleAr: req.subjectAr,
+        description: `AED ${req.amount?.toLocaleString()}`,
         icon: FileText,
-        cta: 'Track',
-        ctaAr: 'تتبع',
+        route: '/employee/documents',
+        status: req.status === 'in_review' ? 'in_progress' : 'pending',
       });
     });
 
@@ -171,33 +161,26 @@ export default function EmployeeDashboard() {
       items.push({
         id: `offer-${offer.id}`,
         title: offer.title,
-        titleAr: offer.title,
-        type: 'offer',
-        date: offer.expires,
-        route: '/employee/marketplace',
+        titleAr: offer.titleAr,
+        description: offer.merchant,
         icon: Gift,
-        cta: 'Claim',
-        ctaAr: 'احصل عليه',
+        route: '/employee/marketplace',
+        badge: 'Expiring',
+        badgeAr: 'ينتهي قريباً',
+        priority: 'medium',
       });
     });
 
-    // Benefits with deadlines
-    benefits.filter(b => b.deadline && b.utilized < b.value).forEach(b => {
-      items.push({
-        id: `benefit-${b.category}`,
-        title: `${b.name} expires`,
-        titleAr: `${b.nameAr} ينتهي`,
-        type: 'benefit',
-        date: b.deadline!,
-        route: b.route,
-        icon: Calendar,
-        cta: 'Use',
-        ctaAr: 'استخدم',
-      });
-    });
-
-    return items.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(0, 4);
+    return items.slice(0, 4);
   }, []);
+
+  // Package breakdown for chart
+  const packageBreakdown = useMemo(() => [
+    { name: isArabic ? 'الراتب الأساسي' : 'Base Salary', value: salaryData.annualSalary, color: 'hsl(var(--primary))' },
+    { name: isArabic ? 'المزايا الأساسية' : 'Core Benefits', value: metrics.coreBenefits, color: 'hsl(var(--accent))' },
+    { name: isArabic ? 'المتغيرة' : 'Variable', value: metrics.variableBenefits, color: 'hsl(38 92% 50%)' },
+    { name: isArabic ? 'طويلة الأجل' : 'Long-term', value: metrics.longTermBenefits, color: 'hsl(271 81% 56%)' },
+  ], [metrics, isArabic]);
 
   const formatCurrency = (value: number) => `${isRTL ? '' : 'AED '}${value.toLocaleString(isRTL ? 'ar-AE' : 'en-AE')}${isRTL ? ' درهم' : ''}`;
   const formatHidden = () => salaryHidden ? '•••,•••' : null;
@@ -213,284 +196,136 @@ export default function EmployeeDashboard() {
         subtitle={isArabic ? 'إليك ما يمكنك فعله اليوم' : "Here's what you can do today"}
       />
 
-      {/* SECTION 1: Benefits Maximizer Hero */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <Card className="overflow-hidden border-2 border-accent/20 bg-gradient-to-br from-accent/5 via-background to-primary/5">
-          <CardContent className="p-6">
-            <div className={cn("flex flex-col lg:flex-row gap-6", isRTL && "lg:flex-row-reverse")}>
-              {/* Left: Unused Value Hero */}
-              <div className={cn("flex-1", isRTL && "text-right")}>
-                <div className={cn("flex items-center gap-2 mb-2", isRTL && "flex-row-reverse")}>
-                  <Sparkles className="w-5 h-5 text-accent" />
-                  <h2 className="text-lg font-display font-semibold">
-                    {isArabic ? 'حاسب المزايا' : 'Benefits Maximizer'}
-                  </h2>
-                </div>
-                
-                <ConfidenceGate 
-                  confidence={metrics.claimableRemaining > 0 ? 'high' : 'medium'}
-                  showEstimatedLabel={metrics.claimableRemaining === 0}
-                  metricName={isArabic ? 'القيمة غير المستخدمة' : 'Unused value'}
-                >
-                  <div className="mb-4">
-                    <p className="text-sm text-muted-foreground mb-1">
-                      {isArabic ? 'قيمة غير مستخدمة تقديرية' : 'Estimated unused value'}
-                    </p>
-                    <p className="text-4xl font-bold text-accent tracking-tight">
-                      {formatHidden() || formatCurrency(metrics.unusedValue)}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {isArabic ? `${metrics.utilizationPercent}% مستخدم من الإجمالي` : `${metrics.utilizationPercent}% used of total`}
-                    </p>
-                  </div>
-                </ConfidenceGate>
+      {/* Status Strip */}
+      <StatusStrip
+        confidence="high"
+        lastUpdated={new Date()}
+        dataSource="Benefits System"
+        dataSourceAr="نظام المزايا"
+      />
 
-                <div className="flex items-center gap-2">
-                  <Progress value={metrics.utilizationPercent} className="flex-1 h-2" />
-                  <span className="text-sm font-medium">{metrics.utilizationPercent}%</span>
-                </div>
-              </div>
+      {/* SECTION 1: Benefits Maximizer - Primary Insight */}
+      <PrimaryInsight
+        title={isArabic ? 'حاسب المزايا' : 'Benefits Maximizer'}
+        titleAr="حاسب المزايا"
+        value={formatHidden() || formatCurrency(metrics.unusedValue)}
+        subtitle={`${metrics.utilizationPercent}% ${isArabic ? 'مستخدم من الإجمالي' : 'used of total'}`}
+        subtitleAr={`${metrics.utilizationPercent}% مستخدم من الإجمالي`}
+        icon={Sparkles}
+        confidence={metrics.claimableRemaining > 0 ? 'high' : 'medium'}
+        source={isArabic ? 'القيمة غير المستخدمة التقديرية' : 'Estimated unused value'}
+        sourceAr="القيمة غير المستخدمة التقديرية"
+        formula="Total Benefits - Utilized Amount"
+        formulaAr="إجمالي المزايا - المبلغ المستخدم"
+        action={benefitActions.length > 0 ? {
+          label: 'View Opportunities',
+          labelAr: 'عرض الفرص',
+          onClick: () => navigate('/employee/insights'),
+        } : undefined}
+      />
 
-              {/* Right: 3 Prioritized Actions */}
-              <div className="flex-1 space-y-3">
-                <p className={cn("text-sm font-medium text-muted-foreground", isRTL && "text-right")}>
-                  {isArabic ? 'إجراءات مقترحة' : 'Suggested Actions'}
-                </p>
-                {prioritizedActions.map((action, i) => (
-                  <motion.div
-                    key={action.id}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                  >
-                    <Card 
-                      className={cn(
-                        "cursor-pointer hover:border-accent/40 transition-all",
-                        action.urgency === 'high' && "border-amber-500/30 bg-amber-500/5"
-                      )}
-                      onClick={() => navigate(action.route)}
-                    >
-                      <CardContent className="p-3">
-                        <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-                          <div className={cn(
-                            "p-2 rounded-lg shrink-0",
-                            action.urgency === 'high' ? "bg-amber-500/10" : "bg-accent/10"
-                          )}>
-                            <action.icon className={cn(
-                              "w-4 h-4",
-                              action.urgency === 'high' ? "text-amber-600" : "text-accent"
-                            )} />
-                          </div>
-                          <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
-                            <p className="text-sm font-medium truncate">
-                              {isArabic ? action.titleAr : action.title}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatCurrency(action.value)} • {isArabic ? action.reasonAr : action.reason}
-                            </p>
-                          </div>
-                          <ChevronIcon className="w-4 h-4 text-muted-foreground shrink-0" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* SECTION 2: Upcoming Deadlines */}
-      {upcomingDeadlines.length > 0 && (
-        <div>
-          <div className={cn("flex items-center justify-between mb-3", isRTL && "flex-row-reverse")}>
-            <h2 className="text-base font-display font-semibold flex items-center gap-2">
-              <Clock className="w-4 h-4 text-muted-foreground" />
-              {isArabic ? 'المواعيد القادمة' : 'Upcoming Deadlines'}
-            </h2>
-            <Badge variant="outline" className="text-xs">
-              {upcomingDeadlines.length}
-            </Badge>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            {upcomingDeadlines.map((item, i) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-              >
-                <Card 
-                  className="cursor-pointer hover:border-accent/40 hover:shadow-sm transition-all h-full"
-                  onClick={() => navigate(item.route)}
-                >
-                  <CardContent className="p-4">
-                    <div className={cn("flex items-start gap-3", isRTL && "flex-row-reverse")}>
-                      <div className={cn(
-                        "p-2 rounded-lg shrink-0",
-                        item.type === 'claim' ? "bg-amber-500/10" : 
-                        item.type === 'offer' ? "bg-violet-500/10" : "bg-blue-500/10"
-                      )}>
-                        <item.icon className={cn(
-                          "w-4 h-4",
-                          item.type === 'claim' ? "text-amber-600" : 
-                          item.type === 'offer' ? "text-violet-600" : "text-blue-600"
-                        )} />
-                      </div>
-                      <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
-                        <p className="text-sm font-medium line-clamp-1">
-                          {isArabic ? item.titleAr : item.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {new Date(item.date).toLocaleDateString(isArabic ? 'ar-AE' : 'en-AE', { 
-                            month: 'short', 
-                            day: 'numeric' 
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className={cn("w-full mt-3 text-xs justify-between", isRTL && "flex-row-reverse")}
-                    >
-                      {isArabic ? item.ctaAr : item.cta}
-                      <ArrowIcon className="w-3 h-3" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+      {/* Top 3 Actions */}
+      {benefitActions.length > 0 && (
+        <ActionQueue
+          title={isArabic ? 'إجراءات مقترحة' : 'Suggested Actions'}
+          titleAr="إجراءات مقترحة"
+          actions={benefitActions}
+          maxItems={3}
+          allLink="/employee/insights"
+        />
       )}
 
-      {/* SECTION 3: My Package Snapshot (Compact) */}
-      <div>
-        <div className={cn("flex items-center justify-between mb-3", isRTL && "flex-row-reverse")}>
-          <h2 className="text-base font-display font-semibold flex items-center gap-2">
-            <Wallet className="w-4 h-4 text-muted-foreground" />
-            {isArabic ? 'ملخص الحزمة' : 'My Package'}
-          </h2>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-xs text-accent"
-            onClick={() => setCompensationModalOpen(true)}
-          >
-            {isArabic ? 'التفاصيل' : 'Details'}
-            <ChevronIcon className="w-3 h-3 ml-1" />
-          </Button>
-        </div>
+      {/* SECTION 2: Deadlines Panel */}
+      {deadlineActions.length > 0 && (
+        <ActionQueue
+          title={isArabic ? 'المواعيد والطلبات' : 'Deadlines & Requests'}
+          titleAr="المواعيد والطلبات"
+          actions={deadlineActions}
+          maxItems={4}
+          allLink="/employee/documents"
+          emptyMessage="No pending items"
+          emptyMessageAr="لا توجد عناصر معلقة"
+        />
+      )}
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card className="bg-gradient-to-br from-primary/5 to-background">
-            <CardContent className="p-4">
-              <div className={cn(isRTL && "text-right")}>
-                <p className="text-xs text-muted-foreground mb-1">
-                  {isArabic ? 'الراتب السنوي' : 'Annual Salary'}
-                </p>
-                <p className="text-lg font-bold">
-                  {formatHidden() || formatCurrency(salaryData.annualSalary)}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-accent/5 to-background">
-            <CardContent className="p-4">
-              <div className={cn(isRTL && "text-right")}>
-                <p className="text-xs text-muted-foreground mb-1">
-                  {isArabic ? 'المزايا الأساسية' : 'Core Benefits'}
-                </p>
-                <p className="text-lg font-bold">
-                  {formatHidden() || formatCurrency(metrics.coreBenefits)}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-emerald-500/5 to-background">
-            <CardContent className="p-4">
-              <div className={cn(isRTL && "text-right")}>
-                <p className="text-xs text-muted-foreground mb-1">
-                  {isArabic ? 'إجمالي التعويضات' : 'Total Rewards'}
-                </p>
-                <p className="text-lg font-bold text-emerald-600">
-                  {formatHidden() || formatCurrency(metrics.totalCompensation)}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className={cn(isRTL && "text-right")}>
-                <p className="text-xs text-muted-foreground mb-1">
-                  {isArabic ? 'رصيد الإجازات' : 'Leave Balance'}
-                </p>
-                <p className="text-lg font-bold">
-                  {salaryData.leaveBalance - salaryData.leaveUsed} {isArabic ? 'يوم' : 'days'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Quick Links Grid */}
-      <div>
-        <h2 className={cn("text-base font-display font-semibold mb-3", isRTL && "text-right")}>
-          {isArabic ? 'روابط سريعة' : 'Quick Links'}
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {[
-            { label: isArabic ? 'تقديم مطالبة' : 'Submit Claim', icon: FileText, route: '/employee/documents', color: 'bg-blue-500/10 text-blue-600' },
-            { label: isArabic ? 'طلب إجازة' : 'Request Leave', icon: Calendar, route: '/employee/leave', color: 'bg-violet-500/10 text-violet-600' },
-            { label: isArabic ? 'استكشاف المزايا' : 'Browse Benefits', icon: Gift, route: '/employee/benefits', color: 'bg-emerald-500/10 text-emerald-600' },
-            { label: isArabic ? 'السوق' : 'Marketplace', icon: Zap, route: '/employee/marketplace', color: 'bg-amber-500/10 text-amber-600' },
-          ].map((link, i) => (
-            <Card 
-              key={link.route}
-              className="cursor-pointer hover:border-accent/40 transition-all"
-              onClick={() => navigate(link.route)}
+      {/* SECTION 3: Total Rewards Snapshot - Stacked Bar */}
+      <Card className="border-border/50">
+        <CardContent className="p-6">
+          <div className={cn("flex items-center justify-between mb-4", isRTL && "flex-row-reverse")}>
+            <h2 className={cn("text-base font-display font-semibold flex items-center gap-2", isRTL && "flex-row-reverse")}>
+              <Wallet className="w-5 h-5 text-muted-foreground" />
+              {isArabic ? 'ملخص الحزمة السنوية' : 'Annual Package Snapshot'}
+            </h2>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setCompensationModalOpen(true)}
+              className={cn("text-xs text-accent gap-1", isRTL && "flex-row-reverse")}
             >
-              <CardContent className="p-3">
+              {isArabic ? 'عرض التفاصيل' : 'View Details'}
+              <ChevronIcon className="w-3 h-3" />
+            </Button>
+          </div>
+
+          <div className={cn("flex flex-wrap gap-4 justify-center", isRTL && "flex-row-reverse")}>
+            {packageBreakdown.map((item) => (
+              <div key={item.name} className={cn("flex items-center gap-2 text-xs", isRTL && "flex-row-reverse")}>
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                <span className="text-muted-foreground">{item.name}</span>
+                <span className="font-medium">{formatCurrency(item.value)}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className={cn("text-center mt-4 pt-4 border-t border-border/50")}>
+            <p className="text-sm text-muted-foreground">{isArabic ? 'إجمالي الحزمة السنوية' : 'Total Annual Package'}</p>
+            <p className="text-2xl font-bold text-foreground">
+              {formatHidden() || formatCurrency(salaryData.annualSalary + metrics.totalValue)}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Quick Actions Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: isArabic ? 'تقديم مطالبة' : 'Submit Claim', icon: FileText, route: '/employee/documents' },
+          { label: isArabic ? 'طلب إجازة' : 'Request Leave', icon: Calendar, route: '/employee/leave' },
+          { label: isArabic ? 'السوق' : 'Marketplace', icon: Gift, route: '/employee/marketplace' },
+          { label: isArabic ? 'الملف الشخصي' : 'My Profile', icon: Wallet, route: '/employee/profile' },
+        ].map((action, i) => (
+          <motion.div
+            key={action.route}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+          >
+            <Card 
+              className="cursor-pointer hover:border-accent/40 hover:shadow-sm transition-all"
+              onClick={() => navigate(action.route)}
+            >
+              <CardContent className="p-4">
                 <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-                  <div className={cn("p-2 rounded-lg", link.color)}>
-                    <link.icon className="w-4 h-4" />
+                  <div className="p-2 rounded-lg bg-accent/10">
+                    <action.icon className="w-5 h-5 text-accent" />
                   </div>
-                  <span className="text-sm font-medium">{link.label}</span>
+                  <span className="text-sm font-medium">{action.label}</span>
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
+          </motion.div>
+        ))}
       </div>
 
-      {/* Satisfaction Survey Section */}
-      {showSatisfactionSurvey && (
-        <SatisfactionSurvey compact={true} />
-      )}
+      {/* Satisfaction Survey */}
+      {showSatisfactionSurvey && <SatisfactionSurvey />}
 
-      {/* Compensation Breakdown Modal */}
-      <CompensationBreakdownModal
+      {/* Compensation Modal */}
+      <CompensationBreakdownModal 
         open={compensationModalOpen}
-        onOpenChange={setCompensationModalOpen}
-        isRTL={isRTL}
         salaryData={salaryData}
-        benefits={benefits.map(b => ({
-          name: b.name,
-          value: b.value,
-          utilized: b.utilized,
-          valueType: b.valueType,
-        }))}
+        benefits={benefits.map(b => ({ name: b.name, nameAr: b.nameAr, value: b.value, utilized: b.utilized, type: b.type }))}
+        onOpenChange={setCompensationModalOpen} 
       />
     </div>
   );
