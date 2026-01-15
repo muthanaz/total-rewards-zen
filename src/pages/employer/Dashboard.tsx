@@ -385,16 +385,30 @@ export default function EmployerDashboard() {
               })}
             </div>
 
-            {/* Money Flow + Year-End Projection */}
+            {/* Money Flow + Year-End Projection - Money Flow is collapsible */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-              <div className="lg:col-span-2 flex">
-                <MoneyFlowVisualization
-                  allocated={metrics.annualBudget}
-                  utilized={metrics.budgetUsed}
-                  wasteIdentified={metrics.wasteSpend}
-                  recoverableThisQuarter={metrics.wasteRecoveryPotential}
-                  satisfactionScore={metrics.satisfactionScore || undefined}
-                />
+              <div className="lg:col-span-2 flex flex-col">
+                <details className="group flex-1">
+                  <summary className="cursor-pointer p-4 bg-card rounded-xl border border-border/50 flex items-center justify-between hover:bg-muted/30 transition-colors mb-2">
+                    <span className="flex items-center gap-2 text-sm font-semibold">
+                      <DollarSign className="w-4 h-4 text-primary" />
+                      {isArabic ? 'تدفق الأموال' : 'The Money Story'}
+                    </span>
+                    <span className="text-xs text-muted-foreground group-open:hidden">
+                      {isArabic ? 'انقر للتوسيع' : 'Click to expand'}
+                    </span>
+                    <span className="text-xs text-muted-foreground hidden group-open:inline">
+                      {isArabic ? 'انقر للطي' : 'Click to collapse'}
+                    </span>
+                  </summary>
+                  <MoneyFlowVisualization
+                    allocated={metrics.annualBudget}
+                    utilized={metrics.budgetUsed}
+                    wasteIdentified={metrics.wasteSpend}
+                    recoverableThisQuarter={metrics.wasteRecoveryPotential}
+                    satisfactionScore={metrics.satisfactionScore || undefined}
+                  />
+                </details>
               </div>
               <div className="flex">
                 <YearEndProjection

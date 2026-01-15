@@ -58,6 +58,32 @@ const typeConfig: Record<string, { label: string; labelAr: string; color: string
   question: { label: 'Question', labelAr: 'سؤال', color: 'border-muted-foreground/50 text-muted-foreground' },
 };
 
+// Decision templates for quick responses
+const decisionTemplates = {
+  approved: [
+    { id: 'approved_standard', label: 'Standard Approval', labelAr: 'موافقة قياسية', note: 'Claim approved. Payment will be processed in the next payroll cycle.' },
+    { id: 'approved_priority', label: 'Priority Approval', labelAr: 'موافقة ذات أولوية', note: 'Claim fast-tracked and approved. Payment processed within 48 hours.' },
+    { id: 'approved_partial', label: 'Partial Approval', labelAr: 'موافقة جزئية', note: 'Claim partially approved. See notes for details on approved amount.' },
+  ],
+  rejected: [
+    { id: 'rejected_docs', label: 'Missing Documents', labelAr: 'مستندات ناقصة', note: 'Claim rejected due to missing supporting documents. Please resubmit with required documentation.' },
+    { id: 'rejected_policy', label: 'Policy Violation', labelAr: 'مخالفة السياسة', note: 'Claim rejected. The request does not comply with current company policy guidelines.' },
+    { id: 'rejected_duplicate', label: 'Duplicate Claim', labelAr: 'مطالبة مكررة', note: 'Claim rejected. A similar claim has already been submitted and processed.' },
+    { id: 'rejected_exceeded', label: 'Limit Exceeded', labelAr: 'تجاوز الحد', note: 'Claim rejected. The request exceeds your remaining benefit allowance for this period.' },
+    { id: 'rejected_ineligible', label: 'Not Eligible', labelAr: 'غير مؤهل', note: 'Claim rejected. You are not eligible for this benefit based on current enrollment.' },
+    { id: 'rejected_expired', label: 'Expired Period', labelAr: 'فترة منتهية', note: 'Claim rejected. The submission deadline for this period has passed.' },
+  ],
+};
+
+// SLA filter options
+const slaFilterOptions = [
+  { value: 'all', label: 'All SLA', labelAr: 'كل SLA' },
+  { value: 'overdue', label: 'Overdue', labelAr: 'متأخر' },
+  { value: 'due_today', label: 'Due Today', labelAr: 'مستحق اليوم' },
+  { value: 'due_week', label: 'Due This Week', labelAr: 'مستحق هذا الأسبوع' },
+  { value: 'on_track', label: 'On Track', labelAr: 'في الموعد' },
+];
+
 export default function ClaimsPage() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
@@ -71,9 +97,11 @@ export default function ClaimsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [slaFilter, setSlaFilter] = useState<string>('all');
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
   const [reviewNotes, setReviewNotes] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [dialogTab, setDialogTab] = useState<'details' | 'timeline'>('details');
   
   // Bulk selection state
@@ -93,9 +121,22 @@ export default function ClaimsPage() {
         req.category.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'all' || req.status === statusFilter;
       const matchesType = typeFilter === 'all' || req.request_type === typeFilter;
-      return matchesSearch && matchesStatus && matchesType;
+      
+      // SLA filter
+      let matchesSla = true;
+      if (slaFilter !== 'all' && req.sla_due_at) {
+        const hoursRemaining = differenceInHours(new Date(req.sla_due_at), new Date());
+        if (slaFilter === 'overdue') matchesSla = hoursRemaining < 0;
+        else if (slaFilter === 'due_today') matchesSla = hoursRemaining >= 0 && hoursRemaining < 24;
+        else if (slaFilter === 'due_week') matchesSla = hoursRemaining >= 0 && hoursRemaining < 168;
+        else if (slaFilter === 'on_track') matchesSla = hoursRemaining >= 24;
+      } else if (slaFilter !== 'all' && !req.sla_due_at) {
+        matchesSla = false;
+      }
+      
+      return matchesSearch && matchesStatus && matchesType && matchesSla;
     });
-  }, [requests, searchQuery, statusFilter, typeFilter]);
+  }, [requests, searchQuery, statusFilter, typeFilter, slaFilter]);
 
   // Apply pagination to filtered requests
   const pagination = usePagination(filteredRequests, { initialPageSize: 10 });
@@ -389,6 +430,19 @@ export default function ClaimsPage() {
                 <SelectItem value="claim">{isArabic ? 'مطالبات' : 'Claims'}</SelectItem>
                 <SelectItem value="request">{isArabic ? 'طلبات' : 'Requests'}</SelectItem>
                 <SelectItem value="question">{isArabic ? 'أسئلة' : 'Questions'}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={slaFilter} onValueChange={setSlaFilter}>
+              <SelectTrigger className="w-40">
+                <Clock className="h-4 w-4 mr-2" />
+                <SelectValue placeholder={isArabic ? 'SLA' : 'SLA'} />
+              </SelectTrigger>
+              <SelectContent>
+                {slaFilterOptions.map(opt => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {isArabic ? opt.labelAr : opt.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -689,6 +743,34 @@ export default function ClaimsPage() {
 
                 {['pending', 'submitted', 'in_review'].includes(selectedRequest.status || '') && (
                   <>
+                    {/* Quick Decision Templates */}
+                    <div>
+                      <p className="text-sm font-medium mb-2">
+                        {isArabic ? 'قوالب القرارات السريعة' : 'Quick Decision Templates'}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        <Select value={selectedTemplate} onValueChange={(v) => {
+                          setSelectedTemplate(v);
+                          const allTemplates = [...decisionTemplates.approved, ...decisionTemplates.rejected];
+                          const template = allTemplates.find(t => t.id === v);
+                          if (template) setReviewNotes(template.note);
+                        }}>
+                          <SelectTrigger className="w-[200px]">
+                            <SelectValue placeholder={isArabic ? 'اختر قالب...' : 'Choose template...'} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="" disabled>{isArabic ? 'الموافقة' : 'Approval'}</SelectItem>
+                            {decisionTemplates.approved.map(t => (
+                              <SelectItem key={t.id} value={t.id}>✓ {isArabic ? t.labelAr : t.label}</SelectItem>
+                            ))}
+                            <SelectItem value="" disabled>{isArabic ? 'الرفض' : 'Rejection'}</SelectItem>
+                            {decisionTemplates.rejected.map(t => (
+                              <SelectItem key={t.id} value={t.id}>✗ {isArabic ? t.labelAr : t.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">
                         {isArabic ? 'ملاحظات للموظف' : 'Notes for Employee'}
