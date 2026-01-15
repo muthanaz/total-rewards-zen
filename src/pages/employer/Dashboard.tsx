@@ -1,822 +1,460 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { MetricTooltip } from '@/components/ui/metric-tooltip';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Users, DollarSign, TrendingUp, Smile, 
-  Recycle, FileCheck, Target, AlertTriangle, 
-  CheckCircle2, Zap, Clock,
-  BarChart3, Shield,
-  ArrowUpRight, ArrowDownRight, PieChart,
-  RefreshCw
-} from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Users, DollarSign, TrendingUp, TrendingDown, Smile, Ghost, FileCheck, Target, ArrowRight, AlertTriangle, CheckCircle2, Sparkles, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { AnimatedLineChart, ProgressBarList } from '@/components/charts';
-import { useElementVisibility } from '@/contexts/UIVisibilityContext';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { cn } from '@/lib/utils';
-import { useEmployerViewMode } from '@/components/layout/EmployerSidebar';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MoneyFlowVisualization } from '@/components/employer/MoneyFlowVisualization';
-import { YearEndProjection } from '@/components/employer/YearEndProjection';
-import { AIInsightsPanel } from '@/components/employer/AIInsightsPanel';
-import { DataQualityPanel } from '@/components/employer/DataQualityPanel';
-import { ConfidenceGate, ConfidenceBadge, type ConfidenceLevel } from '@/components/employer/ConfidenceGate';
+import { Button } from '@/components/ui/button';
 import { 
-  useEmployerDashboardMetrics, 
-  useBenefitUtilizationStats,
-  calculateProgramScore,
-  formatCurrency 
-} from '@/hooks/useEmployerDashboardMetrics';
+  ChartContainer, 
+  AnimatedBarChart, 
+  AnimatedLineChart, 
+  AnimatedRadarChart,
+  StackedAreaChart,
+  ProgressBarList 
+} from '@/components/charts';
+import { EmployerBenefitRecommendations, TrendIndicator } from '@/components/dashboard';
+import { useElementVisibility } from '@/contexts/UIVisibilityContext';
 
-// Industry benchmarks (will be moved to DB later)
-const industryBenchmarks = [
-  { metric: { en: 'Utilization Rate', ar: 'معدل الاستخدام' }, you: 0, industry: 62, top: 78, status: 'good' },
-  { metric: { en: 'Cost Per Employee', ar: 'التكلفة لكل موظف' }, you: 0, industry: 42, top: 52, status: 'optimal' },
-  { metric: { en: 'Zombie Spend Rate', ar: 'معدل الهدر' }, you: 0, industry: 18, top: 8, status: 'good' },
-  { metric: { en: 'Satisfaction Score', ar: 'درجة الرضا' }, you: 0, industry: 3.6, top: 4.3, status: 'near-top' },
+const metrics = {
+  totalEmployees: 156,
+  employeeChange: 8,
+  annualBudget: 62000000,
+  budgetUsed: 39680000,
+  utilizationRate: 64,
+  utilizationChange: 3.2,
+  satisfactionScore: 4.2,
+  retentionRate: 92,
+  retentionChange: 2.1,
+  zombieSpend: 8500000,
+  zombieChange: -12,
+  pendingClaims: 12,
+  avgProcessingDays: 2.3,
+  roi: 3.2,
+};
+
+const executiveInsights = [
+  { type: 'success', icon: CheckCircle2, title: 'Housing at 95% utilization', description: 'Top performing benefit this quarter' },
+  { type: 'warning', icon: AlertTriangle, title: 'L&D underutilized at 38%', description: 'AED 2.8M recovery potential' },
+  { type: 'info', icon: Sparkles, title: '12 claims pending review', description: 'Average processing: 2.3 days' },
+];
+
+const utilizationTrend = [
+  { name: 'Jul', value: 58 },
+  { name: 'Aug', value: 59 },
+  { name: 'Sep', value: 61 },
+  { name: 'Oct', value: 60 },
+  { name: 'Nov', value: 63 },
+  { name: 'Dec', value: 64 },
+];
+
+const spendByType = [
+  { name: 'Cash', value: 32, secondaryValue: 35 },
+  { name: 'Health', value: 9, secondaryValue: 12 },
+  { name: 'Time Off', value: 7, secondaryValue: 8 },
+  { name: 'Growth', value: 2, secondaryValue: 5 },
+  { name: 'Wellbeing', value: 1, secondaryValue: 2 },
+];
+
+const topBenefits = [
+  { name: 'Housing Allowance', value: 95 },
+  { name: 'Health Insurance', value: 78 },
+  { name: 'Transport Allowance', value: 72 },
+];
+
+const leastUsed = [
+  { name: 'Learning & Development', value: 38 },
+  { name: 'Wellbeing Program', value: 45 },
+  { name: 'Financial Planning', value: 52 },
+];
+
+const zombieCandidates = [
+  { benefit: 'Learning & Development', amount: 2800000, employees: 45 },
+  { benefit: 'Wellbeing Program', amount: 1200000, employees: 60 },
+  { benefit: 'Flight Tickets (Singles)', amount: 950000, employees: 25 },
+];
+
+const segmentRadarData = [
+  { subject: 'Housing', value: 92, secondaryValue: 85, fullMark: 100 },
+  { subject: 'Health', value: 65, secondaryValue: 72, fullMark: 100 },
+  { subject: 'Transport', value: 70, secondaryValue: 68, fullMark: 100 },
+  { subject: 'Learning', value: 38, secondaryValue: 55, fullMark: 100 },
+  { subject: 'Wellbeing', value: 48, secondaryValue: 58, fullMark: 100 },
+  { subject: 'Finance', value: 52, secondaryValue: 60, fullMark: 100 },
+];
+
+const cumulativeSpendData = [
+  { name: 'Jul', cash: 4.2, health: 1.1, transport: 0.8, other: 0.4 },
+  { name: 'Aug', cash: 8.5, health: 2.3, transport: 1.5, other: 0.9 },
+  { name: 'Sep', cash: 12.8, health: 3.5, transport: 2.3, other: 1.3 },
+  { name: 'Oct', cash: 17.2, health: 4.8, transport: 3.1, other: 1.8 },
+  { name: 'Nov', cash: 21.5, health: 6.0, transport: 3.9, other: 2.2 },
+  { name: 'Dec', cash: 26.0, health: 7.2, transport: 4.6, other: 2.7 },
+];
+
+const spendStacks = [
+  { key: 'cash', label: 'Cash Allowances', color: 'hsl(160 84% 39%)' },
+  { key: 'health', label: 'Health & Protection', color: 'hsl(217 91% 60%)' },
+  { key: 'transport', label: 'Transport', color: 'hsl(271 81% 56%)' },
+  { key: 'other', label: 'Other Benefits', color: 'hsl(38 92% 50%)' },
 ];
 
 export default function EmployerDashboard() {
-  const { language, direction } = useLanguage();
-  const isRTL = direction === 'rtl';
-  const isArabic = language === 'ar';
-  const viewMode = useEmployerViewMode();
-  
-  // Fetch real metrics from database
-  const { data: metrics, isLoading, error, refetch } = useEmployerDashboardMetrics();
-  const { data: benefitStats } = useBenefitUtilizationStats();
+  const formatCurrency = (value: number) => `AED ${(value / 1000000).toFixed(1)}M`;
+  const budgetUtilization = (metrics.budgetUsed / metrics.annualBudget) * 100;
   
   // UI Visibility hooks
-  const { isVisible: showUtilizationSnapshot } = useElementVisibility('employer', 'dashboard', 'utilization_snapshot');
-
-  const getColorClasses = (color: string) => {
-    const colors: Record<string, { bg: string; text: string; border: string }> = {
-      emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-500', border: 'border-emerald-500/20' },
-      amber: { bg: 'bg-amber-500/10', text: 'text-amber-500', border: 'border-amber-500/20' },
-      red: { bg: 'bg-red-500/10', text: 'text-red-500', border: 'border-red-500/20' },
-      violet: { bg: 'bg-violet-500/10', text: 'text-violet-500', border: 'border-violet-500/20' },
-      blue: { bg: 'bg-blue-500/10', text: 'text-blue-500', border: 'border-blue-500/20' },
-    };
-    return colors[color] || colors.blue;
-  };
-
-  // Calculate derived values
-  const programScore = metrics ? calculateProgramScore(metrics) : 0;
-  const efficiencyPercent = metrics && metrics.budgetUsed > 0 
-    ? Math.round((metrics.effectiveSpend / metrics.budgetUsed) * 100) 
-    : 0;
-
-  // Prepare benchmark data with actual values
-  const benchmarksWithActual = industryBenchmarks.map((b, i) => ({
-    ...b,
-    you: i === 0 ? (metrics?.utilizationRate || 0) :
-         i === 1 ? (metrics && metrics.totalEmployees > 0 ? Math.round(metrics.budgetUsed / metrics.totalEmployees / 1000) : 0) :
-         i === 2 ? (metrics && metrics.budgetUsed > 0 ? Math.round((metrics.wasteSpend / metrics.budgetUsed) * 100) : 0) :
-         (metrics?.satisfactionScore || 0)
-  }));
-
-  // Build utilization trend from monthly data (placeholder - would come from time-series query)
-  const utilizationTrend = [
-    { name: 'Jul', value: Math.max(0, (metrics?.utilizationRate || 0) - 6) },
-    { name: 'Aug', value: Math.max(0, (metrics?.utilizationRate || 0) - 5) },
-    { name: 'Sep', value: Math.max(0, (metrics?.utilizationRate || 0) - 3) },
-    { name: 'Oct', value: Math.max(0, (metrics?.utilizationRate || 0) - 4) },
-    { name: 'Nov', value: Math.max(0, (metrics?.utilizationRate || 0) - 1) },
-    { name: 'Dec', value: metrics?.utilizationRate || 0 },
-  ];
-
-  // Top and bottom benefits from real data
-  const topBenefits = (benefitStats || [])
-    .filter(b => b.utilizationRate >= 70)
-    .slice(0, 3)
-    .map(b => ({
-      name: b.benefitName,
-      value: b.utilizationRate,
-      color: 'success' as const
-    }));
-
-  const bottomBenefits = (benefitStats || [])
-    .filter(b => b.utilizationRate < 60)
-    .sort((a, b) => a.utilizationRate - b.utilizationRate)
-    .slice(0, 3)
-    .map(b => ({
-      name: b.benefitName,
-      value: b.utilizationRate,
-      color: b.utilizationRate < 50 ? 'danger' as const : 'warning' as const
-    }));
-
-  // Executive Pulse cards with real data
-  const executivePulseCards = metrics ? [
-    {
-      id: 'effective-spend',
-      title: { en: 'Effective Spend', ar: 'الإنفاق الفعال' },
-      value: formatCurrency(metrics.effectiveSpend),
-      subtitle: { en: `of ${formatCurrency(metrics.budgetUsed)} utilized`, ar: `من ${formatCurrency(metrics.budgetUsed)} مستخدم` },
-      trend: `${efficiencyPercent}% efficiency`,
-      trendUp: efficiencyPercent >= 80,
-      icon: TrendingUp,
-      color: 'emerald',
-      benchmark: { en: `Waste: ${formatCurrency(metrics.wasteSpend)}`, ar: `هدر: ${formatCurrency(metrics.wasteSpend)}` },
-      metricKey: 'effective_spend',
-      confidence: metrics.confidence.utilization,
-    },
-    {
-      id: 'financial',
-      title: { en: 'Budget Status', ar: 'حالة الميزانية' },
-      value: `${metrics.utilizationRate}%`,
-      subtitle: { en: `${formatCurrency(metrics.budgetUsed)} of ${formatCurrency(metrics.annualBudget)} used`, ar: `${formatCurrency(metrics.budgetUsed)} من ${formatCurrency(metrics.annualBudget)} مستخدم` },
-      trend: `${metrics.monthsRemaining} months left`,
-      trendUp: metrics.utilizationRate <= metrics.utilizationTarget,
-      icon: DollarSign,
-      color: 'blue',
-      benchmark: { en: metrics.annualBudget > 0 ? `On track for ${Math.round((metrics.projectedYearEndSpend / metrics.annualBudget) * 100)}%` : 'No budget set', ar: metrics.annualBudget > 0 ? 'في المسار الصحيح' : 'لم تحدد الميزانية' },
-      metricKey: 'utilization_rate',
-      confidence: metrics.confidence.budget,
-    },
-    {
-      id: 'waste',
-      title: { en: 'Recoverable Waste', ar: 'الهدر القابل للاسترداد' },
-      value: formatCurrency(metrics.wasteRecoveryPotential),
-      subtitle: { en: `of ${formatCurrency(metrics.wasteSpend)} total waste`, ar: `من ${formatCurrency(metrics.wasteSpend)} هدر` },
-      trend: '60% recoverable',
-      trendUp: true,
-      icon: Recycle,
-      color: 'amber',
-      benchmark: { en: 'Action needed this Q', ar: 'يتطلب إجراء هذا الربع' },
-      metricKey: 'waste_spend',
-      confidence: metrics.confidence.waste,
-    },
-    {
-      id: 'sentiment',
-      title: { en: 'Employee Satisfaction', ar: 'رضا الموظفين' },
-      value: metrics.satisfactionScore ? `${metrics.satisfactionScore}/5` : 'N/A',
-      subtitle: { en: `${metrics.satisfactionSampleSize} responses`, ar: `${metrics.satisfactionSampleSize} استجابة` },
-      trend: metrics.satisfactionScore ? '+0.3 vs Q3' : 'Insufficient data',
-      trendUp: !!metrics.satisfactionScore,
-      icon: Smile,
-      color: 'violet',
-      benchmark: { en: 'Industry avg: 3.6/5', ar: 'متوسط الصناعة: 3.6' },
-      metricKey: 'satisfaction_score',
-      confidence: metrics.confidence.satisfaction,
-    },
-  ] : [];
-
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="space-y-6 animate-fade-in">
-        <div className="bg-gradient-to-r from-card via-card to-primary/5 rounded-2xl border border-border/50 p-4">
-          <Skeleton className="h-16 w-full" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-40" />
-          ))}
-        </div>
-        <Skeleton className="h-80" />
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="space-y-6 animate-fade-in">
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            {isArabic ? 'فشل في تحميل البيانات. يرجى المحاولة مرة أخرى.' : 'Failed to load dashboard data. Please try again.'}
-            <Button variant="outline" size="sm" className="ml-4" onClick={() => refetch()}>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              {isArabic ? 'إعادة المحاولة' : 'Retry'}
-            </Button>
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
-  // No data state
-  if (!metrics || metrics.totalEmployees === 0) {
-    return (
-      <div className="space-y-6 animate-fade-in">
-        <Alert>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            {isArabic 
-              ? 'لا توجد بيانات متاحة حتى الآن. يرجى إضافة الموظفين والمزايا للبدء.'
-              : 'No data available yet. Please add employees and benefits to get started.'}
-          </AlertDescription>
-        </Alert>
-        <div className="text-center py-12">
-          <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">
-            {isArabic ? 'ابدأ ببناء برنامج المزايا الخاص بك' : 'Start Building Your Benefits Program'}
-          </h3>
-          <p className="text-muted-foreground mb-4">
-            {isArabic 
-              ? 'أضف بيانات الموظفين واستحقاقات المزايا لرؤية لوحة التحكم الخاصة بك.'
-              : 'Add employee data and benefit entitlements to see your dashboard.'}
-          </p>
-          <Link to="/employer/segments">
-            <Button>
-              <Users className="w-4 h-4 mr-2" />
-              {isArabic ? 'إدارة الموظفين' : 'Manage Employees'}
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
+  const { isVisible: showKpiCards } = useElementVisibility('employer', 'dashboard', 'kpi_cards');
+  const { isVisible: showSecondaryKpi } = useElementVisibility('employer', 'dashboard', 'secondary_kpi');
+  const { isVisible: showExecutiveInsights } = useElementVisibility('employer', 'dashboard', 'executive_insights');
+  const { isVisible: showUtilizationTrend } = useElementVisibility('employer', 'dashboard', 'utilization_trend');
+  const { isVisible: showSpendByType } = useElementVisibility('employer', 'dashboard', 'spend_by_type');
+  const { isVisible: showSegmentComparison } = useElementVisibility('employer', 'dashboard', 'segment_comparison');
+  const { isVisible: showCumulativeSpend } = useElementVisibility('employer', 'dashboard', 'cumulative_spend');
+  const { isVisible: showTopBenefits } = useElementVisibility('employer', 'dashboard', 'top_benefits');
+  const { isVisible: showZombieSpend } = useElementVisibility('employer', 'dashboard', 'zombie_spend');
+  const { isVisible: showRecommendations } = useElementVisibility('employer', 'dashboard', 'recommendations');
+  
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Data Quality Panel - Shows when data is incomplete */}
-      <DataQualityPanel 
-        metrics={{
-          employeesWithEntitlements: metrics.totalEmployees - 5, // Mock calculation
-          totalEmployees: metrics.totalEmployees,
-          hasBudgetConfigured: metrics.annualBudget > 0,
-          satisfactionSampleSize: metrics.satisfactionSampleSize,
-          requiredSampleSize: 30,
-          missingClassifications: metrics.confidence.budget === 'low' ? 2 : 0,
-        }}
-      />
-
-      {/* Data Confidence Banner - Legacy, now handled by DataQualityPanel */}
-
-      {/* Executive Command Bar */}
-      <div className={cn(
-        "bg-gradient-to-r from-card via-card to-primary/5 rounded-2xl border border-border/50 p-4",
-        isRTL && "bg-gradient-to-l"
-      )}>
-        <div className={cn(
-          "flex flex-wrap items-center justify-between gap-4",
-          isRTL && "flex-row-reverse"
-        )}>
-          {/* Title & Period */}
-          <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
-            <div className={cn(isRTL && "text-right")}>
-              <h1 className="text-xl lg:text-2xl font-display font-bold tracking-tight">
-                {viewMode === 'strategic' 
-                  ? (isArabic ? 'لوحة التحكم التنفيذية' : 'Executive Dashboard')
-                  : (isArabic ? 'لوحة العمليات' : 'Operations Dashboard')
-                }
-              </h1>
-              <p className="text-sm text-muted-foreground flex items-center gap-2">
-                <Clock className="w-3.5 h-3.5" />
-                {isArabic ? `${metrics.fiscalYear} • شهري` : `FY ${metrics.fiscalYear} • Monthly View`}
-              </p>
-            </div>
-          </div>
-
-          {/* Quick Stats Bar */}
-          <div className={cn(
-            "flex items-center gap-6 text-sm",
-            isRTL && "flex-row-reverse"
-          )}>
-            <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-              <div className={cn(
-                "w-2 h-2 rounded-full",
-                programScore >= 70 ? "bg-emerald-500" : "bg-amber-500"
-              )} />
-              <span className="text-muted-foreground">{isArabic ? 'صحة البرنامج:' : 'Health:'}</span>
-              <span className="font-bold">{programScore}/100</span>
-              <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-blue-500/10 text-blue-600 border-blue-500/20">
-                {isArabic ? 'تجريبي' : 'beta'}
-              </Badge>
-              <MetricTooltip metricKey="program_score" confidence="medium" lastUpdated={metrics.lastUpdated} />
-            </div>
-            <div className="h-4 w-px bg-border" />
-            <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-              <span className="text-muted-foreground">{isArabic ? 'الميزانية:' : 'Budget:'}</span>
-              <span className="font-bold">{formatCurrency(metrics.annualBudget)}</span>
-              <MetricTooltip metricKey="utilization_rate" confidence={metrics.confidence.budget} />
-            </div>
-            <div className="h-4 w-px bg-border" />
-            <Badge variant="outline" className={cn(
-              "px-3 py-1 flex items-center gap-1.5",
-              metrics.utilizationRate >= 70 
-                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" 
-                : "bg-amber-500/10 text-amber-600 border-amber-500/20",
-              isRTL && "flex-row-reverse"
-            )}>
-              {metrics.utilizationRate >= 70 ? (
-                <CheckCircle2 className="w-3.5 h-3.5" />
-              ) : (
-                <AlertTriangle className="w-3.5 h-3.5" />
-              )}
-              <span>{metrics.utilizationRate}% {isArabic ? 'استخدام' : 'utilized'}</span>
-            </Badge>
-          </div>
+      {/* Executive Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">Executive Dashboard</h1>
+          <p className="text-muted-foreground flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            Benefits program performance • December 2024
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 px-3 py-1">
+            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+            Program Health: Good
+          </Badge>
         </div>
       </div>
 
-      {/* Strategic View Content */}
-      <AnimatePresence mode="wait">
-        {viewMode === 'strategic' ? (
-          <motion.div
-            key="strategic"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-6"
-          >
-            {/* Executive Pulse Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {executivePulseCards.map((card, index) => {
-                const colorClasses = getColorClasses(card.color);
-                return (
-                  <motion.div
-                    key={card.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <Card className={cn(
-                      "border-border/50 hover:shadow-lg transition-all duration-300 overflow-hidden",
-                      colorClasses.border
-                    )}>
-                      <CardContent className="p-4">
-                        <div className={cn("flex items-start justify-between mb-3", isRTL && "flex-row-reverse")}>
-                          <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                            <div className={cn("p-2 rounded-xl", colorClasses.bg)}>
-                              <card.icon className={cn("w-5 h-5", colorClasses.text)} />
-                            </div>
-                            <MetricTooltip 
-                              metricKey={card.metricKey} 
-                              confidence={card.confidence}
-                              lastUpdated={metrics.lastUpdated}
-                            />
-                          </div>
-                          <div className={cn(
-                            "flex items-center gap-1 text-xs font-medium",
-                            card.trendUp ? "text-emerald-600" : "text-amber-600"
-                          )}>
-                            {card.trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                            <span>{card.trend}</span>
-                          </div>
-                        </div>
-                        <div className={cn(isRTL && "text-right")}>
-                          <p className={cn("text-2xl font-bold tracking-tight", colorClasses.text)}>
-                            {card.value}
-                          </p>
-                          <p className="text-sm font-medium text-foreground mt-1">
-                            {isArabic ? card.title.ar : card.title.en}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {isArabic ? card.subtitle.ar : card.subtitle.en}
-                          </p>
-                        </div>
-                        <div className={cn(
-                          "mt-3 pt-3 border-t border-border/50 text-[10px] text-muted-foreground",
-                          isRTL && "text-right"
-                        )}>
-                          {isArabic ? card.benchmark.ar : card.benchmark.en}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            {/* Money Flow + Year-End Projection - Money Flow is collapsible */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-              <div className="lg:col-span-2 flex flex-col">
-                <details className="group flex-1">
-                  <summary className="cursor-pointer p-4 bg-card rounded-xl border border-border/50 flex items-center justify-between hover:bg-muted/30 transition-colors mb-2">
-                    <span className="flex items-center gap-2 text-sm font-semibold">
-                      <DollarSign className="w-4 h-4 text-primary" />
-                      {isArabic ? 'تدفق الأموال' : 'The Money Story'}
-                    </span>
-                    <span className="text-xs text-muted-foreground group-open:hidden">
-                      {isArabic ? 'انقر للتوسيع' : 'Click to expand'}
-                    </span>
-                    <span className="text-xs text-muted-foreground hidden group-open:inline">
-                      {isArabic ? 'انقر للطي' : 'Click to collapse'}
-                    </span>
-                  </summary>
-                  <MoneyFlowVisualization
-                    allocated={metrics.annualBudget}
-                    utilized={metrics.budgetUsed}
-                    wasteIdentified={metrics.wasteSpend}
-                    recoverableThisQuarter={metrics.wasteRecoveryPotential}
-                    satisfactionScore={metrics.satisfactionScore || undefined}
-                  />
-                </details>
+      {/* Executive KPI Cards - Primary Row */}
+      {showKpiCards && (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Employees */}
+        <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-accent/5 hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 rounded-xl bg-accent/10">
+                <Users className="w-5 h-5 text-accent" />
               </div>
-              <div className="flex">
-                <YearEndProjection
-                  currentSpend={metrics.budgetUsed}
-                  budget={metrics.annualBudget}
-                  projectedSpend={metrics.projectedYearEndSpend}
-                  currentUtilization={metrics.utilizationRate}
-                  monthsRemaining={metrics.monthsRemaining}
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-0 text-[10px] font-semibold">
+                <TrendingUp className="w-3 h-3 mr-1" />
+                +{metrics.employeeChange} YTD
+              </Badge>
+            </div>
+            <div className="space-y-1">
+              <p className="text-3xl font-bold tracking-tight">{metrics.totalEmployees}</p>
+              <p className="text-sm font-medium text-muted-foreground">Total Employees</p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-border/50">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Active headcount</span>
+                <span className="font-medium text-accent">100%</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Annual Budget */}
+        <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-blue-500/5 hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 rounded-xl bg-blue-500/10">
+                <DollarSign className="w-5 h-5 text-blue-500" />
+              </div>
+              <InfoTooltip formula="Sum of all benefit budgets for FY2024" dataSource="Finance System" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-3xl font-bold tracking-tight">{formatCurrency(metrics.annualBudget)}</p>
+              <p className="text-sm font-medium text-muted-foreground">Annual Budget</p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-border/50 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Spent to date</span>
+                <span className="font-medium">{formatCurrency(metrics.budgetUsed)}</span>
+              </div>
+              <Progress value={budgetUtilization} className="h-1.5" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Utilization Rate */}
+        <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-emerald-500/5 hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 rounded-xl bg-emerald-500/10">
+                <TrendingUp className="w-5 h-5 text-emerald-500" />
+              </div>
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-0 text-[10px] font-semibold">
+                <TrendingUp className="w-3 h-3 mr-1" />
+                +{metrics.utilizationChange}%
+              </Badge>
+            </div>
+            <div className="space-y-1">
+              <p className="text-3xl font-bold tracking-tight text-emerald-600">{metrics.utilizationRate}%</p>
+              <p className="text-sm font-medium text-muted-foreground">Utilization Rate</p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-border/50">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Target: 75%</span>
+                <span className="font-medium text-amber-600">11% below</span>
+              </div>
+              <Progress value={metrics.utilizationRate} className="h-1.5 mt-2" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Zombie Spend */}
+        <Card className="relative overflow-hidden border-amber-500/20 bg-gradient-to-br from-card to-amber-500/5 hover:shadow-lg transition-all duration-300">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 rounded-xl bg-amber-500/10">
+                <Ghost className="w-5 h-5 text-amber-500" />
+              </div>
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-0 text-[10px] font-semibold">
+                <TrendingDown className="w-3 h-3 mr-1" />
+                {metrics.zombieChange}% vs Q3
+              </Badge>
+            </div>
+            <div className="space-y-1">
+              <p className="text-3xl font-bold tracking-tight text-amber-600">{formatCurrency(metrics.zombieSpend)}</p>
+              <p className="text-sm font-medium text-muted-foreground">Zombie Spend</p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-amber-500/20">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Recovery potential</span>
+                <span className="font-medium text-amber-600">AED 5.1M</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      )}
+
+      {/* Secondary KPI Cards */}
+      {showSecondaryKpi && (
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Satisfaction */}
+        <Card className="border-border/50 hover:shadow-md transition-all duration-300">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-4">
+              <div className="p-2.5 rounded-xl bg-violet-500/10 shrink-0">
+                <Smile className="w-5 h-5 text-violet-500" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-2xl font-bold tracking-tight">{metrics.satisfactionScore}<span className="text-base text-muted-foreground font-normal">/5</span></p>
+                  <InfoTooltip 
+                    formula="Average of all employee ratings across 4 categories: Overall Satisfaction, Benefits Package, HR Communication, and Support Quality. Each category rated 1-5 stars."
+                    dataSource="Monthly Employee Satisfaction Survey"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground truncate">Employee Satisfaction</p>
+              </div>
+            </div>
+            <div className="mt-3 flex gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <div 
+                  key={star} 
+                  className={`h-1.5 flex-1 rounded-full ${star <= Math.round(metrics.satisfactionScore) ? 'bg-violet-500' : 'bg-muted'}`} 
                 />
+              ))}
+            </div>
+            <div className="mt-2 text-xs text-muted-foreground">
+              Based on {metrics.totalEmployees * 0.72 | 0} responses ({((metrics.totalEmployees * 0.72 / metrics.totalEmployees) * 100).toFixed(0)}% participation)
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Retention */}
+        <Card className="border-border/50 hover:shadow-md transition-all duration-300">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-4">
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 shrink-0">
+                <Target className="w-5 h-5 text-emerald-500" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline gap-2">
+                  <p className="text-2xl font-bold tracking-tight text-emerald-600">{metrics.retentionRate}%</p>
+                  <span className="text-xs text-emerald-600 font-medium">+{metrics.retentionChange}%</span>
+                </div>
+                <p className="text-xs text-muted-foreground truncate">Retention Rate</p>
               </div>
             </div>
-
-            {/* AI Strategic Insights */}
-            <AIInsightsPanel
-              insights={[
-                {
-                  id: '1',
-                  text: isArabic 
-                    ? `التطوير المهني يسجل استخدام منخفض. حملة تواصل مستهدفة يمكن أن توفر ${formatCurrency(metrics.wasteRecoveryPotential)} سنوياً.`
-                    : `Low utilization detected. A targeted campaign could save ${formatCurrency(metrics.wasteRecoveryPotential)} annually.`,
-                  impact: formatCurrency(metrics.wasteRecoveryPotential) + '/year',
-                  action: isArabic ? 'إطلاق حملة التعلم' : 'Launch campaign',
-                  type: 'opportunity',
-                  category: isArabic ? 'التعليم' : 'Learning'
-                },
-                {
-                  id: '2',
-                  text: isArabic
-                    ? `${metrics.pendingClaims} مطالبات في انتظار المراجعة. متوسط المعالجة ${metrics.avgProcessingDays} أيام.`
-                    : `${metrics.pendingClaims} claims awaiting review. Avg processing: ${metrics.avgProcessingDays} days.`,
-                  impact: metrics.avgProcessingDays <= metrics.slaTarget ? 'On Target' : 'At Risk',
-                  action: isArabic ? 'مراجعة المطالبات' : 'Review claims',
-                  type: metrics.avgProcessingDays <= metrics.slaTarget ? 'info' : 'warning',
-                  category: isArabic ? 'العمليات' : 'Operations'
-                },
-                ...(metrics.satisfactionScore ? [{
-                  id: '3',
-                  text: isArabic
-                    ? `رضا الموظفين ${metrics.satisfactionScore}/5 من ${metrics.satisfactionSampleSize} استجابة.`
-                    : `Employee satisfaction at ${metrics.satisfactionScore}/5 from ${metrics.satisfactionSampleSize} responses.`,
-                  type: 'info' as const,
-                  category: isArabic ? 'الرضا' : 'Satisfaction'
-                }] : [])
-              ]}
-              lastUpdated={new Date(metrics.lastUpdated).toLocaleString()}
-            />
-
-            {/* Competitive Position + Utilization Snapshot */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Competitive Position */}
-              <Card className="border-border/50">
-                <CardHeader className="pb-2">
-                  <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                    <CardTitle className={cn(
-                      "text-base font-display font-semibold flex items-center gap-2",
-                      isRTL && "flex-row-reverse"
-                    )}>
-                      <BarChart3 className="w-5 h-5 text-primary" />
-                      {isArabic ? 'الموقع التنافسي' : 'Competitive Position'}
-                    </CardTitle>
-                    <MetricTooltip metricKey="utilization_rate" />
-                  </div>
-                  <CardDescription>{isArabic ? 'مقارنة بمعايير الصناعة' : 'vs Industry Benchmarks'}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {benchmarksWithActual.map((item, index) => (
-                      <div key={index} className={cn(
-                        "flex items-center justify-between p-2 rounded-lg bg-muted/30",
-                        isRTL && "flex-row-reverse"
-                      )}>
-                        <span className="text-sm font-medium flex-1">
-                          {isArabic ? item.metric.ar : item.metric.en}
-                        </span>
-                        <div className={cn("flex items-center gap-3 text-sm", isRTL && "flex-row-reverse")}>
-                          <span className="font-bold text-primary">{item.you}{index === 3 ? '' : '%'}</span>
-                          <span className="text-muted-foreground">{item.industry}{index === 3 ? '' : '%'}</span>
-                          <span className="text-emerald-600 font-medium">{item.top}{index === 3 ? '' : '%'}</span>
-                          <Badge variant="outline" className={cn(
-                            "text-[9px]",
-                            item.you >= item.top * 0.9 ? 'bg-emerald-500/10 text-emerald-600' :
-                            item.you >= item.industry ? 'bg-blue-500/10 text-blue-600' :
-                            'bg-amber-500/10 text-amber-600'
-                          )}>
-                            {item.you >= item.top * 0.9 ? '✓' : item.you >= item.industry ? '★' : '○'}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className={cn("flex items-center justify-center gap-4 text-[10px] text-muted-foreground mt-3", isRTL && "flex-row-reverse")}>
-                    <span className="flex items-center gap-1"><span className="font-bold text-primary">●</span> {isArabic ? 'أنت' : 'You'}</span>
-                    <span className="flex items-center gap-1"><span className="text-muted-foreground">●</span> {isArabic ? 'الصناعة' : 'Industry'}</span>
-                    <span className="flex items-center gap-1"><span className="text-emerald-600">●</span> {isArabic ? 'الأفضل' : 'Top 10%'}</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Utilization Snapshot */}
-              <Card className="border-border/50">
-                <CardHeader className="pb-2">
-                  <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                    <CardTitle className={cn(
-                      "text-base font-display font-semibold flex items-center gap-2",
-                      isRTL && "flex-row-reverse"
-                    )}>
-                      <PieChart className="w-5 h-5 text-primary" />
-                      {isArabic ? 'لقطة الاستخدام' : 'Utilization Snapshot'}
-                    </CardTitle>
-                    <MetricTooltip metricKey="utilization_rate" />
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {topBenefits.length > 0 ? (
-                    <div>
-                      <p className={cn("text-xs font-medium text-emerald-600 mb-2 flex items-center gap-1", isRTL && "flex-row-reverse")}>
-                        <CheckCircle2 className="w-3 h-3" />
-                        {isArabic ? 'الأعلى أداءً' : 'Top Performers'}
-                      </p>
-                      <ProgressBarList items={topBenefits} />
-                    </div>
-                  ) : (
-                    <div className="text-center py-4 text-muted-foreground text-sm">
-                      {isArabic ? 'لا توجد بيانات كافية' : 'No data available'}
-                    </div>
-                  )}
-                  {bottomBenefits.length > 0 && (
-                    <div className="border-t border-border/50 pt-4">
-                      <p className={cn("text-xs font-medium text-amber-600 mb-2 flex items-center gap-1", isRTL && "flex-row-reverse")}>
-                        <AlertTriangle className="w-3 h-3" />
-                        {isArabic ? 'يحتاج اهتمام' : 'Needs Attention'}
-                      </p>
-                      <ProgressBarList items={bottomBenefits} />
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+            <div className="mt-3">
+              <Progress value={metrics.retentionRate} className="h-1.5 [&>div]:bg-emerald-500" />
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Utilization Trend Chart */}
-            {showUtilizationSnapshot && (
-              <Card className="border-border/50">
-                <CardHeader className="pb-2">
-                  <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                    <CardTitle className={cn("text-base font-display font-semibold flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                      <TrendingUp className="w-5 h-5 text-primary" />
-                      {isArabic ? 'اتجاه الاستخدام - آخر 6 أشهر' : 'Utilization Trend - Last 6 Months'}
-                    </CardTitle>
-                    <MetricTooltip metricKey="utilization_rate" lastUpdated={metrics.lastUpdated} />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <AnimatedLineChart 
-                    data={utilizationTrend} 
-                    height={150}
-                    showGrid={true}
-                    showLegend={false}
-                  />
-                </CardContent>
-              </Card>
-            )}
-          </motion.div>
-        ) : (
-          /* Operational View Content */
-          <motion.div
-            key="operational"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-6"
-          >
-            {/* Quick Stats for HR */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="border-amber-500/20 hover:shadow-md transition-all duration-300">
-                <CardContent className="p-4">
-                  <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-                    <div className="p-2.5 rounded-xl bg-amber-500/10 shrink-0">
-                      <FileCheck className="w-5 h-5 text-amber-500" />
-                    </div>
-                    <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
-                      <div className="flex items-center gap-1">
-                        <p className="text-2xl font-bold tracking-tight text-amber-600">{metrics.pendingClaims}</p>
-                        <MetricTooltip metricKey="pending_claims" />
-                      </div>
-                      <p className="text-xs text-muted-foreground">{isArabic ? 'مطالبات معلقة' : 'Pending Claims'}</p>
-                    </div>
-                  </div>
-                  <Link to="/employer/claims">
-                    <Button variant="ghost" size="sm" className="w-full mt-2 text-xs text-amber-600 hover:bg-amber-500/10">
-                      {isArabic ? 'مراجعة الآن' : 'Review Now'} →
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-
-              <Card className="border-border/50 hover:shadow-md transition-all duration-300">
-                <CardContent className="p-4">
-                  <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-                    <div className="p-2.5 rounded-xl bg-primary/10 shrink-0">
-                      <Users className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
-                      <div className="flex items-center gap-1">
-                        <p className="text-2xl font-bold tracking-tight">{metrics.totalEmployees}</p>
-                        <MetricTooltip metricKey="utilization_rate" />
-                      </div>
-                      <p className="text-xs text-muted-foreground">{isArabic ? 'إجمالي الموظفين' : 'Total Employees'}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-border/50 hover:shadow-md transition-all duration-300">
-                <CardContent className="p-4">
-                  <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-                    <div className="p-2.5 rounded-xl bg-violet-500/10 shrink-0">
-                      <Smile className="w-5 h-5 text-violet-500" />
-                    </div>
-                    <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
-                      <div className="flex items-center gap-1">
-                        <p className="text-2xl font-bold tracking-tight">
-                          {metrics.satisfactionScore || 'N/A'}
-                          {metrics.satisfactionScore && <span className="text-base text-muted-foreground font-normal">/5</span>}
-                        </p>
-                        <MetricTooltip metricKey="satisfaction_score" confidence={metrics.confidence.satisfaction} />
-                      </div>
-                      <p className="text-xs text-muted-foreground">{isArabic ? 'الرضا' : 'Satisfaction'}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-border/50 hover:shadow-md transition-all duration-300">
-                <CardContent className="p-4">
-                  <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-                    <div className="p-2.5 rounded-xl bg-emerald-500/10 shrink-0">
-                      <Target className="w-5 h-5 text-emerald-500" />
-                    </div>
-                    <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
-                      <div className="flex items-center gap-1">
-                        <p className="text-2xl font-bold tracking-tight text-muted-foreground">N/A</p>
-                        <MetricTooltip metricKey="retention_rate" confidence="not_integrated" />
-                      </div>
-                      <p className="text-xs text-muted-foreground">{isArabic ? 'معدل الاحتفاظ' : 'Retention Rate'}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+        {/* Pending Claims */}
+        <Card className="border-border/50 hover:shadow-md transition-all duration-300">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-4">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 shrink-0">
+                <FileCheck className="w-5 h-5 text-amber-500" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-2xl font-bold tracking-tight text-amber-600">{metrics.pendingClaims}</p>
+                <p className="text-xs text-muted-foreground truncate">Pending Claims</p>
+              </div>
             </div>
-
-            {/* Operational Actions + Financial Summary */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Claims Queue */}
-              <Card className="border-amber-500/20">
-                <CardHeader className="pb-3">
-                  <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                    <CardTitle className={cn(
-                      "text-base font-display font-semibold flex items-center gap-2",
-                      isRTL && "flex-row-reverse"
-                    )}>
-                      <FileCheck className="w-4 h-4 text-amber-500" />
-                      {isArabic ? 'قائمة المطالبات' : 'Claims Queue'}
-                    </CardTitle>
-                    <MetricTooltip metricKey="avg_processing_days" />
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className={cn("flex items-center justify-between p-3 rounded-lg bg-amber-500/5 border border-amber-500/20", isRTL && "flex-row-reverse")}>
-                    <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-                      <Clock className="w-4 h-4 text-amber-500" />
-                      <div className={isRTL ? "text-right" : ""}>
-                        <p className="text-sm font-medium">{isArabic ? 'متوسط وقت المعالجة' : 'Avg Processing Time'}</p>
-                        <p className="text-xs text-muted-foreground">{isArabic ? `الهدف: ${metrics.slaTarget} أيام` : `Target: ${metrics.slaTarget} days`}</p>
-                      </div>
-                    </div>
-                    <div className={cn("text-right", isRTL && "text-left")}>
-                      <p className="text-lg font-bold text-amber-600">{metrics.avgProcessingDays} {isArabic ? 'أيام' : 'days'}</p>
-                      <Badge variant="outline" className={cn(
-                        "text-[10px]",
-                        metrics.avgProcessingDays <= metrics.slaTarget 
-                          ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                          : "bg-red-500/10 text-red-600 border-red-500/20"
-                      )}>
-                        {metrics.avgProcessingDays <= metrics.slaTarget 
-                          ? (isArabic ? 'ضمن الهدف' : 'On Target')
-                          : (isArabic ? 'تجاوز الهدف' : 'Over Target')}
-                      </Badge>
-                    </div>
-                  </div>
-                  
-                  <Link to="/employer/claims">
-                    <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">
-                      <FileCheck className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
-                      {isArabic ? 'مراجعة المطالبات المعلقة' : 'Review Pending Claims'}
-                      <Badge className="ml-2 bg-white/20 text-white">{metrics.pendingClaims}</Badge>
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-
-              {/* Quick Actions */}
-              <Card className="border-border/50">
-                <CardHeader className="pb-3">
-                  <CardTitle className={cn(
-                    "text-base font-display font-semibold flex items-center gap-2",
-                    isRTL && "flex-row-reverse"
-                  )}>
-                    <Zap className="w-4 h-4 text-primary" />
-                    {isArabic ? 'إجراءات سريعة' : 'Quick Actions'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Link to="/employer/spend">
-                    <Button variant="outline" className="w-full justify-start">
-                      <DollarSign className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
-                      {isArabic ? 'عرض تفاصيل الإنفاق' : 'View Spend Details'}
-                    </Button>
-                  </Link>
-                  <Link to="/employer/zombie">
-                    <Button variant="outline" className="w-full justify-start">
-                      <Recycle className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
-                      {isArabic ? 'تحليل الهدر' : 'Analyze Zombie Spend'}
-                    </Button>
-                  </Link>
-                  <Link to="/employer/segments">
-                    <Button variant="outline" className="w-full justify-start">
-                      <Users className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
-                      {isArabic ? 'عرض شرائح الموظفين' : 'View Employee Segments'}
-                    </Button>
-                  </Link>
-                  <Link to="/employer/satisfaction">
-                    <Button variant="outline" className="w-full justify-start">
-                      <Smile className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
-                      {isArabic ? 'نتائج الاستبيان' : 'Survey Results'}
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+            <div className="mt-3 flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Avg processing</span>
+              <span className="font-medium">{metrics.avgProcessingDays} days</span>
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Utilization & Alerts */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <Card className="border-border/50">
-                <CardHeader className="pb-2">
-                  <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                    <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                      <TrendingUp className="w-4 h-4 text-primary" />
-                      {isArabic ? 'اتجاه الاستخدام' : 'Utilization Trend'}
-                    </CardTitle>
-                    <MetricTooltip metricKey="utilization_rate" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <AnimatedLineChart 
-                    data={utilizationTrend} 
-                    height={120}
-                    showGrid={false}
-                    showLegend={false}
-                  />
-                </CardContent>
-              </Card>
-
-              <Card className="border-border/50">
-                <CardHeader className="pb-2">
-                  <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                    <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                      {isArabic ? 'الأعلى أداءً' : 'Top Performers'}
-                    </CardTitle>
-                    <MetricTooltip metricKey="utilization_rate" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {topBenefits.length > 0 ? (
-                    <ProgressBarList items={topBenefits} />
-                  ) : (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      {isArabic ? 'لا توجد بيانات' : 'No data available'}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="border-border/50">
-                <CardHeader className="pb-2">
-                  <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                    <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                      <AlertTriangle className="w-4 h-4 text-amber-500" />
-                      {isArabic ? 'يحتاج اهتمام' : 'Needs Attention'}
-                    </CardTitle>
-                    <MetricTooltip metricKey="waste_spend" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {bottomBenefits.length > 0 ? (
-                    <ProgressBarList items={bottomBenefits} />
-                  ) : (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      {isArabic ? 'لا توجد بيانات' : 'No data available'}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
+        {/* ROI */}
+        <Card className="border-border/50 hover:shadow-md transition-all duration-300">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-4">
+              <div className="p-2.5 rounded-xl bg-blue-500/10 shrink-0">
+                <TrendingUp className="w-5 h-5 text-blue-500" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-2xl font-bold tracking-tight text-blue-600">{metrics.roi}x</p>
+                <p className="text-xs text-muted-foreground truncate">ROI Indicator</p>
+              </div>
             </div>
-          </motion.div>
+            <div className="mt-3 flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Benchmark</span>
+              <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-0">Above avg</Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      )}
+
+      {/* Executive Summary Card */}
+      {showExecutiveInsights && (
+      <Card className="border-accent/20 overflow-hidden bg-gradient-to-r from-card via-card to-accent/5">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="w-5 h-5 text-accent" />
+            <h2 className="font-display font-semibold text-lg">Key Insights This Month</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {executiveInsights.map((insight, index) => (
+              <div 
+                key={index}
+                className={`p-4 rounded-xl border transition-all duration-300 hover:scale-[1.02] cursor-pointer ${
+                  insight.type === 'success' ? 'bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40' :
+                  insight.type === 'warning' ? 'bg-amber-500/5 border-amber-500/20 hover:border-amber-500/40' :
+                  'bg-blue-500/5 border-blue-500/20 hover:border-blue-500/40'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <insight.icon className={`w-5 h-5 mt-0.5 shrink-0 ${
+                    insight.type === 'success' ? 'text-emerald-500' :
+                    insight.type === 'warning' ? 'text-amber-500' :
+                    'text-blue-500'
+                  }`} />
+                  <div>
+                    <p className="font-semibold text-sm">{insight.title}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{insight.description}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      )}
+
+      {/* Charts Row 1 */}
+      {(showUtilizationTrend || showSpendByType) && (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {showUtilizationTrend && (
+        <ChartContainer title="Utilization Trend" formula="Monthly utilization % over time" dataSource="Benefits Tracker">
+          <AnimatedLineChart data={utilizationTrend} showArea={true} primaryLabel="Utilization" formatValue={(v) => `${v}%`} height={240} yDomain={[50, 70]} showLegend={true} />
+        </ChartContainer>
         )}
-      </AnimatePresence>
+        {showSpendByType && (
+        <ChartContainer title="Spend by Benefit Type" formula="Budget vs actual spend per category" dataSource="Finance">
+          <AnimatedBarChart data={spendByType} layout="horizontal" showSecondary={true} primaryLabel="Spent (AED M)" secondaryLabel="Budget (AED M)" formatValue={(v) => `AED ${v}M`} height={240} showLegend={true} />
+        </ChartContainer>
+        )}
+      </div>
+      )}
+
+      {/* Charts Row 2 */}
+      {(showSegmentComparison || showCumulativeSpend) && (
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {showSegmentComparison && (
+        <div className="lg:col-span-5">
+          <ChartContainer title="Segment Comparison" formula="Tech vs Non-Tech utilization" dataSource="Analytics">
+            <AnimatedRadarChart data={segmentRadarData} height={280} showSecondary={true} primaryLabel="Tech Teams" secondaryLabel="Non-Tech" showLegend={true} />
+          </ChartContainer>
+        </div>
+        )}
+        {showCumulativeSpend && (
+        <div className={showSegmentComparison ? "lg:col-span-7" : "lg:col-span-12"}>
+          <ChartContainer title="Cumulative Spend Tracking" formula="Year-to-date spend by category" dataSource="Finance">
+            <StackedAreaChart data={cumulativeSpendData} stacks={spendStacks} height={280} formatValue={(v) => `${v}M`} />
+          </ChartContainer>
+        </div>
+        )}
+          <ChartContainer title="Cumulative Spend Tracking" formula="Year-to-date spend by category" dataSource="Finance">
+            <StackedAreaChart data={cumulativeSpendData} stacks={spendStacks} height={280} formatValue={(v) => `${v}M`} />
+          </ChartContainer>
+      </div>
+      )}
+
+      {/* Bottom Section */}
+      {(showTopBenefits || showZombieSpend) && (
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {showTopBenefits && (
+        <>
+        <ChartContainer title="Top Utilized Benefits">
+          <ProgressBarList items={topBenefits.map(b => ({ ...b, color: 'success' as const }))} size="md" />
+        </ChartContainer>
+        <ChartContainer title="Least Utilized Benefits">
+          <ProgressBarList items={leastUsed.map(b => ({ ...b, color: 'warning' as const }))} size="md" />
+        </ChartContainer>
+        </>
+        )}
+        {showZombieSpend && (
+        <Card className="border-amber-500/20 bg-gradient-to-b from-card to-amber-500/5">
+          <CardHeader className="pb-3 border-b border-amber-500/10">
+            <CardTitle className="text-base font-display font-semibold flex items-center gap-2">
+              <Ghost className="w-4 h-4 text-amber-500" />
+              Zombie Spend Candidates
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4 space-y-3">
+            {zombieCandidates.map((z) => (
+              <div key={z.benefit} className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/15 hover:border-amber-500/30 transition-colors cursor-pointer">
+                <p className="text-sm font-semibold truncate">{z.benefit}</p>
+                <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                  <span className="font-medium text-amber-600">AED {(z.amount / 1000000).toFixed(1)}M unused</span>
+                  <span>{z.employees} employees</span>
+                </div>
+              </div>
+            ))}
+            <Link to="/employer/zombie">
+              <Button variant="ghost" size="sm" className="w-full text-amber-600 hover:text-amber-700 hover:bg-amber-500/10">
+                View Full Analysis <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+        )}
+      </div>
+      )}
+
+      {/* Benefit Recommendations for Employers */}
+      {showRecommendations && (
+      <EmployerBenefitRecommendations employeeCount={metrics.totalEmployees} />
+      )}
     </div>
   );
 }

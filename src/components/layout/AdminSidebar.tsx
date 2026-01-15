@@ -50,18 +50,18 @@ const navigationGroups: NavGroup[] = [
     ],
   },
   {
-    title: 'Data Integrity',
-    titleAr: 'سلامة البيانات',
-    items: [
-      { label: 'Data Quality', labelAr: 'جودة البيانات', path: '/admin/data-quality', icon: Database },
-      { label: 'Benchmark Methodology', labelAr: 'منهجية المقارنة', path: '/admin/benchmark-methodology', icon: Target },
-    ],
-  },
-  {
     title: 'Benchmarking',
     titleAr: 'المقارنة المعيارية',
     items: [
       { label: 'Regional & Industry', labelAr: 'إقليمي وصناعي', path: '/admin/benchmarks', icon: Globe },
+    ],
+  },
+  {
+    title: 'Market Intelligence',
+    titleAr: 'ذكاء السوق',
+    items: [
+      { label: 'User Intent & Segments', labelAr: 'نوايا وشرائح المستخدمين', path: '/admin/market', icon: Users },
+      { label: 'Spending Patterns', labelAr: 'أنماط الإنفاق', path: '/admin/spending', icon: Wallet },
     ],
   },
   {
@@ -78,7 +78,6 @@ const navigationGroups: NavGroup[] = [
     items: [
       { label: 'UI Configuration', labelAr: 'تكوين الواجهة', path: '/admin/ui-config', icon: Sliders },
       { label: 'Data Migration', labelAr: 'ترحيل البيانات', path: '/admin/data-migration', icon: FileSpreadsheet },
-      { label: 'Tenant Isolation Test', labelAr: 'اختبار عزل المستأجرين', path: '/admin/tenant-test', icon: Shield },
     ],
   },
   {

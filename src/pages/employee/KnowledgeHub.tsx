@@ -28,7 +28,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
-import { PageHeader } from '@/components/ui/page-header';
 
 const pageTranslations = {
   en: {
@@ -347,11 +346,18 @@ export default function KnowledgeHubPage() {
 
   return (
     <div className={cn("space-y-6 animate-fade-in", isRTL && "text-right")}>
-      <PageHeader
-        title={t('title')}
-        subtitle={t('subtitle')}
-        icon={BookOpen}
-      />
+      {/* Header */}
+      <div className={cn("flex flex-col gap-2", isRTL && "items-end")}>
+        <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+          <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20">
+            <BookOpen className="w-6 h-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
+            <p className="text-muted-foreground">{t('subtitle')}</p>
+          </div>
+        </div>
+      </div>
 
       {/* Search */}
       <div className="relative max-w-xl">

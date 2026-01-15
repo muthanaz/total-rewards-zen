@@ -2,18 +2,20 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
+  LayoutDashboard,
   Home,
-  Wallet,
-  DollarSign,
-  Gift,
+  GraduationCap,
+  Heart,
+  Car,
+  Dumbbell,
+  PiggyBank,
   TrendingUp,
-  FileText,
+  BookOpen,
   Calendar,
-  ClipboardList,
-  ShoppingBag,
+  Gift,
+  Award,
+  FileText,
   Building2,
-  HelpCircle,
-  Settings,
   User,
   ChevronDown,
   ChevronRight,
@@ -21,10 +23,9 @@ import {
   Menu,
   X,
   LogOut,
-  Landmark,
+  ShoppingBag,
+  Shield,
   Receipt,
-  BookOpen,
-  HeadphonesIcon,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -32,74 +33,43 @@ import { Button } from '@/components/ui/button';
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
-
 interface NavGroup {
-  id: string;
-  label: { en: string; ar: string };
-  icon: React.ElementType;
-  items?: NavItem[];
-  path?: string; // For direct links without children
-  defaultOpen?: boolean;
+  labelKey: string;
+  items: NavItem[];
 }
 
 interface NavItem {
-  label: { en: string; ar: string };
+  labelKey: string;
   path: string;
   icon: React.ElementType;
 }
 
-// Task-based navigation structure
+// Main Navigation Structure
 const navigation: NavGroup[] = [
   {
-    id: 'home',
-    label: { en: 'Home', ar: 'الرئيسية' },
-    icon: Home,
-    path: '/employee',
-  },
-  {
-    id: 'my-money',
-    label: { en: 'My Money', ar: 'أموالي' },
-    icon: Wallet,
+    labelKey: 'nav.dashboard',
     items: [
-      { label: { en: 'Compensation', ar: 'التعويضات' }, path: '/employee/benefits-analysis', icon: DollarSign },
-      { label: { en: 'Benefits', ar: 'المزايا' }, path: '/employee/benefits', icon: Gift },
-      { label: { en: 'Long-term Rewards', ar: 'المكافآت طويلة المدى' }, path: '/employee/bonus', icon: TrendingUp },
-    ],
-    defaultOpen: true,
-  },
-  {
-    id: 'do-stuff',
-    label: { en: 'Do Stuff', ar: 'إجراءات' },
-    icon: ClipboardList,
-    items: [
-      { label: { en: 'Claims & Requests', ar: 'المطالبات والطلبات' }, path: '/employee/documents', icon: Receipt },
-      { label: { en: 'Documents', ar: 'المستندات' }, path: '/employee/documents', icon: FileText },
-      { label: { en: 'Leave', ar: 'الإجازات' }, path: '/employee/leave', icon: Calendar },
-    ],
-    defaultOpen: true,
-  },
-  {
-    id: 'marketplace',
-    label: { en: 'Marketplace', ar: 'السوق' },
-    icon: ShoppingBag,
-    path: '/employee/marketplace',
-  },
-  {
-    id: 'services',
-    label: { en: 'Services', ar: 'الخدمات' },
-    icon: Building2,
-    items: [
-      { label: { en: 'Gov Connect', ar: 'الخدمات الحكومية' }, path: '/employee/gov-connect', icon: Building2 },
-      { label: { en: 'Help & Support', ar: 'المساعدة والدعم' }, path: '/employee/knowledge', icon: HelpCircle },
+      { labelKey: 'nav.overview', path: '/employee', icon: LayoutDashboard },
     ],
   },
   {
-    id: 'settings',
-    label: { en: 'Settings', ar: 'الإعدادات' },
-    icon: Settings,
+    labelKey: 'nav.myBenefits',
     items: [
-      { label: { en: 'Profile', ar: 'الملف الشخصي' }, path: '/employee/profile', icon: User },
-      { label: { en: 'Security', ar: 'الأمان' }, path: '/employee/security', icon: Settings },
+      { labelKey: 'nav.allBenefits', path: '/employee/benefits', icon: Gift },
+      { labelKey: 'nav.benefitsAnalysis', path: '/employee/benefits-analysis', icon: TrendingUp },
+    ],
+  },
+  {
+    labelKey: 'nav.leaves',
+    items: [
+      { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
+    ],
+  },
+  {
+    labelKey: 'nav.hrServices',
+    items: [
+      { labelKey: 'nav.hrClaims', path: '/employee/documents', icon: FileText },
+      { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
     ],
   },
 ];
@@ -108,30 +78,25 @@ export function EmployeeSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut } = useAuth();
-  const { language, direction } = useLanguage();
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['my-money', 'do-stuff']);
+  const { t, direction } = useLanguage();
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['nav.dashboard', 'nav.myBenefits']);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isRTL = direction === 'rtl';
-  const isArabic = language === 'ar';
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
   };
 
-  const toggleGroup = (groupId: string) => {
+  const toggleGroup = (labelKey: string) => {
     setExpandedGroups(prev =>
-      prev.includes(groupId)
-        ? prev.filter(g => g !== groupId)
-        : [...prev, groupId]
+      prev.includes(labelKey)
+        ? prev.filter(g => g !== labelKey)
+        : [...prev, labelKey]
     );
   };
 
   const isActive = (path: string) => location.pathname === path;
-  const isGroupActive = (group: NavGroup) => {
-    if (group.path) return isActive(group.path);
-    return group.items?.some(item => isActive(item.path));
-  };
 
   const ChevronCollapsed = isRTL ? ChevronLeft : ChevronRight;
 
@@ -166,87 +131,127 @@ export function EmployeeSidebar() {
         "flex-1 overflow-y-auto py-4 px-3 space-y-1",
         isRTL && "text-right"
       )}>
-        {navigation.map((group) => {
-          const GroupIcon = group.icon;
-          const hasItems = group.items && group.items.length > 0;
-          const groupActive = isGroupActive(group);
-
-          // Direct link (no children)
-          if (!hasItems && group.path) {
-            return (
-              <Link
-                key={group.id}
-                to={group.path}
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 font-medium text-sm',
-                  isActive(group.path)
-                    ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                    : 'text-sidebar-foreground hover:bg-sidebar-accent',
-                  isRTL && 'flex-row-reverse text-right'
-                )}
-              >
-                <GroupIcon className="w-4 h-4 shrink-0" />
-                <span className="flex-1">{isArabic ? group.label.ar : group.label.en}</span>
-              </Link>
-            );
-          }
-
-          // Collapsible group
-          return (
-            <div key={group.id} className="mb-1">
-              <button
-                onClick={() => toggleGroup(group.id)}
-                className={cn(
-                  "flex items-center justify-between w-full px-3 py-2.5 text-sm font-medium transition-colors rounded-lg group",
-                  groupActive
-                    ? "text-sidebar-primary"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50",
-                  isRTL && "flex-row-reverse text-right"
-                )}
-              >
-                <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-                  <GroupIcon className={cn(
-                    "w-4 h-4 shrink-0",
-                    groupActive && "text-sidebar-primary"
-                  )} />
-                  <span>{isArabic ? group.label.ar : group.label.en}</span>
-                </div>
-                {expandedGroups.includes(group.id) ? (
-                  <ChevronDown className="w-4 h-4 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
-                ) : (
-                  <ChevronCollapsed className="w-4 h-4 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
-                )}
-              </button>
-              
-              {expandedGroups.includes(group.id) && group.items && (
-                <div className={cn(
-                  "mt-1 space-y-0.5 animate-fade-in",
-                  isRTL ? "pr-4" : "pl-4"
-                )}>
-                  {group.items.map((item) => (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      onClick={() => setMobileOpen(false)}
-                      className={cn(
-                        'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm',
-                        isActive(item.path)
-                          ? 'bg-sidebar-primary/10 text-sidebar-primary font-medium'
-                          : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground',
-                        isRTL && 'flex-row-reverse text-right'
-                      )}
-                    >
-                      <item.icon className="w-3.5 h-3.5 shrink-0" />
-                      <span>{isArabic ? item.label.ar : item.label.en}</span>
-                    </Link>
-                  ))}
-                </div>
+        {navigation.map((group, index) => (
+          <div key={group.labelKey} className={cn("mb-1", index > 0 && "mt-6")}>
+            <button
+              onClick={() => toggleGroup(group.labelKey)}
+              className={cn(
+                "flex items-center justify-between w-full px-3 py-2 text-[11px] font-bold uppercase tracking-[0.15em] transition-colors rounded-md group",
+                "text-sidebar-primary hover:bg-sidebar-primary/10",
+                isRTL && "flex-row-reverse text-right"
               )}
-            </div>
-          );
-        })}
+            >
+              <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
+                <span>{t(group.labelKey)}</span>
+              </div>
+              {expandedGroups.includes(group.labelKey) ? (
+                <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+              ) : (
+                <ChevronCollapsed className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+              )}
+            </button>
+            
+            {expandedGroups.includes(group.labelKey) && (
+              <div className="mt-1 space-y-0.5 animate-fade-in">
+                {group.items.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMobileOpen(false)}
+                    className={cn(
+                      'nav-item',
+                      isActive(item.path) && 'nav-item-active',
+                      isRTL && 'flex-row-reverse text-right'
+                    )}
+                  >
+                    <item.icon className="w-4 h-4 shrink-0" />
+                    <span className={cn("text-sm flex-1", isRTL && "text-right")}>{t(item.labelKey)}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
       </nav>
+
+      {/* Marketplace - Distinguished Section */}
+      <div className={cn("px-3 pb-2", isRTL && "text-right")}>
+        <Link
+          to="/employee/marketplace"
+          onClick={() => setMobileOpen(false)}
+          className={cn(
+            "flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200",
+            "bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-pink-500/10",
+            "hover:from-violet-500/20 hover:via-fuchsia-500/20 hover:to-pink-500/20",
+            "border border-violet-500/20 hover:border-violet-500/40",
+            "group",
+            isActive('/employee/marketplace') && "from-violet-500/20 via-fuchsia-500/20 to-pink-500/20 border-violet-500/40",
+            isRTL && "flex-row-reverse"
+          )}
+        >
+          <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/25">
+            <ShoppingBag className="w-4 h-4 text-white" />
+          </div>
+          <div className={cn("flex-1", isRTL && "text-right")}>
+            <span className={cn(
+              "text-sm font-medium block",
+              isActive('/employee/marketplace') 
+                ? "text-violet-600 dark:text-violet-400" 
+                : "text-sidebar-foreground group-hover:text-violet-600 dark:group-hover:text-violet-400"
+            )}>
+              {t('nav.perksPartners')}
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              {isRTL ? 'خصومات وعروض حصرية' : 'Exclusive deals & discounts'}
+            </span>
+          </div>
+          <ChevronCollapsed className={cn(
+            "w-4 h-4 text-violet-500/50 group-hover:text-violet-500 transition-all",
+            "group-hover:translate-x-0.5",
+            isRTL && "rotate-180 group-hover:-translate-x-0.5"
+          )} />
+        </Link>
+      </div>
+
+      {/* Smart Profile - Distinguished Section */}
+      <div className={cn("px-3 pb-2", isRTL && "text-right")}>
+        <Link
+          to="/employee/profile"
+          onClick={() => setMobileOpen(false)}
+          className={cn(
+            "flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200",
+            "bg-gradient-to-r from-teal-500/10 via-emerald-500/10 to-cyan-500/10",
+            "hover:from-teal-500/20 hover:via-emerald-500/20 hover:to-cyan-500/20",
+            "border border-teal-500/20 hover:border-teal-500/40",
+            "group",
+            isActive('/employee/profile') && "from-teal-500/20 via-emerald-500/20 to-cyan-500/20 border-teal-500/40",
+            isRTL && "flex-row-reverse"
+          )}
+        >
+          <div className="p-2 rounded-lg bg-gradient-to-br from-teal-500 to-emerald-500 shadow-lg shadow-teal-500/25">
+            <User className="w-4 h-4 text-white" />
+          </div>
+          <div className={cn("flex-1", isRTL && "text-right")}>
+            <span className={cn(
+              "text-sm font-medium block",
+              isActive('/employee/profile') 
+                ? "text-teal-600 dark:text-teal-400" 
+                : "text-sidebar-foreground group-hover:text-teal-600 dark:group-hover:text-teal-400"
+            )}>
+              {t('nav.profile')}
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              {isRTL ? 'إدارة الحساب والأمان' : 'Manage account & security'}
+            </span>
+          </div>
+          <ChevronCollapsed className={cn(
+            "w-4 h-4 text-teal-500/50 group-hover:text-teal-500 transition-all",
+            "group-hover:translate-x-0.5",
+            isRTL && "rotate-180 group-hover:-translate-x-0.5"
+          )} />
+        </Link>
+      </div>
 
       {/* Sign Out */}
       <div className={cn("p-4 border-t border-sidebar-border", isRTL && "text-right")}>
@@ -259,9 +264,7 @@ export function EmployeeSidebar() {
           )}
         >
           <LogOut className={cn("w-4 h-4 shrink-0", isRTL ? "ml-3" : "mr-3")} />
-          <span className={isRTL ? "text-right" : "text-left"}>
-            {isArabic ? 'تسجيل الخروج' : 'Sign Out'}
-          </span>
+          <span className={isRTL ? "text-right" : "text-left"}>{t('common.signOut')}</span>
         </Button>
       </div>
     </>

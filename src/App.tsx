@@ -8,7 +8,6 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
 import { UIVisibilityProvider } from "@/contexts/UIVisibilityContext";
-import { PeriodProvider } from "@/contexts/PeriodContext";
 import { PrivacyProvider } from "@/components/ui/privacy-toggle";
 
 import Index from "./pages/Index";
@@ -27,7 +26,6 @@ import HealthPage from "./pages/employee/Health";
 import TransportPage from "./pages/employee/Transport";
 import WellbeingPage from "./pages/employee/Wellbeing";
 import FinancialPage from "./pages/employee/Financial";
-import GratuityPage from "./pages/employee/Gratuity";
 import BonusPage from "./pages/employee/Bonus";
 import EquityPage from "./pages/employee/Equity";
 import LearningPage from "./pages/employee/Learning";
@@ -39,24 +37,19 @@ import ProfilePage from "./pages/employee/Profile";
 import BenefitsPage from "./pages/employee/Benefits";
 import OnboardingPage from "./pages/employee/Onboarding";
 import KnowledgeHubPage from "./pages/employee/KnowledgeHub";
+import SecuritySettingsPage from "./pages/employee/SecuritySettings";
 import BenefitsAnalysisPage from "./pages/employee/BenefitsAnalysis";
 
 import EmployerDashboard from "./pages/employer/Dashboard";
 import SpendPage from "./pages/employer/Spend";
-import WasteRecoveryPage from "./pages/employer/WasteRecovery";
+import ZombieSpendPage from "./pages/employer/ZombieSpend";
 import SegmentsPage from "./pages/employer/Segments";
 import ClaimsPage from "./pages/employer/Claims";
 import MarketplaceAnalyticsPage from "./pages/employer/MarketplaceAnalytics";
-import PolicyHubPage from "./pages/employer/PolicyHub";
+import PoliciesPage from "./pages/employer/Policies";
 import IntegrationsPage from "./pages/employer/Integrations";
-import RecommendationsPage from "./pages/employer/Recommendations";
-import ForecastingPage from "./pages/employer/Forecasting";
-import SatisfactionPulsePage from "./pages/employer/SatisfactionPulse";
-import ComplianceAuditPage from "./pages/employer/ComplianceAudit";
 import KnowledgeCenterPage from "./pages/employer/KnowledgeCenter";
-
-import MetricsDictionaryPage from "./pages/employer/MetricsDictionary";
-import ActionPlanPage from "./pages/employer/ActionPlan";
+import RecommendationsPage from "./pages/employer/Recommendations";
 
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminBenchmarks from "./pages/admin/Benchmarks";
@@ -68,9 +61,6 @@ import AdminOrganizations from "./pages/admin/Organizations";
 import AdminOrganizationSettings from "./pages/admin/OrganizationSettings";
 import AdminUIConfiguration from "./pages/admin/UIConfiguration";
 import AdminDataMigration from "./pages/admin/DataMigration";
-import AdminTenantIsolationTest from "./pages/admin/TenantIsolationTest";
-import AdminDataQualityPage from "./pages/admin/DataQuality";
-import AdminBenchmarkMethodologyPage from "./pages/admin/BenchmarkMethodology";
 import VendorDashboard from "./pages/vendor/Dashboard";
 import VendorOffers from "./pages/vendor/Offers";
 import VendorTransactions from "./pages/vendor/Transactions";
@@ -79,18 +69,8 @@ import VendorAnalytics from "./pages/vendor/Analytics";
 import VendorCreateOffer from "./pages/vendor/CreateOffer";
 import VendorProfile from "./pages/vendor/Profile";
 import VendorSettings from "./pages/vendor/Settings";
-import VendorPayouts from "./pages/vendor/Payouts";
-import VendorOfferQuality from "./pages/vendor/OfferQuality";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 1000 * 60 * 5, // 5 minutes default
-    },
-  },
-});
+const queryClient = new QueryClient();
 
 type UserRole = 'employee' | 'employer' | 'admin' | 'vendor';
 
@@ -136,7 +116,6 @@ function AppRoutes() {
         <Route path="transport" element={<TransportPage />} />
         <Route path="wellbeing" element={<WellbeingPage />} />
         <Route path="financial" element={<FinancialPage />} />
-        <Route path="gratuity" element={<GratuityPage />} />
         <Route path="bonus" element={<BonusPage />} />
         <Route path="equity" element={<EquityPage />} />
         <Route path="learning" element={<LearningPage />} />
@@ -154,19 +133,14 @@ function AppRoutes() {
       <Route path="/employer" element={<ProtectedRoute allowedRoles={['employer']}><EmployerLayout /></ProtectedRoute>}>
         <Route index element={<EmployerDashboard />} />
         <Route path="spend" element={<SpendPage />} />
-        <Route path="zombie" element={<WasteRecoveryPage />} />
+        <Route path="zombie" element={<ZombieSpendPage />} />
         <Route path="segments" element={<SegmentsPage />} />
         <Route path="claims" element={<ClaimsPage />} />
         <Route path="marketplace" element={<MarketplaceAnalyticsPage />} />
-        <Route path="policies" element={<PolicyHubPage />} />
+        <Route path="policies" element={<PoliciesPage />} />
         <Route path="integrations" element={<IntegrationsPage />} />
-        <Route path="recommendations" element={<RecommendationsPage />} />
-        <Route path="forecasting" element={<ForecastingPage />} />
-        <Route path="satisfaction" element={<SatisfactionPulsePage />} />
-        <Route path="compliance" element={<ComplianceAuditPage />} />
         <Route path="knowledge" element={<KnowledgeCenterPage />} />
-        <Route path="metrics" element={<MetricsDictionaryPage />} />
-        <Route path="actions" element={<ActionPlanPage />} />
+        <Route path="recommendations" element={<RecommendationsPage />} />
       </Route>
       
       {/* Admin Routes - Platform owner only */}
@@ -181,9 +155,6 @@ function AppRoutes() {
         <Route path="settings" element={<AdminSettings />} />
         <Route path="ui-config" element={<AdminUIConfiguration />} />
         <Route path="data-migration" element={<AdminDataMigration />} />
-        <Route path="tenant-test" element={<AdminTenantIsolationTest />} />
-        <Route path="data-quality" element={<AdminDataQualityPage />} />
-        <Route path="benchmark-methodology" element={<AdminBenchmarkMethodologyPage />} />
       </Route>
       
       {/* Vendor Routes */}
@@ -191,11 +162,9 @@ function AppRoutes() {
         <Route index element={<VendorDashboard />} />
         <Route path="offers" element={<VendorOffers />} />
         <Route path="offers/new" element={<VendorCreateOffer />} />
-        <Route path="offer-quality" element={<VendorOfferQuality />} />
         <Route path="analytics" element={<VendorAnalytics />} />
         <Route path="transactions" element={<VendorTransactions />} />
         <Route path="earnings" element={<VendorEarnings />} />
-        <Route path="payouts" element={<VendorPayouts />} />
         <Route path="profile" element={<VendorProfile />} />
         <Route path="settings" element={<VendorSettings />} />
       </Route>
@@ -212,17 +181,15 @@ const App = () => (
         <AuthProvider>
           <ProfileProvider>
             <PrivacyProvider>
-              <PeriodProvider>
-                <UIVisibilityProvider>
-                  <SecurityProvider enableSessionTimeout={true}>
-                    <TooltipProvider>
-                      <Toaster />
-                      <Sonner />
-                      <AppRoutes />
-                    </TooltipProvider>
-                  </SecurityProvider>
-                </UIVisibilityProvider>
-              </PeriodProvider>
+              <UIVisibilityProvider>
+                <SecurityProvider enableSessionTimeout={true}>
+                  <TooltipProvider>
+                    <Toaster />
+                    <Sonner />
+                    <AppRoutes />
+                  </TooltipProvider>
+                </SecurityProvider>
+              </UIVisibilityProvider>
             </PrivacyProvider>
           </ProfileProvider>
         </AuthProvider>

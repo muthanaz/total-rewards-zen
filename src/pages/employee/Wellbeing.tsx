@@ -1,13 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { BenefitGuide } from '@/components/employee/BenefitGuide';
-import { PageHeader } from '@/components/ui/page-header';
-import { StatusStrip } from '@/components/ui/status-strip';
-import { Dumbbell, Heart, Brain, Leaf, CheckCircle, ExternalLink, Wallet, TrendingDown, Percent } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { cn } from '@/lib/utils';
+import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
+import { Dumbbell, Heart, Brain, Leaf, Moon, CheckCircle, ExternalLink, Wallet, TrendingDown, Percent } from 'lucide-react';
 
 const ANNUAL_VALUE = 6000;
 const UTILIZED = 3200;
@@ -47,51 +44,29 @@ const programs = [
   },
 ];
 
+const tips = [
+  { icon: Moon, title: 'Sleep Better', tip: 'Use the Calm app sleep stories to improve your sleep quality.' },
+  { icon: Dumbbell, title: 'Stay Active', tip: 'Try the new yoga classes at Fitness First - included in your membership.' },
+  { icon: Brain, title: 'Mental Health', tip: 'Book a counseling session if you need support. It\'s confidential.' },
+];
+
 export default function WellbeingPage() {
-  const { language, direction } = useLanguage();
-  const isRTL = direction === 'rtl';
-  const isArabic = language === 'ar';
-  
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
   const remaining = ANNUAL_VALUE - UTILIZED;
   const utilizationPercent = Math.round((UTILIZED / ANNUAL_VALUE) * 100);
 
-  const guideSteps = [
-    {
-      title: 'Choose Programs',
-      description: 'Activate any combination of programs up to your AED 6,000 budget',
-      highlight: 'AED 6,000',
-    },
-    {
-      title: 'Instant Access',
-      description: 'Once activated, access your programs immediately via app or partner locations',
-    },
-    {
-      title: 'Confidential Support',
-      description: 'Mental health sessions are 100% confidential — employer sees only utilization',
-      highlight: '100% confidential',
-    },
-  ];
-
-  const policyPoints = [
-    'AED 6,000 annual wellbeing budget',
-    'Gym membership fully covered',
-    'Mental health support is confidential',
-    'Can mix and match programs',
-    'Unused budget does not roll over',
-    'Family members may join gym (extra cost)',
-  ];
-
   return (
-    <div className={cn("space-y-6 animate-fade-in", isRTL && "text-right")}>
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <PageHeader
-        title={isArabic ? 'برنامج العافية' : 'Wellbeing Program'}
-        titleAr="برنامج العافية"
-        subtitle={isArabic ? 'مزايا الصحة والعافية لعقلك وجسمك' : 'Your health and wellness benefits for mind and body'}
-        subtitleAr="مزايا الصحة والعافية لعقلك وجسمك"
-        icon={Dumbbell}
-      />
+      <div>
+        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
+          <Dumbbell className="w-7 h-7 text-accent" />
+          Wellbeing Program
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Your health and wellness benefits for mind and body
+        </p>
+      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -130,16 +105,46 @@ export default function WellbeingPage() {
         />
       </div>
 
-      {/* Comprehensive Benefit Guide */}
-      <BenefitGuide
-        icon={Dumbbell}
-        title="Wellbeing Program Guide"
-        steps={guideSteps}
-        policyPoints={policyPoints}
-        policyButtonText="View Wellbeing Policy"
-        claimCategory="Wellbeing"
-        claimButtonText="Submit Claim"
-      />
+      {/* How It Works */}
+      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <Dumbbell className="w-5 h-5 text-accent" />
+            How Your Wellbeing Program Works
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
+              <div>
+                <p className="font-medium text-sm">Choose Programs</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Activate any combination of programs up to your <span className="font-semibold text-accent">AED 6,000</span> budget
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
+              <div>
+                <p className="font-medium text-sm">Instant Access</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Once activated, access your programs immediately via app or partner locations
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
+              <div>
+                <p className="font-medium text-sm">Confidential Support</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Mental health sessions are 100% confidential — employer sees only utilization
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Programs Grid */}
       <div className="grid md:grid-cols-2 gap-6">
@@ -194,6 +199,64 @@ export default function WellbeingPage() {
         ))}
       </div>
 
+      {/* Wellness Tips */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-display">Wellness Tips for You</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4">
+            {tips.map((tip, i) => (
+              <div key={i} className="p-4 rounded-lg bg-muted/50">
+                <tip.icon className="w-5 h-5 text-accent mb-2" />
+                <h4 className="font-medium text-sm mb-1">{tip.title}</h4>
+                <p className="text-xs text-muted-foreground">{tip.tip}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Policy Highlights */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-display">Policy Highlights</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              AED 6,000 annual wellbeing budget
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Gym membership fully covered
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Mental health support is confidential
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Can mix and match programs
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Unused budget doesn't roll over
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Family members may join gym (extra cost)
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
+
+      {/* Actions */}
+      <div className="flex items-center justify-center gap-4">
+        <SubmitClaimButton category="Wellbeing" buttonText="Submit Wellbeing Claim" />
+        <Button variant="outline">View Full Wellbeing Policy</Button>
+      </div>
     </div>
   );
 }

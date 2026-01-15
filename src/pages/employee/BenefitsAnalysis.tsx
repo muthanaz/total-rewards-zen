@@ -80,7 +80,6 @@ const benefits = [
 const fullyUtilizedBenefits = [
   { name: 'Housing Allowance', nameAr: 'بدل السكن', value: 120000 },
   { name: 'Transport & Mobility', nameAr: 'النقل والتنقل', value: 39000 },
-  { name: 'End of Service Gratuity', nameAr: 'مكافأة نهاية الخدمة', value: 102083 },
 ];
 
 export default function BenefitsAnalysis() {
@@ -136,13 +135,13 @@ export default function BenefitsAnalysis() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header - Renamed to Insights & Optimization */}
+      {/* Header */}
       <div className={cn("space-y-1", isRTL && "text-right")}>
         <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">
-          {isRTL ? 'الرؤى والتحسين' : 'Insights & Optimization'}
+          {isRTL ? 'تحليل المزايا' : 'Benefits Analysis'}
         </h1>
         <p className="text-muted-foreground">
-          {isRTL ? 'اكتشف فرص التوفير واتخذ إجراءً بناءً على بياناتك' : 'Discover savings opportunities and take action based on your data'}
+          {isRTL ? 'اكتشف ما يمكنك المطالبة به واتخذ إجراءً' : 'Discover what you can claim and take action'}
         </p>
       </div>
 

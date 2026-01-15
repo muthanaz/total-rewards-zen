@@ -19,9 +19,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { AnimatedLineChart } from '@/components/charts/AnimatedLineChart';
 import { AnimatedBarChart } from '@/components/charts/AnimatedBarChart';
 import { toast } from 'sonner';
-import { PageHeader } from '@/components/ui/page-header';
-import { StatusStrip } from '@/components/ui/status-strip';
-import { PrimaryInsight } from '@/components/ui/primary-insight';
 
 const earningsData = {
   totalEarnings: 24500,
@@ -69,36 +66,27 @@ export default function VendorEarnings() {
 
   return (
     <div className={cn("space-y-6", isRTL && "text-right")}>
-      <PageHeader
-        title={t('Earnings', 'الأرباح')}
-        subtitle={t('Track your commissions and payouts', 'تتبع عمولاتك ومدفوعاتك')}
-        icon={DollarSign}
-        action={
-          <div className={cn("flex gap-2", isRTL && "flex-row-reverse")}>
-            <Button variant="outline" className="gap-2">
-              <Download className="w-4 h-4" />
-              {t('Export', 'تصدير')}
-            </Button>
-            <Button className="gap-2" onClick={handleRequestPayout}>
-              <Wallet className="w-4 h-4" />
-              {t('Request Payout', 'طلب الدفع')}
-            </Button>
-          </div>
-        }
-      />
-
-      <StatusStrip
-        confidence="high"
-        lastUpdated={new Date()}
-        dataSource={t('Payment processor', 'معالج الدفع')}
-      />
-
-      <PrimaryInsight
-        title={t('Monthly Growth', 'النمو الشهري')}
-        value={`AED ${earningsData.currentMonthEarnings.toLocaleString()}`}
-        subtitle={t('Earnings growth compared to last month', 'نمو الأرباح مقارنة بالشهر الماضي')}
-        trend={{ value: parseFloat(growthPercent), direction: 'up' }}
-      />
+      {/* Header */}
+      <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
+        <div>
+          <h1 className="text-3xl font-display font-bold text-foreground">
+            {t('Earnings', 'الأرباح')}
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            {t('Track your commissions and payouts', 'تتبع عمولاتك ومدفوعاتك')}
+          </p>
+        </div>
+        <div className={cn("flex gap-2", isRTL && "flex-row-reverse")}>
+          <Button variant="outline" className="gap-2">
+            <Download className="w-4 h-4" />
+            {t('Export', 'تصدير')}
+          </Button>
+          <Button className="gap-2" onClick={handleRequestPayout}>
+            <Wallet className="w-4 h-4" />
+            {t('Request Payout', 'طلب الدفع')}
+          </Button>
+        </div>
+      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -4,17 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { BenefitGuide } from '@/components/employee/BenefitGuide';
-import { PageHeader } from '@/components/ui/page-header';
-import { StatusStrip } from '@/components/ui/status-strip';
+import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { NoData } from '@/components/ui/empty-state';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { BookOpen, Award, Clock, CheckCircle, Plus, ExternalLink, Wallet, TrendingUp, Calculator, GraduationCap, Play, Star, Users } from 'lucide-react';
+import { BookOpen, Award, Clock, CheckCircle, Plus, ExternalLink, Wallet, TrendingUp, Calculator } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { cn } from '@/lib/utils';
 
 const ANNUAL_BUDGET = 12000;
 const UTILIZED = 4500;
@@ -55,119 +51,8 @@ const suggestedCourses = [
   { name: 'Design Thinking', provider: 'IDEO', cost: 800, duration: '4 weeks' },
 ];
 
-const learningPlatforms = [
-  {
-    name: 'LinkedIn Learning',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/LinkedIn_Logo.svg/200px-LinkedIn_Logo.svg.png',
-    url: 'https://www.linkedin.com/learning/',
-    description: 'Business, tech & creative courses',
-    courses: '16,000+',
-    color: 'bg-[#0A66C2]',
-  },
-  {
-    name: 'Coursera',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Coursera-Logo_600x600.svg/200px-Coursera-Logo_600x600.svg.png',
-    url: 'https://www.coursera.org/',
-    description: 'University degrees & certifications',
-    courses: '7,000+',
-    color: 'bg-[#0056D2]',
-  },
-  {
-    name: 'Udemy',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Udemy_logo.svg/200px-Udemy_logo.svg.png',
-    url: 'https://www.udemy.com/',
-    description: 'Practical skills & development',
-    courses: '200,000+',
-    color: 'bg-[#A435F0]',
-  },
-  {
-    name: 'edX',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/EdX.svg/200px-EdX.svg.png',
-    url: 'https://www.edx.org/',
-    description: 'Harvard, MIT & top universities',
-    courses: '3,000+',
-    color: 'bg-[#02262B]',
-  },
-  {
-    name: 'Pluralsight',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Pluralsight_logo_no_background.svg/200px-Pluralsight_logo_no_background.svg.png',
-    url: 'https://www.pluralsight.com/',
-    description: 'Tech & IT skills platform',
-    courses: '7,500+',
-    color: 'bg-[#F15B2A]',
-  },
-  {
-    name: 'Skillshare',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Skillshare_Symbol.svg/200px-Skillshare_Symbol.svg.png',
-    url: 'https://www.skillshare.com/',
-    description: 'Creative & business classes',
-    courses: '30,000+',
-    color: 'bg-[#00FF84]',
-  },
-];
-
-const featuredCourses = [
-  {
-    title: 'Google Project Management Certificate',
-    platform: 'Coursera',
-    url: 'https://www.coursera.org/professional-certificates/google-project-management',
-    rating: 4.8,
-    students: '1.2M',
-    duration: '6 months',
-    level: 'Beginner',
-  },
-  {
-    title: 'AWS Certified Solutions Architect',
-    platform: 'Udemy',
-    url: 'https://www.udemy.com/course/aws-certified-solutions-architect-associate/',
-    rating: 4.7,
-    students: '900K',
-    duration: '27 hours',
-    level: 'Intermediate',
-  },
-  {
-    title: 'Excel Skills for Business',
-    platform: 'Coursera',
-    url: 'https://www.coursera.org/specializations/excel',
-    rating: 4.9,
-    students: '500K',
-    duration: '6 months',
-    level: 'All Levels',
-  },
-  {
-    title: 'Leadership & Management',
-    platform: 'LinkedIn Learning',
-    url: 'https://www.linkedin.com/learning/paths/become-a-manager',
-    rating: 4.6,
-    students: '350K',
-    duration: '15 hours',
-    level: 'Intermediate',
-  },
-  {
-    title: 'Python for Data Science',
-    platform: 'edX',
-    url: 'https://www.edx.org/learn/python',
-    rating: 4.7,
-    students: '800K',
-    duration: '10 weeks',
-    level: 'Beginner',
-  },
-  {
-    title: 'UX Design Professional Certificate',
-    platform: 'Coursera',
-    url: 'https://www.coursera.org/professional-certificates/google-ux-design',
-    rating: 4.8,
-    students: '600K',
-    duration: '6 months',
-    level: 'Beginner',
-  },
-];
-
 export default function LearningPage() {
   const { toast } = useToast();
-  const { language, direction } = useLanguage();
-  const isRTL = direction === 'rtl';
-  const isArabic = language === 'ar';
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
@@ -182,89 +67,57 @@ export default function LearningPage() {
     setDialogOpen(false);
   };
 
-  const guideSteps = [
-    {
-      title: 'Request Approval',
-      description: 'Submit a course request with justification — most under AED 2,000 auto-approved',
-      highlight: 'AED 2,000',
-    },
-    {
-      title: 'Complete & Submit',
-      description: 'Finish your course and submit receipts plus completion certificate',
-    },
-    {
-      title: 'Get Reimbursed',
-      description: 'Receive reimbursement within 30 days of submission',
-      highlight: '30 days',
-    },
-  ];
-
-  const policyPoints = [
-    'AED 12,000 annual learning budget',
-    'Pre-approval required for courses over AED 2,000',
-    'Covers courses, certifications, conferences',
-    'Must be job-related or career-advancing',
-    'Reimbursement within 30 days of completion',
-    'Study leave: up to 5 days for certifications',
-  ];
-
-  const courseRequestButton = (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="w-4 h-4 mr-2" />
-          Request Course
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Request Learning Budget</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>Course/Certification Name</Label>
-            <Input placeholder="e.g., AWS Cloud Practitioner" />
-          </div>
-          <div className="space-y-2">
-            <Label>Provider</Label>
-            <Input placeholder="e.g., Coursera, Udemy, AWS" />
-          </div>
-          <div className="space-y-2">
-            <Label>Estimated Cost (AED)</Label>
-            <Input type="number" placeholder="0" />
-          </div>
-          <div className="space-y-2">
-            <Label>Justification</Label>
-            <Textarea placeholder="How will this help your role?" />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleSubmitRequest}>Submit Request</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-
   return (
-    <div className={cn("space-y-6 animate-fade-in", isRTL && "text-right")}>
+    <div className="space-y-6">
       {/* Header */}
-      <PageHeader
-        title={isArabic ? 'التعلم والتطوير' : 'Learning & Development'}
-        titleAr="التعلم والتطوير"
-        subtitle={isArabic ? 'الدورات والشهادات والتطوير المهني' : 'Courses, certifications, and professional development'}
-        subtitleAr="الدورات والشهادات والتطوير المهني"
-        icon={BookOpen}
-      />
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
+            <BookOpen className="w-7 h-7 text-accent" />
+            Learning & Development
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Courses, certifications, and professional development
+          </p>
+        </div>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Request Course
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Request Learning Budget</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Course/Certification Name</Label>
+                <Input placeholder="e.g., AWS Cloud Practitioner" />
+              </div>
+              <div className="space-y-2">
+                <Label>Provider</Label>
+                <Input placeholder="e.g., Coursera, Udemy, AWS" />
+              </div>
+              <div className="space-y-2">
+                <Label>Estimated Cost (AED)</Label>
+                <Input type="number" placeholder="0" />
+              </div>
+              <div className="space-y-2">
+                <Label>Justification</Label>
+                <Textarea placeholder="How will this help your role?" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleSubmitRequest}>Submit Request</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
 
-      {/* Status Strip */}
-      <StatusStrip
-        confidence="high"
-        lastUpdated={new Date()}
-        dataSource="L&D System"
-      />
-
-      {/* Summary Cards */}
+      {/* Summary Cards with SummaryStatsCard */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <SummaryStatsCard
           variant="primary"
@@ -305,17 +158,46 @@ export default function LearningPage() {
         />
       </div>
 
-      {/* Comprehensive Benefit Guide */}
-      <BenefitGuide
-        icon={BookOpen}
-        title="Learning & Development Guide"
-        steps={guideSteps}
-        policyPoints={policyPoints}
-        policyButtonText="View L&D Policy"
-        claimCategory="Learning & Development"
-        claimButtonText="Submit Claim"
-        customAction={courseRequestButton}
-      />
+      {/* How It Works */}
+      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-accent" />
+            How Your L&D Budget Works
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
+              <div>
+                <p className="font-medium text-sm">Request Approval</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Submit a course request with justification — most under <span className="font-semibold text-accent">AED 2,000</span> auto-approved
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
+              <div>
+                <p className="font-medium text-sm">Complete & Submit</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Finish your course and submit receipts plus completion certificate
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
+              <div>
+                <p className="font-medium text-sm">Get Reimbursed</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Receive reimbursement within 30 days of submission
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Your Learning */}
       <Card>
@@ -368,100 +250,10 @@ export default function LearningPage() {
         </CardContent>
       </Card>
 
-      {/* Learning Platforms */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <GraduationCap className="w-5 h-5 text-accent" />
-            Learning Platforms
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Access courses from our trusted partner platforms. All eligible for reimbursement.
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {learningPlatforms.map((platform) => (
-              <a
-                key={platform.name}
-                href={platform.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex flex-col items-center p-4 rounded-xl border border-border/50 hover:border-accent/50 hover:shadow-md transition-all bg-card hover:bg-muted/30"
-              >
-                <div className={`w-12 h-12 rounded-lg ${platform.color} flex items-center justify-center mb-3`}>
-                  <Play className="w-5 h-5 text-white" />
-                </div>
-                <h4 className="font-medium text-sm text-center group-hover:text-accent transition-colors">
-                  {platform.name}
-                </h4>
-                <p className="text-xs text-muted-foreground text-center mt-1">
-                  {platform.courses} courses
-                </p>
-              </a>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Featured Courses & Certifications */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <Award className="w-5 h-5 text-accent" />
-            Featured Courses & Certifications
-          </CardTitle>
-          <Badge variant="outline" className="text-xs">Recommended</Badge>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {featuredCourses.map((course, i) => (
-              <a
-                key={i}
-                href={course.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group p-4 rounded-xl border border-border/50 hover:border-accent/50 hover:shadow-md transition-all bg-card"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <Badge variant="secondary" className="text-xs">
-                    {course.platform}
-                  </Badge>
-                  <Badge variant="outline" className="text-xs">
-                    {course.level}
-                  </Badge>
-                </div>
-                <h4 className="font-medium text-sm mb-2 group-hover:text-accent transition-colors line-clamp-2">
-                  {course.title}
-                </h4>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                  <span className="flex items-center gap-1">
-                    <Star className="w-3.5 h-3.5 text-warning fill-warning" />
-                    {course.rating}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Users className="w-3.5 h-3.5" />
-                    {course.students}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    {course.duration}
-                  </span>
-                </div>
-                <Button size="sm" variant="outline" className="w-full group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
-                  <ExternalLink className="w-3.5 h-3.5 mr-1" />
-                  View Course
-                </Button>
-              </a>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Suggested Courses */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base font-display">Personalized Suggestions</CardTitle>
+          <CardTitle className="text-base font-display">Suggested for You</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-3 gap-4">
@@ -486,6 +278,46 @@ export default function LearningPage() {
         </CardContent>
       </Card>
 
+      {/* Policy Highlights */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-display">Policy Highlights</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
+              AED 12,000 annual learning budget
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
+              Pre-approval required for courses over AED 2,000
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
+              Covers courses, certifications, conferences
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
+              Must be job-related or career-advancing
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
+              Reimbursement within 30 days of completion
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
+              Study leave: up to 5 days for certifications
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
+
+      {/* Actions */}
+      <div className="flex items-center justify-center gap-4">
+        <SubmitClaimButton category="Learning & Development" buttonText="Submit L&D Claim" />
+        <Button variant="outline">View Full L&D Policy</Button>
+      </div>
     </div>
   );
 }

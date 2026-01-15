@@ -3,9 +3,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PageHeader } from '@/components/ui/page-header';
-import { StatusStrip } from '@/components/ui/status-strip';
-import { PrimaryInsight } from '@/components/ui/primary-insight';
 import { 
   Globe, 
   TrendingUp, 
@@ -85,46 +82,34 @@ export default function AdminDashboard() {
   return (
     <div className={cn("space-y-8", isRTL && "text-right")}>
       {/* Header */}
-      <PageHeader
-        title={t('Platform Command Center', 'مركز قيادة المنصة')}
-        titleAr="مركز قيادة المنصة"
-        subtitle={t('Real-time analytics and market intelligence', 'التحليلات الفورية وذكاء السوق')}
-        subtitleAr="التحليلات الفورية وذكاء السوق"
-        icon={Globe}
-        action={
-          <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-            <Button variant="outline" size="sm">
-              <Calendar className="w-4 h-4 mr-2" />
-              {t('Last 30 Days', 'آخر 30 يوم')}
-            </Button>
-            <Button variant="outline" size="sm">
-              <Filter className="w-4 h-4 mr-2" />
-              {t('Filters', 'تصفية')}
-            </Button>
-            <Button size="sm">
-              <Download className="w-4 h-4 mr-2" />
-              {t('Export Report', 'تصدير التقرير')}
-            </Button>
-          </div>
-        }
-      />
-
-      {/* Status Strip */}
-      <StatusStrip
-        confidence="high"
-        lastUpdated={new Date()}
-        dataSource="Platform Analytics"
-      />
-
-      {/* Primary Insight */}
-      <PrimaryInsight
-        icon={TrendingUp}
-        title={t('Platform Growing Strong', 'نمو قوي للمنصة')}
-        value="AED 24.5M"
-        subtitle={t('Platform GMV increased 15% this month with 12,847 active employees', 'زادت قيمة المنصة بنسبة 15% هذا الشهر مع 12,847 موظف نشط')}
-        trend={{ value: 15, direction: 'up' }}
-        variant="success"
-      />
+      <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
+        <div>
+          <h1 className="text-3xl font-display font-bold text-foreground">
+            {t('Platform Command Center', 'مركز قيادة المنصة')}
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            {t('Real-time analytics and market intelligence', 'التحليلات الفورية وذكاء السوق')}
+          </p>
+        </div>
+        <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+          <Button variant="outline" size="sm">
+            <Calendar className="w-4 h-4 mr-2" />
+            {t('Last 30 Days', 'آخر 30 يوم')}
+          </Button>
+          <Button variant="outline" size="sm">
+            <Filter className="w-4 h-4 mr-2" />
+            {t('Filters', 'تصفية')}
+          </Button>
+          <Button variant="outline" size="sm">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            {t('Refresh', 'تحديث')}
+          </Button>
+          <Button size="sm">
+            <Download className="w-4 h-4 mr-2" />
+            {t('Export Report', 'تصدير التقرير')}
+          </Button>
+        </div>
+      </div>
 
       {/* Platform Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

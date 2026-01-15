@@ -5,15 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { BenefitGuide } from '@/components/employee/BenefitGuide';
-import { PageHeader } from '@/components/ui/page-header';
-import { StatusStrip } from '@/components/ui/status-strip';
-import { PrimaryInsight } from '@/components/ui/primary-insight';
-import { AssumptionsPanel } from '@/components/ui/assumptions-panel';
 import { 
   Gift, TrendingUp, Target, Award, Star, Calendar, 
   Calculator, CheckCircle, Clock, Users, ChevronRight,
-  BarChart3, Trophy, Sparkles, Lightbulb
+  BarChart3, Trophy, Sparkles
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
@@ -22,14 +17,6 @@ import { chartColors, getChartColor } from '@/lib/chartColors';
 
 const MONTHLY_SALARY = 35000;
 const TARGET_MONTHS = 2; // Target bonus is 2 months salary
-
-// Bonus assumptions for transparency
-const bonusAssumptions = [
-  { id: 'salary_basis', label: 'Salary Basis', value: 'Basic Salary Only', source: 'policy' as const },
-  { id: 'target_months', label: 'Target Bonus', value: '2 months', source: 'policy' as const },
-  { id: 'performance_period', label: 'Performance Period', value: 'Jan - Dec 2025', source: 'system' as const },
-  { id: 'payout_timing', label: 'Payout Timing', value: 'March 2026', source: 'policy' as const },
-];
 
 // Performance rating scale
 const performanceRatings = [
@@ -226,50 +213,19 @@ export default function BonusPage() {
 
   return (
     <div className={cn("space-y-6 animate-fade-in", isRTL && "text-right")}>
-      {/* Page Header */}
-      <PageHeader
-        title={t.title}
-        titleAr={pageTranslations.ar.title}
-        subtitle={t.subtitle}
-        subtitleAr={pageTranslations.ar.subtitle}
-        icon={Gift}
-      />
-
-      {/* Status Strip */}
-      <StatusStrip
-        confidence={currentEvaluation.overallRating >= 3 ? 'high' : 'medium'}
-        lastUpdated={new Date(currentEvaluation.lastReviewDate)}
-        dataSource="Performance System"
-        dataSourceAr="نظام الأداء"
-      />
-
-      {/* Primary Insight */}
-      <PrimaryInsight
-        icon={Lightbulb}
-        title={isRTL ? 'مكافأتك المتوقعة' : 'Your Projected Bonus'}
-        titleAr="مكافأتك المتوقعة"
-        value={formatCurrency(projectedBonus)}
-        subtitle={isRTL 
-          ? `بناءً على تقييمك الحالي (${currentEvaluation.overallRating}/5) ومضاعف ${(currentRatingData?.multiplier || 1) * 100}%`
-          : `Based on your current rating (${currentEvaluation.overallRating}/5) and ${(currentRatingData?.multiplier || 1) * 100}% multiplier`}
-        subtitleAr={`بناءً على تقييمك الحالي (${currentEvaluation.overallRating}/5) ومضاعف ${(currentRatingData?.multiplier || 1) * 100}%`}
-        trend={{
-          value: currentEvaluation.overallRating >= 4 ? 50 : currentEvaluation.overallRating >= 3 ? 0 : -50,
-          label: 'vs target',
-          labelAr: 'مقابل الهدف',
-          direction: currentEvaluation.overallRating >= 4 ? 'up' : currentEvaluation.overallRating >= 3 ? 'neutral' : 'down'
-        }}
-        formula={t.formulaProjected}
-        formulaAr={pageTranslations.ar.formulaProjected}
-        variant={currentEvaluation.overallRating >= 4 ? 'success' : 'default'}
-      />
-
-      {/* Assumptions Panel */}
-      <AssumptionsPanel
-        title={isRTL ? 'افتراضات حساب المكافأة' : 'Bonus Calculation Assumptions'}
-        titleAr="افتراضات حساب المكافأة"
-        assumptions={bonusAssumptions}
-      />
+      {/* Header */}
+      <div>
+        <h1 className={cn(
+          "text-2xl font-display font-bold text-foreground flex items-center gap-3",
+          isRTL && "flex-row-reverse"
+        )}>
+          <Gift className="w-7 h-7 text-accent" />
+          {t.title}
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          {t.subtitle}
+        </p>
+      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -307,25 +263,41 @@ export default function BonusPage() {
         />
       </div>
 
-      {/* Comprehensive Benefit Guide */}
-      <BenefitGuide
-        icon={Gift}
-        title={t.howItWorks}
-        steps={[
-          { title: t.step1Title, description: t.step1Desc },
-          { title: t.step2Title, description: t.step2Desc, highlight: '1-5' },
-          { title: t.step3Title, description: t.step3Desc, highlight: '0-200%' },
-        ]}
-        policyPoints={[
-          t.policy1,
-          t.policy2,
-          t.policy3,
-          t.policy4,
-          t.policy5,
-          t.policy6,
-        ]}
-        policyButtonText={t.viewFullPolicy}
-      />
+      {/* How It Works */}
+      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className={cn(
+            "text-base font-display flex items-center gap-2",
+            isRTL && "flex-row-reverse"
+          )}>
+            <Sparkles className="w-5 h-5 text-accent" />
+            {t.howItWorks}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-4 gap-4">
+            {[
+              { icon: Users, title: t.step1Title, desc: t.step1Desc, num: 1 },
+              { icon: BarChart3, title: t.step2Title, desc: t.step2Desc, num: 2 },
+              { icon: Calculator, title: t.step3Title, desc: t.step3Desc, num: 3 },
+              { icon: Gift, title: t.step4Title, desc: t.step4Desc, num: 4 },
+            ].map((step) => (
+              <div key={step.num} className={cn(
+                "flex items-start gap-3 p-3 rounded-lg bg-card border",
+                isRTL && "flex-row-reverse text-right"
+              )}>
+                <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">
+                  {step.num}
+                </div>
+                <div>
+                  <p className="font-medium text-sm">{step.title}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Performance Evaluation & Rating */}
       <div className="grid lg:grid-cols-2 gap-6">
@@ -615,6 +587,10 @@ export default function BonusPage() {
         </CardContent>
       </Card>
 
+      {/* View Full Policy */}
+      <div className="text-center">
+        <Button variant="outline">{t.viewFullPolicy}</Button>
+      </div>
     </div>
   );
 }

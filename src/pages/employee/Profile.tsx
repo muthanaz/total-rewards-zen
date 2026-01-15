@@ -544,120 +544,73 @@ export default function ProfilePage() {
         </TabsContent>
 
         <TabsContent value="lifestyle" className="space-y-4">
-          {/* Life Stage - Important for Benefits Personalization */}
-          <Card className="border-accent/30 bg-accent/5">
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Heart className="w-4 h-4 text-accent" />
-                Life Stage
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">This helps personalize your benefits recommendations and dashboard insights</p>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2"><PawPrint className="w-4 h-4 text-accent" />Pets</CardTitle>
+              <Button size="sm" variant="outline" onClick={addPet}><Plus className="w-4 h-4 mr-1" />Add Pet</Button>
             </CardHeader>
-            <CardContent>
-              <Select defaultValue="single">
-                <SelectTrigger className="w-full max-w-xs">
-                  <SelectValue placeholder="Select your life stage" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="single">Single</SelectItem>
-                  <SelectItem value="married">Married without Children</SelectItem>
-                  <SelectItem value="married_kids">Married with Children</SelectItem>
-                  <SelectItem value="expecting">Expecting a Child</SelectItem>
-                  <SelectItem value="new_parent">New Parent (child under 2)</SelectItem>
-                  <SelectItem value="school_age">Parent with School-Age Children</SelectItem>
-                  <SelectItem value="caregiver">Caregiver (for parents/family)</SelectItem>
-                  <SelectItem value="pre_retirement">Pre-Retirement (5 years to retire)</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-3">
-                Your life stage affects recommended benefits, priority actions, and savings tips shown on your dashboard.
-              </p>
+            <CardContent className="space-y-4">
+              {pets.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">No pets added yet. Click "Add Pet" to add your furry friends.</p>
+              ) : (
+                pets.map((pet, index) => (
+                  <div key={pet.id} className="p-4 border rounded-lg space-y-3 relative bg-muted/30">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-muted-foreground">Pet {index + 1}</span>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => removePet(pet.id)}><Trash2 className="w-4 h-4" /></Button>
+                    </div>
+                    <div className="grid md:grid-cols-3 gap-3">
+                      <div className="space-y-1.5"><Label className="text-xs">Pet Name</Label><Input value={pet.name} onChange={(e) => updatePet(pet.id, 'name', e.target.value)} placeholder="Pet's name" /></div>
+                      <div className="space-y-1.5"><Label className="text-xs">Type</Label>
+                        <Select value={pet.type} onValueChange={(v) => updatePet(pet.id, 'type', v)}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Dog">Dog</SelectItem>
+                            <SelectItem value="Cat">Cat</SelectItem>
+                            <SelectItem value="Bird">Bird</SelectItem>
+                            <SelectItem value="Fish">Fish</SelectItem>
+                            <SelectItem value="Rabbit">Rabbit</SelectItem>
+                            <SelectItem value="Hamster">Hamster</SelectItem>
+                            <SelectItem value="Guinea Pig">Guinea Pig</SelectItem>
+                            <SelectItem value="Turtle">Turtle</SelectItem>
+                            <SelectItem value="Reptile">Reptile</SelectItem>
+                            <SelectItem value="Horse">Horse</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5"><Label className="text-xs">Breed</Label><Input value={pet.breed} onChange={(e) => updatePet(pet.id, 'breed', e.target.value)} placeholder="Breed (optional)" /></div>
+                    </div>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
 
-          {/* Interests - Collapsible by default */}
-          <details className="group">
-            <summary className="cursor-pointer p-4 bg-muted/30 rounded-lg flex items-center justify-between hover:bg-muted/50 transition-colors">
-              <span className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Heart className="w-4 h-4" />
-                Interests & Hobbies (optional)
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {selectedInterests.length > 0 ? `${selectedInterests.length} selected` : 'Click to expand'}
-              </span>
-            </summary>
-            <Card className="mt-2">
-              <CardHeader><CardTitle className="text-base">Interests & Hobbies</CardTitle></CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">Select your interests to help us personalize marketplace recommendations. Click to toggle.</p>
-                <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto">
-                  {INTERESTS_OPTIONS.slice(0, 30).map(interest => (
-                    <Button 
-                      key={interest} 
-                      variant={selectedInterests.includes(interest) ? "default" : "outline"} 
-                      size="sm"
-                      onClick={() => toggleInterest(interest)}
-                      className={selectedInterests.includes(interest) ? "bg-accent text-accent-foreground hover:bg-accent/90" : ""}
-                    >
-                      {interest}
-                    </Button>
-                  ))}
-                </div>
-                {selectedInterests.length > 0 && (
-                  <p className="text-xs text-muted-foreground mt-4">
-                    Selected: {selectedInterests.length} interest{selectedInterests.length !== 1 ? 's' : ''}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </details>
-
-          {/* Pets - Hidden by default, can be expanded */}
-          <details className="group">
-            <summary className="cursor-pointer p-4 bg-muted/30 rounded-lg flex items-center justify-between hover:bg-muted/50 transition-colors">
-              <span className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <PawPrint className="w-4 h-4" />
-                Pets (optional)
-              </span>
-              <span className="text-xs text-muted-foreground">{pets.length > 0 ? `${pets.length} pet(s)` : 'Click to expand'}</span>
-            </summary>
-            <Card className="mt-2">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-base flex items-center gap-2"><PawPrint className="w-4 h-4 text-accent" />Pets</CardTitle>
-                <Button size="sm" variant="outline" onClick={addPet}><Plus className="w-4 h-4 mr-1" />Add Pet</Button>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {pets.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">No pets added yet. Click "Add Pet" to add your furry friends.</p>
-                ) : (
-                  pets.map((pet, index) => (
-                    <div key={pet.id} className="p-4 border rounded-lg space-y-3 relative bg-muted/30">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-muted-foreground">Pet {index + 1}</span>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => removePet(pet.id)}><Trash2 className="w-4 h-4" /></Button>
-                      </div>
-                      <div className="grid md:grid-cols-3 gap-3">
-                        <div className="space-y-1.5"><Label className="text-xs">Pet Name</Label><Input value={pet.name} onChange={(e) => updatePet(pet.id, 'name', e.target.value)} placeholder="Pet's name" /></div>
-                        <div className="space-y-1.5"><Label className="text-xs">Type</Label>
-                          <Select value={pet.type} onValueChange={(v) => updatePet(pet.id, 'type', v)}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Dog">Dog</SelectItem>
-                              <SelectItem value="Cat">Cat</SelectItem>
-                              <SelectItem value="Bird">Bird</SelectItem>
-                              <SelectItem value="Fish">Fish</SelectItem>
-                              <SelectItem value="Other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-1.5"><Label className="text-xs">Breed</Label><Input value={pet.breed} onChange={(e) => updatePet(pet.id, 'breed', e.target.value)} placeholder="Breed (optional)" /></div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-          </details>
+          <Card>
+            <CardHeader><CardTitle className="text-base">Interests & Hobbies</CardTitle></CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">Select your interests to help us personalize marketplace recommendations. Click to toggle.</p>
+              <div className="flex flex-wrap gap-2">
+                {INTERESTS_OPTIONS.map(interest => (
+                  <Button 
+                    key={interest} 
+                    variant={selectedInterests.includes(interest) ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => toggleInterest(interest)}
+                    className={selectedInterests.includes(interest) ? "bg-accent text-accent-foreground hover:bg-accent/90" : ""}
+                  >
+                    {interest}
+                  </Button>
+                ))}
+              </div>
+              {selectedInterests.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-4">
+                  Selected: {selectedInterests.length} interest{selectedInterests.length !== 1 ? 's' : ''}
+                </p>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="security" className="space-y-6">

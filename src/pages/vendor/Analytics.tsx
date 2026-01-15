@@ -27,9 +27,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { AnimatedLineChart } from '@/components/charts/AnimatedLineChart';
 import { AnimatedBarChart } from '@/components/charts/AnimatedBarChart';
 import { AnimatedDonutChart } from '@/components/charts/AnimatedDonutChart';
-import { PageHeader } from '@/components/ui/page-header';
-import { StatusStrip } from '@/components/ui/status-strip';
-import { PrimaryInsight } from '@/components/ui/primary-insight';
 
 const summaryMetrics = [
   { label: 'Total Views', labelAr: 'إجمالي المشاهدات', value: '45,620', change: '+18%', trend: 'up' as const, icon: Eye },
@@ -81,44 +78,35 @@ export default function VendorAnalytics() {
 
   return (
     <div className={cn("space-y-6", isRTL && "text-right")}>
-      <PageHeader
-        title={t('Analytics', 'التحليلات')}
-        subtitle={t('Deep dive into your offer performance', 'نظرة معمقة على أداء عروضك')}
-        icon={BarChart3}
-        action={
-          <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-            <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-40">
-                <Calendar className="w-4 h-4 mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7days">{t('Last 7 Days', 'آخر ٧ أيام')}</SelectItem>
-                <SelectItem value="30days">{t('Last 30 Days', 'آخر ٣٠ يوم')}</SelectItem>
-                <SelectItem value="90days">{t('Last 90 Days', 'آخر ٩٠ يوم')}</SelectItem>
-                <SelectItem value="12months">{t('Last 12 Months', 'آخر ١٢ شهر')}</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" className="gap-2">
-              <Download className="w-4 h-4" />
-              {t('Export', 'تصدير')}
-            </Button>
-          </div>
-        }
-      />
-
-      <StatusStrip
-        confidence="high"
-        lastUpdated={new Date()}
-        dataSource={t('Real-time analytics', 'التحليلات الفورية')}
-      />
-
-      <PrimaryInsight
-        title={t('View Growth', 'نمو المشاهدات')}
-        value="45,620"
-        subtitle={t('Total views increased compared to last period', 'زادت المشاهدات الإجمالية مقارنة بالفترة السابقة')}
-        trend={{ value: 18, direction: 'up' }}
-      />
+      {/* Header */}
+      <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
+        <div>
+          <h1 className="text-3xl font-display font-bold text-foreground">
+            {t('Analytics', 'التحليلات')}
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            {t('Deep dive into your offer performance', 'نظرة معمقة على أداء عروضك')}
+          </p>
+        </div>
+        <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-40">
+              <Calendar className="w-4 h-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7days">{t('Last 7 Days', 'آخر ٧ أيام')}</SelectItem>
+              <SelectItem value="30days">{t('Last 30 Days', 'آخر ٣٠ يوم')}</SelectItem>
+              <SelectItem value="90days">{t('Last 90 Days', 'آخر ٩٠ يوم')}</SelectItem>
+              <SelectItem value="12months">{t('Last 12 Months', 'آخر ١٢ شهر')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" className="gap-2">
+            <Download className="w-4 h-4" />
+            {t('Export', 'تصدير')}
+          </Button>
+        </div>
+      </div>
 
       {/* Summary Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

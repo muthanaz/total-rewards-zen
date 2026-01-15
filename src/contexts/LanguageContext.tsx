@@ -48,30 +48,16 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Navigation - Employer
     'nav.overview': 'Overview',
-    'nav.commandCenter': 'Command Center',
     'nav.spendUtilization': 'Spend & Utilization',
-    'nav.budgetUtilization': 'Budget & Utilization',
     'nav.zombieSpend': 'Zombie Spend',
-    'nav.wasteRecovery': 'Waste Recovery',
     'nav.employeeSegments': 'Employee Segments',
     'nav.claimsApprovals': 'Claims & Approvals',
     'nav.marketplaceAnalytics': 'Marketplace Analytics',
     'nav.policyInsights': 'Policy Insights',
-    'nav.policyHub': 'Policy Hub',
-    'nav.integrations': 'Integrations',
+    'nav.integrations': 'Integrations & Data',
     'nav.recommendations': 'Recommendations',
-    'nav.smartRecommendations': 'Smart Recommendations',
-    'nav.pendingActions': 'pending actions',
     
-    // Navigation Groups - Employer
-    'nav.group.commandCenter': 'Command Center',
-    'nav.group.actionQueue': 'Action Queue',
-    'nav.group.spendIntelligence': 'Spend Intelligence',
-    'nav.group.workforceInsights': 'Workforce Insights',
-    'nav.group.marketplace': 'Marketplace',
-    'nav.group.configuration': 'Configuration',
-    
-    // Navigation Groups - Legacy
+    // Navigation Groups
     'nav.group.overview': 'Overview',
     'nav.group.operations': 'Operations',
     'nav.group.financials': 'Financials',
@@ -163,7 +149,6 @@ const translations: Record<Language, Record<string, string>> = {
     'benefit.learning': 'Learning & Development',
     'benefit.equity': 'Equity & Options',
     'benefit.leave': 'Leave Management',
-    'benefit.gratuity': 'End of Service Gratuity',
     
     // Navigation additions
     'nav.annualBonus': 'Annual Bonus',
@@ -265,30 +250,16 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Navigation - Employer
     'nav.overview': 'نظرة عامة',
-    'nav.commandCenter': 'مركز القيادة',
     'nav.spendUtilization': 'الإنفاق والاستخدام',
-    'nav.budgetUtilization': 'الميزانية والاستخدام',
     'nav.zombieSpend': 'الإنفاق غير المستغل',
-    'nav.wasteRecovery': 'استرداد الهدر',
     'nav.employeeSegments': 'شرائح الموظفين',
     'nav.claimsApprovals': 'المطالبات والموافقات',
     'nav.marketplaceAnalytics': 'تحليلات السوق',
     'nav.policyInsights': 'رؤى السياسات',
-    'nav.policyHub': 'مركز السياسات',
-    'nav.integrations': 'التكاملات',
+    'nav.integrations': 'التكاملات والبيانات',
     'nav.recommendations': 'التوصيات',
-    'nav.smartRecommendations': 'التوصيات الذكية',
-    'nav.pendingActions': 'إجراءات معلقة',
     
-    // Navigation Groups - Employer
-    'nav.group.commandCenter': 'مركز القيادة',
-    'nav.group.actionQueue': 'قائمة الإجراءات',
-    'nav.group.spendIntelligence': 'تحليل الإنفاق',
-    'nav.group.workforceInsights': 'رؤى القوى العاملة',
-    'nav.group.marketplace': 'السوق',
-    'nav.group.configuration': 'الإعدادات',
-    
-    // Navigation Groups - Legacy
+    // Navigation Groups
     'nav.group.overview': 'نظرة عامة',
     'nav.group.operations': 'العمليات',
     'nav.group.financials': 'المالية',
@@ -380,7 +351,6 @@ const translations: Record<Language, Record<string, string>> = {
     'benefit.learning': 'التعلم والتطوير',
     'benefit.equity': 'الأسهم والخيارات',
     'benefit.leave': 'إدارة الإجازات',
-    'benefit.gratuity': 'مكافأة نهاية الخدمة',
     
     // Navigation additions
     'nav.annualBonus': 'المكافأة السنوية',

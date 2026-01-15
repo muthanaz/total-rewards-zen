@@ -20,8 +20,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { PageHeader } from '@/components/ui/page-header';
-import { StatusStrip } from '@/components/ui/status-strip';
 import {
   Dialog,
   DialogContent,
@@ -323,23 +321,21 @@ export default function OrganizationsPage() {
 
   return (
     <div className={cn("space-y-8", isRTL && "text-right")}>
-      <PageHeader
-        title={t('Organizations', 'المنظمات')}
-        subtitle={t('Manage organizations and user assignments', 'إدارة المنظمات وتعيينات المستخدمين')}
-        icon={Building2}
-        action={
-          <Button onClick={() => { setFormData({ name: '', domain: '' }); setCreateDialogOpen(true); }}>
-            <Plus className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
-            {t('Add Organization', 'إضافة منظمة')}
-          </Button>
-        }
-      />
-
-      <StatusStrip
-        confidence="high"
-        lastUpdated={new Date()}
-        dataSource={t('Organization database', 'قاعدة بيانات المنظمات')}
-      />
+      {/* Header */}
+      <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-4", isRTL && "sm:flex-row-reverse")}>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t('Organizations', 'المنظمات')}
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            {t('Manage organizations and user assignments', 'إدارة المنظمات وتعيينات المستخدمين')}
+          </p>
+        </div>
+        <Button onClick={() => { setFormData({ name: '', domain: '' }); setCreateDialogOpen(true); }}>
+          <Plus className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+          {t('Add Organization', 'إضافة منظمة')}
+        </Button>
+      </div>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3">

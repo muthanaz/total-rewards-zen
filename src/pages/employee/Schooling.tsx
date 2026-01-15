@@ -6,21 +6,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
-import { BenefitGuide } from '@/components/employee/BenefitGuide';
 import { NoSearchResults } from '@/components/ui/empty-state';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PageHeader } from '@/components/ui/page-header';
-import { StatusStrip } from '@/components/ui/status-strip';
-import { PrimaryInsight } from '@/components/ui/primary-insight';
 import { 
   GraduationCap, Search, Star, ExternalLink, MapPin, Users, BookOpen, 
   Calculator, Wallet, TrendingUp, User, ChevronRight, Check, Info,
-  School, Baby, Building2, Lightbulb
+  School, Baby, Building2
 } from 'lucide-react';
 import { useSchools, useChildren } from '@/hooks/useSupabaseData';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { cn } from '@/lib/utils';
 
 const ALLOWANCE_PER_CHILD = 30000;
 
@@ -41,9 +35,6 @@ interface ChildAllocation {
 }
 
 export default function SchoolingPage() {
-  const { language, direction } = useLanguage();
-  const isRTL = direction === 'rtl';
-  const isArabic = language === 'ar';
   const { data: schools = [] } = useSchools();
   const { data: dbChildren = [] } = useChildren();
   
@@ -159,40 +150,58 @@ export default function SchoolingPage() {
   };
 
   return (
-    <div className={cn("space-y-6", isRTL && "text-right")}>
-      {/* Page Header */}
-      <PageHeader
-        title={isArabic ? 'بدل التعليم' : 'Education Allowance'}
-        titleAr="بدل التعليم"
-        subtitle={isArabic 
-          ? `قم بتكوين التعليم لكل طفل على حدة — كل طفل يحصل على بدل ${ALLOWANCE_PER_CHILD.toLocaleString()} درهم`
-          : `Configure education for each child individually — each child gets their own AED ${ALLOWANCE_PER_CHILD.toLocaleString()} allowance`}
-        subtitleAr={`قم بتكوين التعليم لكل طفل على حدة — كل طفل يحصل على بدل ${ALLOWANCE_PER_CHILD.toLocaleString()} درهم`}
-        icon={GraduationCap}
-      />
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
+          <GraduationCap className="w-7 h-7 text-accent" />
+          Education Allowance
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Configure education for each child individually — each child gets their own AED 30,000 allowance
+        </p>
+      </div>
 
-      {/* Status Strip */}
-      <StatusStrip
-        confidence="high"
-        lastUpdated={new Date()}
-        dataSource="HR Policy"
-        dataSourceAr="سياسة الموارد البشرية"
-      />
-
-      {/* Primary Insight - Show if any child needs top-up */}
-      {totalOutOfPocket > 0 && (
-        <PrimaryInsight
-          icon={Lightbulb}
-          title={isArabic ? 'مبلغ إضافي مطلوب' : 'Top-Up Required'}
-          titleAr="مبلغ إضافي مطلوب"
-          value={formatCurrency(totalOutOfPocket)}
-          subtitle={isArabic 
-            ? 'سيتم خصم هذا المبلغ من راتبك لتغطية الرسوم التي تتجاوز البدل'
-            : 'This amount will be deducted from your salary to cover fees exceeding the allowance'}
-          subtitleAr="سيتم خصم هذا المبلغ من راتبك لتغطية الرسوم التي تتجاوز البدل"
-          variant="warning"
-        />
-      )}
+      {/* How It Works Card */}
+      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <Info className="w-5 h-5 text-accent" />
+            How Your Education Allowance Works
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
+              <div>
+                <p className="font-medium text-sm">Per-Child Allowance</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Each child receives <span className="font-semibold text-accent">AED 30,000</span> per year — allowances are separate and do not combine
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
+              <div>
+                <p className="font-medium text-sm">Different Schools OK</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Each child can attend a different school — you choose what's best for their age and needs
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
+              <div>
+                <p className="font-medium text-sm">Top-Up If Needed</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  If school fees exceed AED 30,000, the extra is deducted from your salary automatically
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -243,28 +252,6 @@ export default function SchoolingPage() {
           index={4}
         />
       </div>
-
-      {/* Comprehensive Benefit Guide */}
-      <BenefitGuide
-        icon={GraduationCap}
-        title="Education Allowance Guide"
-        steps={[
-          { title: 'Per-Child Allowance', description: 'Each child receives AED 30,000 per year — allowances are separate and do not combine', highlight: 'AED 30,000' },
-          { title: 'Different Schools OK', description: 'Each child can attend a different school — you choose what\'s best for their age and needs' },
-          { title: 'Top-Up If Needed', description: 'If school fees exceed AED 30,000, the extra is deducted from your salary automatically' },
-        ]}
-        policyPoints={[
-          'AED 30,000 per child per academic year (not combined)',
-          'Covers children aged 4–18 years',
-          'Each child can attend a different school',
-          'Tuition fees only (excludes transport, uniform)',
-          'Direct payment to school or reimbursement',
-          'Excess fees deducted from monthly salary',
-        ]}
-        policyButtonText="View Education Policy"
-        claimCategory="Education"
-        claimButtonText="Submit Claim"
-      />
 
       {/* Children Allocation Cards */}
       <div>
@@ -663,9 +650,45 @@ export default function SchoolingPage() {
         </Card>
       )}
 
+      {/* Policy Highlights */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-display">Policy Highlights</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              AED 30,000 per child per academic year (not combined)
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Covers children aged 4–18 years
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Each child can attend a different school
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Tuition fees only (excludes transport, uniform)
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Direct payment to school or reimbursement
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Excess fees deducted from monthly salary
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
+
       {/* Actions */}
-      <div className="flex items-center justify-center">
+      <div className="flex items-center justify-center gap-4">
         <SubmitClaimButton category="Education" buttonText="Submit Education Claim" />
+        <Button variant="outline">View Full Education Policy</Button>
       </div>
     </div>
   );

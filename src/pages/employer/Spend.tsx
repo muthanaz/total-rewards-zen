@@ -3,25 +3,10 @@ import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { PageHeader } from '@/components/ui/page-header';
-import { StatusStrip } from '@/components/ui/status-strip';
-import { PrimaryInsight } from '@/components/ui/primary-insight';
-import { TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3, Lightbulb } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RePieChart, Pie, Cell, Legend } from 'recharts';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { cn } from '@/lib/utils';
 
-import {
-  ANNUAL_BUDGET,
-  YTD_SPEND,
-  SPEND_BY_BENEFIT_TYPE,
-  MONTHLY_SPEND_TREND,
-  SPEND_DISTRIBUTION,
-  DEPARTMENTS,
-  formatCurrency as formatCurrencyUtil,
-} from '@/lib/employerMetrics';
-
-// Vibrant color palette for charts
+// Vibrant color palette
 const COLORS = {
   primary: 'hsl(160 84% 39%)',
   secondary: 'hsl(217 91% 60%)',
@@ -31,27 +16,45 @@ const COLORS = {
   muted: 'hsl(220 14% 70%)',
 };
 
-// Use centralized data
-const spendByBenefitType = [...SPEND_BY_BENEFIT_TYPE];
-
-// Extended monthly trend (including projected months)
-const monthlyTrend = [
-  ...MONTHLY_SPEND_TREND.map(m => ({ month: m.month, spend: m.spend, budget: 5_166_667 })),
-  { month: 'Sep', spend: 4_960_000, budget: 5_166_667 },
-  { month: 'Oct', spend: 4_960_000, budget: 5_166_667 },
-  { month: 'Nov', spend: 4_960_000, budget: 5_166_667 },
-  { month: 'Dec', spend: 4_960_000, budget: 5_166_667 },
+const spendByBenefitType = [
+  { name: 'Housing', spend: 2400000, budget: 2800000, utilization: 85.7 },
+  { name: 'Schooling', spend: 1200000, budget: 1500000, utilization: 80 },
+  { name: 'Health', spend: 800000, budget: 900000, utilization: 88.9 },
+  { name: 'Transport', spend: 400000, budget: 500000, utilization: 80 },
+  { name: 'Learning', spend: 150000, budget: 300000, utilization: 50 },
+  { name: 'Wellbeing', spend: 80000, budget: 150000, utilization: 53.3 },
 ];
 
-const spendDistribution = [...SPEND_DISTRIBUTION];
+const monthlyTrend = [
+  { month: 'Jan', spend: 450000, budget: 500000 },
+  { month: 'Feb', spend: 480000, budget: 500000 },
+  { month: 'Mar', spend: 520000, budget: 500000 },
+  { month: 'Apr', spend: 490000, budget: 500000 },
+  { month: 'May', spend: 510000, budget: 500000 },
+  { month: 'Jun', spend: 530000, budget: 500000 },
+  { month: 'Jul', spend: 545000, budget: 500000 },
+  { month: 'Aug', spend: 520000, budget: 500000 },
+  { month: 'Sep', spend: 495000, budget: 500000 },
+  { month: 'Oct', spend: 510000, budget: 500000 },
+  { month: 'Nov', spend: 525000, budget: 500000 },
+  { month: 'Dec', spend: 455000, budget: 500000 },
+];
 
-const departmentSpend = DEPARTMENTS.map(d => ({
-  department: d.name,
-  headcount: d.headcount,
-  totalSpend: d.totalSpend,
-  avgPerEmployee: Math.round(d.totalSpend / d.headcount),
-  utilization: d.utilization,
-}));
+const spendDistribution = [
+  { name: 'Cash Allowances', value: 45, color: COLORS.primary },
+  { name: 'Health & Protection', value: 20, color: COLORS.secondary },
+  { name: 'Time Off', value: 15, color: COLORS.tertiary },
+  { name: 'Growth & Career', value: 10, color: COLORS.quaternary },
+  { name: 'Wellbeing', value: 10, color: COLORS.quinary },
+];
+
+const departmentSpend = [
+  { department: 'Engineering', headcount: 45, totalSpend: 1800000, avgPerEmployee: 40000, utilization: 82 },
+  { department: 'Sales', headcount: 30, totalSpend: 1200000, avgPerEmployee: 40000, utilization: 78 },
+  { department: 'Marketing', headcount: 20, totalSpend: 750000, avgPerEmployee: 37500, utilization: 75 },
+  { department: 'Operations', headcount: 25, totalSpend: 900000, avgPerEmployee: 36000, utilization: 72 },
+  { department: 'HR', headcount: 10, totalSpend: 380000, avgPerEmployee: 38000, utilization: 76 },
+];
 
 // Custom Legend Component
 const CustomLegend = ({ payload }: any) => (
@@ -69,49 +72,18 @@ const CustomLegend = ({ payload }: any) => (
 );
 
 export default function SpendPage() {
-  const { language, direction } = useLanguage();
-  const isRTL = direction === 'rtl';
-  const isArabic = language === 'ar';
-  
-  const totalBudget = ANNUAL_BUDGET;
-  const totalSpend = YTD_SPEND;
-  const spendUtilizationRate = (totalSpend / totalBudget) * 100;
+  const totalBudget = 6150000;
+  const totalSpend = 5030000;
   const utilizationRate = (totalSpend / totalBudget) * 100;
 
   return (
-    <div className={cn("space-y-6", isRTL && "text-right")}>
+    <div className="space-y-6">
       {/* Header */}
-      <PageHeader
-        title={isArabic ? 'الإنفاق والاستخدام' : 'Spend & Utilization'}
-        titleAr="الإنفاق والاستخدام"
-        subtitle={isArabic ? 'تتبع إنفاق المزايا عبر منظمتك' : 'Track benefits spend across your organization'}
-        subtitleAr="تتبع إنفاق المزايا عبر منظمتك"
-        icon={DollarSign}
-      />
-
-      {/* Status Strip */}
-      <StatusStrip
-        confidence="high"
-        lastUpdated={new Date()}
-        dataSource="Finance System"
-      />
-
-      {/* Primary Insight */}
-      {utilizationRate < 80 && (
-        <PrimaryInsight
-          icon={Lightbulb}
-          title={isArabic ? 'فرصة تحسين الاستخدام' : 'Utilization Opportunity'}
-          value={`${utilizationRate.toFixed(1)}%`}
-          subtitle={isArabic 
-            ? 'معدل الاستخدام الحالي - هناك فرصة لتحسين استخدام الميزانية'
-            : 'Current utilization rate - opportunity to improve budget usage'}
-          variant="warning"
-        />
-      )}
-
-      {/* Summary Cards */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="hidden" />
+        <div>
+          <h1 className="text-2xl font-display font-bold text-foreground">Spend & Utilization</h1>
+          <p className="text-muted-foreground">Track benefits spend across your organization</p>
+        </div>
         <Select defaultValue="2024">
           <SelectTrigger className="w-32">
             <SelectValue />

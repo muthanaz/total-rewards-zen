@@ -5,13 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { BenefitGuide } from '@/components/employee/BenefitGuide';
-import { PageHeader } from '@/components/ui/page-header';
+import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile, Wallet, TrendingDown, Percent } from 'lucide-react';
 import { useHealthProviders } from '@/hooks/useSupabaseData';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { cn } from '@/lib/utils';
 
 const ANNUAL_VALUE = 45000;
 const UTILIZED = 12500;
@@ -64,9 +61,6 @@ const faqs = [
 
 export default function HealthPage() {
   const { data: providers = [] } = useHealthProviders();
-  const { language, direction } = useLanguage();
-  const isRTL = direction === 'rtl';
-  const isArabic = language === 'ar';
   
   const [searchTerm, setSearchTerm] = useState('');
   const [providerType, setProviderType] = useState<string>('all');
@@ -119,42 +113,18 @@ export default function HealthPage() {
 
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
 
-  const guideSteps = [
-    {
-      title: 'In-Network Care',
-      description: 'Visit any in-network provider for direct billing — no upfront payment',
-      highlight: 'direct billing',
-    },
-    {
-      title: 'Family Covered',
-      description: 'Spouse and children under 18 are covered at the same benefit levels',
-    },
-    {
-      title: 'Claims Reimbursement',
-      description: 'Out-of-network? Submit receipts within 60 days for 50% reimbursement',
-      highlight: '60 days',
-    },
-  ];
-
-  const policyPoints = [
-    'Comprehensive coverage up to AED 1,000,000',
-    'Spouse and children covered at same levels',
-    'Pre-existing conditions covered after 6 months',
-    'Direct billing at network providers',
-    '24/7 emergency helpline available',
-    'Annual health check-up included',
-  ];
-
   return (
-    <div className={cn("space-y-6 animate-fade-in", isRTL && "text-right")}>
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <PageHeader
-        title={isArabic ? 'التأمين الصحي' : 'Health Insurance'}
-        titleAr="التأمين الصحي"
-        subtitle={isArabic ? 'تغطية شاملة لك ولعائلتك' : 'Comprehensive coverage for you and your family'}
-        subtitleAr="تغطية شاملة لك ولعائلتك"
-        icon={Heart}
-      />
+      <div>
+        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
+          <Heart className="w-7 h-7 text-accent" />
+          Health Insurance
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Comprehensive coverage for you and your family
+        </p>
+      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -193,16 +163,46 @@ export default function HealthPage() {
         />
       </div>
 
-      {/* Comprehensive Benefit Guide */}
-      <BenefitGuide
-        icon={Heart}
-        title="Health Insurance Guide"
-        steps={guideSteps}
-        policyPoints={policyPoints}
-        policyButtonText="View Insurance Policy"
-        claimCategory="Health Insurance"
-        claimButtonText="Submit Claim"
-      />
+      {/* How It Works */}
+      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <Heart className="w-5 h-5 text-accent" />
+            How Your Health Insurance Works
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
+              <div>
+                <p className="font-medium text-sm">In-Network Care</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Visit any in-network provider for <span className="font-semibold text-accent">direct billing</span> — no upfront payment
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
+              <div>
+                <p className="font-medium text-sm">Family Covered</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Spouse and children under 18 are covered at the same benefit levels
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
+              <div>
+                <p className="font-medium text-sm">Claims Reimbursement</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Out-of-network? Submit receipts within 60 days for 50% reimbursement
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Coverage Categories */}
       <Card>
@@ -374,6 +374,46 @@ export default function HealthPage() {
         </TabsContent>
       </Tabs>
 
+      {/* Policy Highlights */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-display">Policy Highlights</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Comprehensive coverage up to AED 1,000,000
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Spouse and children covered at same levels
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Pre-existing conditions covered after 6 months
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Direct billing at network providers
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              24/7 emergency helpline available
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-accent">•</span>
+              Annual health check-up included
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
+
+      {/* Actions */}
+      <div className="flex items-center justify-center gap-4">
+        <SubmitClaimButton category="Health Insurance" buttonText="Submit Health Claim" />
+        <Button variant="outline">View Full Insurance Policy</Button>
+      </div>
     </div>
   );
 }
