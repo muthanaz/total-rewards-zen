@@ -116,6 +116,7 @@ export type Database = {
           benefit_id: string
           created_at: string | null
           id: string
+          organization_id: string | null
           updated_at: string | null
           user_id: string
           utilized_amount: number | null
@@ -125,6 +126,7 @@ export type Database = {
           benefit_id: string
           created_at?: string | null
           id?: string
+          organization_id?: string | null
           updated_at?: string | null
           user_id: string
           utilized_amount?: number | null
@@ -134,6 +136,7 @@ export type Database = {
           benefit_id?: string
           created_at?: string | null
           id?: string
+          organization_id?: string | null
           updated_at?: string | null
           user_id?: string
           utilized_amount?: number | null
@@ -144,6 +147,13 @@ export type Database = {
             columns: ["benefit_id"]
             isOneToOne: false
             referencedRelation: "benefits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "benefit_entitlements_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -207,6 +217,113 @@ export type Database = {
           },
         ]
       }
+      benefit_policy_versions: {
+        Row: {
+          attachment_url: string | null
+          benefit_id: string | null
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_until: string | null
+          id: string
+          organization_id: string | null
+          policy_text: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          attachment_url?: string | null
+          benefit_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          effective_from: string
+          effective_until?: string | null
+          id?: string
+          organization_id?: string | null
+          policy_text?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          attachment_url?: string | null
+          benefit_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_until?: string | null
+          id?: string
+          organization_id?: string | null
+          policy_text?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "benefit_policy_versions_benefit_id_fkey"
+            columns: ["benefit_id"]
+            isOneToOne: false
+            referencedRelation: "benefits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "benefit_policy_versions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      benefit_required_documents: {
+        Row: {
+          benefit_id: string
+          conditions: Json | null
+          created_at: string
+          description: string | null
+          description_ar: string | null
+          document_name: string
+          document_name_ar: string | null
+          document_type: string
+          id: string
+          is_required: boolean | null
+          required_for: string | null
+        }
+        Insert: {
+          benefit_id: string
+          conditions?: Json | null
+          created_at?: string
+          description?: string | null
+          description_ar?: string | null
+          document_name: string
+          document_name_ar?: string | null
+          document_type: string
+          id?: string
+          is_required?: boolean | null
+          required_for?: string | null
+        }
+        Update: {
+          benefit_id?: string
+          conditions?: Json | null
+          created_at?: string
+          description?: string | null
+          description_ar?: string | null
+          document_name?: string
+          document_name_ar?: string | null
+          document_type?: string
+          id?: string
+          is_required?: boolean | null
+          required_for?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "benefit_required_documents_benefit_id_fkey"
+            columns: ["benefit_id"]
+            isOneToOne: false
+            referencedRelation: "benefits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       benefits: {
         Row: {
           annual_value: number | null
@@ -253,6 +370,7 @@ export type Database = {
           grade: string | null
           id: string
           name: string
+          organization_id: string | null
           school_name: string | null
           user_id: string
         }
@@ -262,6 +380,7 @@ export type Database = {
           grade?: string | null
           id?: string
           name: string
+          organization_id?: string | null
           school_name?: string | null
           user_id: string
         }
@@ -271,10 +390,19 @@ export type Database = {
           grade?: string | null
           id?: string
           name?: string
+          organization_id?: string | null
           school_name?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "children_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       data_access_requests: {
         Row: {
@@ -365,6 +493,65 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      employer_actions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          expected_impact: Json | null
+          id: string
+          metric_keys: string[] | null
+          organization_id: string
+          owner_user_id: string | null
+          priority: string | null
+          source_insight: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          expected_impact?: Json | null
+          id?: string
+          metric_keys?: string[] | null
+          organization_id: string
+          owner_user_id?: string | null
+          priority?: string | null
+          source_insight?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          expected_impact?: Json | null
+          id?: string
+          metric_keys?: string[] | null
+          organization_id?: string
+          owner_user_id?: string | null
+          priority?: string | null
+          source_insight?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employer_actions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       health_providers: {
         Row: {
@@ -486,11 +673,65 @@ export type Database = {
         }
         Relationships: []
       }
+      integration_runs: {
+        Row: {
+          connector_type: string
+          coverage_percent: number | null
+          created_at: string
+          error_summary: string | null
+          id: string
+          last_sync_at: string | null
+          metadata: Json | null
+          organization_id: string
+          records_failed: number | null
+          records_synced: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          connector_type: string
+          coverage_percent?: number | null
+          created_at?: string
+          error_summary?: string | null
+          id?: string
+          last_sync_at?: string | null
+          metadata?: Json | null
+          organization_id: string
+          records_failed?: number | null
+          records_synced?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          connector_type?: string
+          coverage_percent?: number | null
+          created_at?: string
+          error_summary?: string | null
+          id?: string
+          last_sync_at?: string | null
+          metadata?: Json | null
+          organization_id?: string
+          records_failed?: number | null
+          records_synced?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_runs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leave_balances: {
         Row: {
           created_at: string | null
           id: string
           leave_type: string
+          organization_id: string | null
           total_days: number
           used_days: number | null
           user_id: string
@@ -500,6 +741,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           leave_type: string
+          organization_id?: string | null
           total_days: number
           used_days?: number | null
           user_id: string
@@ -509,12 +751,21 @@ export type Database = {
           created_at?: string | null
           id?: string
           leave_type?: string
+          organization_id?: string | null
           total_days?: number
           used_days?: number | null
           user_id?: string
           year?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "leave_balances_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       login_attempts: {
         Row: {
@@ -596,6 +847,54 @@ export type Database = {
           },
         ]
       }
+      metric_definitions: {
+        Row: {
+          confidence_rules: Json | null
+          created_at: string
+          definition_ar: string | null
+          definition_en: string
+          formula_ar: string | null
+          formula_en: string
+          key: string
+          min_sample_size: number
+          name_ar: string | null
+          name_en: string
+          owner_role: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          confidence_rules?: Json | null
+          created_at?: string
+          definition_ar?: string | null
+          definition_en: string
+          formula_ar?: string | null
+          formula_en: string
+          key: string
+          min_sample_size?: number
+          name_ar?: string | null
+          name_en: string
+          owner_role?: string
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          confidence_rules?: Json | null
+          created_at?: string
+          definition_ar?: string | null
+          definition_en?: string
+          formula_ar?: string | null
+          formula_en?: string
+          key?: string
+          min_sample_size?: number
+          name_ar?: string | null
+          name_en?: string
+          owner_role?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mfa_settings: {
         Row: {
           enrolled_at: string | null
@@ -658,6 +957,91 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      org_budgets: {
+        Row: {
+          annual_budget: number
+          budget_allocated: Json | null
+          created_at: string
+          fiscal_year: number
+          id: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          annual_budget?: number
+          budget_allocated?: Json | null
+          created_at?: string
+          fiscal_year: number
+          id?: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          annual_budget?: number
+          budget_allocated?: Json | null
+          created_at?: string
+          fiscal_year?: number
+          id?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_budgets_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_policy_settings: {
+        Row: {
+          created_at: string
+          currency: string | null
+          fiscal_year_start_month: number | null
+          gratuity_calculation_rules: Json | null
+          id: string
+          leave_accrual_rules: Json | null
+          organization_id: string
+          payroll_cycle: string | null
+          timezone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string | null
+          fiscal_year_start_month?: number | null
+          gratuity_calculation_rules?: Json | null
+          id?: string
+          leave_accrual_rules?: Json | null
+          organization_id: string
+          payroll_cycle?: string | null
+          timezone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string | null
+          fiscal_year_start_month?: number | null
+          gratuity_calculation_rules?: Json | null
+          id?: string
+          leave_accrual_rules?: Json | null
+          organization_id?: string
+          payroll_cycle?: string | null
+          timezone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_policy_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       organizations: {
         Row: {
@@ -723,6 +1107,7 @@ export type Database = {
           incidentals_amount: number
           meals_amount: number
           number_of_days: number | null
+          organization_id: string | null
           paid_at: string | null
           rate_id: string | null
           receipts_attached: boolean | null
@@ -751,6 +1136,7 @@ export type Database = {
           incidentals_amount?: number
           meals_amount?: number
           number_of_days?: number | null
+          organization_id?: string | null
           paid_at?: string | null
           rate_id?: string | null
           receipts_attached?: boolean | null
@@ -779,6 +1165,7 @@ export type Database = {
           incidentals_amount?: number
           meals_amount?: number
           number_of_days?: number | null
+          organization_id?: string | null
           paid_at?: string | null
           rate_id?: string | null
           receipts_attached?: boolean | null
@@ -796,6 +1183,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "per_diem_claims_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "per_diem_claims_rate_id_fkey"
             columns: ["rate_id"]
@@ -873,18 +1267,21 @@ export type Database = {
           activated_at: string | null
           id: string
           offer_id: string
+          organization_id: string | null
           user_id: string
         }
         Insert: {
           activated_at?: string | null
           id?: string
           offer_id: string
+          organization_id?: string | null
           user_id: string
         }
         Update: {
           activated_at?: string | null
           id?: string
           offer_id?: string
+          organization_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -893,6 +1290,13 @@ export type Database = {
             columns: ["offer_id"]
             isOneToOne: false
             referencedRelation: "marketplace_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "perk_activations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -1052,50 +1456,161 @@ export type Database = {
           },
         ]
       }
+      request_attachments: {
+        Row: {
+          document_type: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          is_required: boolean | null
+          request_id: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          document_type?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          is_required?: boolean | null
+          request_id: string
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          document_type?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          is_required?: boolean | null
+          request_id?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_attachments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      request_events: {
+        Row: {
+          actor_user_id: string
+          created_at: string
+          from_status: string | null
+          id: string
+          notes_employee_visible: string | null
+          notes_internal: string | null
+          request_id: string
+          to_status: string
+        }
+        Insert: {
+          actor_user_id: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          notes_employee_visible?: string | null
+          notes_internal?: string | null
+          request_id: string
+          to_status: string
+        }
+        Update: {
+          actor_user_id?: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          notes_employee_visible?: string | null
+          notes_internal?: string | null
+          request_id?: string
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_events_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       requests: {
         Row: {
           amount: number | null
+          assigned_to: string | null
           category: string
           created_at: string | null
           description: string | null
           id: string
+          last_status_change_at: string | null
+          organization_id: string | null
+          priority: string | null
           request_type: Database["public"]["Enums"]["request_type"]
           reviewed_at: string | null
           reviewed_by: string | null
           reviewer_notes: string | null
+          sla_due_at: string | null
           status: Database["public"]["Enums"]["request_status"] | null
           subject: string
           user_id: string
         }
         Insert: {
           amount?: number | null
+          assigned_to?: string | null
           category: string
           created_at?: string | null
           description?: string | null
           id?: string
+          last_status_change_at?: string | null
+          organization_id?: string | null
+          priority?: string | null
           request_type: Database["public"]["Enums"]["request_type"]
           reviewed_at?: string | null
           reviewed_by?: string | null
           reviewer_notes?: string | null
+          sla_due_at?: string | null
           status?: Database["public"]["Enums"]["request_status"] | null
           subject: string
           user_id: string
         }
         Update: {
           amount?: number | null
+          assigned_to?: string | null
           category?: string
           created_at?: string | null
           description?: string | null
           id?: string
+          last_status_change_at?: string | null
+          organization_id?: string | null
+          priority?: string | null
           request_type?: Database["public"]["Enums"]["request_type"]
           reviewed_at?: string | null
           reviewed_by?: string | null
           reviewer_notes?: string | null
+          sla_due_at?: string | null
           status?: Database["public"]["Enums"]["request_status"] | null
           subject?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       schools: {
         Row: {
@@ -1284,6 +1799,7 @@ export type Database = {
           description: string | null
           event_type: string
           id: string
+          organization_id: string | null
           user_id: string
         }
         Insert: {
@@ -1293,6 +1809,7 @@ export type Database = {
           description?: string | null
           event_type: string
           id?: string
+          organization_id?: string | null
           user_id: string
         }
         Update: {
@@ -1302,6 +1819,7 @@ export type Database = {
           description?: string | null
           event_type?: string
           id?: string
+          organization_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1310,6 +1828,13 @@ export type Database = {
             columns: ["benefit_id"]
             isOneToOne: false
             referencedRelation: "benefits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "utilization_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -1322,6 +1847,7 @@ export type Database = {
           discount_amount: number | null
           id: string
           offer_id: string | null
+          organization_id: string | null
           original_amount: number
           redeemed_at: string | null
           settled_at: string | null
@@ -1337,6 +1863,7 @@ export type Database = {
           discount_amount?: number | null
           id?: string
           offer_id?: string | null
+          organization_id?: string | null
           original_amount: number
           redeemed_at?: string | null
           settled_at?: string | null
@@ -1352,6 +1879,7 @@ export type Database = {
           discount_amount?: number | null
           id?: string
           offer_id?: string | null
+          organization_id?: string | null
           original_amount?: number
           redeemed_at?: string | null
           settled_at?: string | null
@@ -1366,6 +1894,13 @@ export type Database = {
             columns: ["offer_id"]
             isOneToOne: false
             referencedRelation: "marketplace_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_transactions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -1433,6 +1968,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ensure_demo_user_role: {
+        Args: {
+          p_email: string
+          p_org_id?: string
+          p_role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: Json
+      }
+      get_benefit_utilization_stats: {
+        Args: {
+          p_org_id: string
+          p_period_end?: string
+          p_period_start?: string
+        }
+        Returns: Json
+      }
+      get_employer_dashboard_metrics: {
+        Args: {
+          p_org_id: string
+          p_period_end?: string
+          p_period_start?: string
+        }
+        Returns: Json
+      }
       get_org_benefit_stats: {
         Args: { org_id: string }
         Returns: {
@@ -1514,7 +2073,15 @@ export type Database = {
         | "career"
         | "lifestyle"
         | "mobility"
-      request_status: "pending" | "approved" | "rejected"
+      request_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "draft"
+        | "submitted"
+        | "in_review"
+        | "paid"
+        | "closed"
       request_type: "claim" | "request" | "question"
       user_role: "employee" | "employer" | "admin" | "vendor"
     }
@@ -1661,7 +2228,16 @@ export const Constants = {
         "lifestyle",
         "mobility",
       ],
-      request_status: ["pending", "approved", "rejected"],
+      request_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "draft",
+        "submitted",
+        "in_review",
+        "paid",
+        "closed",
+      ],
       request_type: ["claim", "request", "question"],
       user_role: ["employee", "employer", "admin", "vendor"],
     },

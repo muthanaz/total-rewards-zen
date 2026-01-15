@@ -42,12 +42,13 @@ import BenefitsAnalysisPage from "./pages/employee/BenefitsAnalysis";
 
 import EmployerDashboard from "./pages/employer/Dashboard";
 import SpendPage from "./pages/employer/Spend";
-import WasteRecoveryPage from "./pages/employer/WasteRecovery";
+import ZombieSpendPage from "./pages/employer/ZombieSpend";
 import SegmentsPage from "./pages/employer/Segments";
 import ClaimsPage from "./pages/employer/Claims";
 import MarketplaceAnalyticsPage from "./pages/employer/MarketplaceAnalytics";
-import PolicyHubPage from "./pages/employer/PolicyHub";
+import PoliciesPage from "./pages/employer/Policies";
 import IntegrationsPage from "./pages/employer/Integrations";
+import KnowledgeCenterPage from "./pages/employer/KnowledgeCenter";
 import RecommendationsPage from "./pages/employer/Recommendations";
 
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -132,12 +133,13 @@ function AppRoutes() {
       <Route path="/employer" element={<ProtectedRoute allowedRoles={['employer']}><EmployerLayout /></ProtectedRoute>}>
         <Route index element={<EmployerDashboard />} />
         <Route path="spend" element={<SpendPage />} />
-        <Route path="zombie" element={<WasteRecoveryPage />} />
+        <Route path="zombie" element={<ZombieSpendPage />} />
         <Route path="segments" element={<SegmentsPage />} />
         <Route path="claims" element={<ClaimsPage />} />
         <Route path="marketplace" element={<MarketplaceAnalyticsPage />} />
-        <Route path="policies" element={<PolicyHubPage />} />
+        <Route path="policies" element={<PoliciesPage />} />
         <Route path="integrations" element={<IntegrationsPage />} />
+        <Route path="knowledge" element={<KnowledgeCenterPage />} />
         <Route path="recommendations" element={<RecommendationsPage />} />
       </Route>
       
