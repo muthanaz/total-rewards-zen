@@ -1,12 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { 
   DollarSign, Home, GraduationCap, 
-  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote, AlertCircle, CheckCircle2, Clock, Landmark, TrendingUp, Calendar, Zap, ArrowRight, ArrowLeft, FileText, Sparkles
+  Heart, Car, Dumbbell, PiggyBank, BookOpen, ChevronRight, ChevronLeft, Gift, Wallet, Banknote, AlertCircle, CheckCircle2, Clock, Landmark, TrendingUp, Calendar, Zap, ArrowRight, ArrowLeft, FileText, Sparkles, Target, Lightbulb, Eye, EyeOff
 } from 'lucide-react';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -19,13 +19,15 @@ import { StatusStrip } from '@/components/ui/status-strip';
 import { PrimaryInsight } from '@/components/ui/primary-insight';
 import { ActionQueue, ActionItem } from '@/components/ui/action-queue';
 import { ConfidenceGate } from '@/components/employer/ConfidenceGate';
-import { AnimatedBarChart } from '@/components/charts';
+import { AnimatedDonutChart } from '@/components/charts';
+import { MetricTooltip } from '@/components/ui/metric-tooltip';
 import { motion } from 'framer-motion';
 
 // Demo data - core salary info
 const salaryData = {
   monthlySalary: 35000,
   annualSalary: 420000,
+  salaryType: 'gross' as const, // 'gross' | 'net'
   leaveBalance: 22,
   leaveUsed: 8,
   activatedItems: 7,
@@ -68,32 +70,45 @@ export default function EmployeeDashboard() {
   
   const showSatisfactionSurvey = isElementVisible('employee', 'dashboard', 'satisfaction_survey');
   
-  // Calculate metrics
+  // Calculate metrics with clear definitions
   const metrics = useMemo(() => {
-    const totalValue = benefits.reduce((sum, b) => sum + b.value, 0);
+    const totalBenefitsValue = benefits.reduce((sum, b) => sum + b.value, 0);
     const totalUtilized = benefits.reduce((sum, b) => sum + b.utilized, 0);
-    const unusedValue = totalValue - totalUtilized;
     
-    // Core = guaranteed, Variable = performance, Long-term = wealth
+    // Core = guaranteed allowances (paid regardless)
     const coreBenefits = benefits
       .filter(b => b.valueType === 'guaranteed')
       .reduce((sum, b) => sum + b.value, 0);
+    
+    // Variable = performance-based + budgets
     const variableBenefits = benefits
       .filter(b => b.valueType === 'performance' || b.valueType === 'budget')
       .reduce((sum, b) => sum + b.value, 0);
+    
+    // Long-term = wealth/ownership benefits
     const longTermBenefits = benefits
       .filter(b => b.type === 'wealth_ownership')
       .reduce((sum, b) => sum + b.value, 0);
     
-    // Claimable remaining = budgets with remaining value
+    // Claimable remaining = ONLY budgets with remaining value (not guaranteed allowances)
     const claimableRemaining = benefits
       .filter(b => b.valueType === 'budget')
-      .reduce((sum, b) => sum + (b.value - b.utilized), 0);
+      .reduce((sum, b) => sum + Math.max(0, b.value - b.utilized), 0);
     
-    const utilizationPercent = Math.round((totalUtilized / totalValue) * 100);
+    // Unused value = benefits not yet utilized (for opportunities)
+    const unusedValue = benefits
+      .filter(b => b.valueType === 'budget' || b.valueType === 'performance')
+      .reduce((sum, b) => sum + Math.max(0, b.value - b.utilized), 0);
+    
+    const utilizationPercent = totalBenefitsValue > 0 
+      ? Math.round((totalUtilized / totalBenefitsValue) * 100) 
+      : 0;
+    
+    // Total Rewards = Annual Salary + All Benefits
+    const totalRewards = salaryData.annualSalary + totalBenefitsValue;
     
     return {
-      totalValue,
+      totalBenefitsValue,
       totalUtilized,
       unusedValue,
       coreBenefits,
@@ -101,7 +116,7 @@ export default function EmployeeDashboard() {
       longTermBenefits,
       claimableRemaining,
       utilizationPercent,
-      totalCompensation: salaryData.annualSalary + coreBenefits,
+      totalRewards,
     };
   }, []);
 
@@ -188,6 +203,12 @@ export default function EmployeeDashboard() {
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
   const ChevronIcon = isRTL ? ChevronLeft : ChevronRight;
 
+  // Utilization chart data
+  const utilizationChartData = useMemo(() => [
+    { name: isArabic ? 'مستخدم' : 'Utilized', value: metrics.totalUtilized, color: 'hsl(var(--primary))' },
+    { name: isArabic ? 'متاح' : 'Available', value: metrics.totalBenefitsValue - metrics.totalUtilized, color: 'hsl(var(--muted))' },
+  ], [metrics, isArabic]);
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Page Header */}
@@ -204,87 +225,134 @@ export default function EmployeeDashboard() {
         dataSourceAr="نظام المزايا"
       />
 
-      {/* SECTION 1: Benefits Maximizer - Primary Insight */}
-      <PrimaryInsight
-        title={isArabic ? 'حاسب المزايا' : 'Benefits Maximizer'}
-        titleAr="حاسب المزايا"
-        value={formatHidden() || formatCurrency(metrics.unusedValue)}
-        subtitle={`${metrics.utilizationPercent}% ${isArabic ? 'مستخدم من الإجمالي' : 'used of total'}`}
-        subtitleAr={`${metrics.utilizationPercent}% مستخدم من الإجمالي`}
-        icon={Sparkles}
-        confidence={metrics.claimableRemaining > 0 ? 'high' : 'medium'}
-        source={isArabic ? 'القيمة غير المستخدمة التقديرية' : 'Estimated unused value'}
-        sourceAr="القيمة غير المستخدمة التقديرية"
-        formula="Total Benefits - Utilized Amount"
-        formulaAr="إجمالي المزايا - المبلغ المستخدم"
-        action={benefitActions.length > 0 ? {
-          label: 'View Opportunities',
-          labelAr: 'عرض الفرص',
-          onClick: () => navigate('/employee/insights'),
-        } : undefined}
-      />
+      {/* PRIMARY INSIGHT BLOCK 1: Total Rewards Snapshot */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Total Rewards Card */}
+        <Card className="lg:col-span-2 border-2 border-accent/20 bg-gradient-to-br from-accent/5 via-background to-primary/5">
+          <CardContent className="p-6">
+            <div className={cn("flex items-center justify-between mb-4", isRTL && "flex-row-reverse")}>
+              <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+                <div className="p-2.5 rounded-xl bg-accent/10">
+                  <Wallet className="w-6 h-6 text-accent" />
+                </div>
+                <div className={isRTL ? "text-right" : ""}>
+                  <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                    {isArabic ? 'إجمالي المكافآت السنوية' : 'Annual Total Rewards'}
+                    <MetricTooltip metricKey="total_rewards" confidence="high" />
+                  </h2>
+                  <p className="text-xs text-muted-foreground/70">
+                    {isArabic ? 'الراتب + المزايا' : 'Salary + Benefits'}
+                    {salaryData.salaryType === 'gross' && (
+                      <Badge variant="outline" className="ml-2 text-[9px] px-1">
+                        {isArabic ? 'إجمالي' : 'Gross'}
+                      </Badge>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={toggleSalaryVisibility}
+                className="h-8 w-8"
+              >
+                {salaryHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </Button>
+            </div>
 
-      {/* Top 3 Actions */}
-      {benefitActions.length > 0 && (
-        <ActionQueue
-          title={isArabic ? 'إجراءات مقترحة' : 'Suggested Actions'}
-          titleAr="إجراءات مقترحة"
-          actions={benefitActions}
-          maxItems={3}
-          allLink="/employee/insights"
-        />
-      )}
+            <p className="text-4xl font-bold text-foreground tracking-tight mb-4">
+              {salaryHidden ? '•••,•••' : formatCurrency(metrics.totalRewards)}
+            </p>
 
-      {/* SECTION 2: Deadlines Panel */}
-      {deadlineActions.length > 0 && (
-        <ActionQueue
-          title={isArabic ? 'المواعيد والطلبات' : 'Deadlines & Requests'}
-          titleAr="المواعيد والطلبات"
-          actions={deadlineActions}
-          maxItems={4}
-          allLink="/employee/documents"
-          emptyMessage="No pending items"
-          emptyMessageAr="لا توجد عناصر معلقة"
-        />
-      )}
+            {/* Breakdown */}
+            <div className={cn("grid grid-cols-2 md:grid-cols-4 gap-3", isRTL && "text-right")}>
+              {[
+                { label: isArabic ? 'الراتب' : 'Salary', value: salaryData.annualSalary, color: 'text-foreground' },
+                { label: isArabic ? 'مزايا أساسية' : 'Core Benefits', value: metrics.coreBenefits, color: 'text-accent' },
+                { label: isArabic ? 'متغيرة' : 'Variable', value: metrics.variableBenefits, color: 'text-amber-600' },
+                { label: isArabic ? 'طويلة الأجل' : 'Long-term', value: metrics.longTermBenefits, color: 'text-purple-600' },
+              ].map((item) => (
+                <div key={item.label} className="p-3 rounded-lg bg-muted/30">
+                  <p className="text-xs text-muted-foreground mb-1">{item.label}</p>
+                  <p className={cn("text-sm font-bold tabular-nums", item.color)}>
+                    {salaryHidden ? '•••' : formatCurrency(item.value)}
+                  </p>
+                </div>
+              ))}
+            </div>
 
-      {/* SECTION 3: Total Rewards Snapshot - Stacked Bar */}
-      <Card className="border-border/50">
-        <CardContent className="p-6">
-          <div className={cn("flex items-center justify-between mb-4", isRTL && "flex-row-reverse")}>
-            <h2 className={cn("text-base font-display font-semibold flex items-center gap-2", isRTL && "flex-row-reverse")}>
-              <Wallet className="w-5 h-5 text-muted-foreground" />
-              {isArabic ? 'ملخص الحزمة السنوية' : 'Annual Package Snapshot'}
-            </h2>
             <Button 
-              variant="ghost" 
+              variant="link" 
               size="sm" 
               onClick={() => setCompensationModalOpen(true)}
-              className={cn("text-xs text-accent gap-1", isRTL && "flex-row-reverse")}
+              className={cn("mt-3 p-0 h-auto text-accent gap-1", isRTL && "flex-row-reverse")}
             >
-              {isArabic ? 'عرض التفاصيل' : 'View Details'}
+              {isArabic ? 'عرض التفاصيل الكاملة' : 'View Full Breakdown'}
               <ChevronIcon className="w-3 h-3" />
             </Button>
-          </div>
+          </CardContent>
+        </Card>
 
-          <div className={cn("flex flex-wrap gap-4 justify-center", isRTL && "flex-row-reverse")}>
-            {packageBreakdown.map((item) => (
-              <div key={item.name} className={cn("flex items-center gap-2 text-xs", isRTL && "flex-row-reverse")}>
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                <span className="text-muted-foreground">{item.name}</span>
-                <span className="font-medium">{formatCurrency(item.value)}</span>
+        {/* Utilization Donut */}
+        <Card className="border-border/50">
+          <CardContent className="p-6">
+            <div className={cn("flex items-center gap-2 mb-4", isRTL && "flex-row-reverse")}>
+              <Target className="w-5 h-5 text-muted-foreground" />
+              <h3 className="text-sm font-medium">
+                {isArabic ? 'استخدام المزايا' : 'Benefit Utilization'}
+              </h3>
+              <MetricTooltip metricKey="utilization_rate" confidence="high" />
+            </div>
+            
+            <div className="flex flex-col items-center">
+              <div className="w-32 h-32 relative">
+                <AnimatedDonutChart 
+                  data={utilizationChartData}
+                  innerRadius={40}
+                  outerRadius={55}
+                />
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-2xl font-bold">{metrics.utilizationPercent}%</span>
+                  <span className="text-xs text-muted-foreground">{isArabic ? 'مستخدم' : 'used'}</span>
+                </div>
               </div>
-            ))}
-          </div>
+              
+              <div className="mt-4 text-center">
+                <p className="text-sm text-muted-foreground">
+                  {isArabic ? 'قابل للمطالبة' : 'Claimable'}
+                </p>
+                <p className="text-lg font-bold text-accent">
+                  {formatCurrency(metrics.claimableRemaining)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-          <div className={cn("text-center mt-4 pt-4 border-t border-border/50")}>
-            <p className="text-sm text-muted-foreground">{isArabic ? 'إجمالي الحزمة السنوية' : 'Total Annual Package'}</p>
-            <p className="text-2xl font-bold text-foreground">
-              {formatHidden() || formatCurrency(salaryData.annualSalary + metrics.totalValue)}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* PRIMARY INSIGHT BLOCK 2: Opportunities */}
+      {metrics.claimableRemaining > 0 && (
+        <PrimaryInsight
+          title={isArabic ? 'فرص المزايا' : 'Benefit Opportunities'}
+          titleAr="فرص المزايا"
+          value={formatHidden() || formatCurrency(metrics.claimableRemaining)}
+          subtitle={`${benefitActions.length} ${isArabic ? 'إجراءات مقترحة' : 'suggested actions'}`}
+          subtitleAr={`${benefitActions.length} إجراءات مقترحة`}
+          icon={Lightbulb}
+          iconColor="text-amber-500"
+          confidence="high"
+          source={isArabic ? 'مزايا الميزانية المتبقية' : 'Remaining budget benefits'}
+          sourceAr="مزايا الميزانية المتبقية"
+          formula="Sum of (Budget - Utilized) for claimable benefits"
+          formulaAr="مجموع (الميزانية - المستخدم) للمزايا القابلة للمطالبة"
+          variant="warning"
+          action={benefitActions.length > 0 ? {
+            label: 'View Opportunities',
+            labelAr: 'عرض الفرص',
+            onClick: () => navigate('/employee/insights'),
+          } : undefined}
+        />
+      )}
 
       {/* Quick Actions Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
