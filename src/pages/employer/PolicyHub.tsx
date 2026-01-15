@@ -13,10 +13,12 @@ import {
   Edit,
   Eye,
   History,
-  Bell,
   Download,
   Send,
   UserCheck,
+  Clock,
+  ArrowUpRight,
+  GitBranch,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,9 +27,38 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { StatusStrip } from '@/components/ui/status-strip';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+
+// Version history data
+const versionHistory: Record<string, Array<{version: string; date: string; changes: string[]; author: string}>> = {
+  'Housing Allowance Policy': [
+    { version: '2.1', date: '2023-09-15', changes: ['Increased top-up limit to 25%', 'Added remote work housing provisions'], author: 'Sarah Ahmed' },
+    { version: '2.0', date: '2023-03-01', changes: ['Updated allowance tiers', 'Added family accommodation rules'], author: 'John Smith' },
+    { version: '1.0', date: '2022-01-15', changes: ['Initial policy creation'], author: 'HR Team' },
+  ],
+  'Health Insurance Policy': [
+    { version: '3.0', date: '2023-06-20', changes: ['Added mental health coverage', 'Increased dental limit', 'New maternity benefits'], author: 'Sarah Ahmed' },
+    { version: '2.5', date: '2023-01-10', changes: ['Added optical coverage', 'Updated network providers'], author: 'John Smith' },
+    { version: '2.0', date: '2022-06-01', changes: ['Major overhaul of coverage limits'], author: 'HR Team' },
+  ],
+  'Learning & Development Policy': [
+    { version: '1.5', date: '2022-11-10', changes: ['Added certification budget', 'Updated approval workflow'], author: 'Mike Chen' },
+    { version: '1.0', date: '2021-09-01', changes: ['Initial policy creation'], author: 'HR Team' },
+  ],
+  'Leave Policy': [
+    { version: '4.0', date: '2024-01-01', changes: ['Added parental leave parity', 'Updated carry-forward rules', 'New emergency leave category'], author: 'Sarah Ahmed' },
+    { version: '3.5', date: '2023-07-01', changes: ['Increased annual leave by 2 days', 'Added mental health days'], author: 'John Smith' },
+  ],
+  'Wellbeing Program Policy': [
+    { version: '2.0', date: '2023-03-15', changes: ['Added gym membership options', 'New wellness app subscriptions'], author: 'Mike Chen' },
+    { version: '1.0', date: '2022-04-01', changes: ['Initial policy creation'], author: 'HR Team' },
+  ],
+};
 
 // Policy Insights Data with versioning and acknowledgement tracking
 const policyInsights = [
@@ -156,6 +187,9 @@ export default function PolicyHubPage() {
   const isRTL = direction === 'rtl';
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedPolicyForHistory, setSelectedPolicyForHistory] = useState<string | null>(null);
+  const [acknowledgementDialogOpen, setAcknowledgementDialogOpen] = useState(false);
+  const [selectedPolicyForAck, setSelectedPolicyForAck] = useState<typeof policyInsights[0] | null>(null);
 
   const handleSendReminder = (policyName: string) => {
     toast({
@@ -196,6 +230,16 @@ export default function PolicyHubPage() {
         <h1 className="text-2xl font-display font-bold text-foreground">Policy Hub</h1>
         <p className="text-muted-foreground">Policy insights, knowledge base, and best practices</p>
       </div>
+
+      {/* Status Strip */}
+      <StatusStrip
+        confidence={policyInsights.filter(p => p.status === 'critical').length > 0 ? 'low' : 
+                   policyInsights.filter(p => p.status === 'warning').length > 1 ? 'medium' : 'high'}
+        lastUpdated="2026-01-15"
+        dataSource="Policy Management System"
+        sampleSize={policyInsights.length}
+        minSampleSize={3}
+      />
 
       {/* Search */}
       <div className="relative max-w-md">
@@ -289,7 +333,14 @@ export default function PolicyHubPage() {
                         <p className="text-xs text-muted-foreground">Last Updated</p>
                         <p className="font-medium text-sm">{new Date(policy.lastUpdated).toLocaleDateString()}</p>
                       </div>
-                      <div className={cn(isRTL && "text-right")}>
+                      <div 
+                        className={cn("cursor-pointer hover:bg-muted/50 rounded-lg p-1 -m-1 transition-colors", isRTL && "text-right")}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedPolicyForAck(policy);
+                          setAcknowledgementDialogOpen(true);
+                        }}
+                      >
                         <p className="text-xs text-muted-foreground">Acknowledged</p>
                         <div className={cn("flex items-center gap-1", isRTL && "flex-row-reverse")}>
                           <span className={cn(
@@ -299,7 +350,7 @@ export default function PolicyHubPage() {
                             {policy.acknowledgementRate}%
                           </span>
                           {policy.pendingAcknowledgements > 0 && (
-                            <Badge variant="secondary" className="text-[9px] px-1 py-0">
+                            <Badge variant="secondary" className="text-[9px] px-1 py-0 cursor-pointer hover:bg-secondary/80">
                               {policy.pendingAcknowledgements} pending
                             </Badge>
                           )}
@@ -332,7 +383,11 @@ export default function PolicyHubPage() {
                         Send Reminder
                       </Button>
                     )}
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setSelectedPolicyForHistory(policy.policy)}
+                    >
                       <History className="h-4 w-4 mr-1" />
                       History
                     </Button>
@@ -483,6 +538,162 @@ export default function PolicyHubPage() {
           ))}
         </TabsContent>
       </Tabs>
+
+      {/* Version History Dialog */}
+      <Dialog open={!!selectedPolicyForHistory} onOpenChange={(open) => !open && setSelectedPolicyForHistory(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+              <GitBranch className="h-5 w-5 text-primary" />
+              Version History: {selectedPolicyForHistory}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+            {selectedPolicyForHistory && versionHistory[selectedPolicyForHistory]?.map((version, index) => (
+              <div 
+                key={version.version}
+                className={cn(
+                  "p-4 rounded-lg border",
+                  index === 0 ? "border-primary/30 bg-primary/5" : "border-border/50"
+                )}
+              >
+                <div className={cn("flex items-center justify-between mb-2", isRTL && "flex-row-reverse")}>
+                  <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                    <Badge variant={index === 0 ? "default" : "outline"}>
+                      v{version.version}
+                    </Badge>
+                    {index === 0 && (
+                      <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                        Current
+                      </Badge>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(version.date).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    Updated by: <span className="font-medium text-foreground">{version.author}</span>
+                  </p>
+                  <div className="space-y-1">
+                    {version.changes.map((change, i) => (
+                      <div key={i} className={cn("flex items-start gap-2 text-sm", isRTL && "flex-row-reverse")}>
+                        <ArrowUpRight className="w-3 h-3 text-primary mt-0.5 shrink-0" />
+                        <span>{change}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedPolicyForHistory(null)}>
+              Close
+            </Button>
+            <Button>
+              <Download className="h-4 w-4 mr-1" />
+              Export History
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Acknowledgement Details Dialog */}
+      <Dialog open={acknowledgementDialogOpen} onOpenChange={setAcknowledgementDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+              <UserCheck className="h-5 w-5 text-primary" />
+              Acknowledgement Status: {selectedPolicyForAck?.policy}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedPolicyForAck && (
+            <div className="space-y-4">
+              {/* Summary stats */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 text-center">
+                  <p className="text-2xl font-bold text-emerald-600">
+                    {selectedPolicyForAck.acknowledgementRate}%
+                  </p>
+                  <p className="text-xs text-muted-foreground">Acknowledged</p>
+                </div>
+                <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 text-center">
+                  <p className="text-2xl font-bold text-amber-600">
+                    {selectedPolicyForAck.pendingAcknowledgements}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Pending</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted text-center">
+                  <p className="text-2xl font-bold">
+                    {Math.round(selectedPolicyForAck.pendingAcknowledgements / (1 - selectedPolicyForAck.acknowledgementRate / 100))}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Total Employees</p>
+                </div>
+              </div>
+
+              {/* Demo pending list */}
+              <div>
+                <h4 className="font-medium text-sm mb-2">Pending Acknowledgements (Demo)</h4>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Employee</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Last Reminder</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {['John Smith', 'Sarah Ahmed', 'Mike Chen'].slice(0, Math.min(3, selectedPolicyForAck.pendingAcknowledgements)).map((name, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="font-medium">{name}</TableCell>
+                        <TableCell>{['Engineering', 'Marketing', 'Finance'][i]}</TableCell>
+                        <TableCell>
+                          <div className={cn("flex items-center gap-1 text-xs", isRTL && "flex-row-reverse")}>
+                            <Clock className="w-3 h-3" />
+                            {i === 0 ? 'Never' : `${i * 3} days ago`}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            onClick={() => toast({ title: 'Reminder Sent', description: `Reminder sent to ${name}` })}
+                          >
+                            <Send className="h-3 w-3" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                {selectedPolicyForAck.pendingAcknowledgements > 3 && (
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    + {selectedPolicyForAck.pendingAcknowledgements - 3} more pending acknowledgements
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAcknowledgementDialogOpen(false)}>
+              Close
+            </Button>
+            <Button 
+              className="bg-amber-600 hover:bg-amber-700"
+              onClick={() => {
+                handleSendReminder(selectedPolicyForAck?.policy || '');
+                setAcknowledgementDialogOpen(false);
+              }}
+            >
+              <Send className="h-4 w-4 mr-1" />
+              Send Reminder to All
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
