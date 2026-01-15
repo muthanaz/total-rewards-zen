@@ -6,10 +6,14 @@ import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { BenefitGuide } from '@/components/employee/BenefitGuide';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
+import { PrimaryInsight } from '@/components/ui/primary-insight';
+import { AssumptionsPanel } from '@/components/ui/assumptions-panel';
 import { 
   Gift, TrendingUp, Target, Award, Star, Calendar, 
   Calculator, CheckCircle, Clock, Users, ChevronRight,
-  BarChart3, Trophy, Sparkles
+  BarChart3, Trophy, Sparkles, Lightbulb
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
@@ -18,6 +22,14 @@ import { chartColors, getChartColor } from '@/lib/chartColors';
 
 const MONTHLY_SALARY = 35000;
 const TARGET_MONTHS = 2; // Target bonus is 2 months salary
+
+// Bonus assumptions for transparency
+const bonusAssumptions = [
+  { id: 'salary_basis', label: 'Salary Basis', value: 'Basic Salary Only', source: 'policy' as const },
+  { id: 'target_months', label: 'Target Bonus', value: '2 months', source: 'policy' as const },
+  { id: 'performance_period', label: 'Performance Period', value: 'Jan - Dec 2025', source: 'system' as const },
+  { id: 'payout_timing', label: 'Payout Timing', value: 'March 2026', source: 'policy' as const },
+];
 
 // Performance rating scale
 const performanceRatings = [
@@ -214,19 +226,50 @@ export default function BonusPage() {
 
   return (
     <div className={cn("space-y-6 animate-fade-in", isRTL && "text-right")}>
-      {/* Header */}
-      <div>
-        <h1 className={cn(
-          "text-2xl font-display font-bold text-foreground flex items-center gap-3",
-          isRTL && "flex-row-reverse"
-        )}>
-          <Gift className="w-7 h-7 text-accent" />
-          {t.title}
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          {t.subtitle}
-        </p>
-      </div>
+      {/* Page Header */}
+      <PageHeader
+        title={t.title}
+        titleAr={pageTranslations.ar.title}
+        subtitle={t.subtitle}
+        subtitleAr={pageTranslations.ar.subtitle}
+        icon={Gift}
+      />
+
+      {/* Status Strip */}
+      <StatusStrip
+        confidence={currentEvaluation.overallRating >= 3 ? 'high' : 'medium'}
+        lastUpdated={new Date(currentEvaluation.lastReviewDate)}
+        dataSource="Performance System"
+        dataSourceAr="نظام الأداء"
+      />
+
+      {/* Primary Insight */}
+      <PrimaryInsight
+        icon={Lightbulb}
+        title={isRTL ? 'مكافأتك المتوقعة' : 'Your Projected Bonus'}
+        titleAr="مكافأتك المتوقعة"
+        value={formatCurrency(projectedBonus)}
+        subtitle={isRTL 
+          ? `بناءً على تقييمك الحالي (${currentEvaluation.overallRating}/5) ومضاعف ${(currentRatingData?.multiplier || 1) * 100}%`
+          : `Based on your current rating (${currentEvaluation.overallRating}/5) and ${(currentRatingData?.multiplier || 1) * 100}% multiplier`}
+        subtitleAr={`بناءً على تقييمك الحالي (${currentEvaluation.overallRating}/5) ومضاعف ${(currentRatingData?.multiplier || 1) * 100}%`}
+        trend={{
+          value: currentEvaluation.overallRating >= 4 ? 50 : currentEvaluation.overallRating >= 3 ? 0 : -50,
+          label: 'vs target',
+          labelAr: 'مقابل الهدف',
+          direction: currentEvaluation.overallRating >= 4 ? 'up' : currentEvaluation.overallRating >= 3 ? 'neutral' : 'down'
+        }}
+        formula={t.formulaProjected}
+        formulaAr={pageTranslations.ar.formulaProjected}
+        variant={currentEvaluation.overallRating >= 4 ? 'success' : 'default'}
+      />
+
+      {/* Assumptions Panel */}
+      <AssumptionsPanel
+        title={isRTL ? 'افتراضات حساب المكافأة' : 'Bonus Calculation Assumptions'}
+        titleAr="افتراضات حساب المكافأة"
+        assumptions={bonusAssumptions}
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
