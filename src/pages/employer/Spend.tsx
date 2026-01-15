@@ -3,8 +3,13 @@ import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3 } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
+import { PrimaryInsight } from '@/components/ui/primary-insight';
+import { TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3, Lightbulb } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RePieChart, Pie, Cell, Legend } from 'recharts';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 
 import {
   ANNUAL_BUDGET,
@@ -64,18 +69,49 @@ const CustomLegend = ({ payload }: any) => (
 );
 
 export default function SpendPage() {
+  const { language, direction } = useLanguage();
+  const isRTL = direction === 'rtl';
+  const isArabic = language === 'ar';
+  
   const totalBudget = ANNUAL_BUDGET;
   const totalSpend = YTD_SPEND;
+  const spendUtilizationRate = (totalSpend / totalBudget) * 100;
   const utilizationRate = (totalSpend / totalBudget) * 100;
 
   return (
-    <div className="space-y-6">
+    <div className={cn("space-y-6", isRTL && "text-right")}>
       {/* Header */}
+      <PageHeader
+        title={isArabic ? 'الإنفاق والاستخدام' : 'Spend & Utilization'}
+        titleAr="الإنفاق والاستخدام"
+        subtitle={isArabic ? 'تتبع إنفاق المزايا عبر منظمتك' : 'Track benefits spend across your organization'}
+        subtitleAr="تتبع إنفاق المزايا عبر منظمتك"
+        icon={DollarSign}
+      />
+
+      {/* Status Strip */}
+      <StatusStrip
+        confidence="high"
+        lastUpdated={new Date()}
+        dataSource="Finance System"
+      />
+
+      {/* Primary Insight */}
+      {utilizationRate < 80 && (
+        <PrimaryInsight
+          icon={Lightbulb}
+          title={isArabic ? 'فرصة تحسين الاستخدام' : 'Utilization Opportunity'}
+          value={`${utilizationRate.toFixed(1)}%`}
+          subtitle={isArabic 
+            ? 'معدل الاستخدام الحالي - هناك فرصة لتحسين استخدام الميزانية'
+            : 'Current utilization rate - opportunity to improve budget usage'}
+          variant="warning"
+        />
+      )}
+
+      {/* Summary Cards */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">Spend & Utilization</h1>
-          <p className="text-muted-foreground">Track benefits spend across your organization</p>
-        </div>
+        <div className="hidden" />
         <Select defaultValue="2024">
           <SelectTrigger className="w-32">
             <SelectValue />

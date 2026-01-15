@@ -5,12 +5,16 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { BenefitGuide } from '@/components/employee/BenefitGuide';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
 import { NoData } from '@/components/ui/empty-state';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { BookOpen, Award, Clock, CheckCircle, Plus, ExternalLink, Wallet, TrendingUp, Calculator, GraduationCap, Play, Star, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 
 const ANNUAL_BUDGET = 12000;
 const UTILIZED = 4500;
@@ -161,6 +165,9 @@ const featuredCourses = [
 
 export default function LearningPage() {
   const { toast } = useToast();
+  const { language, direction } = useLanguage();
+  const isRTL = direction === 'rtl';
+  const isArabic = language === 'ar';
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
@@ -240,17 +247,22 @@ export default function LearningPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className={cn("space-y-6 animate-fade-in", isRTL && "text-right")}>
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-          <BookOpen className="w-7 h-7 text-accent" />
-          Learning & Development
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Courses, certifications, and professional development
-        </p>
-      </div>
+      <PageHeader
+        title={isArabic ? 'التعلم والتطوير' : 'Learning & Development'}
+        titleAr="التعلم والتطوير"
+        subtitle={isArabic ? 'الدورات والشهادات والتطوير المهني' : 'Courses, certifications, and professional development'}
+        subtitleAr="الدورات والشهادات والتطوير المهني"
+        icon={BookOpen}
+      />
+
+      {/* Status Strip */}
+      <StatusStrip
+        confidence="high"
+        lastUpdated={new Date()}
+        dataSource="L&D System"
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

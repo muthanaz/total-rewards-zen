@@ -3,7 +3,12 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { BenefitGuide } from '@/components/employee/BenefitGuide';
-import { TrendingUp, DollarSign, CheckCircle, Award, Gem } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusStrip } from '@/components/ui/status-strip';
+import { AssumptionsPanel } from '@/components/ui/assumptions-panel';
+import { TrendingUp, DollarSign, CheckCircle, Award, Gem, Lightbulb } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 
 const TOTAL_SHARES = 5000;
 const VESTED_SHARES = 2500;
@@ -22,6 +27,10 @@ const grants = [
 ];
 
 export default function EquityPage() {
+  const { language, direction } = useLanguage();
+  const isRTL = direction === 'rtl';
+  const isArabic = language === 'ar';
+  
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
   const vestedValue = VESTED_SHARES * SHARE_PRICE;
   const totalValue = TOTAL_SHARES * SHARE_PRICE;
@@ -52,18 +61,29 @@ export default function EquityPage() {
     'Tax implications: consult a financial advisor',
   ];
 
+  const equityAssumptions = [
+    { text: 'Share price based on latest company valuation', icon: Lightbulb as any },
+    { text: 'Value is illustrative and not guaranteed', icon: Lightbulb as any },
+    { text: 'Exercise price and tax implications vary', icon: Lightbulb as any },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className={cn("space-y-6 animate-fade-in", isRTL && "text-right")}>
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-          <TrendingUp className="w-7 h-7 text-accent" />
-          Equity & Share Options
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Your ownership stake in the company
-        </p>
-      </div>
+      <PageHeader
+        title={isArabic ? 'الأسهم وخيارات الأسهم' : 'Equity & Share Options'}
+        titleAr="الأسهم وخيارات الأسهم"
+        subtitle={isArabic ? 'حصتك في ملكية الشركة' : 'Your ownership stake in the company'}
+        subtitleAr="حصتك في ملكية الشركة"
+        icon={TrendingUp}
+      />
+
+      {/* Status Strip */}
+      <StatusStrip
+        confidence={vestedPercent < 50 ? 'medium' : 'high'}
+        lastUpdated="2025-01-01"
+        dataSource="Equity System"
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
