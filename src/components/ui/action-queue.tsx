@@ -11,10 +11,15 @@ import {
   AlertTriangle,
   Clock,
   CheckCircle2,
-  LucideIcon
+  LucideIcon,
+  Calendar,
+  TrendingUp,
+  User
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { formatDistanceToNow, isPast } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
 export interface ActionItem {
   id: string;
@@ -25,12 +30,21 @@ export interface ActionItem {
   icon?: LucideIcon;
   route?: string;
   onClick?: () => void;
-  priority?: 'high' | 'medium' | 'low';
-  status?: 'pending' | 'in_progress' | 'completed';
+  priority?: 'high' | 'medium' | 'low' | 'critical';
+  status?: 'pending' | 'in_progress' | 'completed' | 'blocked';
   badge?: string;
   badgeAr?: string;
   value?: string | number;
   deadline?: string;
+  dueDate?: Date | string;
+  owner?: string;
+  impact?: {
+    value: number;
+    unit?: 'AED' | 'days' | 'percent';
+    label?: string;
+  };
+  metricKeys?: string[];
+  confidence?: 'low' | 'medium' | 'high';
 }
 
 export interface ActionQueueProps {
@@ -59,12 +73,15 @@ export function ActionQueue({
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
   const isArabic = language === 'ar';
+  const locale = isArabic ? ar : undefined;
 
   const ChevronIcon = isRTL ? ChevronLeft : ChevronRight;
   const displayedActions = showAll ? actions : actions.slice(0, maxItems);
 
   const getPriorityStyles = (priority?: ActionItem['priority']) => {
     switch (priority) {
+      case 'critical':
+        return 'border-red-500/40 bg-red-500/10 hover:border-red-500/60';
       case 'high':
         return 'border-red-500/30 bg-red-500/5 hover:border-red-500/50';
       case 'medium':
@@ -76,6 +93,7 @@ export function ActionQueue({
 
   const getPriorityIcon = (priority?: ActionItem['priority']) => {
     switch (priority) {
+      case 'critical':
       case 'high':
         return <AlertTriangle className="w-4 h-4 text-red-500" />;
       case 'medium':
@@ -91,9 +109,47 @@ export function ActionQueue({
       pending: { label: isArabic ? 'قيد الانتظار' : 'Pending', color: 'bg-amber-500/10 text-amber-600' },
       in_progress: { label: isArabic ? 'قيد التنفيذ' : 'In Progress', color: 'bg-blue-500/10 text-blue-600' },
       completed: { label: isArabic ? 'مكتمل' : 'Completed', color: 'bg-emerald-500/10 text-emerald-600' },
+      blocked: { label: isArabic ? 'محظور' : 'Blocked', color: 'bg-red-500/10 text-red-600' },
     };
     const config = configs[status];
-    return <Badge className={cn("text-xs", config.color)}>{config.label}</Badge>;
+    return config ? <Badge className={cn("text-xs", config.color)}>{config.label}</Badge> : null;
+  };
+
+  const getDueDateBadge = (dueDate?: Date | string) => {
+    if (!dueDate) return null;
+    const date = typeof dueDate === 'string' ? new Date(dueDate) : dueDate;
+    const isOverdue = isPast(date);
+    const timeLabel = formatDistanceToNow(date, { addSuffix: true, locale });
+    
+    if (isOverdue) {
+      return (
+        <Badge className="text-[10px] bg-red-500/10 text-red-600 gap-1">
+          <Clock className="w-3 h-3" />
+          {isArabic ? 'متأخر' : 'Overdue'}
+        </Badge>
+      );
+    }
+    return (
+      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+        <Calendar className="w-3 h-3" />
+        {timeLabel}
+      </span>
+    );
+  };
+
+  const formatImpact = (impact?: ActionItem['impact']) => {
+    if (!impact) return null;
+    const formattedValue = impact.unit === 'AED' 
+      ? `AED ${impact.value.toLocaleString()}`
+      : impact.unit === 'percent'
+      ? `${impact.value}%`
+      : `${impact.value} ${isArabic ? 'يوم' : 'days'}`;
+    return (
+      <span className="text-[10px] text-emerald-600 flex items-center gap-1">
+        <TrendingUp className="w-3 h-3" />
+        {formattedValue}
+      </span>
+    );
   };
 
   if (actions.length === 0) {
@@ -183,6 +239,19 @@ export function ActionQueue({
                       <p className="text-xs text-muted-foreground mt-0.5 truncate">
                         {isArabic && action.descriptionAr ? action.descriptionAr : action.description}
                       </p>
+                    )}
+                    {/* Due date, owner, impact row */}
+                    {(action.dueDate || action.owner || action.impact) && (
+                      <div className={cn("flex items-center gap-3 mt-1 flex-wrap", isRTL && "flex-row-reverse")}>
+                        {action.owner && (
+                          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            <User className="w-3 h-3" />
+                            {action.owner}
+                          </span>
+                        )}
+                        {getDueDateBadge(action.dueDate)}
+                        {formatImpact(action.impact)}
+                      </div>
                     )}
                   </div>
 

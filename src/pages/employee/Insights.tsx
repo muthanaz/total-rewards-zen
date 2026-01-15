@@ -174,7 +174,7 @@ export default function InsightsPage() {
         subtitle={isArabic ? 'اكتشف فرص التوفير واتخذ إجراءً بناءً على بياناتك' : 'Discover savings opportunities and take action based on your data'}
         subtitleAr="اكتشف فرص التوفير واتخذ إجراءً بناءً على بياناتك"
         icon={Lightbulb}
-        actions={
+        action={
           <Button variant="outline" size="sm" className="gap-2">
             <Download className="w-4 h-4" />
             {isArabic ? 'تصدير البيان' : 'Export Statement'}
