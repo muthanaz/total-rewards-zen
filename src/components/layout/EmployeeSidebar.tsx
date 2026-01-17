@@ -33,6 +33,7 @@ import { Button } from '@/components/ui/button';
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
+
 interface NavGroup {
   labelKey: string;
   items: NavItem[];
@@ -44,14 +45,19 @@ interface NavItem {
   icon: React.ElementType;
 }
 
-// Main Navigation Structure
+/**
+ * Employee Navigation (Benefits-first)
+ * - Keep Marketplace visible but not the primary focus.
+ * - Consolidate HR workflows (claims, documents, leave) into one clear group.
+ */
 const navigation: NavGroup[] = [
+  // 1) Dashboard
   {
     labelKey: 'nav.dashboard',
-    items: [
-      { labelKey: 'nav.overview', path: '/employee', icon: LayoutDashboard },
-    ],
+    items: [{ labelKey: 'nav.overview', path: '/employee', icon: LayoutDashboard }],
   },
+
+  // 2) Benefits (high-frequency + intelligence)
   {
     labelKey: 'nav.myBenefits',
     items: [
@@ -59,6 +65,8 @@ const navigation: NavGroup[] = [
       { labelKey: 'nav.benefitsAnalysis', path: '/employee/benefits-analysis', icon: TrendingUp },
     ],
   },
+
+  // 3) Benefit Details (deep dive by category)
   {
     labelKey: 'nav.benefitDetails',
     items: [
@@ -72,17 +80,22 @@ const navigation: NavGroup[] = [
       { labelKey: 'nav.learning', path: '/employee/learning', icon: BookOpen },
     ],
   },
-  {
-    labelKey: 'nav.leaves',
-    items: [
-      { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
-    ],
-  },
+
+  // 4) HR Services & Help (reduce confusion: "where do I do X?")
   {
     labelKey: 'nav.hrServices',
     items: [
-      { labelKey: 'nav.hrClaims', path: '/employee/documents', icon: FileText },
+      // NOTE: you will add this page/route in Step 3 below
+      { labelKey: 'nav.claimsRequests', path: '/employee/requests', icon: Receipt },
+
+      // Keep existing docs + gov connect
+      { labelKey: 'nav.documents', path: '/employee/documents', icon: FileText },
+      { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
+
+      // Knowledge + onboarding routes already exist in your tech doc
+      { labelKey: 'nav.knowledge', path: '/employee/knowledge', icon: BookOpen },
       { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
+      { labelKey: 'nav.onboarding', path: '/employee/onboarding', icon: Shield },
     ],
   },
 ];
@@ -92,7 +105,11 @@ export function EmployeeSidebar() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { t, direction } = useLanguage();
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['nav.dashboard', 'nav.myBenefits']);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([
+    'nav.dashboard',
+    'nav.myBenefits',
+    'nav.hrServices',
+  ]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isRTL = direction === 'rtl';
 
@@ -102,10 +119,8 @@ export function EmployeeSidebar() {
   };
 
   const toggleGroup = (labelKey: string) => {
-    setExpandedGroups(prev =>
-      prev.includes(labelKey)
-        ? prev.filter(g => g !== labelKey)
-        : [...prev, labelKey]
+    setExpandedGroups((prev) =>
+      prev.includes(labelKey) ? prev.filter((g) => g !== labelKey) : [...prev, labelKey]
     );
   };
 
@@ -117,22 +132,22 @@ export function EmployeeSidebar() {
     <>
       {/* Logo */}
       <div className="px-4 py-5 border-b border-sidebar-border">
-        <div className={cn(
-          "flex items-center justify-between",
-          isRTL && "flex-row-reverse"
-        )}>
-          <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+        <div className={cn('flex items-center justify-between', isRTL && 'flex-row-reverse')}>
+          <div className={cn('flex items-center gap-2', isRTL && 'flex-row-reverse')}>
             <div className="w-8 h-8 rounded-lg bg-gradient-accent flex items-center justify-center shrink-0">
               <span className="text-sidebar-background font-bold text-lg">b</span>
             </div>
             <span className="font-display text-xl font-bold text-sidebar-foreground">bnft.</span>
           </div>
         </div>
+
         {/* Theme & Language Controls */}
-        <div className={cn(
-          "flex items-center gap-1 mt-3 pt-3 border-t border-sidebar-border/50",
-          isRTL && "flex-row-reverse"
-        )}>
+        <div
+          className={cn(
+            'flex items-center gap-1 mt-3 pt-3 border-t border-sidebar-border/50',
+            isRTL && 'flex-row-reverse'
+          )}
+        >
           <NotificationCenter />
           <LanguageSwitcher />
           <DarkModeToggle />
@@ -140,21 +155,20 @@ export function EmployeeSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className={cn(
-        "flex-1 overflow-y-auto py-4 px-3 space-y-1",
-        isRTL && "text-right"
-      )}>
+      <nav
+        className={cn('flex-1 overflow-y-auto py-4 px-3 space-y-1', isRTL && 'text-right')}
+      >
         {navigation.map((group, index) => (
-          <div key={group.labelKey} className={cn("mb-1", index > 0 && "mt-6")}>
+          <div key={group.labelKey} className={cn('mb-1', index > 0 && 'mt-6')}>
             <button
               onClick={() => toggleGroup(group.labelKey)}
               className={cn(
-                "flex items-center justify-between w-full px-3 py-2 text-[11px] font-bold uppercase tracking-[0.15em] transition-colors rounded-md group",
-                "text-sidebar-primary hover:bg-sidebar-primary/10",
-                isRTL && "flex-row-reverse text-right"
+                'flex items-center justify-between w-full px-3 py-2 text-[11px] font-bold uppercase tracking-[0.15em] transition-colors rounded-md group',
+                'text-sidebar-primary hover:bg-sidebar-primary/10',
+                isRTL && 'flex-row-reverse text-right'
               )}
             >
-              <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+              <div className={cn('flex items-center gap-2', isRTL && 'flex-row-reverse')}>
                 <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
                 <span>{t(group.labelKey)}</span>
               </div>
@@ -164,7 +178,7 @@ export function EmployeeSidebar() {
                 <ChevronCollapsed className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
               )}
             </button>
-            
+
             {expandedGroups.includes(group.labelKey) && (
               <div className="mt-1 space-y-0.5 animate-fade-in">
                 {group.items.map((item) => (
@@ -179,7 +193,9 @@ export function EmployeeSidebar() {
                     )}
                   >
                     <item.icon className="w-4 h-4 shrink-0" />
-                    <span className={cn("text-sm flex-1", isRTL && "text-right")}>{t(item.labelKey)}</span>
+                    <span className={cn('text-sm flex-1', isRTL && 'text-right')}>
+                      {t(item.labelKey)}
+                    </span>
                   </Link>
                 ))}
               </div>
@@ -188,96 +204,106 @@ export function EmployeeSidebar() {
         ))}
       </nav>
 
-      {/* Marketplace - Distinguished Section */}
-      <div className={cn("px-3 pb-2", isRTL && "text-right")}>
+      {/* Marketplace - Secondary (still prominent, but below Benefits) */}
+      <div className={cn('px-3 pb-2', isRTL && 'text-right')}>
         <Link
           to="/employee/marketplace"
           onClick={() => setMobileOpen(false)}
           className={cn(
-            "flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200",
-            "bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-pink-500/10",
-            "hover:from-violet-500/20 hover:via-fuchsia-500/20 hover:to-pink-500/20",
-            "border border-violet-500/20 hover:border-violet-500/40",
-            "group",
-            isActive('/employee/marketplace') && "from-violet-500/20 via-fuchsia-500/20 to-pink-500/20 border-violet-500/40",
-            isRTL && "flex-row-reverse"
+            'flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200',
+            'bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-pink-500/10',
+            'hover:from-violet-500/15 hover:via-fuchsia-500/15 hover:to-pink-500/15',
+            'border border-violet-500/20 hover:border-violet-500/35',
+            'group',
+            isActive('/employee/marketplace') &&
+              'from-violet-500/18 via-fuchsia-500/18 to-pink-500/18 border-violet-500/40',
+            isRTL && 'flex-row-reverse'
           )}
         >
-          <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/25">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/20">
             <ShoppingBag className="w-4 h-4 text-white" />
           </div>
-          <div className={cn("flex-1", isRTL && "text-right")}>
-            <span className={cn(
-              "text-sm font-medium block",
-              isActive('/employee/marketplace') 
-                ? "text-violet-600 dark:text-violet-400" 
-                : "text-sidebar-foreground group-hover:text-violet-600 dark:group-hover:text-violet-400"
-            )}>
+          <div className={cn('flex-1', isRTL && 'text-right')}>
+            <span
+              className={cn(
+                'text-sm font-medium block',
+                isActive('/employee/marketplace')
+                  ? 'text-violet-600 dark:text-violet-400'
+                  : 'text-sidebar-foreground group-hover:text-violet-600 dark:group-hover:text-violet-400'
+              )}
+            >
               {t('nav.perksPartners')}
             </span>
             <span className="text-[10px] text-muted-foreground">
-              {isRTL ? 'خصومات وعروض حصرية' : 'Exclusive deals & discounts'}
+              {isRTL ? 'عروض يومية مختارة لك' : 'Daily deals curated for you'}
             </span>
           </div>
-          <ChevronCollapsed className={cn(
-            "w-4 h-4 text-violet-500/50 group-hover:text-violet-500 transition-all",
-            "group-hover:translate-x-0.5",
-            isRTL && "rotate-180 group-hover:-translate-x-0.5"
-          )} />
+          <ChevronCollapsed
+            className={cn(
+              'w-4 h-4 text-violet-500/50 group-hover:text-violet-500 transition-all',
+              'group-hover:translate-x-0.5',
+              isRTL && 'rotate-180 group-hover:-translate-x-0.5'
+            )}
+          />
         </Link>
       </div>
 
       {/* Smart Profile - Distinguished Section */}
-      <div className={cn("px-3 pb-2", isRTL && "text-right")}>
+      <div className={cn('px-3 pb-2', isRTL && 'text-right')}>
         <Link
           to="/employee/profile"
           onClick={() => setMobileOpen(false)}
           className={cn(
-            "flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200",
-            "bg-gradient-to-r from-teal-500/10 via-emerald-500/10 to-cyan-500/10",
-            "hover:from-teal-500/20 hover:via-emerald-500/20 hover:to-cyan-500/20",
-            "border border-teal-500/20 hover:border-teal-500/40",
-            "group",
-            isActive('/employee/profile') && "from-teal-500/20 via-emerald-500/20 to-cyan-500/20 border-teal-500/40",
-            isRTL && "flex-row-reverse"
+            'flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200',
+            'bg-gradient-to-r from-teal-500/10 via-emerald-500/10 to-cyan-500/10',
+            'hover:from-teal-500/20 hover:via-emerald-500/20 hover:to-cyan-500/20',
+            'border border-teal-500/20 hover:border-teal-500/40',
+            'group',
+            isActive('/employee/profile') &&
+              'from-teal-500/20 via-emerald-500/20 to-cyan-500/20 border-teal-500/40',
+            isRTL && 'flex-row-reverse'
           )}
         >
           <div className="p-2 rounded-lg bg-gradient-to-br from-teal-500 to-emerald-500 shadow-lg shadow-teal-500/25">
             <User className="w-4 h-4 text-white" />
           </div>
-          <div className={cn("flex-1", isRTL && "text-right")}>
-            <span className={cn(
-              "text-sm font-medium block",
-              isActive('/employee/profile') 
-                ? "text-teal-600 dark:text-teal-400" 
-                : "text-sidebar-foreground group-hover:text-teal-600 dark:group-hover:text-teal-400"
-            )}>
+          <div className={cn('flex-1', isRTL && 'text-right')}>
+            <span
+              className={cn(
+                'text-sm font-medium block',
+                isActive('/employee/profile')
+                  ? 'text-teal-600 dark:text-teal-400'
+                  : 'text-sidebar-foreground group-hover:text-teal-600 dark:group-hover:text-teal-400'
+              )}
+            >
               {t('nav.profile')}
             </span>
             <span className="text-[10px] text-muted-foreground">
-              {isRTL ? 'إدارة الحساب والأمان' : 'Manage account & security'}
+              {isRTL ? 'البيانات والإعدادات والخصوصية' : 'Details, settings & privacy'}
             </span>
           </div>
-          <ChevronCollapsed className={cn(
-            "w-4 h-4 text-teal-500/50 group-hover:text-teal-500 transition-all",
-            "group-hover:translate-x-0.5",
-            isRTL && "rotate-180 group-hover:-translate-x-0.5"
-          )} />
+          <ChevronCollapsed
+            className={cn(
+              'w-4 h-4 text-teal-500/50 group-hover:text-teal-500 transition-all',
+              'group-hover:translate-x-0.5',
+              isRTL && 'rotate-180 group-hover:-translate-x-0.5'
+            )}
+          />
         </Link>
       </div>
 
       {/* Sign Out */}
-      <div className={cn("p-4 border-t border-sidebar-border", isRTL && "text-right")}>
+      <div className={cn('p-4 border-t border-sidebar-border', isRTL && 'text-right')}>
         <Button
           variant="ghost"
           onClick={handleSignOut}
           className={cn(
-            "w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent",
-            isRTL ? "justify-start flex-row-reverse" : "justify-start"
+            'w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent',
+            isRTL ? 'justify-start flex-row-reverse' : 'justify-start'
           )}
         >
-          <LogOut className={cn("w-4 h-4 shrink-0", isRTL ? "ml-3" : "mr-3")} />
-          <span className={isRTL ? "text-right" : "text-left"}>{t('common.signOut')}</span>
+          <LogOut className={cn('w-4 h-4 shrink-0', isRTL ? 'ml-3' : 'mr-3')} />
+          <span className={isRTL ? 'text-right' : 'text-left'}>{t('common.signOut')}</span>
         </Button>
       </div>
     </>
@@ -289,8 +315,8 @@ export function EmployeeSidebar() {
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
         className={cn(
-          "fixed top-4 z-50 p-2 rounded-lg bg-sidebar text-sidebar-foreground lg:hidden",
-          isRTL ? "right-4" : "left-4"
+          'fixed top-4 z-50 p-2 rounded-lg bg-sidebar text-sidebar-foreground lg:hidden',
+          isRTL ? 'right-4' : 'left-4'
         )}
       >
         {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -309,9 +335,13 @@ export function EmployeeSidebar() {
         className={cn(
           'fixed top-0 z-40 h-screen w-64 flex flex-col bg-sidebar transition-transform duration-300',
           isRTL ? 'right-0 lg:translate-x-0' : 'left-0 lg:translate-x-0',
-          isRTL 
-            ? (mobileOpen ? 'translate-x-0' : 'translate-x-full')
-            : (mobileOpen ? 'translate-x-0' : '-translate-x-full')
+          isRTL
+            ? mobileOpen
+              ? 'translate-x-0'
+              : 'translate-x-full'
+            : mobileOpen
+              ? 'translate-x-0'
+              : '-translate-x-full'
         )}
       >
         {sidebarContent}
