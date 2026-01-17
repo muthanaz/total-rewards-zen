@@ -85,14 +85,9 @@ const navigation: NavGroup[] = [
   {
     labelKey: 'nav.hrServices',
     items: [
-      // NOTE: you will add this page/route in Step 3 below
       { labelKey: 'nav.claimsRequests', path: '/employee/requests', icon: Receipt },
-
-      // Keep existing docs + gov connect
       { labelKey: 'nav.documents', path: '/employee/documents', icon: FileText },
       { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
-
-      // Knowledge + onboarding routes already exist in your tech doc
       { labelKey: 'nav.knowledge', path: '/employee/knowledge', icon: BookOpen },
       { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
       { labelKey: 'nav.onboarding', path: '/employee/onboarding', icon: Shield },
@@ -124,7 +119,14 @@ export function EmployeeSidebar() {
     );
   };
 
-  const isActive = (path: string) => location.pathname === path;
+  // Active rule:
+  // - exact match is active
+  // - nested route keeps parent highlighted (e.g., /employee/requests/123 highlights /employee/requests)
+  // - dashboard stays exact-only
+  const isActive = (path: string) => {
+    if (path === '/employee') return location.pathname === '/employee';
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
 
   const ChevronCollapsed = isRTL ? ChevronLeft : ChevronRight;
 
@@ -155,9 +157,7 @@ export function EmployeeSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav
-        className={cn('flex-1 overflow-y-auto py-4 px-3 space-y-1', isRTL && 'text-right')}
-      >
+      <nav className={cn('flex-1 overflow-y-auto py-4 px-3 space-y-1', isRTL && 'text-right')}>
         {navigation.map((group, index) => (
           <div key={group.labelKey} className={cn('mb-1', index > 0 && 'mt-6')}>
             <button
