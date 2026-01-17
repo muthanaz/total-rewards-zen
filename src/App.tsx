@@ -20,6 +20,7 @@ import { AdminLayout } from "./components/layout/AdminLayout";
 import { VendorLayout } from "./components/layout/VendorLayout";
 
 import EmployeeDashboard from "./pages/employee/Dashboard";
+import RequestsPage from "./pages/employee/Requests";
 import HousingPage from "./pages/employee/Housing";
 import SchoolingPage from "./pages/employee/Schooling";
 import HealthPage from "./pages/employee/Health";
@@ -37,7 +38,6 @@ import ProfilePage from "./pages/employee/Profile";
 import BenefitsPage from "./pages/employee/Benefits";
 import OnboardingPage from "./pages/employee/Onboarding";
 import KnowledgeHubPage from "./pages/employee/KnowledgeHub";
-import SecuritySettingsPage from "./pages/employee/SecuritySettings";
 import BenefitsAnalysisPage from "./pages/employee/BenefitsAnalysis";
 
 import EmployerDashboard from "./pages/employer/Dashboard";
@@ -61,6 +61,7 @@ import AdminOrganizations from "./pages/admin/Organizations";
 import AdminOrganizationSettings from "./pages/admin/OrganizationSettings";
 import AdminUIConfiguration from "./pages/admin/UIConfiguration";
 import AdminDataMigration from "./pages/admin/DataMigration";
+
 import VendorDashboard from "./pages/vendor/Dashboard";
 import VendorOffers from "./pages/vendor/Offers";
 import VendorTransactions from "./pages/vendor/Transactions";
@@ -72,30 +73,39 @@ import VendorSettings from "./pages/vendor/Settings";
 
 const queryClient = new QueryClient();
 
-type UserRole = 'employee' | 'employer' | 'admin' | 'vendor';
+type UserRole = "employee" | "employer" | "admin" | "vendor";
 
-function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: UserRole[] }) {
+function ProtectedRoute({
+  children,
+  allowedRoles,
+}: {
+  children: React.ReactNode;
+  allowedRoles?: UserRole[];
+}) {
   const { user, role, loading } = useAuth();
-  
+
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-background">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        Loading...
+      </div>
+    );
   }
-  
+
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
-  
+
   if (allowedRoles && role && !allowedRoles.includes(role)) {
-    // Redirect to appropriate dashboard based on role
     const roleRedirects: Record<UserRole, string> = {
-      admin: '/admin',
-      vendor: '/vendor',
-      employer: '/employer',
-      employee: '/employee',
+      admin: "/admin",
+      vendor: "/vendor",
+      employer: "/employer",
+      employee: "/employee",
     };
     return <Navigate to={roleRedirects[role]} replace />;
   }
-  
+
   return <>{children}</>;
 }
 
@@ -104,12 +114,23 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
-      
+
       {/* Employee Routes */}
-      <Route path="/employee" element={<ProtectedRoute allowedRoles={['employee']}><EmployeeLayout /></ProtectedRoute>}>
+      <Route
+        path="/employee"
+        element={
+          <ProtectedRoute allowedRoles={["employee"]}>
+            <EmployeeLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<EmployeeDashboard />} />
         <Route path="benefits-analysis" element={<BenefitsAnalysisPage />} />
         <Route path="benefits" element={<BenefitsPage />} />
+
+        {/* NEW: Requests */}
+        <Route path="requests" element={<RequestsPage />} />
+
         <Route path="housing" element={<HousingPage />} />
         <Route path="schooling" element={<SchoolingPage />} />
         <Route path="health" element={<HealthPage />} />
@@ -126,11 +147,20 @@ function AppRoutes() {
         <Route path="profile" element={<ProfilePage />} />
         <Route path="onboarding" element={<OnboardingPage />} />
         <Route path="knowledge" element={<KnowledgeHubPage />} />
+
+        {/* Keep as-is for now */}
         <Route path="security" element={<Navigate to="/employee/profile" replace />} />
       </Route>
-      
+
       {/* Employer Routes */}
-      <Route path="/employer" element={<ProtectedRoute allowedRoles={['employer']}><EmployerLayout /></ProtectedRoute>}>
+      <Route
+        path="/employer"
+        element={
+          <ProtectedRoute allowedRoles={["employer"]}>
+            <EmployerLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<EmployerDashboard />} />
         <Route path="spend" element={<SpendPage />} />
         <Route path="zombie" element={<ZombieSpendPage />} />
@@ -142,9 +172,16 @@ function AppRoutes() {
         <Route path="knowledge" element={<KnowledgeCenterPage />} />
         <Route path="recommendations" element={<RecommendationsPage />} />
       </Route>
-      
+
       {/* Admin Routes - Platform owner only */}
-      <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout /></ProtectedRoute>}>
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<AdminDashboard />} />
         <Route path="benchmarks" element={<AdminBenchmarks />} />
         <Route path="market" element={<AdminMarketIntelligence />} />
@@ -156,9 +193,16 @@ function AppRoutes() {
         <Route path="ui-config" element={<AdminUIConfiguration />} />
         <Route path="data-migration" element={<AdminDataMigration />} />
       </Route>
-      
+
       {/* Vendor Routes */}
-      <Route path="/vendor" element={<ProtectedRoute allowedRoles={['vendor']}><VendorLayout /></ProtectedRoute>}>
+      <Route
+        path="/vendor"
+        element={
+          <ProtectedRoute allowedRoles={["vendor"]}>
+            <VendorLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<VendorDashboard />} />
         <Route path="offers" element={<VendorOffers />} />
         <Route path="offers/new" element={<VendorCreateOffer />} />
@@ -168,7 +212,7 @@ function AppRoutes() {
         <Route path="profile" element={<VendorProfile />} />
         <Route path="settings" element={<VendorSettings />} />
       </Route>
-      
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
