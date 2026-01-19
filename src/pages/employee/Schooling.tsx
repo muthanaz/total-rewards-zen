@@ -155,53 +155,12 @@ export default function SchoolingPage() {
       <div>
         <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
           <GraduationCap className="w-7 h-7 text-accent" />
-          Education Allowance
+          Schooling Allowance
         </h1>
         <p className="text-muted-foreground mt-1">
           Configure education for each child individually — each child gets their own AED 30,000 allowance
         </p>
       </div>
-
-      {/* How It Works Card */}
-      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <Info className="w-5 h-5 text-accent" />
-            How Your Education Allowance Works
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
-              <div>
-                <p className="font-medium text-sm">Per-Child Allowance</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Each child receives <span className="font-semibold text-accent">AED 30,000</span> per year — allowances are separate and do not combine
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
-              <div>
-                <p className="font-medium text-sm">Different Schools OK</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Each child can attend a different school — you choose what's best for their age and needs
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
-              <div>
-                <p className="font-medium text-sm">Top-Up If Needed</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  If school fees exceed AED 30,000, the extra is deducted from your salary automatically
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -252,6 +211,64 @@ export default function SchoolingPage() {
           index={4}
         />
       </div>
+
+      {/* Policy Highlights */}
+      <PolicyHighlightsCard
+        title="Policy Highlights"
+        policies={[
+          'AED 30,000 allowance per child per year',
+          'Allowances do not combine between children',
+          'Each child can attend different schools',
+          'Excess fees deducted from monthly salary',
+          'Direct payment to approved schools',
+          'Covers tuition, registration, and books',
+        ]}
+        category="Education"
+        actionLabel="Submit Claim"
+        policyLabel="View Full Policy"
+        showClaimButton={true}
+      />
+
+      {/* How It Works Card */}
+      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <Info className="w-5 h-5 text-accent" />
+            How Your Education Allowance Works
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
+              <div>
+                <p className="font-medium text-sm">Per-Child Allowance</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Each child receives <span className="font-semibold text-accent">AED 30,000</span> per year — allowances are separate and do not combine
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
+              <div>
+                <p className="font-medium text-sm">Different Schools OK</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Each child can attend a different school — you choose what's best for their age and needs
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
+              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
+              <div>
+                <p className="font-medium text-sm">Top-Up If Needed</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  If school fees exceed AED 30,000, the extra is deducted from your salary automatically
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Children Allocation Cards */}
       <div>
@@ -650,57 +667,6 @@ export default function SchoolingPage() {
         </Card>
       )}
 
-      {/* Policy Highlights */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-display">Policy Highlights</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              AED 30,000 per child per academic year (not combined)
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Covers children aged 4–18 years
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Each child can attend a different school
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Tuition fees only (excludes transport, uniform)
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Direct payment to school or reimbursement
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Excess fees deducted from monthly salary
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-
-      {/* Actions */}
-      <PolicyHighlightsCard
-        title="Education Policy Highlights"
-        policies={[
-          'AED 30,000 allowance per child per year',
-          'Allowances do not combine between children',
-          'Each child can attend different schools',
-          'Excess fees deducted from monthly salary',
-          'Direct payment to approved schools',
-          'Covers tuition, registration, and books',
-        ]}
-        category="Education"
-        actionLabel="Submit Claim"
-        policyLabel="View Full Policy"
-        showClaimButton={true}
-      />
     </div>
   );
 }
