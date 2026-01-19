@@ -17,8 +17,8 @@ import { useNavigate } from 'react-router-dom';
 const trackableBenefits = [
   { 
     id: 'education',
-    name: 'Education Allowance', 
-    nameAr: 'بدل التعليم',
+    name: 'Schooling Allowance', 
+    nameAr: 'بدل التعليم المدرسي',
     icon: GraduationCap,
     route: '/employee/schooling',
     items: [

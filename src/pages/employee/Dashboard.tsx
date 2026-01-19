@@ -264,66 +264,106 @@ export default function EmployeeDashboard() {
       {/* Benefits Grid - Your Benefits */}
       {showYourBenefits && (
         <div>
-          <div className={cn("flex items-center justify-between mb-3", isRTL && "flex-row-reverse")}>
+          <div className={cn("flex items-center justify-between mb-4", isRTL && "flex-row-reverse")}>
             <h2 className="text-base font-display font-semibold">{t('employee.dashboard.yourBenefits')}</h2>
             <Button 
               variant="ghost" 
               size="sm" 
-              className={cn("text-accent hover:text-accent/80 h-7 text-xs", isRTL && "flex-row-reverse")}
+              className={cn("text-accent hover:text-accent/80 h-7 text-xs gap-1", isRTL && "flex-row-reverse")}
               onClick={() => navigate('/employee/benefits')}
             >
               {t('common.seeAll')}
-              <ChevronIcon className={cn("w-3 h-3", isRTL ? "mr-1" : "ml-1")} />
+              <ChevronIcon className="w-3 h-3" />
             </Button>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+          
+          {/* Modern grid layout - 4 columns on desktop, 2 on mobile */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {benefits.map((benefit, index) => {
-              const utilization = Math.round((benefit.utilized / benefit.value) * 100);
+              const utilization = benefit.value > 0 ? Math.round((benefit.utilized / benefit.value) * 100) : 0;
               const remaining = benefit.value - benefit.utilized;
               const isFullyUsed = utilization >= 100;
+              const hasValue = benefit.value > 0;
               
               return (
                 <Card 
                   key={benefit.name} 
-                  className="benefit-card group cursor-pointer hover:border-accent/40 hover:shadow-sm transition-all duration-200 flex flex-col p-2.5"
-                  style={{ animationDelay: `${index * 30}ms` }}
+                  className="group cursor-pointer border bg-card hover:bg-accent/5 hover:border-accent/30 transition-all duration-200 overflow-hidden"
+                  style={{ animationDelay: `${index * 40}ms` }}
                   onClick={() => handleBenefitClick(benefit.name)}
                 >
-                  <div className={cn("flex items-start gap-2", isRTL && "flex-row-reverse")}>
-                    <div className="p-1.5 rounded-md bg-accent/10 group-hover:bg-accent/20 transition-colors shrink-0">
-                      <benefit.icon className="w-3 h-3 text-accent" />
-                    </div>
-                    <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
-                      <div className={cn("flex items-center gap-1 flex-wrap", isRTL && "flex-row-reverse justify-end")}>
-                        <h3 className="font-medium text-xs truncate group-hover:text-accent transition-colors leading-tight">
+                  <div className="p-4">
+                    {/* Header row with icon and name */}
+                    <div className={cn("flex items-center gap-3 mb-3", isRTL && "flex-row-reverse")}>
+                      <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors shrink-0">
+                        <benefit.icon className="w-5 h-5 text-accent" />
+                      </div>
+                      <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
+                        <h3 className="font-semibold text-sm leading-tight group-hover:text-accent transition-colors line-clamp-1">
                           {t(benefit.nameKey)}
                         </h3>
-                        {getUtilizationBadge(utilization)}
+                        <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
+                          {benefit.bullets[0]}
+                        </p>
                       </div>
-                      <span className={`${BENEFIT_TYPE_COLORS[benefit.type]} text-[9px]`}>
-                        {t(`benefit.${benefit.type}`)}
-                      </span>
                     </div>
-                    <ChevronIcon className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                    
+                    {/* Value display */}
+                    {hasValue ? (
+                      <div className="space-y-2">
+                        <div className={cn("flex items-baseline justify-between", isRTL && "flex-row-reverse")}>
+                          <span className="text-lg font-bold text-foreground">
+                            {formatCurrencyShort(benefit.value)}
+                          </span>
+                          <Badge 
+                            variant="secondary" 
+                            className={cn(
+                              "text-[10px] px-1.5 py-0 h-5",
+                              isFullyUsed 
+                                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" 
+                                : utilization < 30 
+                                  ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                                  : "bg-blue-500/10 text-blue-600 border-blue-500/20"
+                            )}
+                          >
+                            {utilization}% {isRTL ? 'مستخدم' : 'used'}
+                          </Badge>
+                        </div>
+                        
+                        {/* Progress bar */}
+                        <div className="relative">
+                          <Progress 
+                            value={utilization} 
+                            className={cn(
+                              "h-1.5 bg-muted/50",
+                              isFullyUsed 
+                                ? "[&>div]:bg-emerald-500" 
+                                : "[&>div]:bg-accent"
+                            )}
+                          />
+                        </div>
+                        
+                        {/* Remaining amount */}
+                        <p className={cn("text-xs text-muted-foreground", isRTL && "text-right")}>
+                          {remaining > 0 
+                            ? `${formatCurrency(remaining)} ${isRTL ? 'متبقي' : 'remaining'}`
+                            : isRTL ? 'تم الاستخدام بالكامل' : 'Fully utilized'
+                          }
+                        </p>
+                      </div>
+                    ) : (
+                      <div className={cn("text-center py-2", isRTL && "text-right")}>
+                        <span className="text-sm text-muted-foreground">
+                          {isRTL ? 'عرض التفاصيل' : 'View Details'}
+                        </span>
+                        <ChevronIcon className="w-4 h-4 inline-block text-muted-foreground ml-1" />
+                      </div>
+                    )}
                   </div>
                   
-                  <div className="mt-2 space-y-1 flex-1">
-                    <div className={cn("flex justify-between text-[10px]", isRTL && "flex-row-reverse")}>
-                      <span className="text-muted-foreground">{formatCurrency(benefit.utilized)}</span>
-                      <span className={isFullyUsed ? 'text-emerald-600 font-semibold' : 'font-medium'}>{utilization}%</span>
-                    </div>
-                    <Progress 
-                      value={utilization} 
-                      className={`h-1 ${isFullyUsed ? '[&>div]:bg-emerald-500' : '[&>div]:bg-accent'}`}
-                    />
-                    <p className={cn("text-[9px] text-muted-foreground", isRTL && "text-right")}>
-                      {t('employee.dashboard.remaining')}: {formatCurrency(remaining)}
-                    </p>
-                  </div>
-                  
-                  {/* Action Buttons - only show for claimable benefits */}
-                  {benefit.claimable && (
-                    <div className="mt-2 pt-1.5 border-t border-border/30">
+                  {/* Bottom action area - only for claimable benefits */}
+                  {benefit.claimable && hasValue && (
+                    <div className="px-4 py-2 border-t bg-muted/30">
                       <BenefitActionButtons
                         benefitName={benefit.name}
                         benefitCategory={benefit.category}

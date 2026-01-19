@@ -143,7 +143,7 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Benefits - Unified naming (use these consistently across all pages)
     'benefit.housing': 'Housing Allowance',
-    'benefit.education': 'Education Allowance',
+    'benefit.education': 'Schooling Allowance',
     'benefit.health': 'Health Insurance',
     'benefit.transport': 'Transport & Mobility',
     'benefit.bonus': 'Annual Bonus',
@@ -348,7 +348,7 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Benefits - Unified naming (use these consistently across all pages)
     'benefit.housing': 'بدل السكن',
-    'benefit.education': 'بدل التعليم',
+    'benefit.education': 'بدل التعليم المدرسي',
     'benefit.health': 'التأمين الصحي',
     'benefit.transport': 'النقل والتنقل',
     'benefit.bonus': 'المكافأة السنوية',

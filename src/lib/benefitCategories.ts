@@ -41,8 +41,8 @@ export const BENEFIT_CATEGORIES = {
   },
   education: {
     key: 'education',
-    label: 'Education',
-    fullLabel: 'Education Allowance',
+    label: 'Schooling',
+    fullLabel: 'Schooling Allowance',
     // Purple - wisdom, creativity, education
     color: 'hsl(270, 70%, 55%)',
     bgClass: 'bg-purple-500',
@@ -52,7 +52,7 @@ export const BENEFIT_CATEGORIES = {
     gradientClass: 'from-purple-500 to-violet-600',
     icon: GraduationCap,
     route: '/employee/schooling',
-    description: 'Education support for dependents',
+    description: 'Schooling support for dependents',
   },
   health: {
     key: 'health',
