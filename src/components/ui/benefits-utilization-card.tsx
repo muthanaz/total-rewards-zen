@@ -78,10 +78,10 @@ export function BenefitsUtilizationCard({ utilization, isRTL = false, salaryHidd
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1, duration: 0.3 }}
     >
-      <Card className={cn("relative border p-4", colors.border, colors.bg)}>
+      <Card className={cn("relative border p-5", colors.border, colors.bg)}>
         {/* Header with total label and info tooltip */}
-        <div className={cn("flex items-center justify-between mb-3", isRTL && "flex-row-reverse")}>
-          <p className={cn("text-[11px] text-muted-foreground", isRTL && "text-right")}>
+        <div className={cn("flex items-center justify-between mb-4", isRTL && "flex-row-reverse")}>
+          <p className={cn("text-[13px] text-muted-foreground", isRTL && "text-right")}>
             {isRTL 
               ? 'من إجمالي قيمة المزايا (جميع المزايا)'
               : 'Of Total Benefits Value (All Benefits)'}
@@ -90,7 +90,7 @@ export function BenefitsUtilizationCard({ utilization, isRTL = false, salaryHidd
         </div>
         
         {/* Progress bar */}
-        <div className={cn("relative h-2 rounded-full overflow-hidden mb-3", colors.progressBg)}>
+        <div className={cn("relative h-1.5 rounded-full overflow-hidden mb-4", colors.progressBg)}>
           <motion.div 
             className={cn("absolute inset-y-0 left-0 rounded-full", colors.progressFill)}
             initial={{ width: 0 }}
@@ -100,17 +100,17 @@ export function BenefitsUtilizationCard({ utilization, isRTL = false, salaryHidd
         </div>
         
         {/* Used and Remaining */}
-        <div className={cn("grid grid-cols-2 gap-4 mb-3", isRTL && "direction-rtl")}>
-          <div className={cn("flex items-center gap-2.5", isRTL && "flex-row-reverse")}>
-            <div className={cn("w-2.5 h-2.5 rounded-full", colors.usedDot)} />
+        <div className={cn("grid grid-cols-2 gap-5 mb-4", isRTL && "direction-rtl")}>
+          <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+            <div className={cn("w-3 h-3 rounded-full", colors.usedDot)} />
             <div>
               <p className={cn(
-                "text-sm font-bold text-foreground transition-all duration-200",
+                "text-[15px] font-bold text-foreground transition-all duration-200",
                 salaryHidden && "blur-[4px] select-none"
               )}>
                 {utilization.used}
               </p>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-[12px] text-muted-foreground">
                 {isRTL ? 'مستخدم' : 'Used'} <span className={cn(
                   "font-semibold",
                   colors.usedPercentText,
@@ -119,16 +119,16 @@ export function BenefitsUtilizationCard({ utilization, isRTL = false, salaryHidd
               </p>
             </div>
           </div>
-          <div className={cn("flex items-center gap-2.5", isRTL && "flex-row-reverse text-right")}>
-            <div className={cn("w-2.5 h-2.5 rounded-full", colors.remainingDot)} />
+          <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse text-right")}>
+            <div className={cn("w-3 h-3 rounded-full", colors.remainingDot)} />
             <div>
               <p className={cn(
-                "text-sm font-bold text-foreground transition-all duration-200",
+                "text-[15px] font-bold text-foreground transition-all duration-200",
                 salaryHidden && "blur-[4px] select-none"
               )}>
                 {utilization.remaining}
               </p>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-[12px] text-muted-foreground">
                 {isRTL ? 'متاح' : 'Available'} <span className={cn(
                   "font-semibold",
                   colors.remainingPercentText,
@@ -140,29 +140,29 @@ export function BenefitsUtilizationCard({ utilization, isRTL = false, salaryHidd
         </div>
         
         {/* RAG Legend */}
-        <div className={cn("flex items-center gap-3 pt-2 border-t border-border/30", isRTL && "flex-row-reverse")}>
-          <span className="text-[9px] text-muted-foreground uppercase tracking-wide">
+        <div className={cn("flex items-center gap-4 pt-3 border-t border-border/20", isRTL && "flex-row-reverse")}>
+          <span className="text-[11px] text-muted-foreground uppercase tracking-wide font-medium">
             {isRTL ? 'مستوى الاستخدام:' : 'Utilization Level:'}
           </span>
-          <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+          <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
             {legendItems.map((item) => (
               <div 
                 key={item.level}
                 className={cn(
-                  "flex items-center gap-1 px-1.5 py-0.5 rounded-full transition-all",
+                  "flex items-center gap-1.5 px-2 py-1 rounded-full transition-all",
                   level === item.level 
                     ? "bg-foreground/5 ring-1 ring-foreground/10" 
-                    : "opacity-60"
+                    : "opacity-50"
                 )}
               >
                 <div className={cn(
-                  "w-2 h-2 rounded-full",
+                  "w-2.5 h-2.5 rounded-full",
                   item.level === 'high' && "bg-emerald-300/60",
                   item.level === 'medium' && "bg-amber-300/60",
                   item.level === 'low' && "bg-red-300/60"
                 )} />
                 <span className={cn(
-                  "text-[9px] font-medium",
+                  "text-[11px] font-medium",
                   level === item.level ? "text-foreground" : "text-muted-foreground"
                 )}>
                   {item.label}
