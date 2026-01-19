@@ -1,8 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
-import { Car, Fuel, Plane, CreditCard, CheckCircle, Wallet, TrendingDown, Percent } from 'lucide-react';
+import { Car, Fuel, Plane, CreditCard, CheckCircle, Wallet, TrendingDown, Percent, FileText } from 'lucide-react';
+import { toast } from 'sonner';
 
 const allowances = [
   {
@@ -10,6 +12,7 @@ const allowances = [
     icon: Fuel,
     annual: 12000,
     utilized: 9000,
+    claimType: 'fuel',
     bullets: [
       'Paid monthly with salary (AED 1,000/month)',
       'For personal vehicle fuel expenses',
@@ -22,6 +25,7 @@ const allowances = [
     icon: Car,
     annual: 8000,
     utilized: 6000,
+    claimType: 'car',
     bullets: [
       'Monthly contribution towards car lease/loan',
       'Or lump sum towards purchase',
@@ -34,6 +38,7 @@ const allowances = [
     icon: Plane,
     annual: 15000,
     utilized: 15000,
+    claimType: 'flight',
     bullets: [
       'Return tickets to home country',
       'For employee and dependents',
@@ -59,6 +64,13 @@ export default function TransportPage() {
   const totalUtilized = allowances.reduce((sum, a) => sum + a.utilized, 0);
   const totalRemaining = totalAnnual - totalUtilized;
   const totalUtilization = Math.round((totalUtilized / totalAnnual) * 100);
+
+  const handleSubmitClaim = (claimType: string, allowanceName: string) => {
+    toast.success(`Claim for ${allowanceName}`, {
+      description: 'Redirecting to claim form...',
+    });
+    // In production, this would navigate to the claims page with pre-filled data
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -110,12 +122,12 @@ export default function TransportPage() {
         />
       </div>
 
-      {/* 2. Policy Highlights with Action Buttons */}
+      {/* 2. Policy Highlights */}
       <PolicyHighlightsCard
         title="Transport Policy Highlights"
         policies={transportPolicies}
         category="Transport"
-        actionLabel="Submit Claim"
+        showClaimButton={false}
         policyLabel="View Full Policy"
       />
 
@@ -160,7 +172,7 @@ export default function TransportPage() {
         </CardContent>
       </Card>
 
-      {/* Allowance Cards */}
+      {/* Allowance Cards with Submit Claim buttons */}
       <div className="grid md:grid-cols-3 gap-6">
         {allowances.map((allowance) => {
           const remaining = allowance.annual - allowance.utilized;
@@ -169,12 +181,14 @@ export default function TransportPage() {
           return (
             <Card key={allowance.name} className="benefit-card">
               <CardHeader className="pb-4">
-                <CardTitle className="text-base font-display flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-accent/10">
-                    <allowance.icon className="w-5 h-5 text-accent" />
-                  </div>
-                  {allowance.name}
-                </CardTitle>
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-base font-display flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-accent/10">
+                      <allowance.icon className="w-5 h-5 text-accent" />
+                    </div>
+                    {allowance.name}
+                  </CardTitle>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
@@ -205,6 +219,16 @@ export default function TransportPage() {
                     ))}
                   </ul>
                 </div>
+
+                {/* Submit Claim Button for each allowance */}
+                <Button 
+                  className="w-full mt-2" 
+                  size="sm"
+                  onClick={() => handleSubmitClaim(allowance.claimType, allowance.name)}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Submit {allowance.name === 'Annual Flight Tickets' ? 'Ticket Request' : 'Claim'}
+                </Button>
               </CardContent>
             </Card>
           );
