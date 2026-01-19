@@ -33,32 +33,32 @@ export function BenefitCard({
   
   const formatCurrency = (val: number) => `AED ${val.toLocaleString()}`;
   
-  // Determine status color based on utilization
+  // Determine status color based on utilization - using semantic tokens
   const getStatusConfig = () => {
     if (isFullyUsed) {
       return {
-        badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-        progress: '[&>div]:bg-emerald-500',
+        badge: 'bg-success/10 text-success border-success/20',
+        progress: '[&>div]:bg-success',
         label: isRTL ? 'مكتمل' : 'Complete',
       };
     }
     if (utilization >= 50) {
       return {
-        badge: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
-        progress: '[&>div]:bg-blue-500',
+        badge: 'bg-info/10 text-info border-info/20',
+        progress: '[&>div]:bg-info',
         label: isRTL ? 'قيد الاستخدام' : 'On Track',
       };
     }
     if (utilization >= 20) {
       return {
-        badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-        progress: '[&>div]:bg-amber-500',
+        badge: 'bg-warning/10 text-warning border-warning/20',
+        progress: '[&>div]:bg-warning',
         label: isRTL ? 'فرصة' : 'Opportunity',
       };
     }
     return {
-      badge: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20',
-      progress: '[&>div]:bg-slate-400',
+      badge: 'bg-muted text-muted-foreground border-border',
+      progress: '[&>div]:bg-muted-foreground/50',
       label: isRTL ? 'جديد' : 'New',
     };
   };
@@ -134,7 +134,7 @@ export function BenefitCard({
               </span>
               <span className={cn(
                 "font-medium",
-                remaining > 0 ? "text-accent" : "text-emerald-600"
+                remaining > 0 ? "text-accent" : "text-success"
               )}>
                 {remaining > 0 
                   ? `${formatCurrency(remaining)} ${isRTL ? 'متبقي' : 'remaining'}`
