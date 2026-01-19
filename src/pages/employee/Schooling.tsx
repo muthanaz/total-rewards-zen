@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
+import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
 import { NoSearchResults } from '@/components/ui/empty-state';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -686,10 +686,21 @@ export default function SchoolingPage() {
       </Card>
 
       {/* Actions */}
-      <div className="flex items-center justify-center gap-4">
-        <SubmitClaimButton category="Education" buttonText="Submit Education Claim" />
-        <Button variant="outline">View Full Education Policy</Button>
-      </div>
+      <PolicyHighlightsCard
+        title="Education Policy Highlights"
+        policies={[
+          'AED 30,000 allowance per child per year',
+          'Allowances do not combine between children',
+          'Each child can attend different schools',
+          'Excess fees deducted from monthly salary',
+          'Direct payment to approved schools',
+          'Covers tuition, registration, and books',
+        ]}
+        category="Education"
+        actionLabel="Submit Claim"
+        policyLabel="View Full Policy"
+        showClaimButton={true}
+      />
     </div>
   );
 }

@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
 import { Slider } from '@/components/ui/slider';
-import { PiggyBank, TrendingUp, Wallet, Target, Calculator, CheckCircle, Gift } from 'lucide-react';
+import { PiggyBank, TrendingUp, Wallet, Target, Calculator, Gift } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 
@@ -359,29 +360,15 @@ export default function FinancialPage() {
       </Card>
 
       {/* Policy Highlights */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-display">{t.policyHighlights}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-            {[t.policy1, t.policy2, t.policy3, t.policy4, t.policy5, t.policy6].map((policy, index) => (
-              <li key={index} className={cn(
-                "flex items-start gap-2",
-                isRTL && "flex-row-reverse text-right"
-              )}>
-                <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-                {policy}
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-
-      {/* View Full Policy */}
-      <div className="text-center">
-        <Button variant="outline">{t.viewFullPolicy}</Button>
-      </div>
+      <PolicyHighlightsCard
+        title={t.policyHighlights}
+        policies={[t.policy1, t.policy2, t.policy3, t.policy4, t.policy5, t.policy6]}
+        category="savings"
+        actionLabel={language === 'ar' ? 'تعديل المساهمة' : 'Adjust Contribution'}
+        policyLabel={t.viewFullPolicy}
+        showClaimButton={false}
+        isRTL={isRTL}
+      />
     </div>
   );
 }
