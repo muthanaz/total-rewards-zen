@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   DollarSign,
   TrendingUp,
@@ -13,12 +14,14 @@ import {
   CheckCircle2,
   ArrowUpRight,
   CreditCard,
+  Target,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AnimatedLineChart } from '@/components/charts/AnimatedLineChart';
 import { AnimatedBarChart } from '@/components/charts/AnimatedBarChart';
 import { toast } from 'sonner';
+import { PayoutThresholds } from '@/components/vendor/PayoutThresholds';
 
 const earningsData = {
   totalEarnings: 24500,
@@ -88,7 +91,17 @@ export default function VendorEarnings() {
         </div>
       </div>
 
-      {/* Summary Cards */}
+      {/* Tabs for different views */}
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="overview">{t('Overview', 'نظرة عامة')}</TabsTrigger>
+          <TabsTrigger value="tiers" className="gap-1.5">
+            <Target className="w-3.5 h-3.5" />
+            {t('Commission Tiers', 'مستويات العمولة')}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="relative overflow-hidden">
           <CardContent className="p-6">
@@ -241,6 +254,12 @@ export default function VendorEarnings() {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="tiers" className="space-y-6">
+          <PayoutThresholds />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

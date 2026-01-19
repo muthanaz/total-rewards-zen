@@ -17,16 +17,18 @@ import {
   ToggleRight,
   ArrowUpRight,
   ArrowDownRight,
-  Package,
   Wallet,
-  BarChart3,
   Calendar,
+  Sparkles,
+  Target,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AnimatedLineChart } from '@/components/charts/AnimatedLineChart';
 import { AnimatedBarChart } from '@/components/charts/AnimatedBarChart';
 import { useElementVisibility } from '@/contexts/UIVisibilityContext';
+import { PerformanceInsights } from '@/components/vendor/PerformanceInsights';
+import { PayoutThresholds } from '@/components/vendor/PayoutThresholds';
 
 const vendorMetrics = [
   { label: 'Active Offers', labelAr: 'العروض النشطة', value: '12', change: '+2', trend: 'up', icon: Tag },
@@ -181,11 +183,19 @@ export default function VendorDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="offers" className="space-y-6">
-        <TabsList className="w-full justify-start">
+        <TabsList className="w-full justify-start flex-wrap">
           {showOffersTab && <TabsTrigger value="offers">{t('My Offers', 'عروضي')}</TabsTrigger>}
           {showAnalyticsTab && <TabsTrigger value="analytics">{t('Analytics', 'التحليلات')}</TabsTrigger>}
+          <TabsTrigger value="insights" className="gap-1">
+            <Sparkles className="w-3.5 h-3.5" />
+            {t('Insights', 'الرؤى')}
+          </TabsTrigger>
           {showTransactionsTab && <TabsTrigger value="transactions">{t('Transactions', 'المعاملات')}</TabsTrigger>}
           {showEarningsTab && <TabsTrigger value="earnings">{t('Earnings', 'الأرباح')}</TabsTrigger>}
+          <TabsTrigger value="payouts" className="gap-1">
+            <Target className="w-3.5 h-3.5" />
+            {t('Payouts', 'المدفوعات')}
+          </TabsTrigger>
         </TabsList>
 
         {showOffersTab && (
@@ -294,6 +304,10 @@ export default function VendorDashboard() {
         </TabsContent>
         )}
 
+        <TabsContent value="insights" className="space-y-6">
+          <PerformanceInsights />
+        </TabsContent>
+
         {showTransactionsTab && (
         <TabsContent value="transactions" className="space-y-6">
           <Card>
@@ -370,7 +384,7 @@ export default function VendorDashboard() {
               <CardTitle>{t('Payout History', 'سجل الدفعات')}</CardTitle>
             </CardHeader>
             <CardContent className="text-center py-12">
-              <BarChart3 className="w-12 h-12 mx-auto text-muted-foreground/50" />
+              <Wallet className="w-12 h-12 mx-auto text-muted-foreground/50" />
               <p className="mt-4 text-muted-foreground">
                 {t('Payout history will appear here', 'سيظهر سجل الدفعات هنا')}
               </p>
@@ -378,6 +392,10 @@ export default function VendorDashboard() {
           </Card>
         </TabsContent>
         )}
+
+        <TabsContent value="payouts" className="space-y-6">
+          <PayoutThresholds />
+        </TabsContent>
       </Tabs>
     </div>
   );

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Select, 
   SelectContent, 
@@ -22,10 +23,11 @@ import {
   Users,
   DollarSign,
   Calendar,
-  Filter,
+  Star,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { OfferQualityScore } from '@/components/vendor/OfferQualityScore';
 
 interface Offer {
   id: number;
@@ -158,7 +160,17 @@ export default function VendorOffers() {
         </Button>
       </div>
 
-      {/* Filters */}
+      {/* Tabs for Offers List and Quality Score */}
+      <Tabs defaultValue="list" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="list">{t('All Offers', 'جميع العروض')}</TabsTrigger>
+          <TabsTrigger value="quality" className="gap-1.5">
+            <Star className="w-3.5 h-3.5" />
+            {t('Quality Score', 'نقاط الجودة')}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="list" className="space-y-6">
       <Card>
         <CardContent className="p-4">
           <div className={cn("flex flex-col md:flex-row gap-4", isRTL && "md:flex-row-reverse")}>
@@ -291,6 +303,14 @@ export default function VendorOffers() {
           </div>
         </Card>
       )}
+        </TabsContent>
+
+        <TabsContent value="quality" className="space-y-6">
+          <OfferQualityScore 
+            offerTitle={t('20% Off Premium Gym Membership', '٢٠٪ خصم على عضوية النادي المميزة')}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
