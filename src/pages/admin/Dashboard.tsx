@@ -12,19 +12,23 @@ import {
   ArrowUpRight, 
   ArrowDownRight,
   Target,
-  BarChart3,
   PieChart,
   Activity,
   Download,
   RefreshCw,
   Calendar,
   Filter,
+  Database,
+  Lightbulb,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AnimatedLineChart } from '@/components/charts/AnimatedLineChart';
 import { AnimatedBarChart } from '@/components/charts/AnimatedBarChart';
 import { AnimatedDonutChart } from '@/components/charts/AnimatedDonutChart';
+import { VendorPerformanceTab } from '@/components/admin/VendorPerformanceTab';
+import { DataQualityDashboard } from '@/components/admin/DataQualityDashboard';
+import { AdminActionCenter } from '@/components/admin/AdminActionCenter';
 
 const platformMetrics = [
   { label: 'Total Organizations', labelAr: 'إجمالي المنظمات', value: '47', change: '+12%', trend: 'up', icon: Building2 },
@@ -148,11 +152,13 @@ export default function AdminDashboard() {
 
       {/* Main Analytics Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="w-full justify-start">
+        <TabsList className="w-full justify-start flex-wrap">
           <TabsTrigger value="overview">{t('Overview', 'نظرة عامة')}</TabsTrigger>
           <TabsTrigger value="benchmarks">{t('Benchmarks', 'المعايير')}</TabsTrigger>
           <TabsTrigger value="market">{t('Market Intelligence', 'ذكاء السوق')}</TabsTrigger>
           <TabsTrigger value="vendors">{t('Vendor Performance', 'أداء الموردين')}</TabsTrigger>
+          <TabsTrigger value="data-quality">{t('Data Quality', 'جودة البيانات')}</TabsTrigger>
+          <TabsTrigger value="actions">{t('Action Center', 'مركز الإجراءات')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -352,20 +358,15 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="vendors" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('Vendor Performance Overview', 'نظرة عامة على أداء الموردين')}</CardTitle>
-              <CardDescription>
-                {t('Track vendor engagement and transaction metrics', 'تتبع تفاعل الموردين ومقاييس المعاملات')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-center py-12">
-              <BarChart3 className="w-12 h-12 mx-auto text-muted-foreground/50" />
-              <p className="mt-4 text-muted-foreground">
-                {t('Detailed vendor analytics coming soon', 'تحليلات الموردين التفصيلية قريباً')}
-              </p>
-            </CardContent>
-          </Card>
+          <VendorPerformanceTab />
+        </TabsContent>
+
+        <TabsContent value="data-quality" className="space-y-6">
+          <DataQualityDashboard />
+        </TabsContent>
+
+        <TabsContent value="actions" className="space-y-6">
+          <AdminActionCenter />
         </TabsContent>
       </Tabs>
     </div>
