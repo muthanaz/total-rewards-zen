@@ -62,6 +62,7 @@ const navigation: NavGroup[] = [
     labelKey: 'nav.myBenefits',
     items: [
       { labelKey: 'nav.allBenefits', path: '/employee/benefits', icon: Gift },
+      { labelKey: 'Long-Term Financials', path: '/employee/long-term-financials', icon: Wallet },
       { labelKey: 'nav.benefitsAnalysis', path: '/employee/benefits-analysis', icon: TrendingUp },
     ],
   },
@@ -74,21 +75,26 @@ const navigation: NavGroup[] = [
       { labelKey: 'nav.schooling', path: '/employee/schooling', icon: GraduationCap },
       { labelKey: 'nav.health', path: '/employee/health', icon: Heart },
       { labelKey: 'nav.transport', path: '/employee/transport', icon: Car },
-      { labelKey: 'nav.longTermFinancials', path: '/employee/long-term-financials', icon: Wallet },
-      { labelKey: 'nav.financial', path: '/employee/financial', icon: PiggyBank },
       { labelKey: 'nav.wellbeing', path: '/employee/wellbeing', icon: Dumbbell },
       { labelKey: 'nav.learning', path: '/employee/learning', icon: BookOpen },
     ],
   },
 
-  // 4) HR Services & Help (reduce confusion: "where do I do X?")
+  // 4) Leave Management
+  {
+    labelKey: 'Leave Management',
+    items: [
+      { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
+    ],
+  },
+
+  // 5) HR Services & Help
   {
     labelKey: 'nav.hrServices',
     items: [
       { labelKey: 'nav.claimsRequests', path: '/employee/requests', icon: Receipt },
       { labelKey: 'nav.documents', path: '/employee/documents', icon: FileText },
-      { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
-      { labelKey: 'nav.knowledgeHub', path: '/employee/knowledge', icon: BookOpen },
+      { labelKey: 'Knowledge Hub', path: '/employee/knowledge', icon: BookOpen },
       { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
       { labelKey: 'nav.onboarding', path: '/employee/onboarding', icon: Shield },
     ],

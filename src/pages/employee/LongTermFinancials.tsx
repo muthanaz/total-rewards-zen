@@ -3,12 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Gift, TrendingUp, Target, Award, Star, Calendar, 
-  CheckCircle, Clock, Briefcase, DollarSign, Gem, Wallet
+  CheckCircle, Clock, Briefcase, DollarSign, Gem, Wallet,
+  Calculator, PiggyBank
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
@@ -67,7 +71,7 @@ const vestingSchedule = [
 const pageTranslations = {
   en: {
     title: 'Long-Term Financials',
-    subtitle: 'Your bonus, gratuity, and equity compensation',
+    subtitle: 'Your bonus, gratuity, savings, and equity compensation',
     projectedBonus: 'Projected Bonus',
     gratuityAccrued: 'Gratuity Accrued',
     equityValue: 'Equity Value',
@@ -76,8 +80,9 @@ const pageTranslations = {
     formulaGratuity: 'UAE Labor Law calculation',
     formulaEquity: 'Vested shares × price',
     formulaTotal: 'Sum of all components',
-    tabBonus: 'Annual Bonus',
-    tabGratuity: 'End of Service',
+    tabBonus: 'Bonus',
+    tabGratuity: 'Gratuity',
+    tabSavings: 'Savings',
     tabEquity: 'Equity',
     currentRating: 'Current Rating',
     nextReview: 'Next Review',
@@ -86,6 +91,7 @@ const pageTranslations = {
     gratuityEstimate: 'Estimated Gratuity',
     vestedShares: 'Vested Shares',
     vestingSchedule: 'Vesting Schedule',
+    savingsCalculator: 'Savings Calculator',
     policyBonus: [
       'Target bonus: 2 months base salary',
       'Performance multiplier: 0% - 200%',
@@ -102,6 +108,14 @@ const pageTranslations = {
       'Pro-rated for partial years',
       'Tax-free under UAE law',
     ],
+    policySavings: [
+      '5% employer match on contributions',
+      'Multiple fund options available',
+      'Flexible contribution amounts',
+      'Quarterly performance reports',
+      'Early withdrawal penalties apply',
+      'Tax-advantaged savings vehicle',
+    ],
     policyEquity: [
       '4-year vesting with 1-year cliff',
       'Quarterly vesting after cliff',
@@ -113,7 +127,7 @@ const pageTranslations = {
   },
   ar: {
     title: 'الماليات طويلة الأجل',
-    subtitle: 'المكافأة والمكافأة نهاية الخدمة وحقوق الملكية',
+    subtitle: 'المكافأة والمكافأة نهاية الخدمة والادخار وحقوق الملكية',
     projectedBonus: 'المكافأة المتوقعة',
     gratuityAccrued: 'مكافأة نهاية الخدمة المستحقة',
     equityValue: 'قيمة حقوق الملكية',
@@ -122,8 +136,9 @@ const pageTranslations = {
     formulaGratuity: 'حسب قانون العمل الإماراتي',
     formulaEquity: 'الأسهم المكتسبة × السعر',
     formulaTotal: 'مجموع جميع المكونات',
-    tabBonus: 'المكافأة السنوية',
+    tabBonus: 'المكافأة',
     tabGratuity: 'نهاية الخدمة',
+    tabSavings: 'الادخار',
     tabEquity: 'حقوق الملكية',
     currentRating: 'التقييم الحالي',
     nextReview: 'المراجعة القادمة',
@@ -132,6 +147,7 @@ const pageTranslations = {
     gratuityEstimate: 'تقدير مكافأة نهاية الخدمة',
     vestedShares: 'الأسهم المكتسبة',
     vestingSchedule: 'جدول الاستحقاق',
+    savingsCalculator: 'حاسبة الادخار',
     policyBonus: [
       'المكافأة المستهدفة: شهرين راتب أساسي',
       'مضاعف الأداء: ٠٪ - ٢٠٠٪',
@@ -147,6 +163,14 @@ const pageTranslations = {
       'تُدفع عند الاستقالة أو الإنهاء',
       'تحسب نسبياً للسنوات الجزئية',
       'معفاة من الضرائب بموجب قانون الإمارات',
+    ],
+    policySavings: [
+      'مساهمة صاحب العمل ٥٪',
+      'خيارات صناديق متعددة',
+      'مبالغ مساهمة مرنة',
+      'تقارير أداء ربع سنوية',
+      'غرامات السحب المبكر تنطبق',
+      'وسيلة ادخار ذات مزايا ضريبية',
     ],
     policyEquity: [
       'استحقاق على ٤ سنوات مع فترة انتظار سنة',
@@ -165,6 +189,11 @@ export default function LongTermFinancialsPage() {
   const t = pageTranslations[language];
   
   const [activeTab, setActiveTab] = useState('bonus');
+  
+  // Savings calculator state
+  const [monthlyContribution, setMonthlyContribution] = useState(3000);
+  const [yearsToSave, setYearsToSave] = useState([10]);
+  const [expectedReturn, setExpectedReturn] = useState([6]);
 
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
 
@@ -174,6 +203,29 @@ export default function LongTermFinancialsPage() {
   const vestedValue = VESTED_SHARES * SHARE_PRICE;
   const totalLongTerm = projectedBonus + gratuityAccrued + vestedValue;
   const vestedPercent = Math.round((VESTED_SHARES / TOTAL_SHARES) * 100);
+
+  // Savings calculation
+  const calculateSavings = () => {
+    const r = expectedReturn[0] / 100 / 12; // Monthly rate
+    const n = yearsToSave[0] * 12; // Total months
+    const P = monthlyContribution;
+    const employerMatch = P * 0.05; // 5% employer match
+    const totalContribution = P + employerMatch;
+    
+    // Future value of annuity formula
+    const futureValue = totalContribution * ((Math.pow(1 + r, n) - 1) / r);
+    const totalContributed = totalContribution * n;
+    const interestEarned = futureValue - totalContributed;
+    
+    return {
+      futureValue: Math.round(futureValue),
+      totalContributed: Math.round(totalContributed),
+      interestEarned: Math.round(interestEarned),
+      monthlyWithMatch: Math.round(totalContribution),
+    };
+  };
+
+  const savingsResult = calculateSavings();
 
   const bonusChartData = bonusHistory.map(b => ({
     name: b.year.toString(),
@@ -232,30 +284,69 @@ export default function LongTermFinancialsPage() {
 
       {/* Tabs for different components */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="bonus" className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
             <Gift className="w-4 h-4" />
-            {t.tabBonus}
+            <span className="hidden sm:inline">{t.tabBonus}</span>
           </TabsTrigger>
           <TabsTrigger value="gratuity" className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
             <Briefcase className="w-4 h-4" />
-            {t.tabGratuity}
+            <span className="hidden sm:inline">{t.tabGratuity}</span>
+          </TabsTrigger>
+          <TabsTrigger value="savings" className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+            <PiggyBank className="w-4 h-4" />
+            <span className="hidden sm:inline">{t.tabSavings}</span>
           </TabsTrigger>
           <TabsTrigger value="equity" className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
             <Gem className="w-4 h-4" />
-            {t.tabEquity}
+            <span className="hidden sm:inline">{t.tabEquity}</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Bonus Tab */}
         <TabsContent value="bonus" className="space-y-4 mt-4">
+          {/* Summary Cards for Bonus */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <SummaryStatsCard
+              icon={Gift}
+              value={formatCurrency(projectedBonus)}
+              label="Projected Bonus"
+              formula="Base × 2 × multiplier"
+              dataSource="HR Policy"
+              variant="primary"
+            />
+            <SummaryStatsCard
+              icon={Star}
+              value={`${currentRating}/5`}
+              label="Performance Rating"
+              formula="Weighted evaluation"
+              dataSource="HR System"
+              variant="utilized"
+            />
+            <SummaryStatsCard
+              icon={Target}
+              value={formatCurrency(MONTHLY_SALARY * 2)}
+              label="Target Bonus"
+              formula="2 months salary"
+              dataSource="Policy"
+              variant="remaining"
+            />
+            <SummaryStatsCard
+              icon={TrendingUp}
+              value={`${(currentRatingData?.multiplier || 1) * 100}%`}
+              label="Multiplier"
+              formula="Based on rating"
+              dataSource="HR System"
+              variant="info"
+            />
+          </div>
+
           <PolicyHighlightsCard
-            title={language === 'ar' ? 'سياسة المكافآت' : 'Bonus Policy'}
+            title={language === 'ar' ? 'سياسة المكافآت' : 'Bonus Policy Highlights'}
             policies={t.policyBonus}
             category="bonus"
-            actionLabel={language === 'ar' ? 'عرض التفاصيل' : 'View Details'}
-            policyLabel={language === 'ar' ? 'السياسة الكاملة' : 'Full Policy'}
             showClaimButton={false}
+            policyLabel={language === 'ar' ? 'السياسة الكاملة' : 'View Full Policy'}
             isRTL={isRTL}
           />
 
@@ -326,20 +417,55 @@ export default function LongTermFinancialsPage() {
 
         {/* Gratuity Tab */}
         <TabsContent value="gratuity" className="space-y-4 mt-4">
+          {/* Summary Cards for Gratuity */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <SummaryStatsCard
+              icon={Briefcase}
+              value={formatCurrency(gratuityAccrued)}
+              label="Accrued Gratuity"
+              formula="UAE Labor Law"
+              dataSource="System"
+              variant="primary"
+            />
+            <SummaryStatsCard
+              icon={Clock}
+              value={`${YEARS_OF_SERVICE} yrs`}
+              label="Years of Service"
+              formula="Employment date to now"
+              dataSource="HR System"
+              variant="utilized"
+            />
+            <SummaryStatsCard
+              icon={DollarSign}
+              value={formatCurrency(MONTHLY_SALARY)}
+              label="Basic Salary"
+              formula="Monthly base"
+              dataSource="Payroll"
+              variant="remaining"
+            />
+            <SummaryStatsCard
+              icon={Calendar}
+              value="21 days/yr"
+              label="Accrual Rate"
+              formula="First 5 years"
+              dataSource="Labor Law"
+              variant="info"
+            />
+          </div>
+
           <PolicyHighlightsCard
-            title={language === 'ar' ? 'سياسة نهاية الخدمة' : 'End of Service Policy'}
+            title={language === 'ar' ? 'سياسة نهاية الخدمة' : 'End of Service Policy Highlights'}
             policies={t.policyGratuity}
             category="gratuity"
-            actionLabel={language === 'ar' ? 'احسب المكافأة' : 'Calculate'}
-            policyLabel={language === 'ar' ? 'قانون العمل' : 'Labor Law'}
             showClaimButton={false}
+            policyLabel={language === 'ar' ? 'قانون العمل' : 'View Labor Law'}
             isRTL={isRTL}
           />
 
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className={cn("text-base font-display flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                <Briefcase className="w-5 h-5 text-accent" />
+                <Calculator className="w-5 h-5 text-accent" />
                 {t.gratuityEstimate}
               </CardTitle>
             </CardHeader>
@@ -371,15 +497,178 @@ export default function LongTermFinancialsPage() {
           </Card>
         </TabsContent>
 
+        {/* Savings Tab */}
+        <TabsContent value="savings" className="space-y-4 mt-4">
+          {/* Summary Cards for Savings */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <SummaryStatsCard
+              icon={PiggyBank}
+              value={formatCurrency(savingsResult.futureValue)}
+              label="Projected Savings"
+              formula="Based on inputs"
+              dataSource="Calculator"
+              variant="primary"
+            />
+            <SummaryStatsCard
+              icon={DollarSign}
+              value={formatCurrency(savingsResult.monthlyWithMatch)}
+              label="Monthly (with match)"
+              formula="Your + 5% employer"
+              dataSource="Policy"
+              variant="utilized"
+            />
+            <SummaryStatsCard
+              icon={TrendingUp}
+              value={formatCurrency(savingsResult.interestEarned)}
+              label="Interest Earned"
+              formula="Compound growth"
+              dataSource="Calculator"
+              variant="remaining"
+            />
+            <SummaryStatsCard
+              icon={Target}
+              value={`${yearsToSave[0]} yrs`}
+              label="Investment Period"
+              formula="Selected duration"
+              dataSource="Your Input"
+              variant="info"
+            />
+          </div>
+
+          <PolicyHighlightsCard
+            title={language === 'ar' ? 'سياسة الادخار' : 'Savings Policy Highlights'}
+            policies={t.policySavings}
+            category="savings"
+            showClaimButton={false}
+            policyLabel={language === 'ar' ? 'السياسة الكاملة' : 'View Full Policy'}
+            isRTL={isRTL}
+          />
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className={cn("text-base font-display flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                <Calculator className="w-5 h-5 text-accent" />
+                {t.savingsCalculator}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Input Controls */}
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <Label htmlFor="contribution">Monthly Contribution (AED)</Label>
+                    <Input
+                      id="contribution"
+                      type="number"
+                      value={monthlyContribution}
+                      onChange={(e) => setMonthlyContribution(Number(e.target.value))}
+                      min={500}
+                      max={50000}
+                      step={500}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Employer will match 5%: +{formatCurrency(monthlyContribution * 0.05)}/month
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <Label>Investment Period</Label>
+                      <span className="text-sm font-medium">{yearsToSave[0]} years</span>
+                    </div>
+                    <Slider
+                      value={yearsToSave}
+                      onValueChange={setYearsToSave}
+                      min={1}
+                      max={30}
+                      step={1}
+                      className="py-4"
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <Label>Expected Annual Return</Label>
+                      <span className="text-sm font-medium">{expectedReturn[0]}%</span>
+                    </div>
+                    <Slider
+                      value={expectedReturn}
+                      onValueChange={setExpectedReturn}
+                      min={1}
+                      max={12}
+                      step={0.5}
+                      className="py-4"
+                    />
+                  </div>
+                </div>
+
+                {/* Results */}
+                <div className="space-y-4">
+                  <div className="p-6 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20">
+                    <p className="text-sm text-muted-foreground mb-2">Projected Value</p>
+                    <p className="text-4xl font-bold text-accent">{formatCurrency(savingsResult.futureValue)}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-4 rounded-lg bg-muted/50 text-center">
+                      <p className="text-xs text-muted-foreground">Total Contributed</p>
+                      <p className="text-lg font-bold mt-1">{formatCurrency(savingsResult.totalContributed)}</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-green-500/10 text-center border border-green-500/20">
+                      <p className="text-xs text-muted-foreground">Interest Earned</p>
+                      <p className="text-lg font-bold text-green-600 mt-1">{formatCurrency(savingsResult.interestEarned)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Equity Tab */}
         <TabsContent value="equity" className="space-y-4 mt-4">
+          {/* Summary Cards for Equity */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <SummaryStatsCard
+              icon={Gem}
+              value={formatCurrency(vestedValue)}
+              label="Vested Value"
+              formula="Vested × price"
+              dataSource="Equity System"
+              variant="primary"
+            />
+            <SummaryStatsCard
+              icon={Target}
+              value={`${VESTED_SHARES.toLocaleString()}`}
+              label="Vested Shares"
+              formula={`${vestedPercent}% of total`}
+              dataSource="Equity System"
+              variant="utilized"
+            />
+            <SummaryStatsCard
+              icon={TrendingUp}
+              value={formatCurrency(TOTAL_SHARES * SHARE_PRICE)}
+              label="Total Value (if 100%)"
+              formula="All shares × price"
+              dataSource="Equity System"
+              variant="remaining"
+            />
+            <SummaryStatsCard
+              icon={DollarSign}
+              value={`$${SHARE_PRICE}`}
+              label="Share Price"
+              formula="Current valuation"
+              dataSource="Board"
+              variant="info"
+            />
+          </div>
+
           <PolicyHighlightsCard
-            title={language === 'ar' ? 'سياسة حقوق الملكية' : 'Equity Policy'}
+            title={language === 'ar' ? 'سياسة حقوق الملكية' : 'Equity Policy Highlights'}
             policies={t.policyEquity}
             category="equity"
-            actionLabel={language === 'ar' ? 'عرض الخطة' : 'View Plan'}
-            policyLabel={language === 'ar' ? 'الخطة الكاملة' : 'Full Plan'}
             showClaimButton={false}
+            policyLabel={language === 'ar' ? 'الخطة الكاملة' : 'View Full Plan'}
             isRTL={isRTL}
           />
 
@@ -418,32 +707,36 @@ export default function LongTermFinancialsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {vestingSchedule.map((event, i) => (
-                    <div key={i} className={cn(
-                      "flex items-center justify-between p-3 rounded-lg border",
-                      event.status === 'vested' && "bg-success/5 border-success/20",
-                      event.status === 'upcoming' && "bg-warning/5 border-warning/20",
-                      event.status === 'future' && "bg-muted/30 border-border/50"
-                    )}>
-                      <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+                  {vestingSchedule.map((event, index) => (
+                    <div 
+                      key={index}
+                      className={cn(
+                        "flex items-center justify-between p-3 rounded-lg border",
+                        event.status === 'vested' && "bg-green-500/5 border-green-500/20",
+                        event.status === 'upcoming' && "bg-accent/5 border-accent/20",
+                        event.status === 'future' && "bg-muted/30 border-border"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
                         {event.status === 'vested' ? (
-                          <CheckCircle className="w-5 h-5 text-success" />
+                          <CheckCircle className="w-5 h-5 text-green-500" />
                         ) : event.status === 'upcoming' ? (
-                          <Clock className="w-5 h-5 text-warning" />
+                          <Clock className="w-5 h-5 text-accent" />
                         ) : (
                           <Calendar className="w-5 h-5 text-muted-foreground" />
                         )}
                         <div>
-                          <p className="font-medium text-sm">{event.date}</p>
+                          <p className="text-sm font-medium">{event.date}</p>
                           <p className="text-xs text-muted-foreground">{event.shares.toLocaleString()} shares</p>
                         </div>
                       </div>
-                      <Badge className={cn(
-                        "text-xs",
-                        event.status === 'vested' && "bg-success/10 text-success border-0",
-                        event.status === 'upcoming' && "bg-warning/10 text-warning border-0",
-                        event.status === 'future' && "bg-muted text-muted-foreground border-0"
-                      )}>
+                      <Badge 
+                        variant={event.status === 'vested' ? 'default' : 'secondary'}
+                        className={cn(
+                          event.status === 'vested' && "bg-green-500",
+                          event.status === 'upcoming' && "bg-accent"
+                        )}
+                      >
                         {event.status === 'vested' ? 'Vested' : event.status === 'upcoming' ? 'Next' : 'Future'}
                       </Badge>
                     </div>

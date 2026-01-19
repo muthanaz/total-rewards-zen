@@ -136,10 +136,12 @@ function AppRoutes() {
         <Route path="health" element={<HealthPage />} />
         <Route path="transport" element={<TransportPage />} />
         <Route path="wellbeing" element={<WellbeingPage />} />
-        <Route path="financial" element={<FinancialPage />} />
         <Route path="long-term-financials" element={<LongTermFinancialsPage />} />
-        <Route path="equity" element={<EquityPage />} />
         <Route path="learning" element={<LearningPage />} />
+        {/* Legacy routes - redirect to consolidated page */}
+        <Route path="bonus" element={<Navigate to="/employee/long-term-financials" replace />} />
+        <Route path="equity" element={<Navigate to="/employee/long-term-financials" replace />} />
+        <Route path="financial" element={<Navigate to="/employee/long-term-financials" replace />} />
         <Route path="leave" element={<LeavePage />} />
         <Route path="marketplace" element={<MarketplacePage />} />
         <Route path="documents" element={<DocumentsPage />} />
