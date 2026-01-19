@@ -1,9 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
+import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
 import { Dumbbell, Heart, Brain, Leaf, Moon, CheckCircle, ExternalLink, Wallet, TrendingDown, Percent } from 'lucide-react';
 
 const ANNUAL_VALUE = 6000;
@@ -50,6 +49,15 @@ const tips = [
   { icon: Brain, title: 'Mental Health', tip: 'Book a counseling session if you need support. It\'s confidential.' },
 ];
 
+const wellbeingPolicies = [
+  'AED 6,000 annual wellbeing budget',
+  'Gym membership fully covered',
+  'Mental health support is confidential',
+  'Can mix and match programs',
+  'Unused budget doesn\'t roll over',
+  'Family members may join gym (extra cost)',
+];
+
 export default function WellbeingPage() {
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
   const remaining = ANNUAL_VALUE - UTILIZED;
@@ -68,7 +76,7 @@ export default function WellbeingPage() {
         </p>
       </div>
 
-      {/* Summary Cards */}
+      {/* 1. Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <SummaryStatsCard
           icon={Dumbbell}
@@ -105,7 +113,16 @@ export default function WellbeingPage() {
         />
       </div>
 
-      {/* How It Works */}
+      {/* 2. Policy Highlights with Action Buttons */}
+      <PolicyHighlightsCard
+        title="Wellbeing Policy Highlights"
+        policies={wellbeingPolicies}
+        category="Wellbeing"
+        actionLabel="Submit Claim"
+        policyLabel="View Full Policy"
+      />
+
+      {/* 3. How It Works */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-display flex items-center gap-2">
@@ -216,47 +233,6 @@ export default function WellbeingPage() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Policy Highlights */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-display">Policy Highlights</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              AED 6,000 annual wellbeing budget
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Gym membership fully covered
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Mental health support is confidential
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Can mix and match programs
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Unused budget doesn't roll over
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Family members may join gym (extra cost)
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-
-      {/* Actions */}
-      <div className="flex items-center justify-center gap-4">
-        <SubmitClaimButton category="Wellbeing" buttonText="Submit Wellbeing Claim" />
-        <Button variant="outline">View Full Wellbeing Policy</Button>
-      </div>
     </div>
   );
 }

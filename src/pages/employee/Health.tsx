@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
+import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile, Wallet, TrendingDown, Percent } from 'lucide-react';
 import { useHealthProviders } from '@/hooks/useSupabaseData';
@@ -57,6 +57,15 @@ const faqs = [
   { q: 'What is the pre-authorization process?', a: 'For planned procedures, submit a pre-authorization request through your insurer app or call the hotline.' },
   { q: 'How do I claim for out-of-network services?', a: 'Pay upfront, then submit claim forms with receipts within 60 days for 50% reimbursement.' },
   { q: 'Are my dependents covered?', a: 'Yes, spouse and children under 18 are covered under your policy at the same benefit levels.' },
+];
+
+const healthPolicies = [
+  'Comprehensive coverage up to AED 1,000,000',
+  'Spouse and children covered at same levels',
+  'Pre-existing conditions covered after 6 months',
+  'Direct billing at network providers',
+  '24/7 emergency helpline available',
+  'Annual health check-up included',
 ];
 
 export default function HealthPage() {
@@ -126,7 +135,7 @@ export default function HealthPage() {
         </p>
       </div>
 
-      {/* Summary Cards */}
+      {/* 1. Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <SummaryStatsCard
           icon={Heart}
@@ -163,7 +172,16 @@ export default function HealthPage() {
         />
       </div>
 
-      {/* How It Works */}
+      {/* 2. Policy Highlights with Action Buttons */}
+      <PolicyHighlightsCard
+        title="Insurance Policy Highlights"
+        policies={healthPolicies}
+        category="Health Insurance"
+        actionLabel="Submit Claim"
+        policyLabel="View Full Policy"
+      />
+
+      {/* 3. How It Works */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-display flex items-center gap-2">
@@ -373,47 +391,6 @@ export default function HealthPage() {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Policy Highlights */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-display">Policy Highlights</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Comprehensive coverage up to AED 1,000,000
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Spouse and children covered at same levels
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Pre-existing conditions covered after 6 months
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Direct billing at network providers
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              24/7 emergency helpline available
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Annual health check-up included
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-
-      {/* Actions */}
-      <div className="flex items-center justify-center gap-4">
-        <SubmitClaimButton category="Health Insurance" buttonText="Submit Health Claim" />
-        <Button variant="outline">View Full Insurance Policy</Button>
-      </div>
     </div>
   );
 }

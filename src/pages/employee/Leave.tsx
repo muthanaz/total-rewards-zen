@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
+import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -14,7 +15,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useProfile } from '@/contexts/ProfileContext';
 import { LEAVE_TYPES } from '@/lib/constants';
 
-// Base leave balances - will be filtered by gender
 const allLeaveBalances = [
   { type: 'Annual Leave', id: 'annual', total: 30, used: 8, color: 'bg-blue-500', genderSpecific: null },
   { type: 'Sick Leave', id: 'sick', total: 15, used: 2, color: 'bg-rose-500', genderSpecific: null },
@@ -30,12 +30,20 @@ const recentRequests = [
   { id: 3, type: 'Annual Leave', from: '2026-02-10', to: '2026-02-12', days: 3, status: 'pending', reason: 'Family event' },
 ];
 
+const leavePolicies = [
+  '30 days annual leave per calendar year',
+  'Up to 10 days can carry forward to next year',
+  'Sick leave: medical certificate required after 2 days',
+  'Minimum 48 hours notice for planned leave',
+  'Manager approval required for 5+ consecutive days',
+  'Public holidays are in addition to annual leave',
+];
+
 export default function LeavePage() {
   const { toast } = useToast();
   const { profile } = useProfile();
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Filter leave balances based on user's gender
   const leaveBalances = useMemo(() => {
     return allLeaveBalances.filter(leave => {
       if (leave.genderSpecific === null) return true;
@@ -43,7 +51,6 @@ export default function LeavePage() {
     });
   }, [profile.gender]);
 
-  // Filter leave types for the dropdown based on gender
   const filteredLeaveTypes = useMemo(() => {
     return LEAVE_TYPES.filter(type => {
       if (type.id === 'maternity') return profile.gender === 'female';
@@ -79,65 +86,17 @@ export default function LeavePage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-            <Calendar className="w-7 h-7 text-accent" />
-            Leave Management
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            View balances and request time off
-          </p>
-        </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Request Leave
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Request Leave</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Leave Type</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filteredLeaveTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.id}>{type.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>From Date</Label>
-                  <Input type="date" />
-                </div>
-                <div className="space-y-2">
-                  <Label>To Date</Label>
-                  <Input type="date" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Reason</Label>
-                <Textarea placeholder="Brief description of leave reason" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSubmitRequest}>Submit Request</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      <div>
+        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
+          <Calendar className="w-7 h-7 text-accent" />
+          Leave Management
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          View balances and request time off
+        </p>
       </div>
 
-      {/* Summary Cards */}
+      {/* 1. Summary Cards */}
       <div className="grid grid-cols-3 gap-3">
         <SummaryStatsCard
           icon={Calendar}
@@ -165,7 +124,17 @@ export default function LeavePage() {
         />
       </div>
 
-      {/* How It Works */}
+      {/* 2. Policy Highlights with Action Buttons */}
+      <PolicyHighlightsCard
+        title="Leave Policy Highlights"
+        policies={leavePolicies}
+        category="Leave"
+        actionLabel="Request Leave"
+        policyLabel="View Full Policy"
+        showClaimButton={true}
+      />
+
+      {/* 3. How It Works */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-display flex items-center gap-2">
@@ -267,46 +236,6 @@ export default function LeavePage() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Policy Highlights */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-display">Leave Policy Highlights</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              30 days annual leave per calendar year
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Up to 10 days can carry forward to next year
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Sick leave: medical certificate required after 2 days
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Minimum 48 hours notice for planned leave
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Manager approval required for 5+ consecutive days
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Public holidays are in addition to annual leave
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-
-      {/* View Full Policy */}
-      <div className="text-center">
-        <Button variant="outline">View Full Leave Policy</Button>
-      </div>
     </div>
   );
 }

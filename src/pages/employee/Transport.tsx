@@ -1,9 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
+import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
 import { Car, Fuel, Plane, CreditCard, CheckCircle, Wallet, TrendingDown, Percent } from 'lucide-react';
+
 const allowances = [
   {
     name: 'Fuel Allowance',
@@ -43,6 +43,15 @@ const allowances = [
   },
 ];
 
+const transportPolicies = [
+  'Fuel allowance paid monthly with salary',
+  'Car allowance for Grade 5+ employees',
+  'Annual tickets to home country for family',
+  'Business class available for Grade 8+',
+  'Unused ticket allowance non-encashable',
+  'Advance booking recommended for best fares',
+];
+
 export default function TransportPage() {
   const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
 
@@ -64,7 +73,7 @@ export default function TransportPage() {
         </p>
       </div>
 
-      {/* Summary Cards */}
+      {/* 1. Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <SummaryStatsCard
           icon={CreditCard}
@@ -101,7 +110,16 @@ export default function TransportPage() {
         />
       </div>
 
-      {/* How It Works */}
+      {/* 2. Policy Highlights with Action Buttons */}
+      <PolicyHighlightsCard
+        title="Transport Policy Highlights"
+        policies={transportPolicies}
+        category="Transport"
+        actionLabel="Submit Claim"
+        policyLabel="View Full Policy"
+      />
+
+      {/* 3. How It Works */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-display flex items-center gap-2">
@@ -191,85 +209,6 @@ export default function TransportPage() {
             </Card>
           );
         })}
-      </div>
-
-      {/* How to Use */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-display">How to Use Your Transport Benefits</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <Fuel className="w-4 h-4 text-accent" />
-                Fuel Allowance
-              </h4>
-              <p className="text-sm text-muted-foreground">
-                Automatically credited to your salary each month. No action required.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <Car className="w-4 h-4 text-accent" />
-                Car Allowance
-              </h4>
-              <p className="text-sm text-muted-foreground">
-                Submit car lease/loan documents to HR for monthly credit, or request lump sum for purchase.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <Plane className="w-4 h-4 text-accent" />
-                Flight Tickets
-              </h4>
-              <p className="text-sm text-muted-foreground">
-                Book through the approved travel portal or contact HR for travel agent details.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Policy Highlights */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-display">Policy Highlights</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Fuel allowance paid monthly with salary
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Car allowance for Grade 5+ employees
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Annual tickets to home country for family
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Business class available for Grade 8+
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Unused ticket allowance non-encashable
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Advance booking recommended for best fares
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-
-      {/* Actions */}
-      <div className="flex items-center justify-center gap-4">
-        <SubmitClaimButton category="Transport" buttonText="Submit Transport Claim" />
-        <Button variant="outline">View Full Transport Policy</Button>
       </div>
     </div>
   );
