@@ -5,82 +5,76 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { 
   AlertCircle, Clock, ArrowRight, Wallet, CalendarClock, 
-  TrendingUp, Lightbulb, ChevronRight, Sparkles, Target
+  TrendingUp, Lightbulb, ChevronRight, Sparkles, Target,
+  CheckCircle2, Heart, GraduationCap, Car, BookOpen, Dumbbell
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
-// Demo data with actionable info
-const benefits = [
-  { 
-    id: 'health',
-    name: 'Health Insurance', 
-    nameAr: 'التأمين الصحي',
-    value: 45000, 
-    utilized: 12500, 
-    route: '/employee/health',
-    deadline: '2026-12-31',
-    tip: 'Schedule your annual checkup',
-    tipAr: 'حدد موعد الفحص السنوي',
-    urgency: 'low'
-  },
+// Realistic benefit breakdown - only show what we can accurately track
+const trackableBenefits = [
   { 
     id: 'education',
     name: 'Education Allowance', 
     nameAr: 'بدل التعليم',
-    value: 60000, 
-    utilized: 42000, 
+    icon: GraduationCap,
     route: '/employee/schooling',
-    deadline: '2026-08-31',
-    tip: 'Submit tuition receipts before school year ends',
-    tipAr: 'قدم إيصالات الرسوم قبل نهاية العام الدراسي',
-    urgency: 'medium'
-  },
-  { 
-    id: 'wellbeing',
-    name: 'Wellbeing Program', 
-    nameAr: 'برنامج الرفاهية',
-    value: 6000, 
-    utilized: 3200, 
-    route: '/employee/wellbeing',
-    deadline: '2026-12-31',
-    tip: 'Renew your gym membership',
-    tipAr: 'جدد اشتراك النادي الرياضي',
-    urgency: 'low'
+    items: [
+      { name: 'Per-child allowance', value: 30000, description: 'Annual allowance per registered child' },
+      { name: 'Children registered', value: 2, type: 'count' },
+    ],
+    tip: 'Submit tuition receipts to claim your allowance',
+    tipAr: 'قدم إيصالات الرسوم للمطالبة ببدلك',
   },
   { 
     id: 'learning',
     name: 'Learning & Development', 
     nameAr: 'التعلم والتطوير',
-    value: 12000, 
-    utilized: 4500, 
+    icon: BookOpen,
     route: '/employee/learning',
-    deadline: '2026-12-31',
-    tip: 'Enroll in a certification course',
-    tipAr: 'سجل في دورة شهادة مهنية',
-    urgency: 'medium'
+    items: [
+      { name: 'Annual budget', value: 12000, description: 'Pre-approved learning expenses' },
+      { name: 'Claimed to date', value: 4500, type: 'utilized' },
+    ],
+    tip: 'Enroll in a certification course - AED 7,500 remaining',
+    tipAr: 'سجل في دورة شهادة - 7,500 درهم متاح',
   },
   { 
-    id: 'financial',
-    name: 'Financial Planning', 
-    nameAr: 'التخطيط المالي',
-    value: 36000, 
-    utilized: 18000, 
-    route: '/employee/financial',
-    deadline: '2026-12-31',
-    tip: 'Increase your retirement contribution',
-    tipAr: 'زد مساهمتك في صندوق التقاعد',
-    urgency: 'low'
+    id: 'wellbeing',
+    name: 'Wellbeing Program', 
+    nameAr: 'برنامج الرفاهية',
+    icon: Dumbbell,
+    route: '/employee/wellbeing',
+    items: [
+      { name: 'Annual allowance', value: 6000, description: 'Gym, wellness, mental health' },
+      { name: 'Claimed to date', value: 3200, type: 'utilized' },
+    ],
+    tip: 'Renew gym membership - AED 2,800 available',
+    tipAr: 'جدد اشتراك النادي - 2,800 درهم متاح',
   },
 ];
 
-// Fully utilized benefits (for celebration)
-const fullyUtilizedBenefits = [
-  { name: 'Housing Allowance', nameAr: 'بدل السكن', value: 120000 },
-  { name: 'Transport & Mobility', nameAr: 'النقل والتنقل', value: 39000 },
+// Benefits that are paid automatically (no action needed)
+const automaticBenefits = [
+  { name: 'Housing Allowance', nameAr: 'بدل السكن', value: 120000, frequency: 'Monthly with salary' },
+  { name: 'Transport Allowance', nameAr: 'بدل النقل', value: 24000, frequency: 'Monthly with salary' },
 ];
+
+// Health coverage - show plan info, not amounts (since claims vary)
+const healthCoverage = {
+  plan: 'Premium Family Plan',
+  coverage: ['Employee', 'Spouse', 'Children (2)'],
+  network: 'Enhanced Network',
+  features: [
+    { name: 'Outpatient', limit: 'Unlimited', coinsurance: '0% at network' },
+    { name: 'Inpatient', limit: 'Unlimited', coinsurance: '0% at network' },
+    { name: 'Dental', limit: 'AED 5,000/year', coinsurance: '20% coinsurance' },
+    { name: 'Optical', limit: 'AED 2,000/year', coinsurance: '20% coinsurance' },
+    { name: 'Maternity', limit: 'AED 15,000', coinsurance: 'Subject to waiting period' },
+  ],
+};
 
 export default function BenefitsAnalysis() {
   const { language, direction } = useLanguage();
@@ -88,12 +82,15 @@ export default function BenefitsAnalysis() {
   const navigate = useNavigate();
 
   const calculatedMetrics = useMemo(() => {
-    const totalValue = benefits.reduce((sum, b) => sum + b.value, 0) + 
-                       fullyUtilizedBenefits.reduce((sum, b) => sum + b.value, 0);
-    const totalUtilized = benefits.reduce((sum, b) => sum + b.utilized, 0) + 
-                          fullyUtilizedBenefits.reduce((sum, b) => sum + b.value, 0);
-    const unclaimed = totalValue - totalUtilized;
-    const utilizationPercent = Math.round((totalUtilized / totalValue) * 100);
+    // Only count claimable benefits where we know the remaining amount
+    const totalClaimable = trackableBenefits.reduce((sum, b) => {
+      const budget = b.items.find(i => i.description?.includes('allowance') || i.description?.includes('budget'));
+      const utilized = b.items.find(i => i.type === 'utilized');
+      if (budget && utilized) {
+        return sum + (budget.value - utilized.value);
+      }
+      return sum;
+    }, 0);
     
     // Days until year end
     const yearEnd = new Date('2026-12-31');
@@ -101,37 +98,13 @@ export default function BenefitsAnalysis() {
     const daysRemaining = Math.ceil((yearEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     
     return {
-      totalValue,
-      totalUtilized,
-      unclaimed,
-      utilizationPercent,
+      totalClaimable,
       daysRemaining,
     };
   }, []);
 
-  // Sort benefits by urgency and utilization
-  const actionableBenefits = useMemo(() => {
-    return benefits
-      .map(b => ({
-        ...b,
-        remaining: b.value - b.utilized,
-        utilizationPercent: Math.round((b.utilized / b.value) * 100),
-      }))
-      .filter(b => b.remaining > 0)
-      .sort((a, b) => a.utilizationPercent - b.utilizationPercent);
-  }, []);
-
-  // Top 2 urgent actions
-  const urgentActions = actionableBenefits.slice(0, 2);
-
   const formatCurrency = (value: number) => 
     `${isRTL ? '' : 'AED '}${value.toLocaleString(isRTL ? 'ar-AE' : 'en-AE')}${isRTL ? ' درهم' : ''}`;
-
-  const getDaysUntilDeadline = (deadline: string) => {
-    const deadlineDate = new Date(deadline);
-    const today = new Date();
-    return Math.ceil((deadlineDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -141,11 +114,11 @@ export default function BenefitsAnalysis() {
           {isRTL ? 'تحليل المزايا' : 'Benefits Analysis'}
         </h1>
         <p className="text-muted-foreground">
-          {isRTL ? 'اكتشف ما يمكنك المطالبة به واتخذ إجراءً' : 'Discover what you can claim and take action'}
+          {isRTL ? 'فهم مزاياك واتخذ إجراءً' : 'Understand your benefits and take action'}
         </p>
       </div>
 
-      {/* Hero: Money Left on Table */}
+      {/* Hero: Claimable Benefits Summary */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -160,16 +133,16 @@ export default function BenefitsAnalysis() {
                     <Wallet className="w-5 h-5 text-accent" />
                   </div>
                   <span className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                    {isRTL ? 'القيمة غير المطالب بها' : 'Unclaimed Value'}
+                    {isRTL ? 'مزايا قابلة للمطالبة' : 'Claimable Benefits Available'}
                   </span>
                 </div>
                 <p className="text-4xl md:text-5xl font-bold text-foreground">
-                  {formatCurrency(calculatedMetrics.unclaimed)}
+                  {formatCurrency(calculatedMetrics.totalClaimable)}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {isRTL 
-                    ? `من أصل ${formatCurrency(calculatedMetrics.totalValue)} إجمالي المزايا`
-                    : `Out of ${formatCurrency(calculatedMetrics.totalValue)} total benefits`}
+                    ? 'من مزايا التعلم والرفاهية والتطوير'
+                    : 'From learning, wellbeing & development allowances'}
                 </p>
               </div>
               
@@ -182,206 +155,183 @@ export default function BenefitsAnalysis() {
                       : `${calculatedMetrics.daysRemaining} days left this year`}
                   </span>
                 </div>
-                <div className="w-full md:w-48">
-                  <div className={cn("flex justify-between text-xs mb-1", isRTL && "flex-row-reverse")}>
-                    <span className="text-muted-foreground">{isRTL ? 'نسبة الاستخدام' : 'Utilization'}</span>
-                    <span className="font-semibold">{calculatedMetrics.utilizationPercent}%</span>
-                  </div>
-                  <Progress value={calculatedMetrics.utilizationPercent} className="h-2" />
-                </div>
               </div>
             </div>
           </CardContent>
         </Card>
       </motion.div>
 
-      {/* Urgent Actions */}
-      {urgentActions.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
-          <Card className="border-amber-500/30 bg-gradient-to-r from-amber-500/5 to-transparent">
-            <CardHeader className="pb-3">
-              <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                <div className="p-1.5 rounded-lg bg-amber-500/15">
-                  <AlertCircle className="w-4 h-4 text-amber-600" />
-                </div>
-                <CardTitle className="text-base font-semibold">
-                  {isRTL ? 'إجراءات موصى بها' : 'Recommended Actions'}
-                </CardTitle>
+      {/* Claimable Benefits */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+      >
+        <Card>
+          <CardHeader className="pb-3">
+            <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+              <div className="p-1.5 rounded-lg bg-accent/15">
+                <Target className="w-4 h-4 text-accent" />
               </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="grid md:grid-cols-2 gap-3">
-                {urgentActions.map((benefit, index) => (
-                  <motion.div
-                    key={benefit.id}
-                    initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.15 + index * 0.05 }}
-                    className={cn(
-                      "p-4 rounded-xl bg-card border border-border/50 hover:border-accent/50 transition-all cursor-pointer group",
-                    )}
-                    onClick={() => navigate(benefit.route)}
-                  >
-                    <div className={cn("flex items-start justify-between gap-3", isRTL && "flex-row-reverse")}>
-                      <div className={cn("flex-1 space-y-2", isRTL && "text-right")}>
-                        <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                          <span className="font-semibold text-sm">
-                            {isRTL ? benefit.nameAr : benefit.name}
-                          </span>
-                          <Badge variant="secondary" className="text-[10px] bg-amber-500/10 text-amber-700 dark:text-amber-400">
-                            {benefit.utilizationPercent}% {isRTL ? 'مستخدم' : 'used'}
-                          </Badge>
-                        </div>
-                        <p className="text-lg font-bold text-accent">
-                          {formatCurrency(benefit.remaining)} <span className="text-xs font-normal text-muted-foreground">{isRTL ? 'متاح' : 'available'}</span>
-                        </p>
-                        <div className={cn("flex items-center gap-1.5 text-xs text-muted-foreground", isRTL && "flex-row-reverse")}>
-                          <Lightbulb className="w-3 h-3 text-amber-500" />
-                          <span>{isRTL ? benefit.tipAr : benefit.tip}</span>
-                        </div>
+              <CardTitle className="text-base font-semibold">
+                {isRTL ? 'مزايا يمكنك المطالبة بها' : 'Benefits You Can Claim'}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {trackableBenefits.map((benefit, index) => {
+              const budget = benefit.items.find(i => i.description?.includes('allowance') || i.description?.includes('budget'));
+              const utilized = benefit.items.find(i => i.type === 'utilized');
+              const remaining = budget && utilized ? budget.value - utilized.value : 0;
+              const utilizationPercent = budget && utilized ? Math.round((utilized.value / budget.value) * 100) : 0;
+              
+              return (
+                <motion.div
+                  key={benefit.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 + index * 0.05 }}
+                  className={cn(
+                    "p-4 rounded-xl border border-border/50 hover:border-accent/30 transition-all cursor-pointer group",
+                  )}
+                  onClick={() => navigate(benefit.route)}
+                >
+                  <div className={cn("flex items-start justify-between gap-4", isRTL && "flex-row-reverse")}>
+                    <div className={cn("flex items-start gap-3", isRTL && "flex-row-reverse")}>
+                      <div className="p-2 rounded-lg bg-accent/10 shrink-0">
+                        <benefit.icon className="w-5 h-5 text-accent" />
                       </div>
-                      <ChevronRight className={cn(
-                        "w-5 h-5 text-muted-foreground group-hover:text-accent transition-all group-hover:translate-x-1",
-                        isRTL && "rotate-180 group-hover:-translate-x-1"
-                      )} />
+                      <div className={cn("space-y-1", isRTL && "text-right")}>
+                        <h3 className="font-semibold">{isRTL ? benefit.nameAr : benefit.name}</h3>
+                        <div className="text-sm text-muted-foreground">
+                          {budget && <span>Budget: {formatCurrency(budget.value)}</span>}
+                          {utilized && <span className="mx-2">•</span>}
+                          {utilized && <span>Used: {formatCurrency(utilized.value)}</span>}
+                        </div>
+                        {remaining > 0 && (
+                          <p className="text-sm font-medium text-accent">
+                            {formatCurrency(remaining)} {isRTL ? 'متاح' : 'available'}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </motion.div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+                    <ChevronRight className={cn(
+                      "w-5 h-5 text-muted-foreground group-hover:text-accent transition-all group-hover:translate-x-1 shrink-0",
+                      isRTL && "rotate-180 group-hover:-translate-x-1"
+                    )} />
+                  </div>
+                  <Progress value={utilizationPercent} className="h-1.5 mt-3" />
+                  {benefit.tip && (
+                    <div className={cn("flex items-center gap-1.5 mt-2 text-xs text-muted-foreground", isRTL && "flex-row-reverse")}>
+                      <Lightbulb className="w-3 h-3 text-amber-500" />
+                      <span>{isRTL ? benefit.tipAr : benefit.tip}</span>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      </motion.div>
 
-      {/* All Benefits Breakdown */}
+      {/* Automatic Benefits */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       >
-        <Card>
+        <Card className="border-emerald-500/30 bg-gradient-to-r from-emerald-500/5 to-transparent">
           <CardHeader className="pb-3">
-            <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-              <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                <div className="p-1.5 rounded-lg bg-accent/15">
-                  <Target className="w-4 h-4 text-accent" />
-                </div>
-                <CardTitle className="text-base font-semibold">
-                  {isRTL ? 'المزايا القابلة للمطالبة' : 'Claimable Benefits'}
-                </CardTitle>
+            <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+              <div className="p-1.5 rounded-lg bg-emerald-500/15">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               </div>
-              <span className="text-xs text-muted-foreground">
-                {actionableBenefits.length} {isRTL ? 'مزايا متاحة' : 'benefits available'}
-              </span>
+              <CardTitle className="text-base font-semibold text-emerald-700 dark:text-emerald-400">
+                {isRTL ? 'بدلات تلقائية (لا حاجة لأي إجراء)' : 'Automatic Allowances (No Action Needed)'}
+              </CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="space-y-3">
-              {actionableBenefits.map((benefit, index) => {
-                const daysUntil = getDaysUntilDeadline(benefit.deadline);
-                const isUrgent = daysUntil < 90;
-                
-                return (
-                  <motion.div
-                    key={benefit.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.25 + index * 0.03 }}
-                    className={cn(
-                      "p-4 rounded-lg border border-border/50 hover:border-accent/30 transition-all bg-card/50",
-                    )}
-                  >
-                    <div className={cn("flex flex-col sm:flex-row sm:items-center gap-4", isRTL && "sm:flex-row-reverse")}>
-                      {/* Benefit Info */}
-                      <div className={cn("flex-1 space-y-2", isRTL && "text-right")}>
-                        <div className={cn("flex items-center gap-2 flex-wrap", isRTL && "flex-row-reverse")}>
-                          <span className="font-medium">
-                            {isRTL ? benefit.nameAr : benefit.name}
-                          </span>
-                          {isUrgent && (
-                            <Badge variant="destructive" className="text-[10px]">
-                              <Clock className="w-3 h-3 mr-1" />
-                              {daysUntil} {isRTL ? 'يوم' : 'days'}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className={cn("flex items-center gap-4 text-sm", isRTL && "flex-row-reverse")}>
-                          <span className="text-muted-foreground">
-                            {isRTL ? 'مستخدم:' : 'Used:'} {formatCurrency(benefit.utilized)}
-                          </span>
-                          <span className="text-muted-foreground">•</span>
-                          <span className="font-semibold text-accent">
-                            {isRTL ? 'متاح:' : 'Available:'} {formatCurrency(benefit.remaining)}
-                          </span>
-                        </div>
-                        <Progress value={benefit.utilizationPercent} className="h-1.5" />
-                      </div>
-                      
-                      {/* Action */}
-                      <Button 
-                        size="sm" 
-                        className="shrink-0"
-                        onClick={() => navigate(benefit.route)}
-                      >
-                        {isRTL ? 'عرض التفاصيل' : 'View Details'}
-                        <ArrowRight className={cn("w-4 h-4 ml-1", isRTL && "rotate-180 mr-1 ml-0")} />
-                      </Button>
-                    </div>
-                  </motion.div>
-                );
-              })}
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              {automaticBenefits.map((benefit, index) => (
+                <motion.div
+                  key={benefit.name}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.25 + index * 0.05 }}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20",
+                    isRTL && "flex-row-reverse"
+                  )}
+                >
+                  <TrendingUp className="w-4 h-4 text-emerald-600" />
+                  <div className={isRTL ? "text-right" : ""}>
+                    <p className="font-medium text-sm">{isRTL ? benefit.nameAr : benefit.name}</p>
+                    <p className="text-xs text-emerald-600">{formatCurrency(benefit.value)}/year • {benefit.frequency}</p>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </CardContent>
         </Card>
       </motion.div>
 
-      {/* Fully Utilized - Celebration */}
-      {fullyUtilizedBenefits.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
+      {/* Health Coverage Summary */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.3 }}
+      >
+        <Card 
+          className="cursor-pointer hover:border-accent/30 transition-all group"
+          onClick={() => navigate('/employee/health')}
         >
-          <Card className="border-emerald-500/30 bg-gradient-to-r from-emerald-500/5 to-transparent">
-            <CardHeader className="pb-3">
+          <CardHeader className="pb-3">
+            <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
               <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                <div className="p-1.5 rounded-lg bg-emerald-500/15">
-                  <Sparkles className="w-4 h-4 text-emerald-600" />
+                <div className="p-1.5 rounded-lg bg-rose-500/15">
+                  <Heart className="w-4 h-4 text-rose-500" />
                 </div>
-                <CardTitle className="text-base font-semibold text-emerald-700 dark:text-emerald-400">
-                  {isRTL ? 'أحسنت! مزايا مستخدمة بالكامل' : 'Great job! Fully Utilized'}
+                <CardTitle className="text-base font-semibold">
+                  {isRTL ? 'تغطية التأمين الصحي' : 'Health Insurance Coverage'}
                 </CardTitle>
               </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="flex flex-wrap gap-3">
-                {fullyUtilizedBenefits.map((benefit, index) => (
-                  <motion.div
-                    key={benefit.name}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.35 + index * 0.05 }}
-                    className={cn(
-                      "flex items-center gap-3 px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20",
-                      isRTL && "flex-row-reverse"
-                    )}
-                  >
-                    <TrendingUp className="w-4 h-4 text-emerald-600" />
-                    <div className={isRTL ? "text-right" : ""}>
-                      <p className="font-medium text-sm">{isRTL ? benefit.nameAr : benefit.name}</p>
-                      <p className="text-xs text-emerald-600">{formatCurrency(benefit.value)} • 100%</p>
-                    </div>
-                  </motion.div>
+              <ChevronRight className={cn(
+                "w-5 h-5 text-muted-foreground group-hover:text-accent transition-all group-hover:translate-x-1",
+                isRTL && "rotate-180 group-hover:-translate-x-1"
+              )} />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className={cn("flex items-center justify-between flex-wrap gap-2", isRTL && "flex-row-reverse")}>
+                <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                  <Badge variant="secondary">{healthCoverage.plan}</Badge>
+                  <Badge variant="outline">{healthCoverage.network}</Badge>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {isRTL ? 'يغطي:' : 'Covers:'} {healthCoverage.coverage.join(', ')}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                {healthCoverage.features.map((feature) => (
+                  <div key={feature.name} className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                    <p className="font-medium text-sm">{feature.name}</p>
+                    <p className="text-xs text-accent font-medium">{feature.limit}</p>
+                    <p className="text-xs text-muted-foreground">{feature.coinsurance}</p>
+                  </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+              <p className="text-xs text-muted-foreground">
+                <AlertCircle className="w-3 h-3 inline mr-1" />
+                {isRTL 
+                  ? 'استخدام التأمين الصحي يختلف حسب الحالة الفردية ولا يمكن التنبؤ به مسبقاً'
+                  : 'Health insurance usage varies by individual circumstances and cannot be predicted in advance'}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Smart Tips */}
       <motion.div
@@ -396,14 +346,15 @@ export default function BenefitsAnalysis() {
                 <Lightbulb className="w-5 h-5 text-blue-600" />
               </div>
               <div className={cn("space-y-2", isRTL && "text-right")}>
-                <h3 className="font-semibold text-sm">
-                  {isRTL ? 'نصيحة ذكية' : 'Smart Tip'}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {isRTL 
-                    ? `لديك ${formatCurrency(calculatedMetrics.unclaimed)} غير مستخدمة. ركز على التعلم والتطوير والتأمين الصحي - هذه المزايا تنتهي صلاحيتها في نهاية العام ولا يمكن ترحيلها.`
-                    : `You have ${formatCurrency(calculatedMetrics.unclaimed)} unclaimed. Focus on Learning & Development and Health Insurance - these benefits expire at year-end and cannot be rolled over.`}
-                </p>
+                <h4 className="font-semibold">
+                  {isRTL ? 'نصائح لتعظيم مزاياك' : 'Tips to Maximize Your Benefits'}
+                </h4>
+                <ul className={cn("text-sm text-muted-foreground space-y-1", isRTL ? "pr-4" : "pl-4")}>
+                  <li>• {isRTL ? 'قدم إيصالات التعليم قبل نهاية العام الدراسي' : 'Submit education receipts before school year ends'}</li>
+                  <li>• {isRTL ? 'استخدم ميزانية التعلم للحصول على شهادات مهنية' : 'Use learning budget for professional certifications'}</li>
+                  <li>• {isRTL ? 'طالب باشتراكات الصالة الرياضية والعافية ربع سنويًا' : 'Claim gym and wellness subscriptions quarterly'}</li>
+                  <li>• {isRTL ? 'احجز موعد فحص الأسنان والعيون السنوي' : 'Schedule annual dental and optical checkups'}</li>
+                </ul>
               </div>
             </div>
           </CardContent>
