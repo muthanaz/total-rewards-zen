@@ -1,7 +1,7 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { 
   Clock, 
   FileCheck, 
@@ -18,79 +18,10 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ChartContainer, ProgressBarList } from '@/components/charts';
-
-const operationalMetrics = {
-  pendingClaims: 12,
-  urgentClaims: 3,
-  avgProcessingDays: 2.3,
-  slaCompliance: 94,
-  openQuestions: 8,
-  avgResponseTime: 4.2,
-  enrollmentsPending: 5,
-  policyUpdates: 2,
-};
-
-const pendingActions = [
-  {
-    type: 'urgent',
-    title: 'Claims Requiring Immediate Attention',
-    count: 3,
-    description: 'SLA breach in < 24 hours',
-    path: '/employer/claims',
-    icon: AlertCircle,
-    color: 'text-red-500',
-    bgColor: 'bg-red-500/10',
-    borderColor: 'border-red-500/20',
-  },
-  {
-    type: 'pending',
-    title: 'Standard Claims Queue',
-    count: 9,
-    description: 'Within SLA timeline',
-    path: '/employer/claims',
-    icon: FileCheck,
-    color: 'text-amber-500',
-    bgColor: 'bg-amber-500/10',
-    borderColor: 'border-amber-500/20',
-  },
-  {
-    type: 'info',
-    title: 'Employee Questions',
-    count: 8,
-    description: 'Awaiting response',
-    path: '/employer/claims',
-    icon: MessageSquare,
-    color: 'text-blue-500',
-    bgColor: 'bg-blue-500/10',
-    borderColor: 'border-blue-500/20',
-  },
-  {
-    type: 'task',
-    title: 'Benefit Enrollments',
-    count: 5,
-    description: 'Pending activation',
-    path: '/employer/segments',
-    icon: Users,
-    color: 'text-emerald-500',
-    bgColor: 'bg-emerald-500/10',
-    borderColor: 'border-emerald-500/20',
-  },
-];
-
-const claimsByCategory = [
-  { name: 'Health Insurance', value: 35, color: 'primary' as const },
-  { name: 'Transport', value: 28, color: 'success' as const },
-  { name: 'Learning & Development', value: 18, color: 'warning' as const },
-  { name: 'Wellbeing', value: 12, color: 'accent' as const },
-  { name: 'Other', value: 7, color: 'danger' as const },
-];
-
-const recentActivity = [
-  { action: 'Claim Approved', employee: 'Ahmed Al-Rashid', category: 'Health', amount: 450, time: '2 hours ago' },
-  { action: 'Question Answered', employee: 'Lisa Chen', category: 'Housing', amount: null, time: '3 hours ago' },
-  { action: 'Claim Rejected', employee: 'Omar Khalil', category: 'Wellbeing', amount: 3600, time: '5 hours ago' },
-  { action: 'Enrollment Completed', employee: 'New Hire Batch', category: 'All Benefits', amount: null, time: 'Yesterday' },
-];
+import { DataQualityBadge } from './DataQualityBadge';
+import { TrendIndicatorCompact } from './TrendComparison';
+import { useClaimMetrics, useClaimsByCategory, useRecentActivity } from '@/hooks/useEmployerDashboard';
+import { cn } from '@/lib/utils';
 
 const upcomingTasks = [
   { task: 'Q1 Benefits Review Meeting', date: 'Tomorrow, 10:00 AM', type: 'meeting' },
@@ -100,6 +31,67 @@ const upcomingTasks = [
 ];
 
 export function HROpsDashboard() {
+  const { data: claimMetrics, isLoading } = useClaimMetrics();
+  const { data: claimsByCategory } = useClaimsByCategory();
+  const { data: recentActivity } = useRecentActivity();
+
+  const pendingActions = [
+    {
+      type: 'urgent',
+      title: 'Urgent Claims',
+      count: claimMetrics?.urgent || 3,
+      description: 'SLA breach in < 24 hours',
+      path: '/employer/claims',
+      icon: AlertCircle,
+      color: 'text-destructive',
+      bgColor: 'bg-destructive/10',
+      borderColor: 'border-destructive/20',
+    },
+    {
+      type: 'pending',
+      title: 'Standard Queue',
+      count: (claimMetrics?.pending || 12) - (claimMetrics?.urgent || 3),
+      description: 'Within SLA timeline',
+      path: '/employer/claims',
+      icon: FileCheck,
+      color: 'text-warning',
+      bgColor: 'bg-warning/10',
+      borderColor: 'border-warning/20',
+    },
+    {
+      type: 'info',
+      title: 'Open Questions',
+      count: claimMetrics?.openQuestions || 8,
+      description: 'Awaiting response',
+      path: '/employer/claims',
+      icon: MessageSquare,
+      color: 'text-info',
+      bgColor: 'bg-info/10',
+      borderColor: 'border-info/20',
+    },
+    {
+      type: 'task',
+      title: 'Enrollments',
+      count: claimMetrics?.enrollmentsPending || 5,
+      description: 'Pending activation',
+      path: '/employer/segments',
+      icon: Users,
+      color: 'text-success',
+      bgColor: 'bg-success/10',
+      borderColor: 'border-success/20',
+    },
+  ];
+
+  const categoryData = claimsByCategory?.map(c => ({
+    name: c.name,
+    value: c.value,
+    color: 'primary' as const,
+  })) || [];
+
+  if (isLoading) {
+    return <div className="space-y-6 animate-pulse"><div className="h-16 bg-muted rounded-xl" /></div>;
+  }
+
   return (
     <div className="space-y-6">
       {/* HR Ops Header */}
@@ -108,81 +100,87 @@ export function HROpsDashboard() {
           <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">
             HR Operations Dashboard
           </h1>
-          <p className="text-muted-foreground flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            Daily operations overview • {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-          </p>
+          <div className="flex items-center gap-3 mt-1">
+            <p className="text-muted-foreground flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </p>
+            <DataQualityBadge confidence="high" lastUpdated={new Date().toISOString()} showDetails={false} />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-            SLA Compliance: {operationalMetrics.slaCompliance}%
-          </Badge>
-        </div>
+        <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+          <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+          SLA Compliance: {claimMetrics?.slaCompliance || 94}%
+        </Badge>
       </div>
 
-      {/* Action Items - Priority Queue */}
+      {/* Action Items */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {pendingActions.map((action, index) => (
           <Link key={index} to={action.path}>
-            <Card className={`hover:shadow-md transition-all cursor-pointer ${action.borderColor} bg-gradient-to-br from-card to-transparent`}>
+            <Card className={cn("hover:shadow-md transition-all cursor-pointer", action.borderColor)}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
-                  <div className={`p-2 rounded-lg ${action.bgColor}`}>
-                    <action.icon className={`w-4 h-4 ${action.color}`} />
+                  <div className={cn("p-2 rounded-lg", action.bgColor)}>
+                    <action.icon className={cn("w-4 h-4", action.color)} />
                   </div>
                   {action.type === 'urgent' && (
-                    <Badge variant="outline" className="bg-red-500/10 text-red-500 border-0 text-[10px] animate-pulse">
+                    <Badge variant="outline" className="bg-destructive/10 text-destructive border-0 text-[10px] animate-pulse">
                       Urgent
                     </Badge>
                   )}
                 </div>
-                <p className={`text-2xl font-bold ${action.color}`}>{action.count}</p>
+                <p className={cn("text-2xl font-bold", action.color)}>{action.count}</p>
                 <p className="text-sm font-medium mt-1">{action.title}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{action.description}</p>
+                <p className="text-xs text-muted-foreground">{action.description}</p>
               </CardContent>
             </Card>
           </Link>
         ))}
       </div>
 
-      {/* Performance Metrics Strip */}
+      {/* Performance Metrics */}
       <Card className="border-border/50">
         <CardContent className="p-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-emerald-500/10">
-                <Clock className="w-5 h-5 text-emerald-500" />
+              <div className="p-2.5 rounded-xl bg-success/10">
+                <Clock className="w-5 h-5 text-success" />
               </div>
               <div>
-                <p className="text-xl font-bold">{operationalMetrics.avgProcessingDays} days</p>
-                <p className="text-xs text-muted-foreground">Avg Processing Time</p>
+                <p className="text-xl font-bold">{claimMetrics?.avgProcessingDays || 2.3} days</p>
+                <p className="text-xs text-muted-foreground">Avg Processing</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-blue-500/10">
-                <MessageSquare className="w-5 h-5 text-blue-500" />
+              <div className="p-2.5 rounded-xl bg-info/10">
+                <TrendingUp className="w-5 h-5 text-info" />
               </div>
               <div>
-                <p className="text-xl font-bold">{operationalMetrics.avgResponseTime} hrs</p>
-                <p className="text-xs text-muted-foreground">Avg Response Time</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xl font-bold">{claimMetrics?.claimsThisMonth || 45}</p>
+                  <TrendIndicatorCompact 
+                    change={((claimMetrics?.claimsThisMonth || 45) / (claimMetrics?.claimsLastMonth || 42) - 1) * 100} 
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">Claims This Month</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-violet-500/10">
-                <Target className="w-5 h-5 text-violet-500" />
+              <div className="p-2.5 rounded-xl bg-chart-3/10">
+                <Target className="w-5 h-5 text-chart-3" />
               </div>
               <div>
-                <p className="text-xl font-bold text-emerald-600">{operationalMetrics.slaCompliance}%</p>
-                <p className="text-xs text-muted-foreground">SLA Compliance</p>
+                <p className="text-xl font-bold text-success">{claimMetrics?.approvalRate || 87}%</p>
+                <p className="text-xs text-muted-foreground">Approval Rate</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-amber-500/10">
-                <Bell className="w-5 h-5 text-amber-500" />
+              <div className="p-2.5 rounded-xl bg-warning/10">
+                <Bell className="w-5 h-5 text-warning" />
               </div>
               <div>
-                <p className="text-xl font-bold">{operationalMetrics.policyUpdates}</p>
+                <p className="text-xl font-bold">{claimMetrics?.policyUpdatesDue || 2}</p>
                 <p className="text-xs text-muted-foreground">Policy Updates Due</p>
               </div>
             </div>
@@ -190,17 +188,12 @@ export function HROpsDashboard() {
         </CardContent>
       </Card>
 
-      {/* Main Content Grid */}
+      {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Claims Distribution */}
-        <ChartContainer title="Claims by Category" formula="Distribution of claims this month">
-          <ProgressBarList 
-            items={claimsByCategory} 
-            size="md" 
-          />
+        <ChartContainer title="Claims by Category" formula="Distribution this month">
+          <ProgressBarList items={categoryData} size="md" />
         </ChartContainer>
 
-        {/* Recent Activity */}
         <Card className="border-border/50">
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-display flex items-center gap-2">
@@ -209,43 +202,38 @@ export function HROpsDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {recentActivity.map((activity, index) => (
-              <div key={index} className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors">
-                <div className={`p-1.5 rounded-lg ${
-                  activity.action.includes('Approved') ? 'bg-emerald-500/10' :
-                  activity.action.includes('Rejected') ? 'bg-red-500/10' :
-                  'bg-blue-500/10'
-                }`}>
+            {(recentActivity || []).slice(0, 4).map((activity, index) => (
+              <div key={index} className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/30">
+                <div className={cn("p-1.5 rounded-lg", 
+                  activity.action.includes('Approved') ? 'bg-success/10' :
+                  activity.action.includes('Rejected') ? 'bg-destructive/10' : 'bg-info/10'
+                )}>
                   {activity.action.includes('Approved') ? (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-success" />
                   ) : activity.action.includes('Rejected') ? (
-                    <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                    <AlertCircle className="w-3.5 h-3.5 text-destructive" />
                   ) : (
-                    <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
+                    <MessageSquare className="w-3.5 h-3.5 text-info" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{activity.action}</p>
-                  <p className="text-xs text-muted-foreground">{activity.employee}</p>
+                  <p className="text-xs text-muted-foreground">{activity.category}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  {activity.amount && (
-                    <p className="text-sm font-medium">AED {activity.amount}</p>
-                  )}
+                  {activity.amount && <p className="text-sm font-medium">AED {activity.amount}</p>}
                   <p className="text-xs text-muted-foreground">{activity.time}</p>
                 </div>
               </div>
             ))}
             <Link to="/employer/claims">
               <Button variant="ghost" size="sm" className="w-full mt-2">
-                View All Activity
-                <ArrowRight className="w-4 h-4 ml-1" />
+                View All <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </Link>
           </CardContent>
         </Card>
 
-        {/* Upcoming Tasks */}
         <Card className="border-border/50">
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-display flex items-center gap-2">
@@ -255,22 +243,14 @@ export function HROpsDashboard() {
           </CardHeader>
           <CardContent className="space-y-3">
             {upcomingTasks.map((task, index) => (
-              <div key={index} className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors">
-                <div className={`p-1.5 rounded-lg ${
-                  task.type === 'meeting' ? 'bg-blue-500/10' :
-                  task.type === 'policy' ? 'bg-amber-500/10' :
-                  task.type === 'report' ? 'bg-violet-500/10' :
-                  'bg-emerald-500/10'
-                }`}>
-                  {task.type === 'meeting' ? (
-                    <Users className="w-3.5 h-3.5 text-blue-500" />
-                  ) : task.type === 'policy' ? (
-                    <FileCheck className="w-3.5 h-3.5 text-amber-500" />
-                  ) : task.type === 'report' ? (
-                    <TrendingUp className="w-3.5 h-3.5 text-violet-500" />
-                  ) : (
-                    <Target className="w-3.5 h-3.5 text-emerald-500" />
-                  )}
+              <div key={index} className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/30">
+                <div className={cn("p-1.5 rounded-lg",
+                  task.type === 'meeting' ? 'bg-info/10' :
+                  task.type === 'policy' ? 'bg-warning/10' : 'bg-chart-3/10'
+                )}>
+                  {task.type === 'meeting' ? <Users className="w-3.5 h-3.5 text-info" /> :
+                   task.type === 'policy' ? <FileCheck className="w-3.5 h-3.5 text-warning" /> :
+                   <TrendingUp className="w-3.5 h-3.5 text-chart-3" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">{task.task}</p>
@@ -282,7 +262,7 @@ export function HROpsDashboard() {
         </Card>
       </div>
 
-      {/* Quick Actions Footer */}
+      {/* Quick Actions */}
       <Card className="border-primary/20 bg-gradient-to-r from-card to-primary/5">
         <CardContent className="p-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -291,30 +271,9 @@ export function HROpsDashboard() {
               <p className="font-medium">Quick Actions</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Link to="/employer/claims">
-                <Button size="sm" variant="outline">
-                  <FileCheck className="w-4 h-4 mr-2" />
-                  Process Claims
-                </Button>
-              </Link>
-              <Link to="/employer/segments">
-                <Button size="sm" variant="outline">
-                  <Users className="w-4 h-4 mr-2" />
-                  View Employees
-                </Button>
-              </Link>
-              <Link to="/employer/policies">
-                <Button size="sm" variant="outline">
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Policy Updates
-                </Button>
-              </Link>
-              <Link to="/employer/recommendations">
-                <Button size="sm">
-                  <TrendingUp className="w-4 h-4 mr-2" />
-                  View Insights
-                </Button>
-              </Link>
+              <Link to="/employer/claims"><Button size="sm" variant="outline"><FileCheck className="w-4 h-4 mr-2" />Process Claims</Button></Link>
+              <Link to="/employer/segments"><Button size="sm" variant="outline"><Users className="w-4 h-4 mr-2" />View Employees</Button></Link>
+              <Link to="/employer/recommendations"><Button size="sm"><TrendingUp className="w-4 h-4 mr-2" />View Insights</Button></Link>
             </div>
           </div>
         </CardContent>
