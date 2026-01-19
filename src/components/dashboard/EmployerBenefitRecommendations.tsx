@@ -327,11 +327,11 @@ export function EmployerBenefitRecommendations({
       </div>
 
       {/* ROI Calculator Summary */}
-      <Card className="border-blue-500/20 bg-gradient-to-r from-blue-500/5 to-card">
+      <Card className="border-info/20 bg-gradient-to-r from-info/5 to-card">
         <CardContent className="pt-5">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-blue-500/10">
-              <Calculator className="w-5 h-5 text-blue-500" />
+            <div className="p-2 rounded-lg bg-info/10">
+              <Calculator className="w-5 h-5 text-info" />
             </div>
             <div>
               <h4 className="font-semibold">Cost vs Value Analysis</h4>
@@ -355,20 +355,20 @@ export function EmployerBenefitRecommendations({
                 <Users className="w-4 h-4 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">Employees Retained</p>
               </div>
-              <p className="text-xl font-bold text-emerald-600">
+              <p className="text-xl font-bold text-success">
                 ~{sortedSuggestions.slice(0, 3).reduce((sum, s) => sum + Math.round(employeeCount * (s.expectedRetentionImpact / 100)), 0)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">Additional retention/year</p>
             </div>
-            <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+            <div className="p-4 rounded-xl bg-success/10 border border-success/20">
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4 text-emerald-500" />
-                <p className="text-sm text-emerald-600 font-medium">Net Savings</p>
+                <TrendingUp className="w-4 h-4 text-success" />
+                <p className="text-sm text-success font-medium">Net Savings</p>
               </div>
-              <p className="text-xl font-bold text-emerald-600">
+              <p className="text-xl font-bold text-success">
                 {formatCurrency(totalPotentialSavings)}
               </p>
-              <p className="text-xs text-emerald-600 mt-1">Recruitment cost avoided</p>
+              <p className="text-xs text-success mt-1">Recruitment cost avoided</p>
             </div>
           </div>
         </CardContent>

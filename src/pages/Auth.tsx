@@ -29,10 +29,10 @@ const signUpSchema = z.object({
 type UserRole = 'employee' | 'employer' | 'admin' | 'vendor';
 
 const roleConfig: Record<UserRole, { label: string; icon: React.ElementType; color: string }> = {
-  employee: { label: 'Employee', icon: User, color: 'text-blue-500' },
-  employer: { label: 'Employer', icon: Building2, color: 'text-green-500' },
-  admin: { label: 'Admin', icon: Shield, color: 'text-red-500' },
-  vendor: { label: 'Vendor', icon: Store, color: 'text-purple-500' },
+  employee: { label: 'Employee', icon: User, color: 'text-info' },
+  employer: { label: 'Employer', icon: Building2, color: 'text-success' },
+  admin: { label: 'Admin', icon: Shield, color: 'text-destructive' },
+  vendor: { label: 'Vendor', icon: Store, color: 'text-accent' },
 };
 
 export default function Auth() {

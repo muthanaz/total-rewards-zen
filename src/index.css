@@ -197,27 +197,39 @@
   }
 
   .tag-cash {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    background-color: hsl(var(--success) / 0.1);
+    color: hsl(var(--success));
   }
 
   .tag-health {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-500/10 text-rose-600;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    background-color: hsl(var(--chart-5) / 0.1);
+    color: hsl(var(--chart-5));
   }
 
   .tag-time {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-600;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    background-color: hsl(var(--info) / 0.1);
+    color: hsl(var(--info));
   }
 
   .tag-growth {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-500/10 text-purple-600;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    background-color: hsl(var(--chart-3) / 0.1);
+    color: hsl(var(--chart-3));
   }
 
   .tag-wealth {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-600;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    background-color: hsl(var(--warning) / 0.1);
+    color: hsl(var(--warning));
   }
 
   .tag-wellbeing {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-600;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    background-color: hsl(var(--accent) / 0.1);
+    color: hsl(var(--accent));
   }
 
   .within-allowance {
@@ -254,15 +266,15 @@
   }
 
   .insight-badge-success {
-    @apply bg-emerald-500/10 text-emerald-600 border border-emerald-500/20;
+    @apply bg-success/10 text-success border border-success/20;
   }
 
   .insight-badge-warning {
-    @apply bg-amber-500/10 text-amber-600 border border-amber-500/20;
+    @apply bg-warning/10 text-warning border border-warning/20;
   }
 
   .insight-badge-info {
-    @apply bg-blue-500/10 text-blue-600 border border-blue-500/20;
+    @apply bg-info/10 text-info border border-info/20;
   }
 
   /* RTL specific component overrides */

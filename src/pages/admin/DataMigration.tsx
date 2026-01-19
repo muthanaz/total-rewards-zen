@@ -439,15 +439,15 @@ function TemplateDetails({
 
         {/* Notes */}
         {template.notes && template.notes.length > 0 && (
-          <div className="p-4 rounded-lg bg-blue-500/5 border border-blue-500/20">
+          <div className="p-4 rounded-lg bg-info/5 border border-info/20">
             <div className="flex items-center gap-2 mb-2">
-              <Info className="w-4 h-4 text-blue-500" />
-              <span className="font-medium text-sm text-blue-600">Important Notes</span>
+              <Info className="w-4 h-4 text-info" />
+              <span className="font-medium text-sm text-info">Important Notes</span>
             </div>
             <ul className="space-y-1">
               {template.notes.map((note, i) => (
                 <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                  <span className="text-blue-500">•</span>
+                  <span className="text-info">•</span>
                   {note}
                 </li>
               ))}

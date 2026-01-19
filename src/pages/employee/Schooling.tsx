@@ -560,7 +560,7 @@ export default function SchoolingPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-display flex items-center gap-2">
               <Calculator className="w-5 h-5 text-accent" />
-              Your Education Allowance Overview
+              Your Schooling Allowance Overview
               {allChildrenHaveSchools && (
                 <Badge className="bg-success text-success-foreground ml-2">
                   <Check className="w-3 h-3 mr-1" />
