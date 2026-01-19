@@ -8,7 +8,6 @@ import {
 import { useProfile, useMarketplaceOffers } from '@/hooks/useSupabaseData';
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { getMarketplaceCategoryColor } from '@/lib/colorUtils';
 
 interface CuratedPerksProps {
   onActivate: (offer: any) => void;
@@ -180,18 +179,18 @@ export function CuratedPerks({ onActivate }: CuratedPerksProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 border border-violet-500/20">
-            <Sparkles className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+          <div className="p-2.5 rounded-xl bg-accent/10 border border-accent/20">
+            <Sparkles className="w-5 h-5 text-accent" />
           </div>
           <div>
             <h2 className="font-display font-semibold text-lg flex items-center gap-2">
-              Curated For You
-              <Badge variant="outline" className="bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30 text-[10px]">
+              Top Picks For You
+              <Badge variant="secondary" className="text-[10px] font-normal">
                 AI-Powered
               </Badge>
             </h2>
             <p className="text-sm text-muted-foreground">
-              Personalized picks based on your profile
+              Based on your profile and preferences
             </p>
           </div>
         </div>
@@ -203,123 +202,98 @@ export function CuratedPerks({ onActivate }: CuratedPerksProps) {
 
       {/* Curated Offers Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {curatedOffers.map((offer, index) => {
-          const categoryColor = getMarketplaceCategoryColor(offer.category);
-          
-          return (
-            <Card 
-              key={offer.id}
-              className={cn(
-                "group relative overflow-hidden transition-all duration-300",
-                "hover:shadow-xl hover:-translate-y-0.5",
-                "bg-gradient-to-br border",
-                `${categoryColor.bgLight} ${categoryColor.border}`,
-                `hover:border-opacity-50`
-              )}
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              {/* Image */}
-              {offer.image_url && (
-                <div className="relative h-28 overflow-hidden">
-                  <img 
-                    src={offer.image_url} 
-                    alt={offer.title} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/50 to-transparent" />
-                  
-                  {offer.discount_percent && (
-                    <div className="absolute top-2 right-2 z-10">
-                      <Badge className="bg-emerald-500 text-white border-0 text-xs font-bold shadow-lg">
-                        {offer.discount_percent}% OFF
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-              )}
+        {curatedOffers.map((offer, index) => (
+          <Card 
+            key={offer.id}
+            className={cn(
+              "group relative overflow-hidden transition-all duration-300",
+              "hover:shadow-md hover:-translate-y-0.5",
+              "bg-card border-border/50"
+            )}
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
+            {/* Image */}
+            {offer.image_url && (
+              <div className="relative h-32 overflow-hidden bg-muted">
+                <img 
+                  src={offer.image_url} 
+                  alt={offer.title} 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+                
+                {offer.discount_percent && (
+                  <div className="absolute top-2 right-2 z-10">
+                    <Badge className="bg-accent text-accent-foreground border-0 text-xs font-semibold shadow-md">
+                      {offer.discount_percent}% OFF
+                    </Badge>
+                  </div>
+                )}
+              </div>
+            )}
 
-              <CardContent className="p-4 space-y-3">
-                {/* Match Quality Badge */}
-                <Badge 
-                  variant="outline" 
-                  className={cn(
-                    "gap-1 text-xs w-fit",
-                    categoryColor.bgLight,
-                    categoryColor.text,
-                    categoryColor.border
-                  )}
-                >
-                  {getMatchIcon(offer.matchStrength)}
-                  {getMatchLabel(offer.matchStrength)}
+            <CardContent className="p-4 space-y-3">
+              {/* Match Quality Badge */}
+              <Badge 
+                variant="outline" 
+                className="gap-1 text-[10px] w-fit bg-muted/50 text-muted-foreground border-border"
+              >
+                {getMatchIcon(offer.matchStrength)}
+                {getMatchLabel(offer.matchStrength)}
+              </Badge>
+
+              {/* Title & Merchant */}
+              <div>
+                <h3 className="font-medium text-sm leading-snug line-clamp-2 transition-colors min-h-[40px] group-hover:text-accent">
+                  {offer.title}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">{offer.merchant}</p>
+              </div>
+
+              {/* Category & Rating */}
+              <div className="flex items-center justify-between gap-2">
+                <Badge variant="secondary" className="text-[10px] font-normal">
+                  {offer.category.split(' & ')[0]}
                 </Badge>
+                {offer.rating && (
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                    {offer.rating}
+                  </span>
+                )}
+              </div>
 
-                {/* Title & Merchant */}
-                <div>
-                  <h3 className={cn(
-                    "font-semibold text-sm leading-snug line-clamp-2 transition-colors min-h-[40px]",
-                    `group-hover:${categoryColor.text}`
-                  )}>
-                    {offer.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1">{offer.merchant}</p>
-                </div>
+              {/* Personalization Reason */}
+              <div className="pt-2 border-t border-border/50">
+                <p className="text-[11px] flex items-center gap-1.5 text-muted-foreground">
+                  <Sparkles className="w-3 h-3 text-accent" />
+                  {offer.curationReason}
+                </p>
+              </div>
 
-                {/* Category & Rating */}
-                <div className="flex items-center justify-between gap-2">
-                  <Badge 
-                    variant="outline" 
-                    className={cn(
-                      "text-xs px-2 py-0.5",
-                      categoryColor.bgLight,
-                      categoryColor.text,
-                      categoryColor.border
-                    )}
-                  >
-                    {offer.category}
-                  </Badge>
-                  {offer.rating && (
-                    <span className="flex items-center gap-1 text-sm text-amber-500 font-medium">
-                      <Star className="w-3.5 h-3.5 fill-current" />
-                      {offer.rating}
-                    </span>
-                  )}
-                </div>
-
-                {/* Personalization Reason */}
-                <div className="pt-2 border-t border-border/30">
-                  <p className={cn("text-xs flex items-center gap-1.5", categoryColor.text)}>
-                    <Sparkles className="w-3 h-3" />
-                    {offer.curationReason}
-                  </p>
-                </div>
-
-                {/* Action Button */}
-                <Button 
-                  size="sm" 
-                  className={cn(
-                    "w-full gap-2",
-                    `bg-gradient-to-r ${categoryColor.gradient} text-white hover:opacity-90`
-                  )}
-                  onClick={() => onActivate(offer)}
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  Activate Offer
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })}
+              {/* Action Button */}
+              <Button 
+                size="sm" 
+                className="w-full gap-2"
+                onClick={() => onActivate(offer)}
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+                Activate Offer
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Why These Perks Section */}
-      <Card className="border-dashed border-muted-foreground/20 bg-muted/20">
+      <Card className="border-dashed border-border bg-muted/30">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-background border border-border/50">
+            <div className="p-2 rounded-lg bg-background border border-border">
               <Brain className="w-4 h-4 text-muted-foreground" />
             </div>
             <div className="flex-1">
-              <h4 className="text-sm font-medium">Why these perks?</h4>
+              <h4 className="text-sm font-medium">Why these offers?</h4>
               <p className="text-xs text-muted-foreground mt-1">
                 Our AI analyzes your profile, interests, and preferences to surface the most relevant offers. 
                 {userContext.lifeStage === 'family' && ' As a family person, we prioritize family-friendly offers.'}

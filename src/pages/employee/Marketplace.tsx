@@ -5,9 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Gift, Star, CheckCircle, Grid3X3, List, Sparkles, ArrowRight,
+  Gift, Star, CheckCircle, Grid3X3, List, Sparkles, 
   ShoppingBag, Coffee, Activity, Users, BookOpen, Home, Car, Plane,
-  CreditCard, TrendingUp, Heart
+  CreditCard, ChevronRight
 } from 'lucide-react';
 import { useMarketplaceOffers } from '@/hooks/useSupabaseData';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -18,7 +18,6 @@ import { BankCardBenefits } from '@/components/employee/BankCardBenefits';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { FilterBar } from '@/components/shared/FilterBar';
 import { NoSearchResults } from '@/components/ui/empty-state';
-import { getMarketplaceCategoryColor } from '@/lib/colorUtils';
 import { cn } from '@/lib/utils';
 
 // Category icons mapping
@@ -85,22 +84,9 @@ export default function MarketplacePage() {
     });
   };
 
-  // Get category badge styling
-  const getCategoryBadge = (categoryName: string) => {
-    const color = getMarketplaceCategoryColor(categoryName);
-    return (
-      <Badge 
-        variant="outline" 
-        className={cn("text-xs px-2 border", color.bgLight, color.text, color.border)}
-      >
-        {categoryName}
-      </Badge>
-    );
+  const handleCategoryClick = (cat: string) => {
+    setCategory(category === cat ? 'all' : cat);
   };
-
-  // Stats for the header
-  const totalSavings = offers.reduce((acc, o) => acc + (o.discount_percent || 0), 0);
-  const avgDiscount = offers.length > 0 ? Math.round(totalSavings / offers.length) : 0;
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -109,7 +95,7 @@ export default function MarketplacePage() {
         title="Perks & Partners"
         description="Exclusive discounts and benefits for employees"
         icon={Gift}
-        iconClassName="from-violet-500 to-fuchsia-500 shadow-violet-500/25"
+        iconClassName="from-accent to-accent/80 shadow-accent/25"
         badge={{
           label: `${offers.length} Active Offers`,
           icon: Sparkles,
@@ -117,226 +103,143 @@ export default function MarketplacePage() {
         }}
       />
 
-      {/* Quick Stats Strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card className="bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border-violet-500/20">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-violet-500/20">
-              <Gift className="w-5 h-5 text-violet-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{offers.length}</p>
-              <p className="text-xs text-muted-foreground">Active Offers</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border-emerald-500/20">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-500/20">
-              <TrendingUp className="w-5 h-5 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{avgDiscount}%</p>
-              <p className="text-xs text-muted-foreground">Avg. Discount</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/20">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/20">
-              <CreditCard className="w-5 h-5 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{bankCards.length}</p>
-              <p className="text-xs text-muted-foreground">Linked Cards</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-pink-500/10 to-rose-500/10 border-pink-500/20">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-pink-500/20">
-              <Heart className="w-5 h-5 text-pink-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{MARKETPLACE_CATEGORIES.length}</p>
-              <p className="text-xs text-muted-foreground">Categories</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Main Tabs */}
-      <Tabs defaultValue="curated" className="space-y-6">
-        <TabsList className="flex-wrap h-auto gap-1">
-          <TabsTrigger value="curated" className="gap-2">
+      <Tabs defaultValue="personalized" className="space-y-6">
+        <TabsList className="h-auto gap-1 bg-muted/50 p-1">
+          <TabsTrigger value="personalized" className="gap-2 data-[state=active]:bg-background">
             <Sparkles className="w-4 h-4" />
-            Tailored For You
+            Personalized For You
           </TabsTrigger>
-          <TabsTrigger value="bank-benefits" className="gap-2">
+          <TabsTrigger value="bank-benefits" className="gap-2 data-[state=active]:bg-background">
             <CreditCard className="w-4 h-4" />
             Bank Card Benefits
           </TabsTrigger>
-          <TabsTrigger value="browse" className="gap-2">
-            <Grid3X3 className="w-4 h-4" />
-            Browse All
-          </TabsTrigger>
         </TabsList>
 
-        {/* Tailored Perks Tab */}
-        <TabsContent value="curated" className="space-y-6">
+        {/* Personalized Tab */}
+        <TabsContent value="personalized" className="space-y-8">
+          {/* AI Curated Section */}
           <CuratedPerks onActivate={handleActivate} />
           
-          {/* Browse by Category - Compact */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium text-muted-foreground">Quick Browse by Category</h3>
-            <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2">
+          {/* Browse by Category */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display font-semibold text-lg">Browse by Category</h3>
+              {category !== 'all' && (
+                <Button variant="ghost" size="sm" onClick={() => setCategory('all')} className="text-muted-foreground">
+                  Clear filter
+                </Button>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-3">
               {MARKETPLACE_CATEGORIES.map((cat) => {
-                const color = getMarketplaceCategoryColor(cat);
                 const Icon = CATEGORY_ICONS[cat] || ShoppingBag;
                 const count = categoryCounts[cat] || 0;
+                const isSelected = category === cat;
                 
                 return (
                   <button
                     key={cat}
-                    onClick={() => {
-                      setCategory(cat);
-                      document.querySelector('[data-value="browse"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-                    }}
+                    onClick={() => handleCategoryClick(cat)}
                     className={cn(
-                      "flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all duration-200",
-                      "bg-card border-border/50 hover:border-border hover:shadow-md hover:-translate-y-0.5"
+                      "flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200",
+                      "hover:shadow-sm hover:border-border",
+                      isSelected 
+                        ? "bg-accent/10 border-accent/30 shadow-sm" 
+                        : "bg-card border-border/40 hover:bg-muted/50"
                     )}
                   >
-                    <div className={cn("p-2 rounded-lg", color.bgLight)}>
-                      <Icon className={cn("w-4 h-4", color.text)} />
+                    <div className={cn(
+                      "p-2.5 rounded-xl transition-colors",
+                      isSelected 
+                        ? "bg-accent/20" 
+                        : "bg-muted/60"
+                    )}>
+                      <Icon className={cn(
+                        "w-5 h-5 transition-colors",
+                        isSelected ? "text-accent" : "text-muted-foreground"
+                      )} />
                     </div>
-                    <span className="text-[10px] font-medium text-center leading-tight text-muted-foreground">
-                      {cat.split(' & ')[0]}
-                    </span>
-                    <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">
-                      {count}
-                    </Badge>
+                    <div className="text-center">
+                      <span className={cn(
+                        "text-xs font-medium leading-tight block",
+                        isSelected ? "text-foreground" : "text-muted-foreground"
+                      )}>
+                        {cat.split(' & ')[0]}
+                      </span>
+                      <span className={cn(
+                        "text-[10px] mt-0.5 block",
+                        isSelected ? "text-accent" : "text-muted-foreground/70"
+                      )}>
+                        {count} offers
+                      </span>
+                    </div>
                   </button>
                 );
               })}
             </div>
           </div>
-        </TabsContent>
 
-        {/* Bank Card Benefits Tab */}
-        <TabsContent value="bank-benefits" className="space-y-6">
-          <BankCardBenefits cards={bankCards} />
-        </TabsContent>
-
-        {/* Browse All Tab */}
-        <TabsContent value="browse" className="space-y-6">
-          {/* Category Chips */}
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={category === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setCategory('all')}
-              className="rounded-full"
-            >
-              All Offers
-              <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5">
-                {offers.length}
-              </Badge>
-            </Button>
-            {MARKETPLACE_CATEGORIES.map((cat) => {
-              const color = getMarketplaceCategoryColor(cat);
-              const isSelected = category === cat;
-              const count = categoryCounts[cat] || 0;
-              
-              return (
-                <Button
-                  key={cat}
-                  variant={isSelected ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setCategory(isSelected ? 'all' : cat)}
-                  className={cn(
-                    "rounded-full",
-                    isSelected && `${color.bg} hover:opacity-90`
-                  )}
-                >
-                  {cat}
-                  <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5">
-                    {count}
-                  </Badge>
-                </Button>
-              );
-            })}
-          </div>
-
-          {/* Search & Filter Bar */}
-          <FilterBar
-            searchValue={searchTerm}
-            onSearchChange={setSearchTerm}
-            searchPlaceholder="Search offers, merchants..."
-          >
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full md:w-36 bg-background">
-                <SelectValue placeholder="Sort By" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="discount">Highest Discount</SelectItem>
-                <SelectItem value="rating">Top Rated</SelectItem>
-                <SelectItem value="newest">Newest</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <div className="flex border rounded-lg overflow-hidden bg-background">
-              <Button 
-                variant={viewMode === 'grid' ? 'default' : 'ghost'} 
-                size="sm" 
-                className="rounded-none h-9 px-3"
-                onClick={() => setViewMode('grid')}
-              >
-                <Grid3X3 className="w-4 h-4" />
-              </Button>
-              <Button 
-                variant={viewMode === 'list' ? 'default' : 'ghost'} 
-                size="sm" 
-                className="rounded-none h-9 px-3"
-                onClick={() => setViewMode('list')}
-              >
-                <List className="w-4 h-4" />
-              </Button>
+          {/* All Offers Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display font-semibold text-lg flex items-center gap-2">
+                {category === 'all' ? 'All Offers' : category}
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                <Badge variant="secondary" className="font-normal">{filteredOffers.length}</Badge>
+              </h3>
             </div>
-          </FilterBar>
 
-          {/* Section Header */}
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-display font-semibold flex items-center gap-2">
-              {category === 'all' ? 'All Offers' : category}
-              <ArrowRight className="w-4 h-4 text-muted-foreground" />
-              <Badge variant="secondary">{filteredOffers.length} results</Badge>
-            </h2>
-            {(category !== 'all' || searchTerm) && (
-              <Button variant="ghost" size="sm" onClick={() => { setCategory('all'); setSearchTerm(''); }}>
-                Clear Filters
-              </Button>
-            )}
-          </div>
+            {/* Search & Filter Bar */}
+            <FilterBar
+              searchValue={searchTerm}
+              onSearchChange={setSearchTerm}
+              searchPlaceholder="Search offers, merchants..."
+            >
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full md:w-36 bg-background">
+                  <SelectValue placeholder="Sort By" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="discount">Highest Discount</SelectItem>
+                  <SelectItem value="rating">Top Rated</SelectItem>
+                  <SelectItem value="newest">Newest</SelectItem>
+                </SelectContent>
+              </Select>
 
-          {/* Offers Grid/List */}
-          {filteredOffers.length > 0 ? (
-            viewMode === 'grid' ? (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {filteredOffers.map((offer, index) => {
-                  const categoryColor = getMarketplaceCategoryColor(offer.category);
-                  return (
+              <div className="flex border rounded-lg overflow-hidden bg-background">
+                <Button 
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'} 
+                  size="sm" 
+                  className="rounded-none h-9 px-3"
+                  onClick={() => setViewMode('grid')}
+                >
+                  <Grid3X3 className="w-4 h-4" />
+                </Button>
+                <Button 
+                  variant={viewMode === 'list' ? 'default' : 'ghost'} 
+                  size="sm" 
+                  className="rounded-none h-9 px-3"
+                  onClick={() => setViewMode('list')}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
+            </FilterBar>
+
+            {/* Offers Grid/List */}
+            {filteredOffers.length > 0 ? (
+              viewMode === 'grid' ? (
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {filteredOffers.map((offer, index) => (
                     <Card 
                       key={offer.id} 
-                      className={cn(
-                        "benefit-card overflow-hidden group hover:shadow-lg transition-all duration-300 flex flex-col",
-                      )}
+                      className="overflow-hidden group hover:shadow-md transition-all duration-300 flex flex-col border-border/50"
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
-                      {/* Category color bar */}
-                      <div className={cn("h-1", categoryColor.bg)} />
                       {offer.image_url && (
-                        <div className="h-28 bg-muted overflow-hidden shrink-0 relative">
+                        <div className="h-32 bg-muted overflow-hidden shrink-0 relative">
                           <img 
                             src={offer.image_url} 
                             alt={offer.title} 
@@ -344,54 +247,50 @@ export default function MarketplacePage() {
                           />
                           {offer.discount_percent && (
                             <div className="absolute top-2 right-2">
-                              <Badge className="bg-emerald-500 text-white border-0 text-xs font-bold shadow-lg">
+                              <Badge className="bg-accent text-accent-foreground border-0 text-xs font-semibold shadow-md">
                                 {offer.discount_percent}% OFF
                               </Badge>
                             </div>
                           )}
                         </div>
                       )}
-                      <div className="p-4 space-y-2.5 flex flex-col flex-1">
-                        <h3 className="font-medium text-sm leading-snug line-clamp-2 group-hover:text-accent transition-colors">
-                          {offer.title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">{offer.merchant}</p>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {getCategoryBadge(offer.category)}
+                      <CardContent className="p-4 space-y-3 flex flex-col flex-1">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-sm leading-snug line-clamp-2 group-hover:text-accent transition-colors">
+                            {offer.title}
+                          </h3>
+                          <p className="text-xs text-muted-foreground mt-1">{offer.merchant}</p>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Badge variant="secondary" className="text-[10px] font-normal">
+                            {offer.category.split(' & ')[0]}
+                          </Badge>
                           {offer.rating && (
-                            <span className="flex items-center gap-1 text-sm text-amber-500">
-                              <Star className="w-3.5 h-3.5 fill-current" />
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                               {offer.rating}
                             </span>
                           )}
                         </div>
-                        {offer.description && (
-                          <p className="text-xs text-muted-foreground line-clamp-2">{offer.description}</p>
-                        )}
-                        <Button size="sm" className="w-full mt-auto" onClick={() => handleActivate(offer)}>
-                          <CheckCircle className="w-4 h-4 mr-1.5" />
+                        <Button size="sm" className="w-full" onClick={() => handleActivate(offer)}>
+                          <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
                           Activate
                         </Button>
-                      </div>
+                      </CardContent>
                     </Card>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {filteredOffers.map((offer, index) => {
-                  const categoryColor = getMarketplaceCategoryColor(offer.category);
-                  return (
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {filteredOffers.map((offer, index) => (
                     <Card 
                       key={offer.id} 
-                      className="overflow-hidden group hover:border-accent/30 transition-all"
+                      className="overflow-hidden group hover:shadow-sm transition-all border-border/50"
                       style={{ animationDelay: `${index * 30}ms` }}
                     >
-                      {/* Category color bar */}
-                      <div className={cn("h-1", categoryColor.bg)} />
                       <div className="flex items-center gap-4 p-4">
                         {offer.image_url && (
-                          <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden shrink-0 relative">
+                          <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden shrink-0">
                             <img 
                               src={offer.image_url} 
                               alt={offer.title} 
@@ -400,7 +299,7 @@ export default function MarketplacePage() {
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start justify-between gap-3">
                             <div>
                               <h3 className="font-medium text-sm group-hover:text-accent transition-colors">
                                 {offer.title}
@@ -408,23 +307,22 @@ export default function MarketplacePage() {
                               <p className="text-xs text-muted-foreground mt-0.5">{offer.merchant}</p>
                             </div>
                             {offer.discount_percent && (
-                              <Badge className="bg-emerald-500 text-white border-0 shrink-0 font-bold">
+                              <Badge className="bg-accent text-accent-foreground border-0 shrink-0 text-xs font-semibold">
                                 {offer.discount_percent}% OFF
                               </Badge>
                             )}
                           </div>
                           <div className="flex items-center gap-2 mt-2">
-                            {getCategoryBadge(offer.category)}
+                            <Badge variant="secondary" className="text-[10px] font-normal">
+                              {offer.category.split(' & ')[0]}
+                            </Badge>
                             {offer.rating && (
-                              <span className="flex items-center gap-1 text-xs text-amber-500">
-                                <Star className="w-3 h-3 fill-current" />
+                              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                                 {offer.rating}
                               </span>
                             )}
                           </div>
-                          {offer.description && (
-                            <p className="text-xs text-muted-foreground mt-2 line-clamp-1">{offer.description}</p>
-                          )}
                         </div>
                         <Button size="sm" className="shrink-0" onClick={() => handleActivate(offer)}>
                           <CheckCircle className="w-3.5 h-3.5 mr-1" />
@@ -432,16 +330,21 @@ export default function MarketplacePage() {
                         </Button>
                       </div>
                     </Card>
-                  );
-                })}
-              </div>
-            )
-          ) : (
-            <NoSearchResults 
-              query={searchTerm || category !== 'all' ? (searchTerm || category) : undefined}
-              onClear={() => { setSearchTerm(''); setCategory('all'); }}
-            />
-          )}
+                  ))}
+                </div>
+              )
+            ) : (
+              <NoSearchResults 
+                query={searchTerm || category !== 'all' ? (searchTerm || category) : undefined}
+                onClear={() => { setSearchTerm(''); setCategory('all'); }}
+              />
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Bank Card Benefits Tab */}
+        <TabsContent value="bank-benefits" className="space-y-6">
+          <BankCardBenefits cards={bankCards} />
         </TabsContent>
       </Tabs>
     </div>
