@@ -67,10 +67,10 @@ export function CompensationGrid({ metrics, totalCompensation, isRTL = false }: 
           )}
           onClick={totalCompensation.onCardClick}
         >
-          {/* Gradient background: Teal (accent) from LEFT fading to white, Gold (amber) from RIGHT fading to white - softer */}
+          {/* Gradient background: Teal (accent) from LEFT fading to white, Gold (amber) from RIGHT fading to white */}
           <div className="absolute inset-0 bg-white dark:bg-card" />
-          <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-accent/8 via-accent/3 to-transparent" />
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-amber-500/8 via-amber-500/3 to-transparent" />
+          <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-accent/10 via-accent/5 to-transparent" />
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-amber-500/10 via-amber-500/5 to-transparent" />
         
           <div className="relative z-10">
             <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>

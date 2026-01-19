@@ -5,7 +5,6 @@ import {
   FileText, 
   Calendar, 
   Receipt, 
-  Plane, 
   ChevronRight,
   Clock,
   AlertCircle,
@@ -34,7 +33,6 @@ const quickActions: QuickAction[] = [
   { label: 'Submit Claim', labelAr: 'تقديم مطالبة', icon: Receipt, path: '/employee/requests', variant: 'default' },
   { label: 'Request Leave', labelAr: 'طلب إجازة', icon: Calendar, path: '/employee/leave', variant: 'outline' },
   { label: 'View Payslip', labelAr: 'عرض كشف الراتب', icon: FileText, path: '/employee/documents', variant: 'outline' },
-  { label: 'Book Travel', labelAr: 'حجز السفر', icon: Plane, path: '/employee/requests', variant: 'outline' },
 ];
 
 export function QuickActionsStrip({ 
