@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
+import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
 import { NoData } from '@/components/ui/empty-state';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { BookOpen, Award, Clock, CheckCircle, Plus, ExternalLink, Wallet, TrendingUp, Calculator } from 'lucide-react';
@@ -51,6 +51,15 @@ const suggestedCourses = [
   { name: 'Design Thinking', provider: 'IDEO', cost: 800, duration: '4 weeks' },
 ];
 
+const learningPolicies = [
+  'AED 12,000 annual learning budget',
+  'Pre-approval required for courses over AED 2,000',
+  'Covers courses, certifications, conferences',
+  'Must be job-related or career-advancing',
+  'Reimbursement within 30 days of completion',
+  'Study leave: up to 5 days for certifications',
+];
+
 export default function LearningPage() {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -68,56 +77,19 @@ export default function LearningPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-            <BookOpen className="w-7 h-7 text-accent" />
-            Learning & Development
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Courses, certifications, and professional development
-          </p>
-        </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Request Course
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Request Learning Budget</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Course/Certification Name</Label>
-                <Input placeholder="e.g., AWS Cloud Practitioner" />
-              </div>
-              <div className="space-y-2">
-                <Label>Provider</Label>
-                <Input placeholder="e.g., Coursera, Udemy, AWS" />
-              </div>
-              <div className="space-y-2">
-                <Label>Estimated Cost (AED)</Label>
-                <Input type="number" placeholder="0" />
-              </div>
-              <div className="space-y-2">
-                <Label>Justification</Label>
-                <Textarea placeholder="How will this help your role?" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSubmitRequest}>Submit Request</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      <div>
+        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
+          <BookOpen className="w-7 h-7 text-accent" />
+          Learning & Development
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Courses, certifications, and professional development
+        </p>
       </div>
 
-      {/* Summary Cards with SummaryStatsCard */}
+      {/* 1. Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <SummaryStatsCard
           variant="primary"
@@ -158,7 +130,16 @@ export default function LearningPage() {
         />
       </div>
 
-      {/* How It Works */}
+      {/* 2. Policy Highlights with Action Buttons */}
+      <PolicyHighlightsCard
+        title="L&D Policy Highlights"
+        policies={learningPolicies}
+        category="Learning & Development"
+        actionLabel="Submit Claim"
+        policyLabel="View Full Policy"
+      />
+
+      {/* 3. How It Works */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-display flex items-center gap-2">
@@ -277,47 +258,6 @@ export default function LearningPage() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Policy Highlights */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-display">Policy Highlights</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              AED 12,000 annual learning budget
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              Pre-approval required for courses over AED 2,000
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              Covers courses, certifications, conferences
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              Must be job-related or career-advancing
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              Reimbursement within 30 days of completion
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-              Study leave: up to 5 days for certifications
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-
-      {/* Actions */}
-      <div className="flex items-center justify-center gap-4">
-        <SubmitClaimButton category="Learning & Development" buttonText="Submit L&D Claim" />
-        <Button variant="outline">View Full L&D Policy</Button>
-      </div>
     </div>
   );
 }

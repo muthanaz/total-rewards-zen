@@ -4,17 +4,25 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { SubmitClaimButton } from '@/components/employee/SubmitClaimButton';
-import { Home, Search, Star, Clock, ExternalLink, MapPin, Bath, Bed, Filter, Wallet, TrendingDown, Percent, CheckCircle2 } from 'lucide-react';
+import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
+import { Home, Search, Star, Clock, ExternalLink, MapPin, Bath, Bed, Wallet, TrendingDown, Percent, CheckCircle2 } from 'lucide-react';
 import { useHousingAreas, useHousingListings } from '@/hooks/useSupabaseData';
 import { BENEFIT_CATEGORIES } from '@/lib/benefitCategories';
-import { getRAGIndicator, getProgressColorClass } from '@/lib/colorUtils';
+import { getRAGIndicator } from '@/lib/colorUtils';
 import { cn } from '@/lib/utils';
 
-const HOUSING_ALLOWANCE = 120000; // Demo annual allowance
+const HOUSING_ALLOWANCE = 120000;
 const housingCategory = BENEFIT_CATEGORIES.housing;
+
+const housingPolicies = [
+  'Paid monthly with salary as cash allowance',
+  'Can be used for rent or mortgage payments',
+  'Receipts required for tax-free treatment',
+  'Annual renewal: submit new tenancy contract',
+  'Pro-rated for partial year employment',
+  'Allowance based on grade and location',
+];
 
 export default function HousingPage() {
   const { data: areas = [] } = useHousingAreas();
@@ -26,7 +34,7 @@ export default function HousingPage() {
   const [maxRent, setMaxRent] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('price');
 
-  const utilized = 120000; // Demo utilized amount
+  const utilized = 120000;
   const remaining = HOUSING_ALLOWANCE - utilized;
   const utilizationPercent = Math.round((utilized / HOUSING_ALLOWANCE) * 100);
   const rag = getRAGIndicator(utilizationPercent);
@@ -53,7 +61,6 @@ export default function HousingPage() {
       filtered = filtered.filter(l => l.annual_rent <= parseInt(maxRent));
     }
 
-    // Sort
     switch (sortBy) {
       case 'price':
         filtered.sort((a, b) => a.annual_rent - b.annual_rent);
@@ -88,7 +95,7 @@ export default function HousingPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header with category color */}
+      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
@@ -101,17 +108,13 @@ export default function HousingPage() {
             Find the perfect home within your allowance or calculate your top-up
           </p>
         </div>
-        {/* RAG Status Badge */}
         <Badge variant="outline" className={cn("gap-1.5", rag.bgClass, rag.textClass, rag.borderClass)}>
           <CheckCircle2 className="w-4 h-4" />
           {utilizationPercent}% {rag.label}
         </Badge>
       </div>
 
-      {/* Category color bar */}
-      <div className={cn("h-1 rounded-full", housingCategory.bgClass)} />
-
-      {/* Summary Cards */}
+      {/* 1. Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <SummaryStatsCard
           icon={Home}
@@ -148,7 +151,16 @@ export default function HousingPage() {
         />
       </div>
 
-      {/* How It Works */}
+      {/* 2. Policy Highlights with Action Buttons */}
+      <PolicyHighlightsCard
+        title="Housing Policy Highlights"
+        policies={housingPolicies}
+        category="Housing"
+        actionLabel="Submit Claim"
+        policyLabel="View Full Policy"
+      />
+
+      {/* 3. How It Works */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-display flex items-center gap-2">
@@ -385,47 +397,6 @@ export default function HousingPage() {
           <p className="mt-4 text-muted-foreground">No listings match your filters</p>
         </Card>
       )}
-
-      {/* Policy Highlights */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-display">Policy Highlights</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="grid md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Paid monthly with salary as cash allowance
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Can be used for rent or mortgage payments
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Receipts required for tax-free treatment
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Annual renewal: submit new tenancy contract
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Pro-rated for partial year employment
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-accent">•</span>
-              Top-up from salary allowed if rent exceeds
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-
-      {/* Actions */}
-      <div className="flex items-center justify-center gap-4">
-        <SubmitClaimButton category="Housing" buttonText="Submit Housing Claim" />
-        <Button variant="outline">View Full Housing Policy</Button>
-      </div>
     </div>
   );
 }

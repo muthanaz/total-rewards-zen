@@ -88,7 +88,7 @@ const navigation: NavGroup[] = [
       { labelKey: 'nav.claimsRequests', path: '/employee/requests', icon: Receipt },
       { labelKey: 'nav.documents', path: '/employee/documents', icon: FileText },
       { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
-      { labelKey: 'nav.knowledge', path: '/employee/knowledge', icon: BookOpen },
+      { labelKey: 'nav.knowledgeHub', path: '/employee/knowledge', icon: BookOpen },
       { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
       { labelKey: 'nav.onboarding', path: '/employee/onboarding', icon: Shield },
     ],
