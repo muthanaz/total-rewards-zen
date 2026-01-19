@@ -11,6 +11,7 @@ import { useProfile, Child, Pet } from '@/contexts/ProfileContext';
 import { SessionManager } from '@/components/security/SessionManager';
 import { DataPrivacySettings } from '@/components/security/DataPrivacySettings';
 import { MFAEnrollment } from '@/components/auth/MFAEnrollment';
+import { BankCardsSection } from '@/components/shared/BankCardsSection';
 
 // Comprehensive list of countries with their cities and areas
 const COUNTRIES_DATA: Record<string, Record<string, string[]>> = {
@@ -373,6 +374,8 @@ export default function ProfilePage() {
     addPet,
     updatePet,
     removePet,
+    bankCards,
+    setBankCards,
     selectedInterests,
     toggleInterest,
   } = useProfile();
@@ -491,6 +494,9 @@ export default function ProfilePage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Bank Cards */}
+          <BankCardsSection cards={bankCards} onCardsChange={setBankCards} />
         </TabsContent>
 
         <TabsContent value="work"><Card><CardHeader><CardTitle className="text-base">Work Information</CardTitle></CardHeader><CardContent className="grid md:grid-cols-2 gap-4">
