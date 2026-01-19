@@ -6,10 +6,10 @@ import {
   Calendar, 
   Receipt, 
   Plane, 
-  Bell,
   ChevronRight,
   Clock,
   AlertCircle,
+  Wallet,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -25,6 +25,7 @@ interface QuickAction {
 interface QuickActionsStripProps {
   pendingCount?: number;
   urgentCount?: number;
+  nextPayDate?: string;
   isRTL?: boolean;
   className?: string;
 }
@@ -39,9 +40,26 @@ const quickActions: QuickAction[] = [
 export function QuickActionsStrip({ 
   pendingCount = 0, 
   urgentCount = 0,
+  nextPayDate,
   isRTL = false,
   className,
 }: QuickActionsStripProps) {
+  const formatPayDate = (dateString?: string) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    return date.toLocaleDateString(isRTL ? 'ar-AE' : 'en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const getDaysUntil = (dateString?: string) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    const now = new Date();
+    return Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
+  const daysUntilPay = getDaysUntil(nextPayDate);
+  const formattedPayDate = formatPayDate(nextPayDate);
+
   return (
     <Card className={cn("border-border/50 bg-gradient-to-r from-card to-primary/5", className)}>
       <CardContent className="p-4">
@@ -73,33 +91,55 @@ export function QuickActionsStrip({
             ))}
           </div>
 
-          {/* Right side: Pending requests indicator */}
-          {pendingCount > 0 && (
-            <Link to="/employee/requests">
+          {/* Right side: Status indicators */}
+          <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+            {/* Next Payroll indicator */}
+            {formattedPayDate && daysUntilPay !== null && (
               <div className={cn(
-                "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer",
+                "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-success/10 border border-success/20",
                 isRTL && "flex-row-reverse"
               )}>
-                {urgentCount > 0 ? (
-                  <AlertCircle className="w-4 h-4 text-destructive" />
-                ) : (
-                  <Clock className="w-4 h-4 text-warning" />
-                )}
-                <span className="text-sm">
+                <Wallet className="w-4 h-4 text-success" />
+                <span className="text-sm text-success font-medium">
                   {isRTL 
-                    ? `${pendingCount} طلب قيد الانتظار`
-                    : `${pendingCount} pending request${pendingCount > 1 ? 's' : ''}`
+                    ? `الراتب: ${formattedPayDate}`
+                    : `Payroll: ${formattedPayDate}`
                   }
                 </span>
-                {urgentCount > 0 && (
-                  <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-[10px]">
-                    {urgentCount} {isRTL ? 'عاجل' : 'urgent'}
-                  </Badge>
-                )}
-                <ChevronRight className={cn("w-4 h-4 text-muted-foreground", isRTL && "rotate-180")} />
+                <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-[10px]">
+                  {daysUntilPay} {isRTL ? 'يوم' : 'd'}
+                </Badge>
               </div>
-            </Link>
-          )}
+            )}
+
+            {/* Pending requests indicator */}
+            {pendingCount > 0 && (
+              <Link to="/employee/requests">
+                <div className={cn(
+                  "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer",
+                  isRTL && "flex-row-reverse"
+                )}>
+                  {urgentCount > 0 ? (
+                    <AlertCircle className="w-4 h-4 text-destructive" />
+                  ) : (
+                    <Clock className="w-4 h-4 text-warning" />
+                  )}
+                  <span className="text-sm">
+                    {isRTL 
+                      ? `${pendingCount} طلب قيد الانتظار`
+                      : `${pendingCount} pending`
+                    }
+                  </span>
+                  {urgentCount > 0 && (
+                    <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-[10px]">
+                      {urgentCount} {isRTL ? 'عاجل' : 'urgent'}
+                    </Badge>
+                  )}
+                  <ChevronRight className={cn("w-4 h-4 text-muted-foreground", isRTL && "rotate-180")} />
+                </div>
+              </Link>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

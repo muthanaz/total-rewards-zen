@@ -18,7 +18,6 @@ import { usePrivacy } from '@/components/ui/privacy-toggle';
 import { cn } from '@/lib/utils';
 import { CompensationBreakdownModal } from '@/components/employee/CompensationBreakdownModal';
 import { QuickActionsStrip } from '@/components/employee/QuickActionsStrip';
-import { LeavePayrollWidget } from '@/components/employee/LeavePayrollWidget';
 import { ProfileCompleteness } from '@/components/employee/ProfileCompleteness';
 import { useEmployeeDashboard } from '@/hooks/useEmployeeDashboard';
 import { DataQualityBadge } from '@/components/employer/DataQualityBadge';
@@ -272,18 +271,11 @@ export default function EmployeeDashboard() {
         isRTL={isRTL}
       />
 
-      {/* Quick Actions Strip */}
+      {/* Quick Actions Strip with Next Payroll */}
       <QuickActionsStrip
         pendingCount={pendingCount}
         urgentCount={urgentCount}
-        isRTL={isRTL}
-      />
-
-      {/* Leave & Payroll Widget - NEW */}
-      <LeavePayrollWidget
-        leaveBalances={leaveBalances}
         nextPayDate={payrollData.nextPayDate}
-        lastUpdated={dashboardData?.lastUpdated || new Date().toISOString()}
         isRTL={isRTL}
       />
 
