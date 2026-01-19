@@ -3,7 +3,7 @@ import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, DollarSign, TrendingUp, TrendingDown, Smile, Ghost, FileCheck, Target, ArrowRight, AlertTriangle, CheckCircle2, Sparkles, Calendar, Briefcase, Eye } from 'lucide-react';
+import { Users, DollarSign, TrendingUp, TrendingDown, Smile, Ghost, FileCheck, Target, ArrowRight, AlertTriangle, CheckCircle2, Sparkles, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
@@ -104,7 +104,7 @@ const spendStacks = [
 export default function EmployerDashboard() {
   const formatCurrency = (value: number) => `AED ${(value / 1000000).toFixed(1)}M`;
   const budgetUtilization = (metrics.budgetUsed / metrics.annualBudget) * 100;
-  const { viewMode, setViewMode, isExecutive, isOperational } = useEmployerViewMode();
+  const { isExecutive, isOperational } = useEmployerViewMode();
   
   // UI Visibility hooks
   const { isVisible: showKpiCards } = useElementVisibility('employer', 'dashboard', 'kpi_cards');
@@ -120,7 +120,7 @@ export default function EmployerDashboard() {
   
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Executive Header with View Toggle */}
+      {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">
@@ -131,25 +131,10 @@ export default function EmployerDashboard() {
             {isExecutive ? 'Strategic overview • December 2024' : 'Operational tasks • December 2024'}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {/* View Mode Toggle */}
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'executive' | 'operational')} className="w-auto">
-            <TabsList className="grid w-full grid-cols-2 h-9">
-              <TabsTrigger value="operational" className="text-xs gap-1.5 px-3">
-                <Briefcase className="w-3.5 h-3.5" />
-                HR Ops
-              </TabsTrigger>
-              <TabsTrigger value="executive" className="text-xs gap-1.5 px-3">
-                <Eye className="w-3.5 h-3.5" />
-                Executive
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 px-3 py-1">
-            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-            Program Health: Good
-          </Badge>
-        </div>
+        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 px-3 py-1 w-fit">
+          <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+          Program Health: Good
+        </Badge>
       </div>
 
       {/* Operational Quick Actions (Only in HR mode) */}
