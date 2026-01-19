@@ -62,7 +62,6 @@ const navigation: NavGroup[] = [
     labelKey: 'nav.myBenefits',
     items: [
       { labelKey: 'nav.allBenefits', path: '/employee/benefits', icon: Gift },
-      { labelKey: 'Long-Term Financials', path: '/employee/long-term-financials', icon: Wallet },
       { labelKey: 'nav.benefitsAnalysis', path: '/employee/benefits-analysis', icon: TrendingUp },
     ],
   },
@@ -75,12 +74,13 @@ const navigation: NavGroup[] = [
       { labelKey: 'nav.schooling', path: '/employee/schooling', icon: GraduationCap },
       { labelKey: 'nav.health', path: '/employee/health', icon: Heart },
       { labelKey: 'nav.transport', path: '/employee/transport', icon: Car },
+      { labelKey: 'Long-Term Financials', path: '/employee/long-term-financials', icon: Wallet },
       { labelKey: 'nav.wellbeing', path: '/employee/wellbeing', icon: Dumbbell },
       { labelKey: 'nav.learning', path: '/employee/learning', icon: BookOpen },
     ],
   },
 
-  // 4) Leave Management
+  // 4) Leave Management - Clickable heading with direct link
   {
     labelKey: 'Leave Management',
     items: [
@@ -93,10 +93,10 @@ const navigation: NavGroup[] = [
     labelKey: 'nav.hrServices',
     items: [
       { labelKey: 'nav.claimsRequests', path: '/employee/requests', icon: Receipt },
-      { labelKey: 'nav.documents', path: '/employee/documents', icon: FileText },
+      { labelKey: 'HR Documents', path: '/employee/documents', icon: FileText },
       { labelKey: 'Knowledge Hub', path: '/employee/knowledge', icon: BookOpen },
       { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
-      { labelKey: 'nav.onboarding', path: '/employee/onboarding', icon: Shield },
+      { labelKey: 'Onboarding', path: '/employee/onboarding', icon: Shield },
     ],
   },
 ];

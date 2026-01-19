@@ -32,11 +32,12 @@ import {
   Receipt,
   Send,
   AlertTriangle,
-  Sparkles,
   ArrowRight,
   Paperclip,
+  Plane,
 } from "lucide-react";
 import { useRequests } from "@/hooks/useSupabaseData";
+import PerDiemWidget from "@/components/employee/PerDiemWidget";
 
 type RequestType = "claim" | "request" | "question";
 type Status = "Draft" | "Submitted" | "In Review" | "Needs Info" | "Approved" | "Rejected" | "Paid";
@@ -50,6 +51,7 @@ type Category =
   | "Learning & Development"
   | "Leave"
   | "Financial"
+  | "Per Diem"
   | "Other";
 
 type Priority = "Low" | "Normal" | "High";
@@ -156,6 +158,7 @@ const categories: Category[] = [
   "Learning & Development",
   "Leave",
   "Financial",
+  "Per Diem",
   "Other",
 ];
 
@@ -495,23 +498,35 @@ export default function Requests() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold tracking-tight">Claims & Requests Center</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Claims, Requests & Travel</h1>
         <p className="text-muted-foreground">
           Benefits-first submissions with clear status, next actions, and SLA expectations.
         </p>
         {isLoading && (
-          <div className="text-xs text-muted-foreground">Loading from Supabase…</div>
+          <div className="text-xs text-muted-foreground">Loading from database…</div>
         )}
-        {!isLoading && supabaseItems.length > 0 && (
-          <div className="text-xs text-muted-foreground">
-            Showing your live requests from Supabase.
-          </div>
-        )}
-        {!isLoading && supabaseItems.length === 0 && (
-          <div className="text-xs text-muted-foreground">
-            Demo mode: showing sample requests (no Supabase rows found).
-          </div>
-        )}
+      </div>
+
+      {/* Per Diem Section */}
+      <div className="grid lg:grid-cols-2 gap-4">
+        <PerDiemWidget />
+        <Card className="border-dashed">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Plane className="w-5 h-5 text-accent" />
+              Travel & Per Diem Info
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <p>Per diem rates are calculated based on your grade and destination region.</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Domestic (UAE): Standard local rates</li>
+              <li>GCC: Regional travel rates</li>
+              <li>International: Region-specific rates (Europe, Americas, Asia)</li>
+            </ul>
+            <p className="text-xs">All per diem claims require trip purpose and dates. Approval typically takes 3-5 business days.</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="border-dashed">
@@ -892,7 +907,7 @@ export default function Requests() {
       </Dialog>
 
       <div className="text-xs text-muted-foreground flex items-center gap-2">
-        <Sparkles className="w-4 h-4" />
+        <FileText className="w-4 h-4" />
         Tip: Add benefit context + amount + dates + proof of payment to minimize HR back-and-forth.
       </div>
     </div>
