@@ -67,23 +67,23 @@ export function BenefitCard({
   
   return (
     <Card 
-      className="group cursor-pointer bg-card border border-border/60 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300 overflow-hidden h-full flex flex-col"
+      className="group cursor-pointer bg-card border border-border/40 hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300 overflow-hidden h-full flex flex-col"
       style={{ animationDelay: `${index * 50}ms` }}
       onClick={onClick}
     >
       {/* Main content area */}
-      <div className="p-5 flex-1 flex flex-col">
+      <div className="p-6 flex-1 flex flex-col">
         {/* Header: Icon + Name + Arrow */}
         <div className={cn("flex items-start gap-4", isRTL && "flex-row-reverse")}>
           {/* Icon container */}
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center group-hover:from-accent/30 group-hover:to-accent/10 transition-all duration-300 shrink-0">
-            <Icon className="w-6 h-6 text-accent" />
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center group-hover:from-accent/20 group-hover:to-accent/8 transition-all duration-300 shrink-0">
+            <Icon className="w-5 h-5 text-accent" />
           </div>
           
           {/* Title and description */}
           <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
             <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse justify-end")}>
-              <h3 className="font-semibold text-base text-foreground group-hover:text-accent transition-colors leading-tight">
+              <h3 className="font-semibold text-[15px] text-foreground group-hover:text-accent transition-colors leading-tight">
                 {name}
               </h3>
               <ChevronRight className={cn(
@@ -91,44 +91,44 @@ export function BenefitCard({
                 isRTL && "rotate-180 group-hover:-translate-x-0.5"
               )} />
             </div>
-            <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
+            <p className="text-[13px] text-muted-foreground mt-1.5 line-clamp-1">
               {description}
             </p>
           </div>
         </div>
         
         {/* Spacer */}
-        <div className="flex-1 min-h-4" />
+        <div className="flex-1 min-h-5" />
         
         {/* Stats section */}
-        <div className="space-y-3 mt-4">
+        <div className="space-y-4 mt-5">
           {/* Value and status row */}
-          <div className={cn("flex items-end justify-between gap-2", isRTL && "flex-row-reverse")}>
+          <div className={cn("flex items-end justify-between gap-3", isRTL && "flex-row-reverse")}>
             <div className={cn(isRTL && "text-right")}>
-              <p className="text-2xl font-bold text-foreground tracking-tight">
+              <p className="text-xl font-bold text-foreground tracking-tight">
                 {formatCurrency(value)}
               </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-[13px] text-muted-foreground mt-1">
                 {isRTL ? 'القيمة السنوية' : 'Annual Value'}
               </p>
             </div>
             <Badge 
               variant="outline"
-              className={cn("text-xs px-2.5 py-1 font-medium border", status.badge)}
+              className={cn("text-[13px] px-3 py-1.5 font-medium border", status.badge)}
             >
               {utilization}%
             </Badge>
           </div>
           
           {/* Progress bar */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Progress 
               value={utilization} 
-              className={cn("h-2 bg-muted/40 rounded-full", status.progress)}
+              className={cn("h-1.5 bg-muted/30 rounded-full", status.progress)}
             />
             
             {/* Utilization details */}
-            <div className={cn("flex items-center justify-between text-xs", isRTL && "flex-row-reverse")}>
+            <div className={cn("flex items-center justify-between text-[13px]", isRTL && "flex-row-reverse")}>
               <span className="text-muted-foreground">
                 {formatCurrency(utilized)} {isRTL ? 'مستخدم' : 'used'}
               </span>

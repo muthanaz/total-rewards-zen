@@ -262,7 +262,7 @@ export default function EmployeeDashboard() {
   }
   
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* Personalized Header with Profile Completeness */}
       <ProfileCompleteness
         firstName={profileData.firstName}
@@ -281,9 +281,9 @@ export default function EmployeeDashboard() {
 
       {/* Compensation Summary Grid */}
       {showCompensationSummary && (
-        <div>
-          <div className={cn("flex items-center justify-between mb-3", isRTL && "flex-row-reverse")}>
-            <h2 className="text-base font-display font-semibold">
+        <section>
+          <div className={cn("flex items-center justify-between mb-4", isRTL && "flex-row-reverse")}>
+            <h2 className="text-lg font-display font-semibold tracking-tight">
               {isRTL ? 'ملخص التعويضات' : 'Compensation Summary'}
             </h2>
             <DataQualityBadge 
@@ -297,18 +297,18 @@ export default function EmployeeDashboard() {
             totalCompensation={totalCompensationData}
             isRTL={isRTL}
           />
-        </div>
+        </section>
       )}
 
       {/* Benefits Grid - Your Benefits */}
       {showYourBenefits && (
-        <div>
+        <section>
           <div className={cn("flex items-center justify-between mb-5", isRTL && "flex-row-reverse")}>
-            <h2 className="text-lg font-display font-semibold">{t('employee.dashboard.yourBenefits')}</h2>
+            <h2 className="text-lg font-display font-semibold tracking-tight">{t('employee.dashboard.yourBenefits')}</h2>
             <Button 
               variant="ghost" 
               size="sm" 
-              className={cn("text-accent hover:text-accent/80 h-8 text-sm gap-1.5", isRTL && "flex-row-reverse")}
+              className={cn("text-accent hover:text-accent/80 h-9 text-sm gap-1.5 font-medium", isRTL && "flex-row-reverse")}
               onClick={() => navigate('/employee/benefits')}
             >
               {t('common.seeAll')}
@@ -316,8 +316,8 @@ export default function EmployeeDashboard() {
             </Button>
           </div>
           
-          {/* 2 rows x 3 columns grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* 2 rows x 3 columns grid - increased gap */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {benefits.map((benefit, index) => {
               const utilization = benefit.value > 0 ? Math.round((benefit.utilized / benefit.value) * 100) : 0;
               const remaining = benefit.value - benefit.utilized;
@@ -326,45 +326,45 @@ export default function EmployeeDashboard() {
               return (
                 <Card 
                   key={benefit.name} 
-                  className="group cursor-pointer bg-card border border-border/60 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300 overflow-hidden"
+                  className="group cursor-pointer bg-card border border-border/40 hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300 overflow-hidden"
                   style={{ animationDelay: `${index * 50}ms` }}
                   onClick={() => handleBenefitClick(benefit.name)}
                 >
-                  <div className="p-5">
+                  <div className="p-6">
                     {/* Header: Icon + Name */}
                     <div className={cn("flex items-start gap-4", isRTL && "flex-row-reverse")}>
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center group-hover:from-accent/30 group-hover:to-accent/10 transition-all duration-300 shrink-0">
-                        <benefit.icon className="w-6 h-6 text-accent" />
+                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center group-hover:from-accent/20 group-hover:to-accent/8 transition-all duration-300 shrink-0">
+                        <benefit.icon className="w-5 h-5 text-accent" />
                       </div>
                       <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
                         <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse justify-end")}>
-                          <h3 className="font-semibold text-base text-foreground group-hover:text-accent transition-colors leading-tight">
+                          <h3 className="font-semibold text-[15px] text-foreground group-hover:text-accent transition-colors leading-tight">
                             {t(benefit.nameKey)}
                           </h3>
                           <ChevronIcon className={cn(
                             "w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all shrink-0"
                           )} />
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
+                        <p className="text-[13px] text-muted-foreground mt-1.5 line-clamp-1">
                           {benefit.description}
                         </p>
                       </div>
                     </div>
                     
-                    {/* Stats section */}
-                    <div className="mt-5 space-y-3">
-                      <div className={cn("flex items-end justify-between gap-2", isRTL && "flex-row-reverse")}>
+                    {/* Stats section - more breathing room */}
+                    <div className="mt-6 space-y-4">
+                      <div className={cn("flex items-end justify-between gap-3", isRTL && "flex-row-reverse")}>
                         <div className={cn(isRTL && "text-right")}>
-                          <p className="text-2xl font-bold text-foreground tracking-tight">
+                          <p className="text-xl font-bold text-foreground tracking-tight">
                             {formatCurrency(benefit.value)}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
+                          <p className="text-[13px] text-muted-foreground mt-1">
                             {isRTL ? 'القيمة السنوية' : 'Annual Value'}
                           </p>
                         </div>
                         <Badge 
                           variant="outline"
-                          className={cn("text-xs px-2.5 py-1 font-medium border", status.badge)}
+                          className={cn("text-[13px] px-3 py-1.5 font-medium border", status.badge)}
                         >
                           {utilization}%
                         </Badge>
@@ -372,10 +372,10 @@ export default function EmployeeDashboard() {
                       
                       <Progress 
                         value={utilization} 
-                        className={cn("h-2 bg-muted/40 rounded-full", status.progress)}
+                        className={cn("h-1.5 bg-muted/30 rounded-full", status.progress)}
                       />
                       
-                      <div className={cn("flex items-center justify-between text-xs", isRTL && "flex-row-reverse")}>
+                      <div className={cn("flex items-center justify-between text-[13px]", isRTL && "flex-row-reverse")}>
                         <span className="text-muted-foreground">
                           {formatCurrency(benefit.utilized)} {isRTL ? 'مستخدم' : 'used'}
                         </span>
@@ -392,7 +392,7 @@ export default function EmployeeDashboard() {
               );
             })}
           </div>
-        </div>
+        </section>
       )}
 
       {/* Benefits Utilization Section */}

@@ -53,7 +53,7 @@ export function CompensationGrid({ metrics, totalCompensation, isRTL = false }: 
   const benefitsPercent = totalCompensation.benefitsPercent ?? 34;
   
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* Total Compensation Row - Now at Top */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -62,18 +62,18 @@ export function CompensationGrid({ metrics, totalCompensation, isRTL = false }: 
       >
         <Card 
           className={cn(
-            "relative overflow-hidden border border-border/50 p-4",
-            totalCompensation.onCardClick && "cursor-pointer hover:shadow-md hover:border-accent/30 transition-all group"
+            "relative overflow-hidden border border-border/40 p-5",
+            totalCompensation.onCardClick && "cursor-pointer hover:shadow-md hover:border-accent/25 transition-all group"
           )}
           onClick={totalCompensation.onCardClick}
         >
-          {/* Gradient background: Teal (accent) from LEFT fading to white, Gold (amber) from RIGHT fading to white */}
+          {/* Gradient background: Teal (accent) from LEFT fading to white, Gold (amber) from RIGHT fading to white - softer */}
           <div className="absolute inset-0 bg-white dark:bg-card" />
-          <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-accent/10 via-accent/5 to-transparent" />
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-amber-500/10 via-amber-500/5 to-transparent" />
+          <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-accent/8 via-accent/3 to-transparent" />
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-amber-500/8 via-amber-500/3 to-transparent" />
         
           <div className="relative z-10">
-            <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-3", isRTL && "md:flex-row-reverse")}>
+            <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
               {/* Left side - Label and Formula */}
               <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
                 <div>
@@ -178,7 +178,7 @@ export function CompensationGrid({ metrics, totalCompensation, isRTL = false }: 
       </motion.div>
 
       {/* Metrics Row - 4 Cards with consistent height */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {metrics.map((metric, index) => (
           <motion.div
             key={metric.label}
@@ -188,18 +188,18 @@ export function CompensationGrid({ metrics, totalCompensation, isRTL = false }: 
             className="flex"
           >
             <Card className={cn(
-              'relative p-3 border transition-all duration-200 hover:shadow-md w-full flex flex-col',
+              'relative p-4 border transition-all duration-200 hover:shadow-md w-full flex flex-col',
               variantStyles[metric.variant || 'default']
             )}>
               <div className="flex items-start justify-between gap-2">
-                <div className={cn('p-1.5 rounded-lg', iconVariantStyles[metric.variant || 'default'])}>
-                  <metric.icon className="w-3.5 h-3.5" />
+                <div className={cn('p-2 rounded-lg', iconVariantStyles[metric.variant || 'default'])}>
+                  <metric.icon className="w-4 h-4" />
                 </div>
                 {metric.formula && (
                   <InfoTooltip formula={metric.formula} dataSource={metric.dataSource} />
                 )}
               </div>
-              <div className="mt-2 flex-1 flex flex-col justify-end">
+              <div className="mt-3 flex-1 flex flex-col justify-end">
                 <p className={cn(
                   "text-lg font-bold text-foreground tracking-tight transition-all duration-200",
                   metric.isSensitive && totalCompensation.salaryHidden && "blur-[4px] select-none"
@@ -208,11 +208,11 @@ export function CompensationGrid({ metrics, totalCompensation, isRTL = false }: 
                 </p>
                 {/* Subtitle for benefits showing potential value */}
                 {metric.subtitle && (
-                  <p className="text-[9px] text-amber-600/80 dark:text-amber-400/80 mt-0.5">
+                  <p className="text-[11px] text-amber-600/80 dark:text-amber-400/80 mt-1">
                     {metric.subtitle}
                   </p>
                 )}
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mt-0.5">{metric.label}</p>
+                <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wide mt-1">{metric.label}</p>
               </div>
             </Card>
           </motion.div>
