@@ -16,6 +16,8 @@ import {
   Database,
   BookOpen,
   ChevronDown,
+  Briefcase,
+  Eye,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -23,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
+import { useEmployerViewMode } from '@/contexts/EmployerViewModeContext';
 
 interface NavGroup {
   titleKey: string;
@@ -79,6 +82,7 @@ export function EmployerSidebar() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { t, direction } = useLanguage();
+  const { viewMode, setViewMode, isExecutive } = useEmployerViewMode();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<string[]>(navigationGroups.map(g => g.titleKey));
   const isRTL = direction === 'rtl';
@@ -119,6 +123,37 @@ export function EmployerSidebar() {
             </span>
           </div>
         </div>
+        
+        {/* View Mode Toggle */}
+        <div className="mt-4 p-1 bg-sidebar-accent/50 rounded-xl">
+          <div className="grid grid-cols-2 gap-1">
+            <button
+              onClick={() => setViewMode('operational')}
+              className={cn(
+                "flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200",
+                !isExecutive 
+                  ? "bg-sidebar-background text-sidebar-foreground shadow-sm" 
+                  : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+              )}
+            >
+              <Briefcase className="w-3.5 h-3.5" />
+              <span>HR Ops</span>
+            </button>
+            <button
+              onClick={() => setViewMode('executive')}
+              className={cn(
+                "flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200",
+                isExecutive 
+                  ? "bg-sidebar-background text-sidebar-foreground shadow-sm" 
+                  : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+              )}
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>Executive</span>
+            </button>
+          </div>
+        </div>
+
         {/* Theme & Language Controls */}
         <div className={cn(
           "flex items-center gap-1 mt-3 pt-3 border-t border-sidebar-border/50",
