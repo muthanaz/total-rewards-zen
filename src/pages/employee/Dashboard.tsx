@@ -37,13 +37,12 @@ const salaryData = {
 type BenefitValueType = 'guaranteed' | 'employer_cost' | 'performance' | 'budget';
 
 const benefits = [
-  { name: 'Housing Allowance', nameKey: 'benefit.housing', icon: Home, value: 120000, utilized: 120000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'home_living', route: '/employee/housing', category: 'housing', claimable: true, bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'], bulletsAr: ['يُدفع شهرياً مع الراتب', 'يمكن استخدامه للإيجار أو الرهن العقاري'] },
-  { name: 'Schooling Allowance', nameKey: 'benefit.education', icon: GraduationCap, value: 60000, utilized: 42000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'family_parenting', route: '/employee/schooling', category: 'education', claimable: true, bullets: ['Per child up to 18 years', 'Covers tuition fees only'], bulletsAr: ['لكل طفل حتى ١٨ عاماً', 'يغطي الرسوم الدراسية فقط'] },
-  { name: 'Health Insurance', nameKey: 'benefit.health', icon: Heart, value: 45000, utilized: 12500, type: 'health_protection', valueType: 'employer_cost' as BenefitValueType, area: 'health', route: '/employee/health', category: 'health', claimable: true, bullets: ['Includes dental and optical', 'Covers spouse and children'], bulletsAr: ['يشمل طب الأسنان والبصريات', 'يغطي الزوج/الزوجة والأطفال'] },
-  { name: 'Transport & Mobility', nameKey: 'benefit.transport', icon: Car, value: 39000, utilized: 33000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'mobility', route: '/employee/transport', category: 'transport', claimable: true, bullets: ['Monthly allowance: AED 2,000', 'Annual flight tickets included', 'Covers fuel, parking & tickets'], bulletsAr: ['بدل شهري: ٢٠٠٠ درهم', 'تذاكر الطيران السنوية مشمولة', 'يغطي الوقود والمواقف والتذاكر'] },
-  { name: 'Long-Term Financials', nameKey: 'benefit.financials', icon: PiggyBank, value: 0, utilized: 0, type: 'wealth_ownership', valueType: 'budget' as BenefitValueType, area: 'money', route: '/employee/long-term-financials', category: 'financial', claimable: false, bullets: ['Bonus, gratuity & savings', 'Equity vesting schedule'], bulletsAr: ['المكافآت والتقاعد والادخار', 'جدول استحقاق الأسهم'] },
-  { name: 'Wellbeing Program', nameKey: 'benefit.wellbeing', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', valueType: 'budget' as BenefitValueType, area: 'health', route: '/employee/wellbeing', category: 'wellbeing', claimable: true, bullets: ['Gym membership covered', 'Wellness app subscription'], bulletsAr: ['عضوية النادي الرياضي مغطاة', 'اشتراك تطبيق العافية'] },
-  { name: 'Learning & Development', nameKey: 'benefit.learning', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', valueType: 'budget' as BenefitValueType, area: 'career', route: '/employee/learning', category: 'learning', claimable: true, bullets: ['Courses and certifications', 'Pre-approval required'], bulletsAr: ['الدورات والشهادات', 'يتطلب موافقة مسبقة'] },
+  { name: 'Housing Allowance', nameKey: 'benefit.housing', icon: Home, value: 120000, utilized: 120000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'home_living', route: '/employee/housing', category: 'housing', claimable: true, description: 'Monthly housing allowance paid with salary', bullets: ['Paid monthly with salary', 'Can be used for rent or mortgage'], bulletsAr: ['يُدفع شهرياً مع الراتب', 'يمكن استخدامه للإيجار أو الرهن العقاري'] },
+  { name: 'Schooling Allowance', nameKey: 'benefit.education', icon: GraduationCap, value: 60000, utilized: 42000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'family_parenting', route: '/employee/schooling', category: 'education', claimable: true, description: 'School fee coverage for dependents', bullets: ['Per child up to 18 years', 'Covers tuition fees only'], bulletsAr: ['لكل طفل حتى ١٨ عاماً', 'يغطي الرسوم الدراسية فقط'] },
+  { name: 'Health Insurance', nameKey: 'benefit.health', icon: Heart, value: 45000, utilized: 12500, type: 'health_protection', valueType: 'employer_cost' as BenefitValueType, area: 'health', route: '/employee/health', category: 'health', claimable: true, description: 'Comprehensive health coverage for family', bullets: ['Includes dental and optical', 'Covers spouse and children'], bulletsAr: ['يشمل طب الأسنان والبصريات', 'يغطي الزوج/الزوجة والأطفال'] },
+  { name: 'Transport & Mobility', nameKey: 'benefit.transport', icon: Car, value: 39000, utilized: 33000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'mobility', route: '/employee/transport', category: 'transport', claimable: true, description: 'Monthly transport and flight tickets', bullets: ['Monthly allowance: AED 2,000', 'Annual flight tickets included', 'Covers fuel, parking & tickets'], bulletsAr: ['بدل شهري: ٢٠٠٠ درهم', 'تذاكر الطيران السنوية مشمولة', 'يغطي الوقود والمواقف والتذاكر'] },
+  { name: 'Wellbeing Program', nameKey: 'benefit.wellbeing', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', valueType: 'budget' as BenefitValueType, area: 'health', route: '/employee/wellbeing', category: 'wellbeing', claimable: true, description: 'Gym membership and wellness apps', bullets: ['Gym membership covered', 'Wellness app subscription'], bulletsAr: ['عضوية النادي الرياضي مغطاة', 'اشتراك تطبيق العافية'] },
+  { name: 'Learning & Development', nameKey: 'benefit.learning', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', valueType: 'budget' as BenefitValueType, area: 'career', route: '/employee/learning', category: 'learning', claimable: true, description: 'Professional courses and certifications', bullets: ['Courses and certifications', 'Pre-approval required'], bulletsAr: ['الدورات والشهادات', 'يتطلب موافقة مسبقة'] },
 ];
 
 export default function EmployeeDashboard() {
@@ -264,114 +263,104 @@ export default function EmployeeDashboard() {
       {/* Benefits Grid - Your Benefits */}
       {showYourBenefits && (
         <div>
-          <div className={cn("flex items-center justify-between mb-4", isRTL && "flex-row-reverse")}>
-            <h2 className="text-base font-display font-semibold">{t('employee.dashboard.yourBenefits')}</h2>
+          <div className={cn("flex items-center justify-between mb-5", isRTL && "flex-row-reverse")}>
+            <h2 className="text-lg font-display font-semibold">{t('employee.dashboard.yourBenefits')}</h2>
             <Button 
               variant="ghost" 
               size="sm" 
-              className={cn("text-accent hover:text-accent/80 h-7 text-xs gap-1", isRTL && "flex-row-reverse")}
+              className={cn("text-accent hover:text-accent/80 h-8 text-sm gap-1.5", isRTL && "flex-row-reverse")}
               onClick={() => navigate('/employee/benefits')}
             >
               {t('common.seeAll')}
-              <ChevronIcon className="w-3 h-3" />
+              <ChevronIcon className="w-4 h-4" />
             </Button>
           </div>
           
-          {/* Modern grid layout - 4 columns on desktop, 2 on mobile */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* 2 rows x 3 columns grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {benefits.map((benefit, index) => {
               const utilization = benefit.value > 0 ? Math.round((benefit.utilized / benefit.value) * 100) : 0;
               const remaining = benefit.value - benefit.utilized;
               const isFullyUsed = utilization >= 100;
-              const hasValue = benefit.value > 0;
+              
+              // Determine status styling
+              const getStatusStyle = () => {
+                if (isFullyUsed) return { badge: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20', progress: '[&>div]:bg-emerald-500' };
+                if (utilization >= 50) return { badge: 'bg-blue-500/10 text-blue-600 border-blue-500/20', progress: '[&>div]:bg-blue-500' };
+                if (utilization >= 20) return { badge: 'bg-amber-500/10 text-amber-600 border-amber-500/20', progress: '[&>div]:bg-amber-500' };
+                return { badge: 'bg-slate-500/10 text-slate-600 border-slate-500/20', progress: '[&>div]:bg-slate-400' };
+              };
+              
+              const status = getStatusStyle();
               
               return (
                 <Card 
                   key={benefit.name} 
-                  className="group cursor-pointer border bg-card hover:bg-accent/5 hover:border-accent/30 transition-all duration-200 overflow-hidden"
-                  style={{ animationDelay: `${index * 40}ms` }}
+                  className="group cursor-pointer bg-card border border-border/60 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300 overflow-hidden"
+                  style={{ animationDelay: `${index * 50}ms` }}
                   onClick={() => handleBenefitClick(benefit.name)}
                 >
-                  <div className="p-4">
-                    {/* Header row with icon and name */}
-                    <div className={cn("flex items-center gap-3 mb-3", isRTL && "flex-row-reverse")}>
-                      <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors shrink-0">
-                        <benefit.icon className="w-5 h-5 text-accent" />
+                  <div className="p-5">
+                    {/* Header: Icon + Name */}
+                    <div className={cn("flex items-start gap-4", isRTL && "flex-row-reverse")}>
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center group-hover:from-accent/30 group-hover:to-accent/10 transition-all duration-300 shrink-0">
+                        <benefit.icon className="w-6 h-6 text-accent" />
                       </div>
                       <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
-                        <h3 className="font-semibold text-sm leading-tight group-hover:text-accent transition-colors line-clamp-1">
-                          {t(benefit.nameKey)}
-                        </h3>
-                        <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
-                          {benefit.bullets[0]}
+                        <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse justify-end")}>
+                          <h3 className="font-semibold text-base text-foreground group-hover:text-accent transition-colors leading-tight">
+                            {t(benefit.nameKey)}
+                          </h3>
+                          <ChevronIcon className={cn(
+                            "w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                          )} />
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
+                          {benefit.description}
                         </p>
                       </div>
                     </div>
                     
-                    {/* Value display */}
-                    {hasValue ? (
-                      <div className="space-y-2">
-                        <div className={cn("flex items-baseline justify-between", isRTL && "flex-row-reverse")}>
-                          <span className="text-lg font-bold text-foreground">
-                            {formatCurrencyShort(benefit.value)}
-                          </span>
-                          <Badge 
-                            variant="secondary" 
-                            className={cn(
-                              "text-[10px] px-1.5 py-0 h-5",
-                              isFullyUsed 
-                                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" 
-                                : utilization < 30 
-                                  ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                                  : "bg-blue-500/10 text-blue-600 border-blue-500/20"
-                            )}
-                          >
-                            {utilization}% {isRTL ? 'مستخدم' : 'used'}
-                          </Badge>
+                    {/* Stats section */}
+                    <div className="mt-5 space-y-3">
+                      {/* Value and status */}
+                      <div className={cn("flex items-end justify-between gap-2", isRTL && "flex-row-reverse")}>
+                        <div className={cn(isRTL && "text-right")}>
+                          <p className="text-2xl font-bold text-foreground tracking-tight">
+                            {formatCurrency(benefit.value)}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {isRTL ? 'القيمة السنوية' : 'Annual Value'}
+                          </p>
                         </div>
-                        
-                        {/* Progress bar */}
-                        <div className="relative">
-                          <Progress 
-                            value={utilization} 
-                            className={cn(
-                              "h-1.5 bg-muted/50",
-                              isFullyUsed 
-                                ? "[&>div]:bg-emerald-500" 
-                                : "[&>div]:bg-accent"
-                            )}
-                          />
-                        </div>
-                        
-                        {/* Remaining amount */}
-                        <p className={cn("text-xs text-muted-foreground", isRTL && "text-right")}>
+                        <Badge 
+                          variant="outline"
+                          className={cn("text-xs px-2.5 py-1 font-medium border", status.badge)}
+                        >
+                          {utilization}%
+                        </Badge>
+                      </div>
+                      
+                      {/* Progress bar */}
+                      <Progress 
+                        value={utilization} 
+                        className={cn("h-2 bg-muted/40 rounded-full", status.progress)}
+                      />
+                      
+                      {/* Usage details */}
+                      <div className={cn("flex items-center justify-between text-xs", isRTL && "flex-row-reverse")}>
+                        <span className="text-muted-foreground">
+                          {formatCurrency(benefit.utilized)} {isRTL ? 'مستخدم' : 'used'}
+                        </span>
+                        <span className={cn("font-medium", remaining > 0 ? "text-accent" : "text-emerald-600")}>
                           {remaining > 0 
                             ? `${formatCurrency(remaining)} ${isRTL ? 'متبقي' : 'remaining'}`
-                            : isRTL ? 'تم الاستخدام بالكامل' : 'Fully utilized'
+                            : isRTL ? 'مكتمل' : 'Complete'
                           }
-                        </p>
-                      </div>
-                    ) : (
-                      <div className={cn("text-center py-2", isRTL && "text-right")}>
-                        <span className="text-sm text-muted-foreground">
-                          {isRTL ? 'عرض التفاصيل' : 'View Details'}
                         </span>
-                        <ChevronIcon className="w-4 h-4 inline-block text-muted-foreground ml-1" />
                       </div>
-                    )}
-                  </div>
-                  
-                  {/* Bottom action area - only for claimable benefits */}
-                  {benefit.claimable && hasValue && (
-                    <div className="px-4 py-2 border-t bg-muted/30">
-                      <BenefitActionButtons
-                        benefitName={benefit.name}
-                        benefitCategory={benefit.category}
-                        isRTL={isRTL}
-                        compact={true}
-                      />
                     </div>
-                  )}
+                  </div>
                 </Card>
               );
             })}
