@@ -2,7 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Users, DollarSign, TrendingUp, TrendingDown, Smile, Ghost, FileCheck, Target, ArrowRight, AlertTriangle, CheckCircle2, Sparkles, Calendar } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Users, DollarSign, TrendingUp, TrendingDown, Smile, Ghost, FileCheck, Target, ArrowRight, AlertTriangle, CheckCircle2, Sparkles, Calendar, Briefcase, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
@@ -15,6 +16,7 @@ import {
 } from '@/components/charts';
 import { EmployerBenefitRecommendations, TrendIndicator } from '@/components/dashboard';
 import { useElementVisibility } from '@/contexts/UIVisibilityContext';
+import { useEmployerViewMode } from '@/contexts/EmployerViewModeContext';
 
 const metrics = {
   totalEmployees: 156,
@@ -102,6 +104,7 @@ const spendStacks = [
 export default function EmployerDashboard() {
   const formatCurrency = (value: number) => `AED ${(value / 1000000).toFixed(1)}M`;
   const budgetUtilization = (metrics.budgetUsed / metrics.annualBudget) * 100;
+  const { viewMode, setViewMode, isExecutive, isOperational } = useEmployerViewMode();
   
   // UI Visibility hooks
   const { isVisible: showKpiCards } = useElementVisibility('employer', 'dashboard', 'kpi_cards');
@@ -117,22 +120,95 @@ export default function EmployerDashboard() {
   
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Executive Header */}
+      {/* Executive Header with View Toggle */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">Executive Dashboard</h1>
+          <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">
+            {isExecutive ? 'Executive Dashboard' : 'HR Operations Dashboard'}
+          </h1>
           <p className="text-muted-foreground flex items-center gap-2">
             <Calendar className="w-4 h-4" />
-            Benefits program performance • December 2024
+            {isExecutive ? 'Strategic overview • December 2024' : 'Operational tasks • December 2024'}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* View Mode Toggle */}
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'executive' | 'operational')} className="w-auto">
+            <TabsList className="grid w-full grid-cols-2 h-9">
+              <TabsTrigger value="operational" className="text-xs gap-1.5 px-3">
+                <Briefcase className="w-3.5 h-3.5" />
+                HR Ops
+              </TabsTrigger>
+              <TabsTrigger value="executive" className="text-xs gap-1.5 px-3">
+                <Eye className="w-3.5 h-3.5" />
+                Executive
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
           <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 px-3 py-1">
             <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
             Program Health: Good
           </Badge>
         </div>
       </div>
+
+      {/* Operational Quick Actions (Only in HR mode) */}
+      {isOperational && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <Link to="/employer/claims">
+            <Card className="hover:shadow-md transition-all cursor-pointer border-amber-500/20 bg-gradient-to-br from-card to-amber-500/5">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-amber-500/10">
+                  <FileCheck className="w-5 h-5 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-amber-600">{metrics.pendingClaims}</p>
+                  <p className="text-xs text-muted-foreground">Pending Claims</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link to="/employer/segments">
+            <Card className="hover:shadow-md transition-all cursor-pointer">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-blue-500/10">
+                  <Users className="w-5 h-5 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{metrics.totalEmployees}</p>
+                  <p className="text-xs text-muted-foreground">Employees</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link to="/employer/integrations">
+            <Card className="hover:shadow-md transition-all cursor-pointer">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-emerald-500/10">
+                  <Target className="w-5 h-5 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-emerald-600">92%</p>
+                  <p className="text-xs text-muted-foreground">Data Coverage</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link to="/employer/zombie">
+            <Card className="hover:shadow-md transition-all cursor-pointer border-amber-500/20">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-amber-500/10">
+                  <Ghost className="w-5 h-5 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-amber-600">{formatCurrency(metrics.zombieSpend)}</p>
+                  <p className="text-xs text-muted-foreground">Zombie Spend</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+      )}
 
       {/* Executive KPI Cards - Primary Row */}
       {showKpiCards && (
