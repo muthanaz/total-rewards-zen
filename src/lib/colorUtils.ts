@@ -95,9 +95,9 @@ export function getBenefitColorByKey(key: string): typeof BENEFIT_CATEGORIES[Ben
   const keyMap: Record<string, BenefitCategoryKey> = {
     housing: 'housing',
     housingallowance: 'housing',
-    education: 'education',
-    educationallowance: 'education',
-    schooling: 'education',
+    education: 'schooling',
+    educationallowance: 'schooling',
+    schooling: 'schooling',
     health: 'health',
     healthinsurance: 'health',
     transport: 'transport',
@@ -138,7 +138,7 @@ export function getBenefitColor(benefitName: string) {
 export function getBenefitChartColors(): { name: string; color: string }[] {
   return [
     { name: 'Housing', color: BENEFIT_CATEGORIES.housing.color },
-    { name: 'Education', color: BENEFIT_CATEGORIES.education.color },
+    { name: 'Schooling', color: BENEFIT_CATEGORIES.schooling.color },
     { name: 'Health', color: BENEFIT_CATEGORIES.health.color },
     { name: 'Transport', color: BENEFIT_CATEGORIES.transport.color },
     { name: 'Bonus', color: BENEFIT_CATEGORIES.rewards.color },

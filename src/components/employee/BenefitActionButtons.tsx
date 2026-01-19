@@ -107,9 +107,9 @@ export function BenefitActionButtons({
       {/* Claim/Request Button */}
       <Button
         variant="ghost"
-        size="sm"
+        size="xs"
         className={cn(
-          "h-6 px-1.5 text-[10px] text-muted-foreground hover:text-primary hover:bg-primary/10",
+          "text-muted-foreground hover:text-primary hover:bg-primary/10",
           compact && "gap-0.5"
         )}
         onClick={(e) => {
@@ -124,9 +124,9 @@ export function BenefitActionButtons({
       {/* Rate Button */}
       <Button
         variant="ghost"
-        size="sm"
+        size="xs"
         className={cn(
-          "h-6 px-1.5 text-[10px] text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10",
+          "text-muted-foreground hover:text-warning hover:bg-warning/10",
           compact && "gap-0.5"
         )}
         onClick={(e) => {

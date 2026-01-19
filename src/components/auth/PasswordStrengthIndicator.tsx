@@ -32,13 +32,13 @@ export function PasswordStrengthIndicator({ password, className }: PasswordStren
     
     if (score >= 5) {
       strength = 'strong';
-      color = 'bg-green-500';
+      color = 'bg-success';
     } else if (score >= 4) {
       strength = 'good';
-      color = 'bg-blue-500';
+      color = 'bg-info';
     } else if (score >= 3) {
       strength = 'fair';
-      color = 'bg-yellow-500';
+      color = 'bg-warning';
     }
     
     return { passed, score, percentage, strength, color };
@@ -56,9 +56,9 @@ export function PasswordStrengthIndicator({ password, className }: PasswordStren
           <span className="text-muted-foreground">Password strength</span>
           <span className={cn(
             'font-medium capitalize',
-            analysis.strength === 'strong' && 'text-green-500',
-            analysis.strength === 'good' && 'text-blue-500',
-            analysis.strength === 'fair' && 'text-yellow-500',
+            analysis.strength === 'strong' && 'text-success',
+            analysis.strength === 'good' && 'text-info',
+            analysis.strength === 'fair' && 'text-warning',
             analysis.strength === 'weak' && 'text-destructive'
           )}>
             {analysis.strength}
@@ -81,7 +81,7 @@ export function PasswordStrengthIndicator({ password, className }: PasswordStren
               key={index}
               className={cn(
                 'flex items-center gap-2 text-xs transition-colors',
-                isPassed ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'
+                isPassed ? 'text-success' : 'text-muted-foreground'
               )}
             >
               {isPassed ? (
