@@ -15,6 +15,15 @@ export interface Pet {
   breed: string;
 }
 
+export interface BankCard {
+  id: string;
+  cardName: string;
+  bank: string;
+  cardType: 'credit' | 'debit';
+  lastFourDigits: string;
+  isPrimary?: boolean;
+}
+
 export interface ProfileData {
   // Basic Info
   firstName: string;
@@ -60,6 +69,8 @@ interface ProfileContextType {
   addPet: () => void;
   updatePet: (id: string, field: keyof Pet, value: string) => void;
   removePet: (id: string) => void;
+  bankCards: BankCard[];
+  setBankCards: (cards: BankCard[]) => void;
   selectedInterests: string[];
   setSelectedInterests: (interests: string[]) => void;
   toggleInterest: (interest: string) => void;
@@ -107,6 +118,11 @@ const defaultPets: Pet[] = [
   { id: '1', name: 'Max', type: 'Dog', breed: 'Golden Retriever' },
 ];
 
+const defaultBankCards: BankCard[] = [
+  { id: '1', cardName: 'Emirates NBD Visa Signature', bank: 'Emirates NBD', cardType: 'credit', lastFourDigits: '4521', isPrimary: true },
+  { id: '2', cardName: 'ADCB TouchPoints Titanium', bank: 'ADCB', cardType: 'credit', lastFourDigits: '8734', isPrimary: false },
+];
+
 const defaultInterests = ['Travel', 'Fitness', 'Technology', 'Photography'];
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -115,6 +131,7 @@ export function ProfileProvider({ children: childrenProp }: { children: ReactNod
   const [profile, setProfile] = useState<ProfileData>(defaultProfile);
   const [children, setChildren] = useState<Child[]>(defaultChildren);
   const [pets, setPets] = useState<Pet[]>(defaultPets);
+  const [bankCards, setBankCards] = useState<BankCard[]>(defaultBankCards);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(defaultInterests);
 
   const updateProfile = (updates: Partial<ProfileData>) => {
@@ -179,6 +196,8 @@ export function ProfileProvider({ children: childrenProp }: { children: ReactNod
     addPet,
     updatePet,
     removePet,
+    bankCards,
+    setBankCards,
     selectedInterests,
     setSelectedInterests,
     toggleInterest,
