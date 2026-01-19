@@ -11,7 +11,7 @@ const routeLabels: Record<string, string> = {
   employee: 'Dashboard',
   employer: 'Dashboard',
   housing: 'Housing',
-  schooling: 'Education',
+  schooling: 'Schooling',
   health: 'Health Insurance',
   transport: 'Transport & Mobility',
   wellbeing: 'Wellbeing',

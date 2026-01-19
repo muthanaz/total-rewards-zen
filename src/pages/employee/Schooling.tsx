@@ -234,7 +234,7 @@ export default function SchoolingPage() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-display flex items-center gap-2">
             <Info className="w-5 h-5 text-accent" />
-            How Your Education Allowance Works
+            How Your Schooling Allowance Works
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
