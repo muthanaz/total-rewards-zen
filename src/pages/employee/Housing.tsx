@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { RecommendedVendorsModule } from '@/components/employee/RecommendedVendorsModule';
+import { BenefitCrossLinks } from '@/components/employee/BenefitCrossLinks';
 import { Home, Search, Star, Clock, ExternalLink, MapPin, Bath, Bed, Wallet, TrendingDown, Percent, CheckCircle2 } from 'lucide-react';
 import { useHousingAreas, useHousingListings } from '@/hooks/useSupabaseData';
 import { BENEFIT_CATEGORIES } from '@/lib/benefitCategories';
@@ -155,7 +157,11 @@ export default function HousingPage() {
         policyLabel="View Full Policy"
       />
 
-      {/* 3. How It Works */}
+      {/* Cross-links */}
+      <BenefitCrossLinks benefitCategory="Housing" showClaimLink={false} />
+
+      {/* Recommended Vendors */}
+      <RecommendedVendorsModule benefitCategory="Housing" title="Housing & Home Partners" />
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-display flex items-center gap-2">

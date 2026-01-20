@@ -9,7 +9,7 @@ import {
   Gift, Star, CheckCircle, Grid3X3, List, Sparkles, 
   ShoppingBag, Coffee, Activity, Users, BookOpen, Home, Car, Plane,
   CreditCard, Search, X, Clock, Ticket, Heart, AlertCircle,
-  Calendar, Tag
+  Calendar, Tag, Building2, Link as LinkIcon, QrCode, Wallet
 } from 'lucide-react';
 import { useMarketplaceOffers, usePerkActivations } from '@/hooks/useSupabaseData';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -56,6 +56,19 @@ const CATEGORY_TABS = [
   'Experiences',
 ];
 
+// Redemption method types
+type RedemptionMethod = 'code' | 'deeplink' | 'voucher' | 'payroll';
+
+const REDEMPTION_CONFIG: Record<RedemptionMethod, { label: string; description: string }> = {
+  'code': { label: 'Promo Code', description: 'Copy code and use at checkout' },
+  'deeplink': { label: 'Direct Link', description: 'Click to apply discount automatically' },
+  'voucher': { label: 'E-Voucher', description: 'Download voucher to present in-store' },
+  'payroll': { label: 'Payroll Deduction', description: 'Deducted from your salary' },
+};
+
+// Offer sponsorship type
+type SponsorshipType = 'employer' | 'public';
+
 // Voucher status helper
 type VoucherStatus = 'active' | 'redeemed' | 'expired';
 
@@ -73,6 +86,24 @@ interface VoucherData {
   expiresAt: string;
   status: VoucherStatus;
   code?: string;
+  redemptionMethod?: RedemptionMethod;
+}
+
+// Helper to determine sponsorship type (demo logic)
+function getOfferSponsorship(offer: any): SponsorshipType {
+  // In real implementation, this would come from the offer data
+  // For demo, we mark offers with high discounts as employer-sponsored
+  return (offer.discount_percent && offer.discount_percent >= 15) ? 'employer' : 'public';
+}
+
+// Helper to determine redemption method (demo logic)
+function getRedemptionMethod(offer: any): RedemptionMethod {
+  // In real implementation, this would come from the offer data
+  const category = offer.category?.toLowerCase() || '';
+  if (category.includes('fitness') || category.includes('health')) return 'voucher';
+  if (category.includes('learning')) return 'deeplink';
+  if (category.includes('shopping')) return 'payroll';
+  return 'code';
 }
 
 function MarketplaceContent() {
@@ -208,6 +239,9 @@ function MarketplaceContent() {
     }
   };
 
+  // Count sponsored vs public offers
+  const sponsoredCount = offers.filter(o => getOfferSponsorship(o) === 'employer').length;
+
   // Empty state when no offers available
   if (offers.length === 0) {
     return (
@@ -226,18 +260,21 @@ function MarketplaceContent() {
             </div>
             <h3 className="font-semibold text-lg mb-2">No Offers Available Yet</h3>
             <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6">
-              Your employer enables marketplace offers based on your eligibility and benefit entitlements. 
-              New offers are added regularly based on vendor partnerships.
+              Marketplace offers are enabled by your employer based on eligibility and benefit entitlements. 
+              Ask HR to enable the marketplace for your organization.
             </p>
             <div className="p-4 rounded-xl bg-muted/50 max-w-sm mx-auto text-sm text-left space-y-2">
               <p className="font-medium">How it works:</p>
               <ul className="text-muted-foreground space-y-1">
-                <li>• Vendors partner with your employer</li>
+                <li>• <span className="text-accent font-medium">Employer-Sponsored</span> — Exclusive discounts subsidized by your company</li>
+                <li>• <span className="text-muted-foreground font-medium">Public Offers</span> — Partner discounts available to all employees</li>
                 <li>• Offers are curated based on your profile</li>
                 <li>• Eligibility depends on your benefit tier</li>
-                <li>• Discounts are exclusive to employees</li>
               </ul>
             </div>
+            <Button variant="outline" className="mt-6" asChild>
+              <a href="/employee/requests?type=question">Ask HR about Marketplace</a>
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -258,6 +295,23 @@ function MarketplaceContent() {
           variant: 'accent',
         }}
       />
+
+      {/* Sponsorship Legend */}
+      <div className="flex items-center gap-4 text-xs">
+        <div className="flex items-center gap-2">
+          <Badge className="bg-accent/10 text-accent border-0 gap-1">
+            <Building2 className="w-3 h-3" />
+            Employer-Sponsored
+          </Badge>
+          <span className="text-muted-foreground">({sponsoredCount} offers) — Exclusive discounts subsidized by your company</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="gap-1">
+            Public Offer
+          </Badge>
+          <span className="text-muted-foreground">— Partner discounts available to all employees</span>
+        </div>
+      </div>
 
       {/* Main Tabs */}
       <Tabs defaultValue="personalized" className="space-y-6">
