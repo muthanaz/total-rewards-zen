@@ -13,6 +13,7 @@ import {
   Calendar, Tag, Building2, ShieldCheck, Filter, Info, HelpCircle
 } from 'lucide-react';
 import { useMarketplaceOffers, usePerkActivations } from '@/hooks/useSupabaseData';
+import { useActivateOffer } from '@/hooks/useActivateOffer';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
@@ -95,7 +96,8 @@ interface VoucherData {
 
 function MarketplaceContent() {
   const { data: offers = [], isLoading } = useMarketplaceOffers();
-  const { data: activations = [] } = usePerkActivations();
+  const { data: activations = [], refetch: refetchActivations } = usePerkActivations();
+  const { mutate: activateOffer, isPending: isActivating } = useActivateOffer();
   const { bankCards, profile, children } = useProfile();
   const { language, direction } = useLanguage();
   const { toast } = useToast();
@@ -212,15 +214,17 @@ function MarketplaceContent() {
   const sponsoredCount = offers.filter(o => getOfferSponsorship(o) === 'employer').length;
   const publicCount = offers.length - sponsoredCount;
 
+  // P0 FIX: Actually insert perk_activation into DB
   const handleActivate = (offer: any) => {
-    toast({ 
-      title: t("Offer Activated! 🎉", "تم تفعيل العرض! 🎉"), 
-      description: t(
-        `${offer.title} has been activated. Check "My Vouchers" for your code.`,
-        `تم تفعيل ${offer.title}. تحقق من "قسائمي" للحصول على الرمز.`
-      )
-    });
-    setSelectedOffer(null);
+    activateOffer(
+      { id: offer.id, title: offer.title, vendor_id: offer.vendor_id },
+      {
+        onSuccess: () => {
+          refetchActivations();
+          setSelectedOffer(null);
+        },
+      }
+    );
   };
 
   const handleSave = (offerId: string) => {
@@ -880,6 +884,7 @@ function MarketplaceContent() {
         onActivate={handleActivate}
         isSaved={selectedOffer ? savedOffers.has(selectedOffer.id) : false}
         onToggleSave={handleSave}
+        isActivating={isActivating}
       />
     </div>
   );
