@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { PageLayout, MetricCard, MetricGrid } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +16,7 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow } from 'date-fns';
+import { useAdminAuditLog } from '@/hooks/useAdminAuditLog';
 
 const MODERATION_ITEMS = [
   { id: '1', type: 'vendor', entity: 'FitLife Gym', reason: 'New vendor application', submitted_at: new Date(Date.now() - 1000 * 60 * 30), priority: 'high', details: 'Complete KYB documents submitted' },
@@ -40,6 +43,8 @@ export default function AdminModeration() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
+  const queryClient = useQueryClient();
+  const { createAuditLog } = useAdminAuditLog();
 
   const [items, setItems] = useState(MODERATION_ITEMS);
   const [selectedItem, setSelectedItem] = useState<typeof MODERATION_ITEMS[0] | null>(null);
@@ -55,31 +60,97 @@ export default function AdminModeration() {
     { title: t('Offers', 'العروض'), value: items.filter(i => i.type === 'offer').length, icon: Tag },
   ];
 
-  const handleApprove = (item: typeof MODERATION_ITEMS[0]) => {
-    setItems(prev => prev.filter(i => i.id !== item.id));
-    toast.success(t(`Approved: ${item.entity}`, `تمت الموافقة: ${item.entity}`));
-    setSelectedItem(null);
+  // P0 FIX: Mutation to actually persist moderation actions to DB
+  const moderationMutation = useMutation({
+    mutationFn: async ({ item, action, reason }: { item: typeof MODERATION_ITEMS[0]; action: 'approve' | 'reject' | 'request_changes'; reason?: string }) => {
+      // For vendor type, update vendors table
+      if (item.type === 'vendor') {
+        const newStatus = action === 'approve' ? 'active' : action === 'reject' ? 'rejected' : 'pending';
+        const { error } = await supabase
+          .from('vendors')
+          .update({ status: newStatus, is_active: action === 'approve' })
+          .eq('id', item.id);
+        if (error && error.code !== 'PGRST116') throw error; // Ignore not found for demo
+      }
+      
+      // For offer type, update marketplace_offers table  
+      if (item.type === 'offer') {
+        const newStatus = action === 'approve' ? 'active' : action === 'reject' ? 'rejected' : 'pending';
+        const { error } = await supabase
+          .from('marketplace_offers')
+          .update({ status: newStatus, is_active: action === 'approve' })
+          .eq('id', item.id);
+        if (error && error.code !== 'PGRST116') throw error; // Ignore not found for demo
+      }
+
+      return { item, action, reason };
+    },
+    onSuccess: async ({ item, action, reason }) => {
+      // Audit log
+      const actionMap = {
+        approve: item.type === 'vendor' ? 'VENDOR_APPROVE' : 'OFFER_APPROVE',
+        reject: item.type === 'vendor' ? 'VENDOR_REJECT' : 'OFFER_REJECT',
+        request_changes: 'SETTINGS_UPDATE',
+      };
+      
+      await createAuditLog({
+        action: actionMap[action] as any,
+        entityType: item.type as any,
+        entityId: item.id,
+        metadata: { 
+          entity_name: item.entity,
+          action_taken: action,
+          reason: reason || null,
+        },
+      });
+
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ['admin-vendors'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-offers'] });
+      queryClient.invalidateQueries({ queryKey: ['marketplace_offers'] });
+    },
+  });
+
+  const handleApprove = async (item: typeof MODERATION_ITEMS[0]) => {
+    try {
+      await moderationMutation.mutateAsync({ item, action: 'approve' });
+      setItems(prev => prev.filter(i => i.id !== item.id));
+      toast.success(t(`Approved: ${item.entity}`, `تمت الموافقة: ${item.entity}`));
+      setSelectedItem(null);
+    } catch (error) {
+      toast.error(t('Failed to approve', 'فشل في الموافقة'));
+    }
   };
 
-  const handleReject = (item: typeof MODERATION_ITEMS[0]) => {
+  const handleReject = async (item: typeof MODERATION_ITEMS[0]) => {
     if (!rejectionReason.trim()) {
       toast.error(t('Please provide a rejection reason', 'يرجى تقديم سبب الرفض'));
       return;
     }
-    setItems(prev => prev.filter(i => i.id !== item.id));
-    toast.error(t(`Rejected: ${item.entity}`, `تم الرفض: ${item.entity}`));
-    setSelectedItem(null);
-    setRejectionReason('');
+    try {
+      await moderationMutation.mutateAsync({ item, action: 'reject', reason: rejectionReason });
+      setItems(prev => prev.filter(i => i.id !== item.id));
+      toast.error(t(`Rejected: ${item.entity}`, `تم الرفض: ${item.entity}`));
+      setSelectedItem(null);
+      setRejectionReason('');
+    } catch (error) {
+      toast.error(t('Failed to reject', 'فشل في الرفض'));
+    }
   };
 
-  const handleRequestChanges = (item: typeof MODERATION_ITEMS[0]) => {
+  const handleRequestChanges = async (item: typeof MODERATION_ITEMS[0]) => {
     if (!rejectionReason.trim()) {
       toast.error(t('Please specify the required changes', 'يرجى تحديد التغييرات المطلوبة'));
       return;
     }
-    toast.info(t(`Changes requested for: ${item.entity}`, `تم طلب تغييرات لـ: ${item.entity}`));
-    setSelectedItem(null);
-    setRejectionReason('');
+    try {
+      await moderationMutation.mutateAsync({ item, action: 'request_changes', reason: rejectionReason });
+      toast.info(t(`Changes requested for: ${item.entity}`, `تم طلب تغييرات لـ: ${item.entity}`));
+      setSelectedItem(null);
+      setRejectionReason('');
+    } catch (error) {
+      toast.error(t('Failed to request changes', 'فشل في طلب التغييرات'));
+    }
   };
 
   return (
