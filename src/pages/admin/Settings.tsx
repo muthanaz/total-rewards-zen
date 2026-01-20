@@ -30,6 +30,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 export default function AdminSettings() {
   const { language, direction } = useLanguage();
@@ -74,24 +75,17 @@ export default function AdminSettings() {
   ];
 
   return (
-    <div className={cn("space-y-8", isRTL && "text-right")}>
+    <div className={cn("space-y-6", isRTL && "text-right")}>
       {/* Header */}
-      <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-4", isRTL && "sm:flex-row-reverse")}>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {t('Platform Settings', 'إعدادات المنصة')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('Configure and manage platform-wide settings', 'تكوين وإدارة إعدادات المنصة')}
-          </p>
-        </div>
-        <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-          <Badge variant="outline" className="gap-1.5 py-1.5">
-            <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-            {t('All Systems Operational', 'جميع الأنظمة تعمل')}
-          </Badge>
-        </div>
-      </div>
+      <PageHeader
+        title={t('Platform Settings', 'إعدادات المنصة')}
+        description={t('Configure and manage platform-wide settings', 'تكوين وإدارة إعدادات المنصة')}
+        icon={Settings}
+        badge={{
+          label: t('All Systems Operational', 'جميع الأنظمة تعمل'),
+          variant: 'success',
+        }}
+      />
 
       {/* Tabs */}
       <Tabs defaultValue="general" className="space-y-6">

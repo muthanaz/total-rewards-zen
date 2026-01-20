@@ -10,9 +10,6 @@ import {
   TrendingUp, 
   Building2, 
   Download, 
-  RefreshCw,
-  ArrowUpRight,
-  ArrowDownRight,
   Bookmark,
   Target,
   Award,
@@ -23,6 +20,8 @@ import { AnimatedBarChart } from '@/components/charts/AnimatedBarChart';
 import { AnimatedRadarChart } from '@/components/charts/AnimatedRadarChart';
 import { AnimatedLineChart } from '@/components/charts/AnimatedLineChart';
 import { toast } from 'sonner';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { MetricCard, MetricGrid } from '@/components/shared';
 
 const regionalData = [
   { region: 'UAE', avgUtilization: 72, avgSpend: 185000, employees: 8500, organizations: 28, benefits: 12, marketShare: 35 },
@@ -85,71 +84,64 @@ export default function AdminBenchmarks() {
   }));
 
   return (
-    <div className={cn("space-y-8", isRTL && "text-right")}>
+    <div className={cn("space-y-6", isRTL && "text-right")}>
       {/* Header */}
-      <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
-        <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">
-            {t('Regional & Industry Benchmarks', 'المعايير الإقليمية والصناعية')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('Compare performance metrics across regions, industries, and company sizes', 'قارن مقاييس الأداء عبر المناطق والصناعات وأحجام الشركات')}
-          </p>
-        </div>
-        <div className={cn("flex items-center gap-2 flex-wrap", isRTL && "flex-row-reverse")}>
-          <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder={t('Region', 'المنطقة')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('All Regions', 'جميع المناطق')}</SelectItem>
-              {regionalData.map(r => (
-                <SelectItem key={r.region} value={r.region}>{r.region}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button variant="outline" size="sm" onClick={handleSaveReport}>
-            <Bookmark className="w-4 h-4 mr-2" />
-            {t('Save Report', 'حفظ التقرير')}
-          </Button>
-          <Button size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            {t('Export', 'تصدير')}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title={t('Regional & Industry Benchmarks', 'المعايير الإقليمية والصناعية')}
+        description={t('Compare performance metrics across regions, industries, and company sizes', 'قارن مقاييس الأداء عبر المناطق والصناعات وأحجام الشركات')}
+        icon={Globe}
+        actions={
+          <div className={cn("flex items-center gap-2 flex-wrap", isRTL && "flex-row-reverse")}>
+            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder={t('Region', 'المنطقة')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('All Regions', 'جميع المناطق')}</SelectItem>
+                {regionalData.map(r => (
+                  <SelectItem key={r.region} value={r.region}>{r.region}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="sm" onClick={handleSaveReport}>
+              <Bookmark className="w-4 h-4 me-2" />
+              {t('Save Report', 'حفظ التقرير')}
+            </Button>
+            <Button size="sm">
+              <Download className="w-4 h-4 me-2" />
+              {t('Export', 'تصدير')}
+            </Button>
+          </div>
+        }
+      />
 
       {/* Key Benchmark Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {[
-          { label: t('GCC Avg Utilization', 'متوسط الاستخدام الخليجي'), value: '72%', change: '+4%', trend: 'up', icon: Target },
-          { label: t('Avg Benefits per Org', 'متوسط المزايا لكل منظمة'), value: '11.2', change: '+2.1', trend: 'up', icon: Award },
-          { label: t('Avg Annual Spend', 'متوسط الإنفاق السنوي'), value: 'AED 175K', change: '+12%', trend: 'up', icon: TrendingUp },
-          { label: t('Market Coverage', 'تغطية السوق'), value: '47 Orgs', change: '+8', trend: 'up', icon: Building2 },
-        ].map((metric) => (
-          <Card key={metric.label}>
-            <CardContent className="p-6">
-              <div className={cn("flex items-start justify-between", isRTL && "flex-row-reverse")}>
-                <div>
-                  <p className="text-sm text-muted-foreground">{metric.label}</p>
-                  <p className="text-2xl font-bold mt-1">{metric.value}</p>
-                  <div className={cn("flex items-center gap-1 mt-2", isRTL && "flex-row-reverse")}>
-                    {metric.trend === 'up' ? (
-                      <ArrowUpRight className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <ArrowDownRight className="w-4 h-4 text-red-500" />
-                    )}
-                    <span className="text-sm font-medium text-green-500">{metric.change}</span>
-                  </div>
-                </div>
-                <div className="p-3 rounded-xl bg-primary/10">
-                  <metric.icon className="w-5 h-5 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <MetricGrid columns={4}>
+        <MetricCard
+          title={t('GCC Avg Utilization', 'متوسط الاستخدام الخليجي')}
+          value="72%"
+          trend={{ value: 4, higherIsBetter: true }}
+          icon={Target}
+        />
+        <MetricCard
+          title={t('Avg Benefits per Org', 'متوسط المزايا لكل منظمة')}
+          value="11.2"
+          trend={{ value: 2.1, higherIsBetter: true }}
+          icon={Award}
+        />
+        <MetricCard
+          title={t('Avg Annual Spend', 'متوسط الإنفاق السنوي')}
+          value="AED 175K"
+          trend={{ value: 12, higherIsBetter: true }}
+          icon={TrendingUp}
+        />
+        <MetricCard
+          title={t('Market Coverage', 'تغطية السوق')}
+          value="47 Orgs"
+          trend={{ value: 8, higherIsBetter: true }}
+          icon={Building2}
+        />
+      </MetricGrid>
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="regional" className="space-y-6">

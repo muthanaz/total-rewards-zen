@@ -15,15 +15,14 @@ import {
   Zap,
   BookOpen,
   Home,
-  Car,
-  GraduationCap,
-  Wallet,
   Download,
   RefreshCw,
-  Filter,
   Eye,
   MousePointer,
   Clock,
+  Wallet,
+  GraduationCap,
+  Car,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -31,6 +30,7 @@ import { AnimatedBarChart } from '@/components/charts/AnimatedBarChart';
 import { AnimatedDonutChart } from '@/components/charts/AnimatedDonutChart';
 import { AnimatedLineChart } from '@/components/charts/AnimatedLineChart';
 import { toast } from 'sonner';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 const highIntentSegments = [
   { 
