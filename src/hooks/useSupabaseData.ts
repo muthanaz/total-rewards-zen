@@ -114,13 +114,25 @@ export function useMarketplaceOffers() {
     queryKey: ['marketplace_offers'],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
+      
+      // SECURITY (Defense-in-Depth):
+      // - status='active' = Admin has approved this offer (vendor cannot self-activate)
+      // - is_active=true = Offer is enabled (redundant check for data integrity)
+      // - valid_from/valid_to = Offer is within its validity window
+      // Both status AND is_active are checked because vendors control is_active
+      // but only admins can set status='active'. This prevents accidental exposure
+      // of pending/rejected/suspended offers even if is_active is incorrectly true.
       const { data, error } = await supabase
         .from('marketplace_offers')
         .select('*')
+        .eq('status', 'active')
         .eq('is_active', true)
-        .eq('status', 'active') // P0: Only show admin-approved offers
-        .or(`valid_to.is.null,valid_to.gte.${today}`) // Exclude expired offers
-        .order('rating', { ascending: false });
+        .or(`valid_from.is.null,valid_from.lte.${today}`)
+        .or(`valid_to.is.null,valid_to.gte.${today}`)
+        .order('sponsored', { ascending: false }) // Sponsored offers first
+        .order('discount_percent', { ascending: false, nullsFirst: false }) // Then by discount
+        .order('rating', { ascending: false, nullsFirst: false }); // Then by rating
+      
       if (error) throw error;
       return data;
     },
