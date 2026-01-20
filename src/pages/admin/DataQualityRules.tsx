@@ -24,7 +24,7 @@ import { cn } from '@/lib/utils';
 const SEVERITY_CONFIG = {
   critical: { label: 'Critical', labelAr: 'حرج', color: 'bg-destructive/10 text-destructive border-destructive/30' },
   high: { label: 'High', labelAr: 'عالي', color: 'bg-warning/10 text-warning border-warning/30' },
-  medium: { label: 'Medium', labelAr: 'متوسط', color: 'bg-blue-500/10 text-blue-600 border-blue-500/30' },
+  medium: { label: 'Medium', labelAr: 'متوسط', color: 'bg-primary/10 text-primary border-primary/30' },
   low: { label: 'Low', labelAr: 'منخفض', color: 'bg-muted text-muted-foreground border-border' },
 };
 

@@ -24,10 +24,10 @@ const MODERATION_ITEMS = [
 ];
 
 const TYPE_CONFIG = {
-  vendor: { icon: Store, label: 'Vendor', labelAr: 'بائع', color: 'bg-amber-500/10 text-amber-600 border-amber-500/30' },
-  offer: { icon: Tag, label: 'Offer', labelAr: 'عرض', color: 'bg-violet-500/10 text-violet-600 border-violet-500/30' },
-  image: { icon: Image, label: 'Image', labelAr: 'صورة', color: 'bg-blue-500/10 text-blue-600 border-blue-500/30' },
-  copy: { icon: FileText, label: 'Copy', labelAr: 'نص', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' },
+  vendor: { icon: Store, label: 'Vendor', labelAr: 'بائع', color: 'bg-warning/10 text-warning border-warning/30' },
+  offer: { icon: Tag, label: 'Offer', labelAr: 'عرض', color: 'bg-accent/10 text-accent-foreground border-accent/30' },
+  image: { icon: Image, label: 'Image', labelAr: 'صورة', color: 'bg-primary/10 text-primary border-primary/30' },
+  copy: { icon: FileText, label: 'Copy', labelAr: 'نص', color: 'bg-success/10 text-success border-success/30' },
 };
 
 const PRIORITY_CONFIG = {
