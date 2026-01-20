@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RePieChart, Pie, Cell, Legend } from 'recharts';
 import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
-import { EmployerGlobalFiltersBar } from '@/components/employer';
+import { EmployerGlobalFiltersBar, DataConfidenceBadge, PageConfidenceGate, useDataCoverageMetrics } from '@/components/employer';
 
 // Vibrant color palette
 const COLORS = {
@@ -76,13 +76,18 @@ export default function SpendPage() {
   const totalBudget = 6150000;
   const totalSpend = 5030000;
   const utilizationRate = (totalSpend / totalBudget) * 100;
+  const coverageMetrics = useDataCoverageMetrics();
 
   return (
+    <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground">Spend & Utilization</h1>
-        <p className="text-muted-foreground">Track benefits spend across your organization</p>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-foreground">Spend & Utilization</h1>
+          <p className="text-muted-foreground">Track benefits spend across your organization</p>
+        </div>
+        <DataConfidenceBadge metrics={coverageMetrics} />
       </div>
 
       {/* Global Filters */}

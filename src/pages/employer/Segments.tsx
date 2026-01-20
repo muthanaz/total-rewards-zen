@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Users, Baby, Briefcase, GraduationCap, Heart, Car, TrendingUp } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
-import { EmployerGlobalFiltersBar } from '@/components/employer';
+import { EmployerGlobalFiltersBar, DataConfidenceBadge, PageConfidenceGate, useDataCoverageMetrics } from '@/components/employer';
 
 // Vibrant color palette
 const COLORS = {
@@ -117,12 +117,18 @@ const CustomLegend = ({ payload }: any) => (
 );
 
 export default function SegmentsPage() {
+  const coverageMetrics = useDataCoverageMetrics();
+
   return (
+    <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground">Employee Segments</h1>
-        <p className="text-muted-foreground">Analyze benefit usage patterns across employee groups</p>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-foreground">Employee Segments</h1>
+          <p className="text-muted-foreground">Analyze benefit usage patterns across employee groups</p>
+        </div>
+        <DataConfidenceBadge metrics={coverageMetrics} />
       </div>
 
       {/* Global Filters */}

@@ -19,6 +19,8 @@ import {
 import { Link } from 'react-router-dom';
 import { ChartContainer, ProgressBarList } from '@/components/charts';
 import { DataQualityBadge } from './DataQualityBadge';
+import { DataConfidenceBadge, useDataCoverageMetrics } from './DataConfidenceBadge';
+import { PageConfidenceGate } from './PageConfidenceGate';
 import { TrendIndicatorCompact } from './TrendComparison';
 import { useClaimMetrics, useClaimsByCategory, useRecentActivity } from '@/hooks/useEmployerDashboard';
 import { cn } from '@/lib/utils';
@@ -35,6 +37,7 @@ export function HROpsDashboard() {
   const { data: claimMetrics, isLoading } = useClaimMetrics();
   const { data: claimsByCategory } = useClaimsByCategory();
   const { data: recentActivity } = useRecentActivity();
+  const coverageMetrics = useDataCoverageMetrics();
 
   const pendingActions = [
     {
@@ -94,6 +97,7 @@ export function HROpsDashboard() {
   }
 
   return (
+    <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
     <div className="space-y-6">
       {/* HR Ops Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -109,10 +113,13 @@ export function HROpsDashboard() {
             <DataQualityBadge confidence="high" lastUpdated={new Date().toISOString()} showDetails={false} />
           </div>
         </div>
-        <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-          <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-          SLA Compliance: {claimMetrics?.slaCompliance || 94}%
-        </Badge>
+        <div className="flex items-center gap-3">
+          <DataConfidenceBadge metrics={coverageMetrics} />
+          <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+            SLA Compliance: {claimMetrics?.slaCompliance || 94}%
+          </Badge>
+        </div>
       </div>
 
       {/* Global Filters */}
@@ -283,5 +290,6 @@ export function HROpsDashboard() {
         </CardContent>
       </Card>
     </div>
+    </PageConfidenceGate>
   );
 }

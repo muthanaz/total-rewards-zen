@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, AlertTriangle, CheckCircle, TrendingUp, Eye, MessageSquare, Edit } from 'lucide-react';
-import { EmployerGlobalFiltersBar } from '@/components/employer';
+import { EmployerGlobalFiltersBar, DataConfidenceBadge, PageConfidenceGate, useDataCoverageMetrics } from '@/components/employer';
 
 const policyInsights = [
   {
@@ -66,6 +66,8 @@ const policyMetrics = [
 ];
 
 export default function PoliciesPage() {
+  const coverageMetrics = useDataCoverageMetrics();
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'good':
@@ -80,11 +82,15 @@ export default function PoliciesPage() {
   };
 
   return (
+    <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground">Policy Insights</h1>
-        <p className="text-muted-foreground">Analyze policy clarity and employee understanding</p>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-foreground">Policy Insights</h1>
+          <p className="text-muted-foreground">Analyze policy clarity and employee understanding</p>
+        </div>
+        <DataConfidenceBadge metrics={coverageMetrics} />
       </div>
 
       {/* Global Filters */}
