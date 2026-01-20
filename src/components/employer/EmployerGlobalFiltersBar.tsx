@@ -72,19 +72,24 @@ export function EmployerGlobalFiltersBar({
   };
 
   return (
-    <div className={cn("space-y-3", className)}>
+    <div 
+      className={cn("space-y-3", className)}
+      role="region"
+      aria-label="Filters"
+    >
       {/* Main Filter Bar */}
       <div className={cn(
         "flex flex-wrap items-center gap-2 p-3 rounded-xl bg-muted/30 border border-border/50",
+        "overflow-x-auto scrollbar-thin",
         compact && "p-2"
       )}>
         {/* Filter Icon */}
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Filter className="w-4 h-4" />
+        <div className="flex items-center gap-2 text-muted-foreground shrink-0">
+          <Filter className="w-4 h-4" aria-hidden="true" />
           {!compact && <span className="text-sm font-medium hidden sm:inline">Filters</span>}
         </div>
 
-        <div className="h-4 w-px bg-border/50 hidden sm:block" />
+        <div className="h-4 w-px bg-border/50 hidden sm:block shrink-0" aria-hidden="true" />
 
         {/* Period Selector */}
         <Select value={filters.period} onValueChange={handlePeriodChange}>
