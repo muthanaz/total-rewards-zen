@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PageLayout, MetricCard, MetricGrid } from '@/components/shared';
 import { Button } from '@/components/ui/button';
@@ -9,101 +9,194 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { 
-  ToggleLeft, Search, Plus, Building2, Globe, Users, 
-  ShoppingBag, BarChart3, FileText, Zap, Shield, Save
+  ToggleLeft, Search, Building2, Globe, Save, RefreshCw,
+  ShoppingBag, FileText, BarChart3, Zap, Shield, Users
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { useAdminAuditLog } from '@/hooks/useAdminAuditLog';
 
-const FEATURE_FLAGS = [
-  { id: 'marketplace', name: 'Marketplace', description: 'Employee perks and offers marketplace', icon: ShoppingBag, enabled_globally: true, orgs_override: [] },
-  { id: 'gov_connect', name: 'GovConnect', description: 'Government services integration', icon: FileText, enabled_globally: false, orgs_override: ['org_1', 'org_2'] },
-  { id: 'advanced_analytics', name: 'Advanced Analytics', description: 'AI-powered insights and predictions', icon: BarChart3, enabled_globally: true, orgs_override: [] },
-  { id: 'benefits_ai', name: 'Benefits AI', description: 'AI recommendations for benefit optimization', icon: Zap, enabled_globally: false, orgs_override: ['org_1'] },
-  { id: 'sso_integration', name: 'SSO Integration', description: 'Enterprise single sign-on support', icon: Shield, enabled_globally: true, orgs_override: [] },
-  { id: 'mobile_app', name: 'Mobile App Access', description: 'Native mobile application access', icon: Users, enabled_globally: false, orgs_override: [] },
+// Feature flag definitions with DB key mapping
+const FEATURE_FLAG_DEFINITIONS = [
+  { id: 'marketplace_enabled', name: 'Marketplace', nameAr: 'السوق', description: 'Employee perks and offers marketplace', descriptionAr: 'سوق الامتيازات والعروض للموظفين', icon: ShoppingBag },
+  { id: 'gov_connect_enabled', name: 'GovConnect', nameAr: 'الربط الحكومي', description: 'Government services integration', descriptionAr: 'تكامل الخدمات الحكومية', icon: FileText },
+  { id: 'advanced_insights_enabled', name: 'Advanced Analytics', nameAr: 'التحليلات المتقدمة', description: 'AI-powered insights and predictions', descriptionAr: 'رؤى وتنبؤات مدعومة بالذكاء الاصطناعي', icon: BarChart3 },
+  { id: 'benefits_ai_enabled', name: 'Benefits AI', nameAr: 'ذكاء المزايا', description: 'AI recommendations for benefit optimization', descriptionAr: 'توصيات الذكاء الاصطناعي لتحسين المزايا', icon: Zap },
+  { id: 'sso_enabled', name: 'SSO Integration', nameAr: 'تسجيل الدخول الموحد', description: 'Enterprise single sign-on support', descriptionAr: 'دعم تسجيل الدخول الموحد للمؤسسات', icon: Shield },
+  { id: 'mobile_app_enabled', name: 'Mobile App Access', nameAr: 'الوصول عبر التطبيق', description: 'Native mobile application access', descriptionAr: 'الوصول عبر التطبيق المحمول', icon: Users },
 ];
+
+interface OrgSettings {
+  marketplace_enabled?: boolean;
+  gov_connect_enabled?: boolean;
+  advanced_insights_enabled?: boolean;
+  benefits_ai_enabled?: boolean;
+  sso_enabled?: boolean;
+  mobile_app_enabled?: boolean;
+}
+
+interface Organization {
+  id: string;
+  name: string;
+  settings: OrgSettings | null;
+}
 
 export default function AdminFeatureFlags() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
+  const queryClient = useQueryClient();
   const { createAuditLog } = useAdminAuditLog();
 
-  const [flags, setFlags] = useState(FEATURE_FLAGS);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedOrg, setSelectedOrg] = useState('all');
+  const [selectedOrgId, setSelectedOrgId] = useState<string>('all');
 
-  // Fetch organizations for the filter
-  const { data: organizations } = useQuery({
-    queryKey: ['admin-orgs-for-flags'],
+  // Fetch all organizations with their settings
+  const { data: organizations, isLoading } = useQuery({
+    queryKey: ['admin-orgs-feature-flags'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('organizations')
         .select('id, name, settings')
         .order('name');
       if (error) throw error;
-      return data || [];
+      return (data || []) as Organization[];
     },
   });
 
-  const filteredFlags = flags.filter(f => 
+  // Mutation to update organization settings (feature flags)
+  const updateFlagMutation = useMutation({
+    mutationFn: async ({ orgId, flagKey, value }: { orgId: string; flagKey: string; value: boolean }) => {
+      // Get current settings
+      const org = organizations?.find(o => o.id === orgId);
+      const currentSettings = (org?.settings || {}) as OrgSettings;
+      
+      const newSettings = {
+        ...currentSettings,
+        [flagKey]: value,
+      };
+
+      const { error } = await supabase
+        .from('organizations')
+        .update({ settings: newSettings })
+        .eq('id', orgId);
+
+      if (error) throw error;
+      return { orgId, flagKey, value };
+    },
+    onSuccess: async ({ orgId, flagKey, value }) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-orgs-feature-flags'] });
+      queryClient.invalidateQueries({ queryKey: ['org-feature-flags'] });
+      
+      const flagDef = FEATURE_FLAG_DEFINITIONS.find(f => f.id === flagKey);
+      const org = organizations?.find(o => o.id === orgId);
+      
+      await createAuditLog({
+        action: 'FLAG_TOGGLE',
+        entityType: 'feature_flag',
+        entityId: flagKey,
+        metadata: { 
+          flag_name: flagDef?.name,
+          organization_id: orgId,
+          organization_name: org?.name,
+          new_value: value,
+        },
+      });
+      
+      toast.success(t('Feature flag updated', 'تم تحديث علامة الميزة'));
+    },
+    onError: () => {
+      toast.error(t('Failed to update flag', 'فشل في تحديث العلامة'));
+    },
+  });
+
+  // Filter flag definitions by search
+  const filteredFlags = FEATURE_FLAG_DEFINITIONS.filter(f => 
     f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     f.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleToggleGlobal = async (flagId: string) => {
-    const flag = flags.find(f => f.id === flagId);
-    const newValue = !flag?.enabled_globally;
+  // Calculate metrics
+  const metrics = useMemo(() => {
+    if (!organizations?.length) return { total: 0, globallyEnabled: 0, orgSpecific: 0 };
     
-    setFlags(prev => prev.map(f => 
-      f.id === flagId ? { ...f, enabled_globally: newValue } : f
-    ));
+    let globallyEnabled = 0;
+    let orgSpecific = 0;
     
-    // Log the action
-    await createAuditLog({
-      action: 'FLAG_TOGGLE',
-      entityType: 'feature_flag',
-      entityId: flagId,
-      metadata: { flag_name: flag?.name, before: flag?.enabled_globally, after: newValue },
+    FEATURE_FLAG_DEFINITIONS.forEach(flag => {
+      const enabledCount = organizations.filter(org => {
+        const settings = org.settings as OrgSettings | null;
+        return settings?.[flag.id as keyof OrgSettings] === true;
+      }).length;
+      
+      if (enabledCount === organizations.length) {
+        globallyEnabled++;
+      } else if (enabledCount > 0) {
+        orgSpecific++;
+      }
     });
     
-    toast.success(t('Feature flag updated', 'تم تحديث علامة الميزة'));
+    return { total: FEATURE_FLAG_DEFINITIONS.length, globallyEnabled, orgSpecific };
+  }, [organizations]);
+
+  // Get flag value for a specific org
+  const getFlagValue = (orgId: string, flagKey: string): boolean => {
+    const org = organizations?.find(o => o.id === orgId);
+    const settings = org?.settings as OrgSettings | null;
+    return settings?.[flagKey as keyof OrgSettings] ?? false;
   };
 
-  const handleSaveAll = async () => {
-    // In production, this would persist all flag states
-    toast.success(t('All feature flags saved', 'تم حفظ جميع علامات الميزات'));
+  // Handle toggle for a specific org
+  const handleToggle = (orgId: string, flagKey: string, currentValue: boolean) => {
+    updateFlagMutation.mutate({ orgId, flagKey, value: !currentValue });
   };
 
-  const metrics = [
-    { title: t('Total Features', 'إجمالي الميزات'), value: flags.length, icon: ToggleLeft },
-    { title: t('Enabled Globally', 'مفعل عالمياً'), value: flags.filter(f => f.enabled_globally).length, icon: Globe },
-    { title: t('Org-Specific', 'خاص بالمنظمة'), value: flags.filter(f => f.orgs_override.length > 0).length, icon: Building2 },
-  ];
+  // Batch enable/disable for all orgs
+  const handleBatchToggle = async (flagKey: string, enable: boolean) => {
+    if (!organizations?.length) return;
+    
+    for (const org of organizations) {
+      await updateFlagMutation.mutateAsync({ orgId: org.id, flagKey, value: enable });
+    }
+  };
 
   return (
     <PageLayout
       title={t('Feature Flags', 'علامات الميزات')}
-      description={t('Control feature availability across the platform and per organization', 'التحكم في توفر الميزات عبر المنصة ولكل منظمة')}
+      description={t('Control feature availability per organization', 'التحكم في توفر الميزات لكل منظمة')}
       icon={ToggleLeft}
       iconClassName="from-violet-500 to-purple-500"
       actions={
-        <Button onClick={handleSaveAll}>
-          <Save className="w-4 h-4 me-2" />
-          {t('Save All', 'حفظ الكل')}
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-orgs-feature-flags'] })}
+        >
+          <RefreshCw className="w-4 h-4 me-2" />
+          {t('Refresh', 'تحديث')}
         </Button>
       }
     >
       <MetricGrid columns={3}>
-        {metrics.map((m) => (
-          <MetricCard key={m.title} title={m.title} value={m.value} icon={m.icon} />
-        ))}
+        <MetricCard title={t('Total Features', 'إجمالي الميزات')} value={metrics.total} icon={ToggleLeft} />
+        <MetricCard 
+          title={t('Globally Enabled', 'مفعل عالمياً')} 
+          value={metrics.globallyEnabled} 
+          icon={Globe}
+          iconClassName="from-success to-success/80"
+        />
+        <MetricCard 
+          title={t('Org-Specific', 'خاص بالمنظمة')} 
+          value={metrics.orgSpecific} 
+          icon={Building2}
+          iconClassName="from-primary to-primary/80"
+        />
       </MetricGrid>
 
+      {/* Feature Flag Cards */}
       <Card>
         <CardHeader>
           <div className={cn("flex flex-col md:flex-row md:items-center justify-between gap-4", isRTL && "md:flex-row-reverse")}>
@@ -112,7 +205,7 @@ export default function AdminFeatureFlags() {
                 <ToggleLeft className="w-5 h-5" />
                 {t('Feature Configuration', 'تكوين الميزات')}
               </CardTitle>
-              <CardDescription>{t('Toggle features globally or per organization', 'تبديل الميزات عالمياً أو لكل منظمة')}</CardDescription>
+              <CardDescription>{t('Toggle features per organization', 'تبديل الميزات لكل منظمة')}</CardDescription>
             </div>
             <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
               <div className="relative">
@@ -124,7 +217,7 @@ export default function AdminFeatureFlags() {
                   className={cn("w-64", isRTL ? "pr-9" : "pl-9")}
                 />
               </div>
-              <Select value={selectedOrg} onValueChange={setSelectedOrg}>
+              <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder={t('Filter by org', 'تصفية حسب المنظمة')} />
                 </SelectTrigger>
@@ -139,89 +232,134 @@ export default function AdminFeatureFlags() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {filteredFlags.map((flag) => (
-              <div 
-                key={flag.id} 
-                className="p-4 rounded-lg border hover:border-primary/50 transition-colors"
-              >
-                <div className={cn("flex items-start justify-between gap-4", isRTL && "flex-row-reverse")}>
-                  <div className={cn("flex items-start gap-4", isRTL && "flex-row-reverse")}>
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <flag.icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                        <h4 className="font-medium">{flag.name}</h4>
-                        {flag.enabled_globally && (
-                          <Badge variant="outline" className="bg-success/10 text-success border-success/30">
-                            <Globe className="w-3 h-3 me-1" />
-                            {t('Global', 'عالمي')}
-                          </Badge>
-                        )}
-                        {flag.orgs_override.length > 0 && (
-                          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
-                            <Building2 className="w-3 h-3 me-1" />
-                            {flag.orgs_override.length} {t('orgs', 'منظمات')}
-                          </Badge>
-                        )}
+          {isLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 w-full" />)}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredFlags.map((flag) => {
+                const Icon = flag.icon;
+                const enabledOrgs = organizations?.filter(org => getFlagValue(org.id, flag.id)) || [];
+                const isGlobal = enabledOrgs.length === organizations?.length;
+                
+                return (
+                  <div 
+                    key={flag.id} 
+                    className="p-4 rounded-lg border hover:border-primary/50 transition-colors"
+                  >
+                    <div className={cn("flex items-start justify-between gap-4", isRTL && "flex-row-reverse")}>
+                      <div className={cn("flex items-start gap-4", isRTL && "flex-row-reverse")}>
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <Icon className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                            <h4 className="font-medium">{isRTL ? flag.nameAr : flag.name}</h4>
+                            {isGlobal && organizations?.length ? (
+                              <Badge variant="outline" className="bg-success/10 text-success border-success/30">
+                                <Globe className="w-3 h-3 me-1" />
+                                {t('Global', 'عالمي')}
+                              </Badge>
+                            ) : enabledOrgs.length > 0 ? (
+                              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                                <Building2 className="w-3 h-3 me-1" />
+                                {enabledOrgs.length} {t('orgs', 'منظمات')}
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="bg-muted text-muted-foreground">
+                                {t('Disabled', 'معطل')}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {isRTL ? flag.descriptionAr : flag.description}
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">{flag.description}</p>
+                      <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleBatchToggle(flag.id, true)}
+                          disabled={isGlobal || updateFlagMutation.isPending}
+                        >
+                          {t('Enable All', 'تفعيل الكل')}
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleBatchToggle(flag.id, false)}
+                          disabled={enabledOrgs.length === 0 || updateFlagMutation.isPending}
+                        >
+                          {t('Disable All', 'تعطيل الكل')}
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                  <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground mb-1">{t('Global', 'عالمي')}</p>
-                      <Switch 
-                        checked={flag.enabled_globally} 
-                        onCheckedChange={() => handleToggleGlobal(flag.id)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Per-Organization Overrides */}
+      {/* Per-Organization Matrix */}
       <Card>
         <CardHeader>
           <CardTitle className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
             <Building2 className="w-5 h-5" />
-            {t('Organization Overrides', 'تجاوزات المنظمة')}
+            {t('Organization Settings', 'إعدادات المنظمة')}
           </CardTitle>
           <CardDescription>
-            {t('Enable features for specific organizations that differ from global settings', 'تمكين الميزات لمنظمات محددة تختلف عن الإعدادات العالمية')}
+            {t('Enable or disable features for specific organizations', 'تمكين أو تعطيل الميزات لمنظمات محددة')}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('Organization', 'المنظمة')}</TableHead>
-                {flags.slice(0, 4).map(f => (
-                  <TableHead key={f.id} className="text-center">{f.name}</TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {organizations?.slice(0, 5).map(org => (
-                <TableRow key={org.id}>
-                  <TableCell className="font-medium">{org.name}</TableCell>
-                  {flags.slice(0, 4).map(f => (
-                    <TableCell key={f.id} className="text-center">
-                      <Switch 
-                        checked={f.enabled_globally || f.orgs_override.includes(org.id)}
-                        disabled={f.enabled_globally}
-                      />
-                    </TableCell>
+          {isLoading ? (
+            <Skeleton className="h-64 w-full" />
+          ) : !organizations?.length ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Building2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>{t('No organizations found', 'لم يتم العثور على منظمات')}</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[200px]">{t('Organization', 'المنظمة')}</TableHead>
+                    {FEATURE_FLAG_DEFINITIONS.slice(0, 5).map(f => (
+                      <TableHead key={f.id} className="text-center min-w-[100px]">
+                        {isRTL ? f.nameAr : f.name}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {organizations
+                    .filter(org => selectedOrgId === 'all' || org.id === selectedOrgId)
+                    .map(org => (
+                    <TableRow key={org.id}>
+                      <TableCell className="font-medium">{org.name}</TableCell>
+                      {FEATURE_FLAG_DEFINITIONS.slice(0, 5).map(flag => {
+                        const isEnabled = getFlagValue(org.id, flag.id);
+                        return (
+                          <TableCell key={flag.id} className="text-center">
+                            <Switch 
+                              checked={isEnabled}
+                              onCheckedChange={() => handleToggle(org.id, flag.id, isEnabled)}
+                              disabled={updateFlagMutation.isPending}
+                            />
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
                   ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </PageLayout>
