@@ -9,8 +9,6 @@ import {
   Users, 
   Building2, 
   DollarSign, 
-  ArrowUpRight, 
-  ArrowDownRight,
   Target,
   PieChart,
   Activity,
@@ -18,8 +16,6 @@ import {
   RefreshCw,
   Calendar,
   Filter,
-  Database,
-  Lightbulb,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -29,12 +25,13 @@ import { AnimatedDonutChart } from '@/components/charts/AnimatedDonutChart';
 import { VendorPerformanceTab } from '@/components/admin/VendorPerformanceTab';
 import { DataQualityDashboard } from '@/components/admin/DataQualityDashboard';
 import { AdminActionCenter } from '@/components/admin/AdminActionCenter';
+import { PageLayout, MetricCard, MetricGrid, SectionCard } from '@/components/shared';
 
 const platformMetrics = [
-  { label: 'Total Organizations', labelAr: 'إجمالي المنظمات', value: '47', change: '+12%', trend: 'up', icon: Building2 },
-  { label: 'Active Employees', labelAr: 'الموظفون النشطون', value: '12,847', change: '+8%', trend: 'up', icon: Users },
-  { label: 'Platform GMV', labelAr: 'إجمالي قيمة المنصة', value: 'AED 24.5M', change: '+15%', trend: 'up', icon: DollarSign },
-  { label: 'Active Vendors', labelAr: 'الموردون النشطون', value: '156', change: '+23%', trend: 'up', icon: Target },
+  { label: 'Total Organizations', labelAr: 'إجمالي المنظمات', value: '47', change: 12, icon: Building2 },
+  { label: 'Active Employees', labelAr: 'الموظفون النشطون', value: '12,847', change: 8, icon: Users },
+  { label: 'Platform GMV', labelAr: 'إجمالي قيمة المنصة', value: 'AED 24.5M', change: 15, icon: DollarSign },
+  { label: 'Active Vendors', labelAr: 'الموردون النشطون', value: '156', change: 23, icon: Target },
 ];
 
 const regionalBenchmarks = [
@@ -52,7 +49,6 @@ const industryBreakdown = [
   { name: 'Manufacturing', value: 10, color: 'hsl(38 92% 50%)' },
 ];
 
-// Transformed for AnimatedLineChart (expects name/value)
 const monthlyGrowthChart = [
   { name: 'Jul', value: 32, secondaryValue: 15.2 },
   { name: 'Aug', value: 35, secondaryValue: 17.1 },
@@ -83,72 +79,49 @@ export default function AdminDashboard() {
 
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
 
+  const headerActions = (
+    <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+      <Button variant="outline" size="sm">
+        <Calendar className="w-4 h-4 me-2" />
+        {t('Last 30 Days', 'آخر 30 يوم')}
+      </Button>
+      <Button variant="outline" size="sm">
+        <Filter className="w-4 h-4 me-2" />
+        {t('Filters', 'تصفية')}
+      </Button>
+      <Button variant="outline" size="sm">
+        <RefreshCw className="w-4 h-4 me-2" />
+        {t('Refresh', 'تحديث')}
+      </Button>
+      <Button size="sm">
+        <Download className="w-4 h-4 me-2" />
+        {t('Export Report', 'تصدير التقرير')}
+      </Button>
+    </div>
+  );
+
   return (
-    <div className={cn("space-y-8", isRTL && "text-right")}>
-      {/* Header */}
-      <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
-        <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">
-            {t('Platform Command Center', 'مركز قيادة المنصة')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('Real-time analytics and market intelligence', 'التحليلات الفورية وذكاء السوق')}
-          </p>
-        </div>
-        <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-          <Button variant="outline" size="sm">
-            <Calendar className="w-4 h-4 mr-2" />
-            {t('Last 30 Days', 'آخر 30 يوم')}
-          </Button>
-          <Button variant="outline" size="sm">
-            <Filter className="w-4 h-4 mr-2" />
-            {t('Filters', 'تصفية')}
-          </Button>
-          <Button variant="outline" size="sm">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            {t('Refresh', 'تحديث')}
-          </Button>
-          <Button size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            {t('Export Report', 'تصدير التقرير')}
-          </Button>
-        </div>
-      </div>
+    <PageLayout
+      title={t('Platform Command Center', 'مركز قيادة المنصة')}
+      description={t('Real-time analytics and market intelligence', 'التحليلات الفورية وذكاء السوق')}
+      icon={Globe}
+      iconClassName="from-primary to-primary/80"
+      actions={headerActions}
+    >
 
       {/* Platform Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <MetricGrid columns={4}>
         {platformMetrics.map((metric) => (
-          <Card key={metric.label} className="relative overflow-hidden">
-            <CardContent className="p-6">
-              <div className={cn("flex items-start justify-between", isRTL && "flex-row-reverse")}>
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? metric.labelAr : metric.label}
-                  </p>
-                  <p className="text-2xl font-bold mt-1">{metric.value}</p>
-                  <div className={cn("flex items-center gap-1 mt-2", isRTL && "flex-row-reverse")}>
-                    {metric.trend === 'up' ? (
-                      <ArrowUpRight className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <ArrowDownRight className="w-4 h-4 text-red-500" />
-                    )}
-                    <span className={cn(
-                      "text-sm font-medium",
-                      metric.trend === 'up' ? "text-green-500" : "text-red-500"
-                    )}>
-                      {metric.change}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{t('vs last month', 'مقارنة بالشهر الماضي')}</span>
-                  </div>
-                </div>
-                <div className="p-3 rounded-xl bg-primary/10">
-                  <metric.icon className="w-5 h-5 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <MetricCard
+            key={metric.label}
+            title={language === 'ar' ? metric.labelAr : metric.label}
+            value={metric.value}
+            icon={metric.icon}
+            trend={{ value: metric.change, label: t('vs last month', 'مقارنة بالشهر الماضي') }}
+            variant="default"
+          />
         ))}
-      </div>
+      </MetricGrid>
 
       {/* Main Analytics Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
@@ -369,6 +342,6 @@ export default function AdminDashboard() {
           <AdminActionCenter />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageLayout>
   );
 }

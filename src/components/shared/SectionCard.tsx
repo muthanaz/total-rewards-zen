@@ -1,14 +1,15 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
-import { ChevronRight, type LucideIcon } from 'lucide-react';
+import { ChevronRight, ChevronDown, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SectionCardProps {
   title: string;
   description?: string;
   icon?: LucideIcon;
+  iconClassName?: string;
   tooltip?: {
     formula?: string;
     dataSource?: string;
@@ -32,6 +33,7 @@ export function SectionCard({
   title,
   description,
   icon: Icon,
+  iconClassName,
   tooltip,
   action,
   badge,
@@ -42,19 +44,30 @@ export function SectionCard({
   collapsible = false,
   defaultCollapsed = false,
 }: SectionCardProps) {
+  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+
   return (
-    <Card className={cn('border-border/50', className)}>
+    <Card className={cn('border-border/50 shadow-sm', className)}>
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
+          <div 
+            className={cn(
+              "flex items-center gap-3",
+              collapsible && "cursor-pointer"
+            )}
+            onClick={collapsible ? () => setIsCollapsed(!isCollapsed) : undefined}
+          >
             {Icon && (
-              <div className="p-2 rounded-lg bg-accent/10 shrink-0">
-                <Icon className="w-4 h-4 text-accent" />
+              <div className={cn(
+                "p-2 rounded-xl shrink-0",
+                iconClassName || "bg-accent/10"
+              )}>
+                <Icon className={cn("w-4 h-4", iconClassName ? '' : "text-accent")} />
               </div>
             )}
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <CardTitle className="text-base font-semibold">{title}</CardTitle>
+                <CardTitle className="text-base font-display font-semibold">{title}</CardTitle>
                 {tooltip && (
                   <InfoTooltip 
                     formula={tooltip.formula}
@@ -63,6 +76,13 @@ export function SectionCard({
                   />
                 )}
                 {badge}
+                {collapsible && (
+                  isCollapsed ? (
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  )
+                )}
               </div>
               {description && (
                 <p className="text-sm text-muted-foreground">{description}</p>
@@ -83,12 +103,14 @@ export function SectionCard({
           )}
         </div>
       </CardHeader>
-      <CardContent className={cn(
-        noPadding ? 'p-0' : 'pt-0',
-        contentClassName
-      )}>
-        {children}
-      </CardContent>
+      {!isCollapsed && (
+        <CardContent className={cn(
+          noPadding ? 'p-0' : 'pt-0',
+          contentClassName
+        )}>
+          {children}
+        </CardContent>
+      )}
     </Card>
   );
 }
@@ -99,9 +121,11 @@ interface CompactSectionCardProps {
   value: string | number;
   subtitle?: string;
   icon?: LucideIcon;
+  iconClassName?: string;
   trend?: {
     value: number;
     label?: string;
+    higherIsBetter?: boolean;
   };
   tooltip?: {
     formula?: string;
@@ -116,26 +140,25 @@ export function CompactSectionCard({
   value,
   subtitle,
   icon: Icon,
+  iconClassName,
   trend,
   tooltip,
   onClick,
   className,
 }: CompactSectionCardProps) {
-  const TrendDisplay = trend && (
-    <span className={cn(
-      "text-xs font-medium",
-      trend.value > 0 ? "text-success" : trend.value < 0 ? "text-destructive" : "text-muted-foreground"
-    )}>
-      {trend.value > 0 ? '+' : ''}{trend.value}%
-      {trend.label && <span className="text-muted-foreground ml-1">{trend.label}</span>}
-    </span>
-  );
+  const getTrendColor = () => {
+    if (!trend) return '';
+    if (trend.value === 0) return 'text-muted-foreground';
+    const isPositive = trend.value > 0;
+    const isGood = trend.higherIsBetter !== false ? isPositive : !isPositive;
+    return isGood ? 'text-success' : 'text-destructive';
+  };
 
   return (
     <Card 
       className={cn(
-        'border-border/50 transition-all',
-        onClick && 'cursor-pointer hover:border-accent/50 hover:shadow-md',
+        'border-border/50 shadow-sm transition-all duration-200',
+        onClick && 'cursor-pointer hover:border-accent/40 hover:shadow-md',
         className
       )}
       onClick={onClick}
@@ -143,7 +166,11 @@ export function CompactSectionCard({
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex items-center gap-2">
-            {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
+            {Icon && (
+              <div className={cn("p-1.5 rounded-lg", iconClassName || "bg-muted")}>
+                <Icon className={cn("w-4 h-4", iconClassName ? '' : "text-muted-foreground")} />
+              </div>
+            )}
             <span className="text-sm text-muted-foreground">{title}</span>
             {tooltip && (
               <InfoTooltip 
@@ -152,9 +179,14 @@ export function CompactSectionCard({
               />
             )}
           </div>
-          {TrendDisplay}
+          {trend && (
+            <span className={cn("text-xs font-medium", getTrendColor())}>
+              {trend.value > 0 ? '+' : ''}{trend.value}%
+              {trend.label && <span className="text-muted-foreground ml-1">{trend.label}</span>}
+            </span>
+          )}
         </div>
-        <p className="text-2xl font-bold">{value}</p>
+        <p className="text-2xl font-bold tracking-tight">{value}</p>
         {subtitle && (
           <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
         )}

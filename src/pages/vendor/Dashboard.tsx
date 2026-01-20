@@ -2,12 +2,10 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { 
   Tag, 
-  TrendingUp, 
   DollarSign, 
   Eye, 
   Users, 
@@ -15,12 +13,11 @@ import {
   Edit,
   ToggleLeft,
   ToggleRight,
-  ArrowUpRight,
-  ArrowDownRight,
   Wallet,
   Calendar,
   Sparkles,
   Target,
+  TrendingUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -29,12 +26,13 @@ import { AnimatedBarChart } from '@/components/charts/AnimatedBarChart';
 import { useElementVisibility } from '@/contexts/UIVisibilityContext';
 import { PerformanceInsights } from '@/components/vendor/PerformanceInsights';
 import { PayoutThresholds } from '@/components/vendor/PayoutThresholds';
+import { PageLayout, MetricCard, MetricGrid } from '@/components/shared';
 
 const vendorMetrics = [
-  { label: 'Active Offers', labelAr: 'العروض النشطة', value: '12', change: '+2', trend: 'up', icon: Tag },
-  { label: 'Total Views', labelAr: 'إجمالي المشاهدات', value: '4,562', change: '+18%', trend: 'up', icon: Eye },
-  { label: 'Redemptions', labelAr: 'عمليات الاسترداد', value: '847', change: '+12%', trend: 'up', icon: Users },
-  { label: 'Total Earnings', labelAr: 'إجمالي الأرباح', value: 'AED 24,500', change: '+15%', trend: 'up', icon: DollarSign },
+  { label: 'Active Offers', labelAr: 'العروض النشطة', value: '12', change: 2, icon: Tag },
+  { label: 'Total Views', labelAr: 'إجمالي المشاهدات', value: '4,562', change: 18, icon: Eye },
+  { label: 'Redemptions', labelAr: 'عمليات الاسترداد', value: '847', change: 12, icon: Users },
+  { label: 'Total Earnings', labelAr: 'إجمالي الأرباح', value: 'AED 24,500', change: 15, icon: DollarSign },
 ];
 
 const myOffers = [
@@ -80,7 +78,6 @@ const myOffers = [
   },
 ];
 
-// Transformed for AnimatedLineChart (expects name/value/secondaryValue)
 const monthlyPerformanceChart = [
   { name: 'Jul', value: 2800, secondaryValue: 520 },
   { name: 'Aug', value: 3100, secondaryValue: 580 },
@@ -112,7 +109,6 @@ export default function VendorDashboard() {
   const isRTL = direction === 'rtl';
   const [searchQuery, setSearchQuery] = useState('');
 
-  // UI Visibility hooks
   const { isVisible: showMetricsCards } = useElementVisibility('vendor', 'dashboard', 'metrics_cards');
   const { isVisible: showOffersTab } = useElementVisibility('vendor', 'dashboard', 'offers_tab');
   const { isVisible: showAnalyticsTab } = useElementVisibility('vendor', 'dashboard', 'analytics_tab');
@@ -126,59 +122,35 @@ export default function VendorDashboard() {
     offer.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  return (
-    <div className={cn("space-y-8", isRTL && "text-right")}>
-      {/* Header */}
-      <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
-        <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">
-            {t('Vendor Dashboard', 'لوحة تحكم المورد')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('Manage your offers and track performance', 'إدارة عروضك وتتبع الأداء')}
-          </p>
-        </div>
-        <Button size="lg" className="gap-2">
-          <Plus className="w-4 h-4" />
-          {t('Create New Offer', 'إنشاء عرض جديد')}
-        </Button>
-      </div>
+  const headerActions = (
+    <Button size="lg" className="gap-2">
+      <Plus className="w-4 h-4" />
+      {t('Create New Offer', 'إنشاء عرض جديد')}
+    </Button>
+  );
 
+  return (
+    <PageLayout
+      title={t('Vendor Dashboard', 'لوحة تحكم المورد')}
+      description={t('Manage your offers and track performance', 'إدارة عروضك وتتبع الأداء')}
+      icon={Tag}
+      iconClassName="from-accent to-accent/80"
+      actions={headerActions}
+    >
       {/* Metrics Cards */}
       {showMetricsCards && (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {vendorMetrics.map((metric) => (
-          <Card key={metric.label} className="relative overflow-hidden">
-            <CardContent className="p-6">
-              <div className={cn("flex items-start justify-between", isRTL && "flex-row-reverse")}>
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? metric.labelAr : metric.label}
-                  </p>
-                  <p className="text-2xl font-bold mt-1">{metric.value}</p>
-                  <div className={cn("flex items-center gap-1 mt-2", isRTL && "flex-row-reverse")}>
-                    {metric.trend === 'up' ? (
-                      <ArrowUpRight className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <ArrowDownRight className="w-4 h-4 text-red-500" />
-                    )}
-                    <span className={cn(
-                      "text-sm font-medium",
-                      metric.trend === 'up' ? "text-green-500" : "text-red-500"
-                    )}>
-                      {metric.change}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{t('this month', 'هذا الشهر')}</span>
-                  </div>
-                </div>
-                <div className="p-3 rounded-xl bg-primary/10">
-                  <metric.icon className="w-5 h-5 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+        <MetricGrid columns={4}>
+          {vendorMetrics.map((metric) => (
+            <MetricCard
+              key={metric.label}
+              title={language === 'ar' ? metric.labelAr : metric.label}
+              value={metric.value}
+              icon={metric.icon}
+              trend={{ value: metric.change, label: t('this month', 'هذا الشهر') }}
+              variant="default"
+            />
+          ))}
+        </MetricGrid>
       )}
 
       {/* Main Content Tabs */}
@@ -397,6 +369,6 @@ export default function VendorDashboard() {
           <PayoutThresholds />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageLayout>
   );
 }
