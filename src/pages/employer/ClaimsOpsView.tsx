@@ -24,7 +24,9 @@ import { EmployerGlobalFiltersBar } from '@/components/employer';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useEmployerPermissions } from '@/hooks/useEmployerPermissions';
 import { ClaimReviewSheet } from '@/components/employer/ClaimReviewSheet';
-import { useProfile } from '@/contexts/ProfileContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 interface Request {
   id: string;
@@ -132,8 +134,23 @@ export function ClaimsOpsView() {
   const { toast } = useToast();
   const { hasPermission } = useEmployerPermissions();
   const canProcessClaims = hasPermission('can_process_claims');
-  const { profile } = useProfile();
-  const organizationId = profile?.organization_id || null;
+  const { user } = useAuth();
+  
+  // Fetch organization ID from profile
+  const { data: profileData } = useQuery({
+    queryKey: ['profile_org', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('user_id', user.id)
+        .single();
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+  const organizationId = profileData?.organization_id || null;
 
   const filteredRequests = requests.filter(req => {
     const matchesSearch = req.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -148,29 +165,6 @@ export function ClaimsOpsView() {
   const lowRiskPending = requests.filter(r => r.status === 'pending' && r.riskLevel === 'low');
   const approvedCount = requests.filter(r => r.status === 'approved').length;
   const slaBreach = requests.filter(r => r.status === 'pending' && new Date(r.slaDeadline) < new Date()).length;
-
-  const handleAction = (action: 'approve' | 'reject') => {
-    if (!selectedRequest) return;
-    
-    setRequests(prev => prev.map(req => 
-      req.id === selectedRequest.id 
-        ? { 
-            ...req, 
-            status: action === 'approve' ? 'approved' : 'rejected',
-            reviewedAt: new Date().toISOString(),
-            reviewerNotes: reviewNotes
-          } 
-        : req
-    ));
-    
-    toast({
-      title: action === 'approve' ? 'Request Approved' : 'Request Rejected',
-      description: `${selectedRequest.subject} has been ${action === 'approve' ? 'approved' : 'rejected'}.`,
-    });
-    
-    setSelectedRequest(null);
-    setReviewNotes('');
-  };
 
   const handleBulkApprove = () => {
     setRequests(prev => prev.map(req => 
