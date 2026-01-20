@@ -37,8 +37,15 @@ import {
   Hourglass,
   Flame,
   FileQuestion,
-  TrendingUp
+  TrendingUp,
+  Flag,
+  CheckCircle2,
+  XCircle as XCircleIcon,
+  Mail,
+  MoreHorizontal,
+  Info
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { EmployerGlobalFiltersBar } from '@/components/employer';
 import { PermissionGate } from '@/components/shared/PermissionGate';
@@ -267,7 +274,12 @@ export function ClaimsOpsView() {
   const maxAmount = searchParams.get('maxAmount') ? Number(searchParams.get('maxAmount')) : undefined;
   const dateFrom = searchParams.get('dateFrom') || '';
   const dateTo = searchParams.get('dateTo') || '';
-  const sortBySlaRisk = searchParams.get('slaSort') === 'true';
+  // Persist SLA sort preference in localStorage
+  const [localSlaSort, setLocalSlaSort] = useState(() => {
+    const saved = localStorage.getItem('employer_claims_sla_sort');
+    return saved === 'true' || searchParams.get('slaSort') === 'true';
+  });
+  const sortBySlaRisk = localSlaSort;
 
   // Local state
   const [requests, setRequests] = useState<QueueRequest[]>(mockRequests);
@@ -275,6 +287,14 @@ export function ClaimsOpsView() {
   const [selectedForBulk, setSelectedForBulk] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [bulkAssignOpen, setBulkAssignOpen] = useState(false);
+  const [bulkPriorityOpen, setBulkPriorityOpen] = useState(false);
+
+  // Handle SLA sort toggle with persistence
+  const handleSlaSortToggle = (checked: boolean) => {
+    setLocalSlaSort(checked);
+    localStorage.setItem('employer_claims_sla_sort', checked ? 'true' : 'false');
+    updateParam('slaSort', checked ? 'true' : null);
+  };
 
   // Fetch organization ID from profile
   const { data: profileData } = useQuery({
@@ -452,9 +472,56 @@ export function ClaimsOpsView() {
   };
 
   const handleBulkRequestDocs = () => {
+    // Mark selected requests as needing docs follow-up
+    setRequests(prev => prev.map(req =>
+      selectedForBulk.includes(req.id)
+        ? { ...req, hasMissingDocs: true }
+        : req
+    ));
     toast({
       title: 'Document Requests Sent',
-      description: `Document requests sent for ${selectedForBulk.length} claims.`,
+      description: `Document request notifications sent for ${selectedForBulk.length} claims.`,
+    });
+    setSelectedForBulk([]);
+  };
+
+  const handleBulkPriorityChange = (newPriority: QueueRequest['priority']) => {
+    setRequests(prev => prev.map(req =>
+      selectedForBulk.includes(req.id)
+        ? { ...req, priority: newPriority }
+        : req
+    ));
+    toast({
+      title: 'Priority Updated',
+      description: `${selectedForBulk.length} requests set to ${newPriority} priority.`,
+    });
+    setSelectedForBulk([]);
+    setBulkPriorityOpen(false);
+  };
+
+  const handleBulkApprove = () => {
+    setRequests(prev => prev.map(req =>
+      selectedForBulk.includes(req.id) && ['pending', 'submitted', 'in_review'].includes(req.status)
+        ? { ...req, status: 'approved' as const, lastStatusChangeAt: new Date().toISOString() }
+        : req
+    ));
+    toast({
+      title: 'Claims Approved',
+      description: `${selectedForBulk.length} claims have been approved.`,
+    });
+    setSelectedForBulk([]);
+  };
+
+  const handleBulkReject = () => {
+    setRequests(prev => prev.map(req =>
+      selectedForBulk.includes(req.id) && ['pending', 'submitted', 'in_review'].includes(req.status)
+        ? { ...req, status: 'rejected' as const, lastStatusChangeAt: new Date().toISOString() }
+        : req
+    ));
+    toast({
+      title: 'Claims Rejected',
+      description: `${selectedForBulk.length} claims have been rejected.`,
+      variant: 'destructive',
     });
     setSelectedForBulk([]);
   };
@@ -595,18 +662,29 @@ export function ClaimsOpsView() {
           <h1 className="text-2xl font-display font-bold text-foreground">Claims & Approvals Queue</h1>
           <p className="text-muted-foreground">Process employee requests efficiently with SLA tracking</p>
         </div>
-        <div className="flex items-center gap-2">
+        <TooltipProvider>
           <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg">
             <Switch
               id="sla-sort"
               checked={sortBySlaRisk}
-              onCheckedChange={(checked) => updateParam('slaSort', checked ? 'true' : null)}
+              onCheckedChange={handleSlaSortToggle}
             />
             <Label htmlFor="sla-sort" className="text-sm cursor-pointer">
               SLA Risk First
             </Label>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs">
+                <p className="text-xs">
+                  When enabled, requests are sorted by SLA urgency—breached and due-soon items appear first. 
+                  Your preference is saved for future visits.
+                </p>
+              </TooltipContent>
+            </Tooltip>
           </div>
-        </div>
+        </TooltipProvider>
       </div>
 
       {/* Global Filters */}
@@ -793,8 +871,9 @@ export function ClaimsOpsView() {
                   Clear
                 </Button>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <PermissionGate permission="can_process_claims">
+                  {/* Assign Owner */}
                   <Popover open={bulkAssignOpen} onOpenChange={setBulkAssignOpen}>
                     <PopoverTrigger asChild>
                       <Button variant="outline" size="sm" className="gap-2">
@@ -803,6 +882,7 @@ export function ClaimsOpsView() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-48 p-2">
+                      <p className="text-xs font-medium text-muted-foreground mb-2 px-2">Assign to:</p>
                       {mockEmployerUsers.map((u) => (
                         <Button
                           key={u.id}
@@ -816,6 +896,32 @@ export function ClaimsOpsView() {
                     </PopoverContent>
                   </Popover>
 
+                  {/* Set Priority */}
+                  <Popover open={bulkPriorityOpen} onOpenChange={setBulkPriorityOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Flag className="w-4 h-4" />
+                        Priority
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-36 p-2">
+                      <p className="text-xs font-medium text-muted-foreground mb-2 px-2">Set priority:</p>
+                      <Button variant="ghost" className="w-full justify-start text-red-600" onClick={() => handleBulkPriorityChange('urgent')}>
+                        Urgent
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start text-amber-600" onClick={() => handleBulkPriorityChange('high')}>
+                        High
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start" onClick={() => handleBulkPriorityChange('normal')}>
+                        Normal
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={() => handleBulkPriorityChange('low')}>
+                        Low
+                      </Button>
+                    </PopoverContent>
+                  </Popover>
+
+                  {/* Move to Status */}
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" size="sm" className="gap-2">
@@ -823,28 +929,54 @@ export function ClaimsOpsView() {
                         Status
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-40 p-2">
-                      <Button variant="ghost" className="w-full justify-start" onClick={() => handleBulkStatusChange('in_review')}>
+                    <PopoverContent className="w-44 p-2">
+                      <p className="text-xs font-medium text-muted-foreground mb-2 px-2">Move to:</p>
+                      <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => handleBulkStatusChange('in_review')}>
+                        <Hourglass className="w-3.5 h-3.5" />
                         In Review
                       </Button>
-                      <Button variant="ghost" className="w-full justify-start" onClick={() => handleBulkStatusChange('approved')}>
-                        Approved
-                      </Button>
-                      <Button variant="ghost" className="w-full justify-start" onClick={() => handleBulkStatusChange('rejected')}>
-                        Rejected
+                      <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => handleBulkStatusChange('pending')}>
+                        <Clock className="w-3.5 h-3.5" />
+                        Pending
                       </Button>
                     </PopoverContent>
                   </Popover>
 
+                  {/* Request Docs */}
                   <Button variant="outline" size="sm" className="gap-2" onClick={handleBulkRequestDocs}>
-                    <FileText className="w-4 h-4" />
+                    <Mail className="w-4 h-4" />
                     Request Docs
+                  </Button>
+
+                  <Separator orientation="vertical" className="h-6 mx-1" />
+
+                  {/* Quick Actions: Approve / Reject */}
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-2 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10" 
+                    onClick={handleBulkApprove}
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    Approve
+                  </Button>
+
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-2 text-red-600 border-red-500/30 hover:bg-red-500/10" 
+                    onClick={handleBulkReject}
+                  >
+                    <XCircleIcon className="w-4 h-4" />
+                    Reject
                   </Button>
                 </PermissionGate>
 
+                <Separator orientation="vertical" className="h-6 mx-1" />
+
                 <Button variant="outline" size="sm" className="gap-2" onClick={handleExportCSV}>
                   <Download className="w-4 h-4" />
-                  Export CSV
+                  Export
                 </Button>
               </div>
             </div>
