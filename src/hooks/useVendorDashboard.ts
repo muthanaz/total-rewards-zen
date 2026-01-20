@@ -355,20 +355,67 @@ export function useVendorProfileCompleteness() {
 
 // ============= DEMO DATA SEEDING =============
 
-const DEMO_OFFER_IMAGES = [
-  'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop',
-  'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=300&fit=crop',
-  'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400&h=300&fit=crop',
-  'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=400&h=300&fit=crop',
-  'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=300&fit=crop',
-];
-
-const DEMO_OFFER_TITLES = [
-  { title: '20% Off All Purchases', category: 'Lifestyle & Shopping' },
-  { title: 'Premium Gym Membership', category: 'Health & Fitness' },
-  { title: 'Family Dining Discount', category: 'Food & Coffee' },
-  { title: 'Annual Learning Subscription', category: 'Learning & Skills' },
-  { title: 'Weekend Staycation Deal', category: 'Travel & Experiences' },
+const DEMO_OFFERS = [
+  {
+    title: 'Premium Gym Membership - 25% Off',
+    category: 'Health & Fitness',
+    tags: ['fitness', 'gym', 'wellness', 'corporate'],
+    discount_percent: 25,
+    image_url: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=300&fit=crop',
+    locations: ['Dubai Marina', 'Downtown Dubai', 'JBR'],
+    status: 'active' as const,
+    is_expired: false,
+  },
+  {
+    title: 'Gourmet Dining Experience',
+    category: 'Food & Coffee',
+    tags: ['dining', 'restaurant', 'fine-dining', 'date-night'],
+    discount_percent: 20,
+    image_url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=300&fit=crop',
+    locations: ['DIFC', 'Business Bay'],
+    status: 'active' as const,
+    is_expired: false,
+  },
+  {
+    title: 'Weekend Spa & Wellness Retreat',
+    category: 'Travel & Experiences',
+    tags: ['spa', 'wellness', 'relaxation', 'staycation'],
+    discount_percent: 30,
+    image_url: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&h=300&fit=crop',
+    locations: ['Palm Jumeirah', 'JBR'],
+    status: 'active' as const,
+    is_expired: false,
+  },
+  {
+    title: 'Online Learning Platform - Annual Pass',
+    category: 'Learning & Skills',
+    tags: ['education', 'courses', 'upskilling', 'career'],
+    discount_percent: 40,
+    image_url: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop',
+    locations: ['Online'],
+    status: 'pending' as const,
+    is_expired: false,
+  },
+  {
+    title: 'Kids Summer Camp 2025',
+    category: 'Family & Kids',
+    tags: ['kids', 'summer', 'activities', 'family'],
+    discount_percent: 15,
+    image_url: 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?w=400&h=300&fit=crop',
+    locations: ['Dubai Sports City', 'Al Quoz'],
+    status: 'pending' as const,
+    is_expired: false,
+  },
+  {
+    title: 'Holiday Season Shopping Spree',
+    category: 'Lifestyle & Shopping',
+    tags: ['shopping', 'retail', 'fashion', 'seasonal'],
+    discount_percent: 35,
+    image_url: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop',
+    locations: ['Dubai Mall', 'Mall of Emirates'],
+    status: 'active' as const,
+    is_expired: true, // This one is expired
+  },
 ];
 
 export function useSeedVendorDemoData() {
@@ -393,23 +440,20 @@ export function useSeedVendorDemoData() {
       }
       
       const now = new Date();
-      const offerStatuses = ['active', 'active', 'pending', 'pending', 'active'];
-      const createdOffers: string[] = [];
+      const createdOffers: { id: string; status: string; is_expired: boolean }[] = [];
       
-      // Create offers
-      for (let i = 0; i < 5; i++) {
-        const template = DEMO_OFFER_TITLES[i];
-        const status = offerStatuses[i];
-        const daysOffset = Math.floor(Math.random() * 20) + 5;
+      // Create 6 offers with realistic data
+      for (let i = 0; i < DEMO_OFFERS.length; i++) {
+        const template = DEMO_OFFERS[i];
         
-        // Last offer is expired
-        const isExpired = i === 4;
-        const validFrom = isExpired 
-          ? format(subDays(now, 60), 'yyyy-MM-dd')
-          : format(subDays(now, 15), 'yyyy-MM-dd');
-        const validTo = isExpired
-          ? format(subDays(now, 10), 'yyyy-MM-dd')
-          : format(subDays(now, -60 - daysOffset), 'yyyy-MM-dd');
+        // Calculate validity window
+        const validFrom = template.is_expired 
+          ? format(subDays(now, 90), 'yyyy-MM-dd')
+          : format(subDays(now, 30 + i * 5), 'yyyy-MM-dd');
+        
+        const validTo = template.is_expired
+          ? format(subDays(now, 15), 'yyyy-MM-dd') // Expired 15 days ago
+          : format(subDays(now, -(60 + i * 10)), 'yyyy-MM-dd'); // Future expiry
         
         const { data: offer, error } = await supabase
           .from('marketplace_offers')
@@ -417,35 +461,47 @@ export function useSeedVendorDemoData() {
             vendor_id: vendor.id,
             merchant: vendor.company_name,
             title: template.title,
-            description: `Exclusive offer from ${vendor.company_name}. Terms and conditions apply.`,
+            description: `Exclusive offer from ${vendor.company_name}. Enjoy ${template.discount_percent}% off at participating locations. Terms and conditions apply.`,
             category: template.category,
-            discount_percent: 10 + Math.floor(Math.random() * 25),
-            status: isExpired ? 'active' : status, // Expired but was active
-            is_active: status === 'active' && !isExpired,
-            is_public: Math.random() > 0.3,
+            discount_percent: template.discount_percent,
+            status: template.is_expired ? 'active' : template.status, // Expired was active
+            is_active: template.status === 'active',
+            is_public: true,
             valid_from: validFrom,
             valid_to: validTo,
-            image_url: DEMO_OFFER_IMAGES[i],
-            terms: 'Valid on selected items. Cannot be combined with other offers.',
+            image_url: template.image_url,
+            tags: template.tags,
+            terms: `Valid at: ${template.locations.join(', ')}. Cannot be combined with other offers. Subject to availability.`,
           })
           .select('id')
           .single();
         
         if (error) throw error;
-        if (offer) createdOffers.push(offer.id);
+        if (offer) {
+          createdOffers.push({ 
+            id: offer.id, 
+            status: template.status,
+            is_expired: template.is_expired,
+          });
+        }
       }
       
-      // Create activations (only for active offers)
-      const activeOfferIds = createdOffers.slice(0, 2);
+      // Get only active, non-expired offers for activations
+      const activeOfferIds = createdOffers
+        .filter(o => o.status === 'active' && !o.is_expired)
+        .map(o => o.id);
       
-      for (const offerId of activeOfferIds) {
-        const numActivations = 15 + Math.floor(Math.random() * 25);
+      // Create exactly 12 activations spread across active offers
+      const activationDistribution = [5, 4, 3]; // Distribute: 5, 4, 3 per offer
+      
+      for (let offerIdx = 0; offerIdx < activeOfferIds.length; offerIdx++) {
+        const offerId = activeOfferIds[offerIdx];
+        const numActivations = activationDistribution[offerIdx] || 3;
         
         for (let i = 0; i < numActivations; i++) {
-          const daysAgo = Math.floor(Math.random() * 28);
+          const daysAgo = Math.floor(Math.random() * 25) + 1;
           const activatedAt = subDays(now, daysAgo);
           
-          // user_id is required - use a placeholder UUID for demo
           await supabase.from('perk_activations').insert({
             offer_id: offerId,
             user_id: '00000000-0000-0000-0000-000000000001', // Demo user
@@ -454,39 +510,46 @@ export function useSeedVendorDemoData() {
         }
       }
       
-      // Create transactions (redemptions)
-      const redemptionCount = 10 + Math.floor(Math.random() * 20);
+      // Create exactly 6 transactions (redemptions) spread across active offers
+      const transactionDistribution = [3, 2, 1]; // Distribute: 3, 2, 1 per offer
       
-      for (let i = 0; i < redemptionCount; i++) {
-        const offerId = activeOfferIds[Math.floor(Math.random() * activeOfferIds.length)];
-        const daysAgo = Math.floor(Math.random() * 25);
-        const redeemedAt = subDays(now, daysAgo);
-        const originalAmount = 100 + Math.floor(Math.random() * 500);
-        const discountAmount = originalAmount * 0.2;
-        const commissionAmount = discountAmount * ((vendor.commission_rate || 10) / 100);
+      for (let offerIdx = 0; offerIdx < activeOfferIds.length; offerIdx++) {
+        const offerId = activeOfferIds[offerIdx];
+        const numTransactions = transactionDistribution[offerIdx] || 1;
         
-        await supabase.from('vendor_transactions').insert({
-          vendor_id: vendor.id,
-          offer_id: offerId,
-          user_id: '00000000-0000-0000-0000-000000000001', // Demo user
-          transaction_type: 'redemption',
-          original_amount: originalAmount,
-          discount_amount: discountAmount,
-          commission_amount: commissionAmount,
-          status: Math.random() > 0.3 ? 'settled' : 'pending',
-          redeemed_at: redeemedAt.toISOString(),
-          settled_at: Math.random() > 0.5 ? subDays(redeemedAt, -5).toISOString() : null,
-        });
+        for (let i = 0; i < numTransactions; i++) {
+          const daysAgo = Math.floor(Math.random() * 20) + 2;
+          const redeemedAt = subDays(now, daysAgo);
+          const originalAmount = 150 + Math.floor(Math.random() * 400);
+          const discountPercent = DEMO_OFFERS[offerIdx].discount_percent;
+          const discountAmount = originalAmount * (discountPercent / 100);
+          const commissionAmount = discountAmount * ((vendor.commission_rate || 10) / 100);
+          
+          await supabase.from('vendor_transactions').insert({
+            vendor_id: vendor.id,
+            offer_id: offerId,
+            user_id: '00000000-0000-0000-0000-000000000001', // Demo user
+            transaction_type: 'redemption',
+            original_amount: originalAmount,
+            discount_amount: discountAmount,
+            commission_amount: commissionAmount,
+            status: i === 0 ? 'pending' : 'settled', // First transaction pending, rest settled
+            redeemed_at: redeemedAt.toISOString(),
+            settled_at: i === 0 ? null : subDays(redeemedAt, -3).toISOString(),
+          });
+        }
       }
       
-      return { offersCreated: createdOffers.length };
+      return { offersCreated: createdOffers.length, activations: 12, transactions: 6 };
     },
     onSuccess: () => {
+      // Invalidate all relevant queries
       queryClient.invalidateQueries({ queryKey: ['vendor-dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['vendor-offers'] });
       queryClient.invalidateQueries({ queryKey: ['vendor-activity'] });
       queryClient.invalidateQueries({ queryKey: ['vendor-transactions'] });
-      toast.success('Demo data added successfully');
+      queryClient.invalidateQueries({ queryKey: ['marketplace_offers'] }); // Employee marketplace
+      toast.success('Demo data seeded: 6 offers, 12 activations, 6 transactions');
     },
     onError: (error: Error) => {
       if (error.message === 'Vendor already has offers') {
