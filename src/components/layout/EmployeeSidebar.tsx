@@ -8,8 +8,6 @@ import {
   Heart,
   Car,
   Dumbbell,
-  PiggyBank,
-  TrendingUp,
   BookOpen,
   Calendar,
   Gift,
@@ -24,90 +22,121 @@ import {
   X,
   LogOut,
   ShoppingBag,
-  Shield,
   Receipt,
+  Compass,
+  Clock,
+  Landmark,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+import { useProfile } from '@/contexts/ProfileContext';
 import { Button } from '@/components/ui/button';
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 
 interface NavGroup {
-  labelKey: string;
+  id: string;
+  label: string;
+  labelAr?: string;
   items: NavItem[];
+  defaultOpen?: boolean;
   featureFlag?: keyof ReturnType<typeof useFeatureFlags>['flags'];
+  /** If true, show only when onboarding is incomplete */
+  showOnlyIfOnboardingIncomplete?: boolean;
 }
 
 interface NavItem {
-  labelKey: string;
+  label: string;
+  labelAr?: string;
   path: string;
   icon: React.ElementType;
+  featureFlag?: keyof ReturnType<typeof useFeatureFlags>['flags'];
 }
 
 /**
- * Employee Navigation (Benefits-first)
- * - Keep Marketplace visible but not the primary focus.
- * - Consolidate HR workflows (claims, documents, leave) into one clear group.
+ * Employee Navigation Structure
+ * Clean, consistent groups matching Employer portal patterns
  */
 const navigation: NavGroup[] = [
-  // 1) Dashboard
+  // OVERVIEW
   {
-    labelKey: 'nav.dashboard',
-    items: [{ labelKey: 'nav.overview', path: '/employee', icon: LayoutDashboard }],
-  },
-
-  // 2) Benefits (high-frequency + intelligence)
-  {
-    labelKey: 'nav.myBenefits',
+    id: 'overview',
+    label: 'Overview',
+    labelAr: 'نظرة عامة',
+    defaultOpen: true,
     items: [
-      { labelKey: 'nav.allBenefits', path: '/employee/benefits', icon: Gift },
-      { labelKey: 'nav.benefitsAnalysis', path: '/employee/benefits-analysis', icon: TrendingUp },
+      { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/employee', icon: LayoutDashboard },
     ],
   },
-
-  // 3) Benefit Details (deep dive by category)
+  // ONBOARDING (conditional - only show if incomplete)
   {
-    labelKey: 'nav.benefitDetails',
+    id: 'onboarding',
+    label: 'Getting Started',
+    labelAr: 'البدء',
+    showOnlyIfOnboardingIncomplete: true,
     items: [
-      { labelKey: 'nav.housing', path: '/employee/housing', icon: Home },
-      { labelKey: 'nav.schooling', path: '/employee/schooling', icon: GraduationCap },
-      { labelKey: 'nav.health', path: '/employee/health', icon: Heart },
-      { labelKey: 'nav.transport', path: '/employee/transport', icon: Car },
-      { labelKey: 'Long-Term Financials', path: '/employee/long-term-financials', icon: Wallet },
-      { labelKey: 'nav.wellbeing', path: '/employee/wellbeing', icon: Dumbbell },
-      { labelKey: 'nav.learning', path: '/employee/learning', icon: BookOpen },
+      { label: 'Onboarding', labelAr: 'التهيئة', path: '/employee/onboarding', icon: Compass },
     ],
   },
-
-  // 4) Leave Management - Clickable heading with direct link
+  // MY BENEFITS
   {
-    labelKey: 'nav.leaveManagement',
+    id: 'my-benefits',
+    label: 'My Benefits',
+    labelAr: 'مزاياي',
+    defaultOpen: true,
     items: [
-      { labelKey: 'nav.leave', path: '/employee/leave', icon: Calendar },
+      { label: 'Benefits Overview', labelAr: 'نظرة عامة على المزايا', path: '/employee/benefits', icon: Gift },
+      { label: 'Insights & Optimization', labelAr: 'التحليلات والتحسين', path: '/employee/benefits-analysis', icon: Compass },
     ],
   },
-
-  // 5) Marketplace & Perks (Phase 2 - feature-flagged)
+  // BENEFIT CATEGORIES (collapsible)
   {
-    labelKey: 'nav.marketplace',
+    id: 'benefit-categories',
+    label: 'Benefit Categories',
+    labelAr: 'فئات المزايا',
+    items: [
+      { label: 'Housing', labelAr: 'السكن', path: '/employee/housing', icon: Home },
+      { label: 'Schooling', labelAr: 'التعليم', path: '/employee/schooling', icon: GraduationCap },
+      { label: 'Health Insurance', labelAr: 'التأمين الصحي', path: '/employee/health', icon: Heart },
+      { label: 'Transport & Mobility', labelAr: 'النقل والتنقل', path: '/employee/transport', icon: Car },
+      { label: 'Wellbeing', labelAr: 'الرفاهية', path: '/employee/wellbeing', icon: Dumbbell },
+      { label: 'Long-Term Financials', labelAr: 'الماليات طويلة الأجل', path: '/employee/long-term-financials', icon: Wallet },
+      { label: 'Learning & Development', labelAr: 'التعلم والتطوير', path: '/employee/learning', icon: BookOpen },
+      { label: 'End of Service', labelAr: 'نهاية الخدمة', path: '/employee/long-term-financials?tab=gratuity', icon: Landmark },
+    ],
+  },
+  // TIME OFF
+  {
+    id: 'time-off',
+    label: 'Time Off',
+    labelAr: 'الإجازات',
+    items: [
+      { label: 'Leave', labelAr: 'الإجازات', path: '/employee/leave', icon: Calendar },
+    ],
+  },
+  // HR & SERVICES
+  {
+    id: 'hr-services',
+    label: 'HR & Services',
+    labelAr: 'الموارد البشرية والخدمات',
+    defaultOpen: true,
+    items: [
+      { label: 'Claims & Requests', labelAr: 'المطالبات والطلبات', path: '/employee/requests', icon: Receipt },
+      { label: 'HR Documents', labelAr: 'مستندات الموارد البشرية', path: '/employee/documents', icon: FileText },
+      { label: 'Knowledge Hub', labelAr: 'مركز المعرفة', path: '/employee/knowledge', icon: BookOpen },
+      { label: 'Gov Connect', labelAr: 'الخدمات الحكومية', path: '/employee/gov-connect', icon: Building2 },
+    ],
+  },
+  // MARKETPLACE
+  {
+    id: 'marketplace',
+    label: 'Marketplace',
+    labelAr: 'السوق',
     featureFlag: 'marketplaceEnabled',
     items: [
-      { labelKey: 'nav.perksOffers', path: '/employee/marketplace', icon: ShoppingBag },
-    ],
-  },
-
-  // 6) HR Services & Help
-  {
-    labelKey: 'nav.hrServices',
-    items: [
-      { labelKey: 'nav.claimsRequests', path: '/employee/requests', icon: Receipt },
-      { labelKey: 'nav.hrDocuments', path: '/employee/documents', icon: FileText },
-      { labelKey: 'nav.knowledgeHub', path: '/employee/knowledge', icon: BookOpen },
-      { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
-      { labelKey: 'nav.onboarding', path: '/employee/onboarding', icon: Shield },
+      { label: 'Offers', labelAr: 'العروض', path: '/employee/marketplace', icon: ShoppingBag },
     ],
   },
 ];
@@ -116,47 +145,70 @@ export function EmployeeSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut } = useAuth();
-  const { t, direction } = useLanguage();
+  const { language, direction } = useLanguage();
   const { flags } = useFeatureFlags();
+  const { profile } = useProfile();
+  
+  // Check if onboarding is complete (simplified check)
+  const isOnboardingComplete = Boolean(
+    profile?.firstName && 
+    profile?.lastName && 
+    profile?.dateOfBirth
+  );
+  
   const [expandedGroups, setExpandedGroups] = useState<string[]>([
-    'nav.dashboard',
-    'nav.myBenefits',
-    'nav.hrServices',
+    'overview',
+    'my-benefits',
+    'hr-services',
   ]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isRTL = direction === 'rtl';
 
-  // Filter navigation groups based on feature flags
+  // Filter navigation groups based on feature flags and conditions
   const visibleNavigation = useMemo(() => {
     return navigation.filter((group) => {
-      if (group.featureFlag) {
-        return flags[group.featureFlag];
+      // Feature flag check
+      if (group.featureFlag && !flags[group.featureFlag]) {
+        return false;
+      }
+      // Onboarding visibility check
+      if (group.showOnlyIfOnboardingIncomplete && isOnboardingComplete) {
+        return false;
       }
       return true;
-    });
-  }, [flags]);
+    }).map(group => ({
+      ...group,
+      // Filter items by feature flags too
+      items: group.items.filter(item => 
+        !item.featureFlag || flags[item.featureFlag]
+      ),
+    }));
+  }, [flags, isOnboardingComplete]);
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
   };
 
-  const toggleGroup = (labelKey: string) => {
+  const toggleGroup = (id: string) => {
     setExpandedGroups((prev) =>
-      prev.includes(labelKey) ? prev.filter((g) => g !== labelKey) : [...prev, labelKey]
+      prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]
     );
   };
 
-  // Active rule:
-  // - exact match is active
-  // - nested route keeps parent highlighted (e.g., /employee/requests/123 highlights /employee/requests)
-  // - dashboard stays exact-only
+  // Active rule: exact match or nested route
   const isActive = (path: string) => {
     if (path === '/employee') return location.pathname === '/employee';
-    return location.pathname === path || location.pathname.startsWith(path + '/');
+    // Handle query params in path
+    const basePath = path.split('?')[0];
+    return location.pathname === basePath || location.pathname.startsWith(basePath + '/');
   };
 
   const ChevronCollapsed = isRTL ? ChevronLeft : ChevronRight;
+
+  const getLabel = (item: { label: string; labelAr?: string }) => {
+    return language === 'ar' && item.labelAr ? item.labelAr : item.label;
+  };
 
   const sidebarContent = (
     <>
@@ -187,9 +239,9 @@ export function EmployeeSidebar() {
       {/* Navigation */}
       <nav className={cn('flex-1 overflow-y-auto py-4 px-3 space-y-1', isRTL && 'text-right')}>
         {visibleNavigation.map((group, index) => (
-          <div key={group.labelKey} className={cn('mb-1', index > 0 && 'mt-6')}>
+          <div key={group.id} className={cn('mb-1', index > 0 && 'mt-5')}>
             <button
-              onClick={() => toggleGroup(group.labelKey)}
+              onClick={() => toggleGroup(group.id)}
               className={cn(
                 'flex items-center justify-between w-full px-3 py-2 text-[11px] font-bold uppercase tracking-[0.15em] transition-colors rounded-md group',
                 'text-sidebar-primary hover:bg-sidebar-primary/10',
@@ -198,16 +250,16 @@ export function EmployeeSidebar() {
             >
               <div className={cn('flex items-center gap-2', isRTL && 'flex-row-reverse')}>
                 <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
-                <span>{t(group.labelKey)}</span>
+                <span>{getLabel(group)}</span>
               </div>
-              {expandedGroups.includes(group.labelKey) ? (
+              {expandedGroups.includes(group.id) ? (
                 <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
               ) : (
                 <ChevronCollapsed className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
               )}
             </button>
 
-            {expandedGroups.includes(group.labelKey) && (
+            {expandedGroups.includes(group.id) && (
               <div className="mt-1 space-y-0.5 animate-fade-in">
                 {group.items.map((item) => (
                   <Link
@@ -222,7 +274,7 @@ export function EmployeeSidebar() {
                   >
                     <item.icon className="w-4 h-4 shrink-0" />
                     <span className={cn('text-sm flex-1', isRTL && 'text-right')}>
-                      {t(item.labelKey)}
+                      {getLabel(item)}
                     </span>
                   </Link>
                 ))}
@@ -231,52 +283,6 @@ export function EmployeeSidebar() {
           </div>
         ))}
       </nav>
-
-      {/* Marketplace - Secondary (still prominent, but below Benefits) - Only show if enabled */}
-      {flags.marketplaceEnabled && (
-        <div className={cn('px-3 pb-2', isRTL && 'text-right')}>
-          <Link
-            to="/employee/marketplace"
-            onClick={() => setMobileOpen(false)}
-            className={cn(
-              'flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200',
-              'bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-pink-500/10',
-              'hover:from-violet-500/15 hover:via-fuchsia-500/15 hover:to-pink-500/15',
-              'border border-violet-500/20 hover:border-violet-500/35',
-              'group',
-              isActive('/employee/marketplace') &&
-                'from-violet-500/18 via-fuchsia-500/18 to-pink-500/18 border-violet-500/40',
-              isRTL && 'flex-row-reverse'
-            )}
-          >
-            <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/20">
-              <ShoppingBag className="w-4 h-4 text-white" />
-            </div>
-            <div className={cn('flex-1', isRTL && 'text-right')}>
-              <span
-                className={cn(
-                  'text-sm font-medium block',
-                  isActive('/employee/marketplace')
-                    ? 'text-violet-600 dark:text-violet-400'
-                    : 'text-sidebar-foreground group-hover:text-violet-600 dark:group-hover:text-violet-400'
-                )}
-              >
-                {t('nav.perksPartners')}
-              </span>
-              <span className="text-[10px] text-muted-foreground">
-                {isRTL ? 'عروض يومية مختارة لك' : 'Daily deals curated for you'}
-              </span>
-            </div>
-            <ChevronCollapsed
-              className={cn(
-                'w-4 h-4 text-violet-500/50 group-hover:text-violet-500 transition-all',
-                'group-hover:translate-x-0.5',
-                isRTL && 'rotate-180 group-hover:-translate-x-0.5'
-              )}
-            />
-          </Link>
-        </div>
-      )}
 
       {/* Smart Profile - Distinguished Section */}
       <div className={cn('px-3 pb-2', isRTL && 'text-right')}>
@@ -306,7 +312,7 @@ export function EmployeeSidebar() {
                   : 'text-sidebar-foreground group-hover:text-teal-600 dark:group-hover:text-teal-400'
               )}
             >
-              {t('nav.profile')}
+              {language === 'ar' ? 'الملف الذكي' : 'Smart Profile'}
             </span>
             <span className="text-[10px] text-muted-foreground">
               {isRTL ? 'البيانات والإعدادات والخصوصية' : 'Details, settings & privacy'}
@@ -333,7 +339,9 @@ export function EmployeeSidebar() {
           )}
         >
           <LogOut className={cn('w-4 h-4 shrink-0', isRTL ? 'ml-3' : 'mr-3')} />
-          <span className={isRTL ? 'text-right' : 'text-left'}>{t('common.signOut')}</span>
+          <span className={isRTL ? 'text-right' : 'text-left'}>
+            {language === 'ar' ? 'تسجيل الخروج' : 'Sign Out'}
+          </span>
         </Button>
       </div>
     </>
