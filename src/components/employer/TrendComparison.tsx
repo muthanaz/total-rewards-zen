@@ -1,5 +1,5 @@
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
 
 interface TrendComparisonProps {
   current: number;
@@ -30,11 +30,11 @@ export function TrendComparison({
   const formatValue = (value: number): string => {
     switch (format) {
       case 'currency':
-        return `AED ${(value / 1000).toFixed(0)}K`;
+        return formatCurrencyAED(value);
       case 'percent':
-        return `${value.toFixed(1)}%`;
+        return formatPercent(value);
       default:
-        return value.toLocaleString();
+        return formatInteger(value);
     }
   };
 

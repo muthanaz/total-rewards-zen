@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Lightbulb, TrendingUp, Users, DollarSign, MessageSquare, Target, ArrowRight, CheckCircle } from 'lucide-react';
+import { formatCurrencyAED, formatInteger } from '@/lib/utils';
 
 interface Recommendation {
   id: string;
@@ -175,7 +176,7 @@ export default function RecommendationsPage() {
             <div className="flex items-center gap-3">
               <DollarSign className="h-8 w-8 text-green-500" />
               <div>
-                <p className="text-2xl font-bold text-green-600">AED {(totalPotentialSavings / 1000).toFixed(0)}K</p>
+                <p className="text-2xl font-bold text-green-600">{formatCurrencyAED(totalPotentialSavings)}</p>
                 <p className="text-sm text-muted-foreground">Potential Savings</p>
               </div>
             </div>
@@ -270,7 +271,7 @@ export default function RecommendationsPage() {
                         {rec.potentialSavings && (
                           <div>
                             <p className="text-muted-foreground">Potential Savings</p>
-                            <p className="font-medium text-green-600">AED {rec.potentialSavings.toLocaleString()}</p>
+                            <p className="font-medium text-green-600">{formatCurrencyAED(rec.potentialSavings, { abbreviate: false })}</p>
                           </div>
                         )}
                         {rec.affectedEmployees && (

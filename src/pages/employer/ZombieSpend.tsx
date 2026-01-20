@@ -8,6 +8,7 @@ import { Ghost, AlertTriangle, TrendingDown, Lightbulb, DollarSign, Users, Targe
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 import { useState } from 'react';
 import { DrillDownModal } from '@/components/dashboard';
+import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
 
 const zombieCategories = [
   { 
@@ -131,7 +132,7 @@ export default function ZombieSpendPage() {
         <SummaryStatsCard
           variant="info"
           label="Total Zombie Spend"
-          value={`AED ${(totalZombie / 1000).toFixed(0)}K`}
+          value={formatCurrencyAED(totalZombie)}
           icon={Ghost}
           formula="Sum of allocated but unused benefits across all categories with <75% utilization"
           dataSource="Benefits Analytics"
@@ -140,7 +141,7 @@ export default function ZombieSpendPage() {
         <SummaryStatsCard
           variant="utilized"
           label="Affected Employees"
-          value={totalAffected.toString()}
+          value={formatInteger(totalAffected)}
           icon={Users}
           formula="Count of employees with underutilized benefits"
           dataSource="HR System"
@@ -149,7 +150,7 @@ export default function ZombieSpendPage() {
         <SummaryStatsCard
           variant="remaining"
           label="Recovery Potential"
-          value={`AED ${(recoveryPotential / 1000).toFixed(0)}K`}
+          value={formatCurrencyAED(recoveryPotential)}
           icon={TrendingDown}
           formula="Estimated recoverable amount (60% of zombie spend)"
           dataSource="Analytics Model"
@@ -158,7 +159,7 @@ export default function ZombieSpendPage() {
         <SummaryStatsCard
           variant="utilization"
           label="Zombie Rate"
-          value={`${((totalZombie / totalAllocated) * 100).toFixed(1)}%`}
+          value={formatPercent((totalZombie / totalAllocated) * 100)}
           icon={Target}
           formula="(Zombie Spend / Total Allocated) × 100"
           dataSource="Benefits Analytics"
@@ -224,7 +225,7 @@ export default function ZombieSpendPage() {
                 </defs>
                 <XAxis 
                   type="number" 
-                  tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`}
+                  tickFormatter={(v) => formatCurrencyAED(v, { showCurrency: false })}
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
@@ -240,7 +241,7 @@ export default function ZombieSpendPage() {
                 />
                 <Tooltip 
                   formatter={(value: number, name: string) => [
-                    `AED ${value.toLocaleString()}`,
+                    formatCurrencyAED(value, { abbreviate: false }),
                     name === 'utilized' ? 'Utilized' : 'Zombie Spend'
                   ]}
                   contentStyle={{ 
@@ -300,19 +301,19 @@ export default function ZombieSpendPage() {
                         {category.utilizationRate}% utilized
                       </Badge>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground text-xs">Allocated</p>
-                        <p className="font-semibold">AED {category.allocated.toLocaleString()}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground text-xs">Utilized</p>
-                        <p className="font-semibold text-accent">AED {category.utilized.toLocaleString()}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground text-xs">Zombie Amount</p>
-                        <p className="font-semibold text-amber-500">AED {category.zombie.toLocaleString()}</p>
-                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground text-xs">Allocated</p>
+                          <p className="font-semibold">{formatCurrencyAED(category.allocated, { abbreviate: false })}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground text-xs">Utilized</p>
+                          <p className="font-semibold text-accent">{formatCurrencyAED(category.utilized, { abbreviate: false })}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-muted-foreground text-xs">Zombie Amount</p>
+                          <p className="font-semibold text-amber-500">{formatCurrencyAED(category.zombie, { abbreviate: false })}</p>
+                        </div>
                       <div className="space-y-1">
                         <p className="text-muted-foreground text-xs">Affected</p>
                         <p className="font-semibold">{category.affectedEmployees} employees</p>
@@ -352,7 +353,7 @@ export default function ZombieSpendPage() {
         open={drillDownOpen}
         onOpenChange={setDrillDownOpen}
         data={selectedData}
-        formatValue={(v) => `AED ${v.toLocaleString()}`}
+        formatValue={(v) => formatCurrencyAED(v, { abbreviate: false })}
       />
     </div>
   );

@@ -30,7 +30,7 @@ import {
   useStrategicPriorities,
   useSpendAllocation,
 } from '@/hooks/useEmployerDashboard';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED, formatPercent } from '@/lib/utils';
 
 const priorityColors = {
   critical: {
@@ -65,8 +65,9 @@ export function ExecutiveDashboard() {
   const { data: priorities } = useStrategicPriorities(metrics);
   const { data: spendAllocation } = useSpendAllocation();
 
-  const formatCurrency = (value: number) => `AED ${(value / 1000000).toFixed(1)}M`;
-  const formatK = (value: number) => `AED ${(value / 1000).toFixed(0)}K`;
+  // Use centralized formatting utilities
+  const formatCurrency = (value: number) => formatCurrencyAED(value);
+  const formatK = (value: number) => formatCurrencyAED(value);
 
   // Prepare chart data
   const utilizationChartData = utilizationTrends?.map(t => ({

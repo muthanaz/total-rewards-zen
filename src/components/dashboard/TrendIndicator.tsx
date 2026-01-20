@@ -1,5 +1,5 @@
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
 
 interface TrendIndicatorProps {
   currentValue: number;
@@ -32,11 +32,11 @@ export function TrendIndicator({
   const formatValue = () => {
     const absChange = Math.abs(percentChange);
     if (format === 'percent') {
-      return `${absChange}%`;
+      return formatPercent(absChange);
     } else if (format === 'currency') {
-      return `AED ${Math.abs(difference).toLocaleString()}`;
+      return formatCurrencyAED(Math.abs(difference), { abbreviate: false });
     }
-    return Math.abs(difference).toLocaleString();
+    return formatInteger(Math.abs(difference));
   };
 
   const iconSize = size === 'sm' ? 'w-3 h-3' : 'w-4 h-4';
