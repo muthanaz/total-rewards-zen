@@ -1355,6 +1355,7 @@ export type Database = {
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
           emirates_id: string | null
+          employer_view_mode: string | null
           employment_date: string | null
           first_name: string | null
           grade: string | null
@@ -1389,6 +1390,7 @@ export type Database = {
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           emirates_id?: string | null
+          employer_view_mode?: string | null
           employment_date?: string | null
           first_name?: string | null
           grade?: string | null
@@ -1423,6 +1425,7 @@ export type Database = {
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           emirates_id?: string | null
+          employer_view_mode?: string | null
           employment_date?: string | null
           first_name?: string | null
           grade?: string | null
