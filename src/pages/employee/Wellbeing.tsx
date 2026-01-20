@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Dumbbell, Heart, Brain, Leaf, Moon, CheckCircle, ExternalLink, Wallet, TrendingDown, Percent } from 'lucide-react';
 
 const ANNUAL_VALUE = 6000;
@@ -65,16 +66,13 @@ export default function WellbeingPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-          <Dumbbell className="w-7 h-7 text-accent" />
-          Wellbeing Program
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Your health and wellness benefits for mind and body
-        </p>
-      </div>
+      {/* Header - Using PageHeader pattern */}
+      <PageHeader
+        title="Wellbeing Program"
+        description="Your health and wellness benefits for mind and body"
+        icon={Dumbbell}
+        iconClassName="from-chart-6 to-chart-6/80 shadow-chart-6/25"
+      />
 
       {/* 1. Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

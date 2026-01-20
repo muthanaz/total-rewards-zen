@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { NoSearchResults } from '@/components/ui/empty-state';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -150,17 +151,14 @@ export default function SchoolingPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-          <GraduationCap className="w-7 h-7 text-accent" />
-          Schooling Allowance
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Configure education for each child individually — each child gets their own AED 30,000 allowance
-        </p>
-      </div>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header - Using PageHeader pattern */}
+      <PageHeader
+        title="Schooling Allowance"
+        description="Configure education for each child individually — each child gets their own AED 30,000 allowance"
+        icon={GraduationCap}
+        iconClassName="from-chart-4 to-chart-4/80 shadow-chart-4/25"
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { NoData } from '@/components/ui/empty-state';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -78,16 +79,13 @@ export default function LearningPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-          <BookOpen className="w-7 h-7 text-accent" />
-          Learning & Development
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Courses, certifications, and professional development
-        </p>
-      </div>
+      {/* Header - Using PageHeader pattern */}
+      <PageHeader
+        title="Learning & Development"
+        description="Courses, certifications, and professional development"
+        icon={BookOpen}
+        iconClassName="from-chart-3 to-chart-3/80 shadow-chart-3/25"
+      />
 
       {/* 1. Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

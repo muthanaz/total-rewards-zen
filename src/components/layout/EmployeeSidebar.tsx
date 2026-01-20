@@ -82,21 +82,29 @@ const navigation: NavGroup[] = [
 
   // 4) Leave Management - Clickable heading with direct link
   {
-    labelKey: 'Leave Management',
+    labelKey: 'nav.leaveManagement',
     items: [
-      { labelKey: 'nav.leaveManagement', path: '/employee/leave', icon: Calendar },
+      { labelKey: 'nav.leave', path: '/employee/leave', icon: Calendar },
     ],
   },
 
-  // 5) HR Services & Help
+  // 5) Marketplace & Perks
+  {
+    labelKey: 'nav.marketplace',
+    items: [
+      { labelKey: 'nav.perksOffers', path: '/employee/marketplace', icon: ShoppingBag },
+    ],
+  },
+
+  // 6) HR Services & Help
   {
     labelKey: 'nav.hrServices',
     items: [
       { labelKey: 'nav.claimsRequests', path: '/employee/requests', icon: Receipt },
-      { labelKey: 'HR Documents', path: '/employee/documents', icon: FileText },
-      { labelKey: 'Knowledge Hub', path: '/employee/knowledge', icon: BookOpen },
+      { labelKey: 'nav.hrDocuments', path: '/employee/documents', icon: FileText },
+      { labelKey: 'nav.knowledgeHub', path: '/employee/knowledge', icon: BookOpen },
       { labelKey: 'nav.govConnect', path: '/employee/gov-connect', icon: Building2 },
-      { labelKey: 'Onboarding', path: '/employee/onboarding', icon: Shield },
+      { labelKey: 'nav.onboarding', path: '/employee/onboarding', icon: Shield },
     ],
   },
 ];
