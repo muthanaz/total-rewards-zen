@@ -88,6 +88,7 @@ import VendorTransactions from "./pages/vendor/Transactions";
 import VendorEarnings from "./pages/vendor/Earnings";
 import VendorAnalytics from "./pages/vendor/Analytics";
 import VendorCreateOffer from "./pages/vendor/CreateOffer";
+import VendorRedemptions from "./pages/vendor/Redemptions";
 import VendorProfile from "./pages/vendor/Profile";
 import VendorSettings from "./pages/vendor/Settings";
 
@@ -293,6 +294,7 @@ function AppRoutes() {
         <Route index element={<VendorDashboard />} />
         <Route path="offers" element={<VendorOffers />} />
         <Route path="offers/new" element={<VendorCreateOffer />} />
+        <Route path="redemptions" element={<VendorRedemptions />} />
         <Route path="analytics" element={<VendorAnalytics />} />
         <Route path="transactions" element={<VendorTransactions />} />
         <Route path="earnings" element={<VendorEarnings />} />
