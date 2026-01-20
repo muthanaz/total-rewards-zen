@@ -34,7 +34,7 @@ export function TodayStrip({ className }: TodayStripProps) {
       iconBg: 'bg-blue-500',
     },
     {
-      label: language === 'ar' ? 'تصفح العروض' : 'Browse Offers',
+      label: language === 'ar' ? 'تصفح السوق' : 'Browse Marketplace',
       icon: ShoppingBag,
       path: '/employee/marketplace',
       color: 'from-violet-500/10 to-violet-500/5 border-violet-500/20 hover:border-violet-500/40',

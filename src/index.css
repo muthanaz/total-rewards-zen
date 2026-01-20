@@ -865,3 +865,50 @@
     display: none;
   }
 }
+
+/* ============================================================================
+   SCROLL SHADOW INDICATOR
+   ============================================================================ */
+@layer components {
+  .scroll-shadow {
+    position: relative;
+    /* Subtle gradient shadow at bottom to indicate more content */
+    mask-image: linear-gradient(
+      to bottom,
+      black calc(100% - 32px),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      black calc(100% - 32px),
+      transparent 100%
+    );
+  }
+
+  /* Override mask when scrolled to bottom */
+  .scroll-shadow:not(:hover) {
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  /* Alternative: Show a subtle bottom gradient overlay */
+  .scroll-shadow-overlay {
+    position: relative;
+  }
+
+  .scroll-shadow-overlay::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 32px;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      hsl(var(--sidebar-background))
+    );
+    pointer-events: none;
+    opacity: 0.8;
+  }
+}

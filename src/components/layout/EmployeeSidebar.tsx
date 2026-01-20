@@ -129,14 +129,15 @@ const navigation: NavGroup[] = [
       { label: 'Gov Connect', labelAr: 'الخدمات الحكومية', path: '/employee/gov-connect', icon: Building2 },
     ],
   },
-  // MARKETPLACE
+  // MARKETPLACE - Always visible and expanded by default
   {
     id: 'marketplace',
     label: 'Marketplace',
     labelAr: 'السوق',
-    featureFlag: 'marketplaceEnabled',
+    defaultOpen: true,
+    // NOTE: Removed featureFlag to make marketplace always visible
     items: [
-      { label: 'Offers', labelAr: 'العروض', path: '/employee/marketplace', icon: ShoppingBag },
+      { label: 'Offers & Vouchers', labelAr: 'العروض والقسائم', path: '/employee/marketplace', icon: ShoppingBag },
     ],
   },
 ];
@@ -160,6 +161,7 @@ export function EmployeeSidebar() {
     'overview',
     'my-benefits',
     'hr-services',
+    'marketplace', // Always expanded by default
   ]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isRTL = direction === 'rtl';
@@ -236,8 +238,12 @@ export function EmployeeSidebar() {
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className={cn('flex-1 overflow-y-auto py-4 px-3 space-y-1', isRTL && 'text-right')}>
+      {/* Navigation with scroll shadow indicator */}
+      <nav className={cn(
+        'flex-1 overflow-y-auto py-4 px-3 space-y-1',
+        'scroll-shadow',
+        isRTL && 'text-right'
+      )}>
         {visibleNavigation.map((group, index) => (
           <div key={group.id} className={cn('mb-1', index > 0 && 'mt-5')}>
             <button

@@ -294,6 +294,8 @@ function MarketplaceContent() {
           icon: Sparkles,
           variant: 'accent',
         }}
+        // TODO: Remove this test badge after confirming navigation works
+        confidenceBadge={<Badge className="bg-emerald-500 text-white gap-1"><CheckCircle className="w-3 h-3" />Marketplace enabled ✅</Badge>}
       />
 
       {/* Sponsorship Legend */}
