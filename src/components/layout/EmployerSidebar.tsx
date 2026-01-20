@@ -26,13 +26,14 @@ import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { useEmployerViewMode } from '@/contexts/EmployerViewModeContext';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 interface NavGroup {
   id: string;
   label: string;
   items: NavItem[];
   /** If true, the group is feature-flagged and may be hidden */
-  featureFlag?: string;
+  featureFlag?: keyof ReturnType<typeof useFeatureFlags>['flags'];
 }
 
 interface NavItem {
@@ -40,11 +41,6 @@ interface NavItem {
   path: string;
   icon: React.ElementType;
 }
-
-// Feature flags (in production, these would come from a config/context)
-const FEATURE_FLAGS = {
-  marketplaceEnabled: false, // Set to true to show Marketplace section
-};
 
 /**
  * Employer Navigation - Clean, consistent, and correctly sequenced
@@ -111,6 +107,7 @@ export function EmployerSidebar() {
   const { signOut } = useAuth();
   const { direction } = useLanguage();
   const { viewMode, setViewMode, isExecutive } = useEmployerViewMode();
+  const { flags } = useFeatureFlags();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<string[]>(
     navigationGroups.map((g) => g.id)
@@ -132,10 +129,10 @@ export function EmployerSidebar() {
     );
   };
 
-  // Filter groups based on feature flags
+  // Filter groups based on feature flags from org settings
   const visibleGroups = navigationGroups.filter((group) => {
     if (group.featureFlag) {
-      return FEATURE_FLAGS[group.featureFlag as keyof typeof FEATURE_FLAGS];
+      return flags[group.featureFlag];
     }
     return true;
   });

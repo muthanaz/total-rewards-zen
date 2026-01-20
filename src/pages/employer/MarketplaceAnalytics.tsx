@@ -6,6 +6,8 @@ import { ShoppingBag, TrendingUp, Users, Star, Coffee, Dumbbell, ShoppingCart, P
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend, Area, AreaChart } from 'recharts';
 import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
 import { EmployerGlobalFiltersBar, DataConfidenceBadge, PageConfidenceGate, useDataCoverageMetrics } from '@/components/employer';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+import { MarketplaceDisabledState } from '@/components/employer/MarketplaceDisabledState';
 
 // Vibrant color palette
 const COLORS = {
@@ -66,10 +68,16 @@ const CustomLegend = ({ payload }: any) => (
 );
 
 export default function MarketplaceAnalyticsPage() {
+  const { flags, loading } = useFeatureFlags();
   const totalActivations = categoryPerformance.reduce((sum, c) => sum + c.activations, 0);
   const totalSavings = categoryPerformance.reduce((sum, c) => sum + (c.activations * c.avgSavings), 0);
   const engagementRate = 78; // percentage of employees who activated at least one offer
   const coverageMetrics = useDataCoverageMetrics();
+
+  // Show disabled state if marketplace is not enabled
+  if (!loading && !flags.marketplaceEnabled) {
+    return <MarketplaceDisabledState />;
+  }
 
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
