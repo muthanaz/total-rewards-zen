@@ -4,6 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { ShoppingBag, TrendingUp, Users, Star, Coffee, Dumbbell, ShoppingCart, Plane, BookOpen, Baby } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend, Area, AreaChart } from 'recharts';
+import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
 
 // Vibrant color palette
 const COLORS = {
@@ -132,7 +133,7 @@ export default function MarketplaceAnalyticsPage() {
                 <TrendingUp className="h-6 w-6" style={{ color: COLORS.emerald }} />
               </div>
               <div>
-                <p className="text-2xl font-bold" style={{ color: COLORS.emerald }}>AED {(totalSavings / 1000).toFixed(0)}K</p>
+                <p className="text-2xl font-bold" style={{ color: COLORS.emerald }}>{formatCurrencyAED(totalSavings)}</p>
                 <p className="text-sm text-muted-foreground">Total Savings</p>
               </div>
             </div>
@@ -250,14 +251,14 @@ export default function MarketplaceAnalyticsPage() {
                   <YAxis 
                     yAxisId="right" 
                     orientation="right" 
-                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`}
+                    tickFormatter={(v) => formatCurrencyAED(v, { showCurrency: false })}
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                   />
                   <Tooltip 
                     formatter={(value: number, name: string) => [
-                      name === 'activations' ? value : `AED ${value.toLocaleString()}`,
+                      name === 'activations' ? formatInteger(value) : formatCurrencyAED(value, { abbreviate: false }),
                       name === 'activations' ? 'Activations' : 'Savings'
                     ]}
                     contentStyle={{ 

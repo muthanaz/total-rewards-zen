@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RePieChart, Pie, Cell, Legend } from 'recharts';
+import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
 
 // Vibrant color palette
 const COLORS = {
@@ -102,7 +103,7 @@ export default function SpendPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Budget</p>
-                <p className="text-2xl font-bold">AED {(totalBudget / 1000000).toFixed(2)}M</p>
+                <p className="text-2xl font-bold">{formatCurrencyAED(totalBudget)}</p>
               </div>
               <DollarSign className="h-8 w-8 text-primary/20" />
             </div>
@@ -115,7 +116,7 @@ export default function SpendPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Spend</p>
-                <p className="text-2xl font-bold">AED {(totalSpend / 1000000).toFixed(2)}M</p>
+                <p className="text-2xl font-bold">{formatCurrencyAED(totalSpend)}</p>
               </div>
               <BarChart3 className="h-8 w-8 text-accent/20" />
             </div>
@@ -131,7 +132,7 @@ export default function SpendPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Utilization Rate</p>
-                <p className="text-2xl font-bold">{utilizationRate.toFixed(1)}%</p>
+                <p className="text-2xl font-bold">{formatPercent(utilizationRate)}</p>
               </div>
               <PieChart className="h-8 w-8 text-chart-2/20" />
             </div>
@@ -144,7 +145,7 @@ export default function SpendPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Unused Budget</p>
-                <p className="text-2xl font-bold text-amber-600">AED {((totalBudget - totalSpend) / 1000000).toFixed(2)}M</p>
+                <p className="text-2xl font-bold text-amber-600">{formatCurrencyAED(totalBudget - totalSpend)}</p>
               </div>
               <TrendingDown className="h-8 w-8 text-amber-500/20" />
             </div>
@@ -308,16 +309,16 @@ export default function SpendPage() {
                     {spendByBenefitType.map((item) => (
                       <tr key={item.name} className="border-b border-border/50">
                         <td className="py-3 px-4 font-medium">{item.name}</td>
-                        <td className="text-right py-3 px-4">AED {item.budget.toLocaleString()}</td>
-                        <td className="text-right py-3 px-4">AED {item.spend.toLocaleString()}</td>
+                        <td className="text-right py-3 px-4">{formatCurrencyAED(item.budget, { abbreviate: false })}</td>
+                        <td className="text-right py-3 px-4">{formatCurrencyAED(item.spend, { abbreviate: false })}</td>
                         <td className="text-right py-3 px-4 text-muted-foreground">
-                          AED {(item.budget - item.spend).toLocaleString()}
+                          {formatCurrencyAED(item.budget - item.spend, { abbreviate: false })}
                         </td>
                         <td className="text-right py-3 px-4">
                           <div className="flex items-center justify-end gap-2">
                             <Progress value={item.utilization} className="w-20 h-2" />
                             <span className={item.utilization >= 80 ? 'text-green-600' : item.utilization >= 60 ? 'text-amber-600' : 'text-red-500'}>
-                              {item.utilization.toFixed(1)}%
+                              {formatPercent(item.utilization)}
                             </span>
                           </div>
                         </td>
@@ -351,13 +352,13 @@ export default function SpendPage() {
                     {departmentSpend.map((dept) => (
                       <tr key={dept.department} className="border-b border-border/50">
                         <td className="py-3 px-4 font-medium">{dept.department}</td>
-                        <td className="text-right py-3 px-4">{dept.headcount}</td>
-                        <td className="text-right py-3 px-4">AED {dept.totalSpend.toLocaleString()}</td>
-                        <td className="text-right py-3 px-4">AED {dept.avgPerEmployee.toLocaleString()}</td>
+                        <td className="text-right py-3 px-4">{formatInteger(dept.headcount)}</td>
+                        <td className="text-right py-3 px-4">{formatCurrencyAED(dept.totalSpend, { abbreviate: false })}</td>
+                        <td className="text-right py-3 px-4">{formatCurrencyAED(dept.avgPerEmployee, { abbreviate: false })}</td>
                         <td className="text-right py-3 px-4">
                           <div className="flex items-center justify-end gap-2">
                             <Progress value={dept.utilization} className="w-20 h-2" />
-                            <span>{dept.utilization}%</span>
+                            <span>{formatPercent(dept.utilization)}</span>
                           </div>
                         </td>
                       </tr>
