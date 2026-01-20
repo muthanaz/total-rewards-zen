@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { Button } from '@/components/ui/button';
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
@@ -37,6 +38,7 @@ import { NotificationCenter } from '@/components/notifications/NotificationCente
 interface NavGroup {
   labelKey: string;
   items: NavItem[];
+  featureFlag?: keyof ReturnType<typeof useFeatureFlags>['flags'];
 }
 
 interface NavItem {
@@ -88,9 +90,10 @@ const navigation: NavGroup[] = [
     ],
   },
 
-  // 5) Marketplace & Perks
+  // 5) Marketplace & Perks (Phase 2 - feature-flagged)
   {
     labelKey: 'nav.marketplace',
+    featureFlag: 'marketplaceEnabled',
     items: [
       { labelKey: 'nav.perksOffers', path: '/employee/marketplace', icon: ShoppingBag },
     ],
@@ -114,6 +117,7 @@ export function EmployeeSidebar() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { t, direction } = useLanguage();
+  const { flags } = useFeatureFlags();
   const [expandedGroups, setExpandedGroups] = useState<string[]>([
     'nav.dashboard',
     'nav.myBenefits',
@@ -121,6 +125,16 @@ export function EmployeeSidebar() {
   ]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isRTL = direction === 'rtl';
+
+  // Filter navigation groups based on feature flags
+  const visibleNavigation = useMemo(() => {
+    return navigation.filter((group) => {
+      if (group.featureFlag) {
+        return flags[group.featureFlag];
+      }
+      return true;
+    });
+  }, [flags]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -172,7 +186,7 @@ export function EmployeeSidebar() {
 
       {/* Navigation */}
       <nav className={cn('flex-1 overflow-y-auto py-4 px-3 space-y-1', isRTL && 'text-right')}>
-        {navigation.map((group, index) => (
+        {visibleNavigation.map((group, index) => (
           <div key={group.labelKey} className={cn('mb-1', index > 0 && 'mt-6')}>
             <button
               onClick={() => toggleGroup(group.labelKey)}
@@ -218,49 +232,51 @@ export function EmployeeSidebar() {
         ))}
       </nav>
 
-      {/* Marketplace - Secondary (still prominent, but below Benefits) */}
-      <div className={cn('px-3 pb-2', isRTL && 'text-right')}>
-        <Link
-          to="/employee/marketplace"
-          onClick={() => setMobileOpen(false)}
-          className={cn(
-            'flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200',
-            'bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-pink-500/10',
-            'hover:from-violet-500/15 hover:via-fuchsia-500/15 hover:to-pink-500/15',
-            'border border-violet-500/20 hover:border-violet-500/35',
-            'group',
-            isActive('/employee/marketplace') &&
-              'from-violet-500/18 via-fuchsia-500/18 to-pink-500/18 border-violet-500/40',
-            isRTL && 'flex-row-reverse'
-          )}
-        >
-          <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/20">
-            <ShoppingBag className="w-4 h-4 text-white" />
-          </div>
-          <div className={cn('flex-1', isRTL && 'text-right')}>
-            <span
-              className={cn(
-                'text-sm font-medium block',
-                isActive('/employee/marketplace')
-                  ? 'text-violet-600 dark:text-violet-400'
-                  : 'text-sidebar-foreground group-hover:text-violet-600 dark:group-hover:text-violet-400'
-              )}
-            >
-              {t('nav.perksPartners')}
-            </span>
-            <span className="text-[10px] text-muted-foreground">
-              {isRTL ? 'عروض يومية مختارة لك' : 'Daily deals curated for you'}
-            </span>
-          </div>
-          <ChevronCollapsed
+      {/* Marketplace - Secondary (still prominent, but below Benefits) - Only show if enabled */}
+      {flags.marketplaceEnabled && (
+        <div className={cn('px-3 pb-2', isRTL && 'text-right')}>
+          <Link
+            to="/employee/marketplace"
+            onClick={() => setMobileOpen(false)}
             className={cn(
-              'w-4 h-4 text-violet-500/50 group-hover:text-violet-500 transition-all',
-              'group-hover:translate-x-0.5',
-              isRTL && 'rotate-180 group-hover:-translate-x-0.5'
+              'flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all duration-200',
+              'bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-pink-500/10',
+              'hover:from-violet-500/15 hover:via-fuchsia-500/15 hover:to-pink-500/15',
+              'border border-violet-500/20 hover:border-violet-500/35',
+              'group',
+              isActive('/employee/marketplace') &&
+                'from-violet-500/18 via-fuchsia-500/18 to-pink-500/18 border-violet-500/40',
+              isRTL && 'flex-row-reverse'
             )}
-          />
-        </Link>
-      </div>
+          >
+            <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/20">
+              <ShoppingBag className="w-4 h-4 text-white" />
+            </div>
+            <div className={cn('flex-1', isRTL && 'text-right')}>
+              <span
+                className={cn(
+                  'text-sm font-medium block',
+                  isActive('/employee/marketplace')
+                    ? 'text-violet-600 dark:text-violet-400'
+                    : 'text-sidebar-foreground group-hover:text-violet-600 dark:group-hover:text-violet-400'
+                )}
+              >
+                {t('nav.perksPartners')}
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                {isRTL ? 'عروض يومية مختارة لك' : 'Daily deals curated for you'}
+              </span>
+            </div>
+            <ChevronCollapsed
+              className={cn(
+                'w-4 h-4 text-violet-500/50 group-hover:text-violet-500 transition-all',
+                'group-hover:translate-x-0.5',
+                isRTL && 'rotate-180 group-hover:-translate-x-0.5'
+              )}
+            />
+          </Link>
+        </div>
+      )}
 
       {/* Smart Profile - Distinguished Section */}
       <div className={cn('px-3 pb-2', isRTL && 'text-right')}>
