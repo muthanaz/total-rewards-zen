@@ -6,7 +6,8 @@ import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard
 import { Slider } from '@/components/ui/slider';
 import { PiggyBank, TrendingUp, Wallet, Target, Calculator, Gift } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED, formatPercent } from '@/lib/utils';
+import { BenefitCrossLinks } from '@/components/employee/BenefitCrossLinks';
 
 const MONTHLY_SALARY = 35000;
 const EMPLOYER_MATCH_PERCENT = 5;
@@ -132,7 +133,7 @@ export default function FinancialPage() {
   
   const [savingsPercent, setSavingsPercent] = useState([10]);
   
-  const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
+  const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
 
   const monthlySavings = Math.round(MONTHLY_SALARY * (savingsPercent[0] / 100));
   const employerMatch = Math.round(MONTHLY_SALARY * (Math.min(savingsPercent[0], EMPLOYER_MATCH_PERCENT) / 100));
@@ -201,8 +202,11 @@ export default function FinancialPage() {
           formula={t.formulaAnnualProjection}
           dataSource={t.dataSourceProjection}
           variant="info"
-        />
-      </div>
+      />
+
+      {/* Cross-links */}
+      <BenefitCrossLinks benefitCategory="Financial Planning" showClaimLink={false} />
+    </div>
 
       {/* How It Works */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">

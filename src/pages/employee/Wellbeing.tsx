@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { BenefitCrossLinks } from '@/components/employee/BenefitCrossLinks';
+import { formatCurrencyAED, formatPercent } from '@/lib/utils';
 import { Dumbbell, Heart, Brain, Leaf, Moon, CheckCircle, ExternalLink, Wallet, TrendingDown, Percent } from 'lucide-react';
 
 const ANNUAL_VALUE = 6000;
@@ -60,7 +62,7 @@ const wellbeingPolicies = [
 ];
 
 export default function WellbeingPage() {
-  const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
+  const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
   const remaining = ANNUAL_VALUE - UTILIZED;
   const utilizationPercent = Math.round((UTILIZED / ANNUAL_VALUE) * 100);
 
@@ -119,6 +121,9 @@ export default function WellbeingPage() {
         actionLabel="Submit Claim"
         policyLabel="View Full Policy"
       />
+
+      {/* Cross-links */}
+      <BenefitCrossLinks benefitCategory="Wellbeing" showClaimLink={false} />
 
       {/* 3. How It Works */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">

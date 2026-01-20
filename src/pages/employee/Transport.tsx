@@ -6,6 +6,8 @@ import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Car, Fuel, Plane, CreditCard, CheckCircle, Wallet, TrendingDown, Percent, FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { BenefitCrossLinks } from '@/components/employee/BenefitCrossLinks';
+import { formatCurrencyAED, formatPercent } from '@/lib/utils';
 
 const allowances = [
   {
@@ -59,7 +61,7 @@ const transportPolicies = [
 ];
 
 export default function TransportPage() {
-  const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
+  const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
 
   const totalAnnual = allowances.reduce((sum, a) => sum + a.annual, 0);
   const totalUtilized = allowances.reduce((sum, a) => sum + a.utilized, 0);
@@ -128,6 +130,9 @@ export default function TransportPage() {
         showClaimButton={false}
         policyLabel="View Full Policy"
       />
+
+      {/* Cross-links */}
+      <BenefitCrossLinks benefitCategory="Transport" showClaimLink={false} />
 
       {/* 3. How It Works */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">

@@ -15,7 +15,8 @@ import {
   Calculator, PiggyBank
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED, formatPercent } from '@/lib/utils';
+import { BenefitCrossLinks } from '@/components/employee/BenefitCrossLinks';
 import { AnimatedBarChart } from '@/components/charts';
 
 // Constants
@@ -195,7 +196,7 @@ export default function LongTermFinancialsPage() {
   const [yearsToSave, setYearsToSave] = useState([10]);
   const [expectedReturn, setExpectedReturn] = useState([6]);
 
-  const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
+  const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
 
   // Calculations
   const projectedBonus = Math.round(MONTHLY_SALARY * 2 * (currentRatingData?.multiplier || 1));
@@ -747,6 +748,9 @@ export default function LongTermFinancialsPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Cross-links */}
+      <BenefitCrossLinks benefitCategory="Long-Term Financials" showClaimLink={false} showMarketplaceLink={false} />
     </div>
   );
 }

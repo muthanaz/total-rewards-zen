@@ -25,6 +25,8 @@ const BENEFIT_TO_MARKETPLACE_MAP: Record<string, string> = {
   'Wellbeing': 'Fitness',
   'Learning & Development': 'Learning',
   'Learning': 'Learning',
+  'Financial Planning': 'Financial',
+  'Long-Term Financials': 'Financial',
 };
 
 export function BenefitCrossLinks({
