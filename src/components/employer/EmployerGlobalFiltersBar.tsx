@@ -160,10 +160,11 @@ export function EmployerGlobalFiltersBar({
         <Select value={filters.department} onValueChange={(v) => setFilter('department', v)}>
           <SelectTrigger className={cn(
             "h-8 bg-background border-border/50",
-            compact ? "w-[130px]" : "w-[150px]"
+            compact ? "w-[130px]" : "w-[150px]",
+            filters.department === 'all' && "text-muted-foreground"
           )}>
             <Building2 className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
-            <SelectValue />
+            <SelectValue placeholder="Department" />
           </SelectTrigger>
           <SelectContent>
             {FILTER_OPTIONS.departments.map(option => (
@@ -178,10 +179,11 @@ export function EmployerGlobalFiltersBar({
         <Select value={filters.grade} onValueChange={(v) => setFilter('grade', v)}>
           <SelectTrigger className={cn(
             "h-8 bg-background border-border/50",
-            compact ? "w-[100px]" : "w-[120px]"
+            compact ? "w-[100px]" : "w-[120px]",
+            filters.grade === 'all' && "text-muted-foreground"
           )}>
             <Users className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
-            <SelectValue />
+            <SelectValue placeholder="Grade" />
           </SelectTrigger>
           <SelectContent>
             {FILTER_OPTIONS.grades.map(option => (
@@ -196,10 +198,11 @@ export function EmployerGlobalFiltersBar({
         <Select value={filters.location} onValueChange={(v) => setFilter('location', v)}>
           <SelectTrigger className={cn(
             "h-8 bg-background border-border/50",
-            compact ? "w-[110px]" : "w-[130px]"
+            compact ? "w-[110px]" : "w-[130px]",
+            filters.location === 'all' && "text-muted-foreground"
           )}>
             <MapPin className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
-            <SelectValue />
+            <SelectValue placeholder="Location" />
           </SelectTrigger>
           <SelectContent>
             {FILTER_OPTIONS.locations.map(option => (
@@ -215,10 +218,11 @@ export function EmployerGlobalFiltersBar({
           <Select value={filters.employmentType} onValueChange={(v) => setFilter('employmentType', v)}>
             <SelectTrigger className={cn(
               "h-8 bg-background border-border/50",
-              compact ? "w-[100px]" : "w-[120px]"
+              compact ? "w-[100px]" : "w-[120px]",
+              filters.employmentType === 'all' && "text-muted-foreground"
             )}>
               <Briefcase className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
-              <SelectValue />
+              <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent>
               {FILTER_OPTIONS.employmentTypes.map(option => (
