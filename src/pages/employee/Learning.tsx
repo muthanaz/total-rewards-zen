@@ -12,6 +12,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { BookOpen, Award, Clock, CheckCircle, Plus, ExternalLink, Wallet, TrendingUp, Calculator } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { BenefitCrossLinks } from '@/components/employee/BenefitCrossLinks';
+import { formatCurrencyAED, formatPercent } from '@/lib/utils';
 
 const ANNUAL_BUDGET = 12000;
 const UTILIZED = 4500;
@@ -65,7 +67,7 @@ export default function LearningPage() {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
+  const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
   const remaining = ANNUAL_BUDGET - UTILIZED;
   const utilizationPercent = Math.round((UTILIZED / ANNUAL_BUDGET) * 100);
 
@@ -136,6 +138,9 @@ export default function LearningPage() {
         actionLabel="Submit Claim"
         policyLabel="View Full Policy"
       />
+
+      {/* Cross-links */}
+      <BenefitCrossLinks benefitCategory="Learning & Development" showClaimLink={false} />
 
       {/* 3. How It Works */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">

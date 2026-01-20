@@ -10,6 +10,8 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile, Wallet, TrendingDown, Percent } from 'lucide-react';
 import { useHealthProviders } from '@/hooks/useSupabaseData';
+import { BenefitCrossLinks } from '@/components/employee/BenefitCrossLinks';
+import { formatCurrencyAED, formatPercent } from '@/lib/utils';
 
 const ANNUAL_VALUE = 45000;
 const UTILIZED = 12500;
@@ -121,7 +123,7 @@ export default function HealthPage() {
     return filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
   }, [providers, searchTerm, providerType, specialty, area]);
 
-  const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
+  const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -178,6 +180,9 @@ export default function HealthPage() {
         actionLabel="Submit Claim"
         policyLabel="View Full Policy"
       />
+
+      {/* Cross-links */}
+      <BenefitCrossLinks benefitCategory="Health Insurance" showClaimLink={false} />
 
       {/* 3. How It Works */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">

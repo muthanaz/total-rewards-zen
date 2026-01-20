@@ -16,6 +16,8 @@ import {
   School, Baby, Building2
 } from 'lucide-react';
 import { useSchools, useChildren } from '@/hooks/useSupabaseData';
+import { BenefitCrossLinks } from '@/components/employee/BenefitCrossLinks';
+import { formatCurrencyAED, formatPercent } from '@/lib/utils';
 
 const ALLOWANCE_PER_CHILD = 30000;
 
@@ -122,7 +124,7 @@ export default function SchoolingPage() {
     return filtered;
   }, [schools, searchTerm, curriculum, city, maxFee, sortBy, activeChild]);
 
-  const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
+  const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
 
   const handleSelectSchool = (schoolId: string, schoolName: string, fee: number) => {
     setChildrenAllocations(prev => prev.map(c => {
@@ -226,6 +228,9 @@ export default function SchoolingPage() {
         policyLabel="View Full Policy"
         showClaimButton={true}
       />
+
+      {/* Cross-links */}
+      <BenefitCrossLinks benefitCategory="Schooling" showClaimLink={false} />
 
       {/* How It Works Card */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">

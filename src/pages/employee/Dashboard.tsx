@@ -15,7 +15,7 @@ import { CompensationGrid } from '@/components/ui/compensation-summary-card';
 import { BenefitsUtilizationCard } from '@/components/ui/benefits-utilization-card';
 import { useUIVisibility } from '@/contexts/UIVisibilityContext';
 import { usePrivacy } from '@/components/ui/privacy-toggle';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED, formatPercent } from '@/lib/utils';
 import { CompensationBreakdownModal } from '@/components/employee/CompensationBreakdownModal';
 import { QuickActionsStrip } from '@/components/employee/QuickActionsStrip';
 import { ProfileCompleteness } from '@/components/employee/ProfileCompleteness';
@@ -156,9 +156,9 @@ export default function EmployeeDashboard() {
     };
   }, [benefits, profileData.monthlySalary]);
 
-  const formatCurrency = (value: number) => `${isRTL ? '' : 'AED '}${value.toLocaleString(isRTL ? 'ar-AE' : 'en-AE')}${isRTL ? ' درهم' : ''}`;
+  const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
   const formatCurrencyHidden = () => salaryHidden ? '•••,•••' : '';
-  const formatCurrencyShort = (value: number) => `${(value / 1000).toFixed(0)}${isRTL ? 'ألف' : 'K'}`;
+  const formatCurrencyShort = (value: number) => formatCurrencyAED(value, { abbreviate: true });
 
   const ChevronIcon = isRTL ? ChevronLeft : ChevronRight;
 

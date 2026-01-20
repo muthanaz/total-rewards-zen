@@ -13,7 +13,7 @@ import { Home, Search, Star, Clock, ExternalLink, MapPin, Bath, Bed, Wallet, Tre
 import { useHousingAreas, useHousingListings } from '@/hooks/useSupabaseData';
 import { BENEFIT_CATEGORIES } from '@/lib/benefitCategories';
 import { getRAGIndicator } from '@/lib/colorUtils';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED, formatPercent } from '@/lib/utils';
 
 const HOUSING_ALLOWANCE = 120000;
 const housingCategory = BENEFIT_CATEGORIES.housing;
@@ -86,7 +86,7 @@ export default function HousingPage() {
     return filtered;
   }, [listings, searchTerm, selectedArea, bedrooms, maxRent, sortBy]);
 
-  const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
+  const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
 
   const getAffordabilityLabel = (rent: number) => {
     if (rent <= HOUSING_ALLOWANCE) {
