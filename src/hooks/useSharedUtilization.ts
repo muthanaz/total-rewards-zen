@@ -178,7 +178,7 @@ export function useOrganizationUtilization(organizationId: string | null) {
         byLifeArea,
       };
     },
-    enabled: !!targetOrgId,
+    enabled: !!organizationId,
   });
 }
 

@@ -134,28 +134,29 @@ export function useOrganizationPolicies(organizationId: string | null) {
 export function usePublishPolicyVersion() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { profile } = useProfile();
   
   return useMutation({
     mutationFn: async ({
       benefitId,
+      organizationId,
       policyText,
       attachmentUrl,
       effectiveFrom,
     }: {
       benefitId: string;
+      organizationId: string;
       policyText: string;
       attachmentUrl?: string;
       effectiveFrom?: string;
     }) => {
-      if (!profile?.organization_id) throw new Error('No organization');
+      if (!organizationId) throw new Error('No organization');
       
       // Get the latest version number
       const { data: latestVersion } = await supabase
         .from('benefit_policy_versions')
         .select('version')
         .eq('benefit_id', benefitId)
-        .eq('organization_id', profile.organization_id)
+        .eq('organization_id', organizationId)
         .order('version', { ascending: false })
         .limit(1)
         .single();
@@ -170,7 +171,7 @@ export function usePublishPolicyVersion() {
           effective_until: effectiveDate 
         })
         .eq('benefit_id', benefitId)
-        .eq('organization_id', profile.organization_id)
+        .eq('organization_id', organizationId)
         .is('effective_until', null);
       
       if (updateError) throw updateError;
@@ -180,7 +181,7 @@ export function usePublishPolicyVersion() {
         .from('benefit_policy_versions')
         .insert({
           benefit_id: benefitId,
-          organization_id: profile.organization_id,
+          organization_id: organizationId,
           version: newVersion,
           policy_text: policyText,
           attachment_url: attachmentUrl,
@@ -229,11 +230,11 @@ export function useRequiredDocuments(benefitId: string | null) {
  * Get the policy bullets/summary for a benefit
  * Used by Employee benefit cards
  */
-export function useBenefitPolicyBullets(benefitId: string | null) {
-  const { data: policy } = useCurrentPolicyVersion(benefitId);
+export function useBenefitPolicyBullets(benefitId: string | null, organizationId: string | null) {
+  const { data: policy } = useCurrentPolicyVersion(benefitId, organizationId);
   
   return useQuery({
-    queryKey: ['policy_bullets', benefitId, policy?.id],
+    queryKey: ['policy_bullets', benefitId, organizationId, policy?.id],
     queryFn: async () => {
       if (!benefitId) return { bullets: [], policyText: null };
       
