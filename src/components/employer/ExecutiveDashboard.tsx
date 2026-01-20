@@ -21,6 +21,8 @@ import { Link } from 'react-router-dom';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { ChartContainer, AnimatedDonutChart, AnimatedLineChart } from '@/components/charts';
 import { DataQualityBadge, DataConfidenceIndicator } from './DataQualityBadge';
+import { DataConfidenceBadge, useDataCoverageMetrics } from './DataConfidenceBadge';
+import { PageConfidenceGate } from './PageConfidenceGate';
 import { PeriodSelector, PeriodType, formatPeriodLabel } from './PeriodSelector';
 import { TrendComparison, TrendIndicatorCompact } from './TrendComparison';
 import { 
@@ -64,6 +66,7 @@ export function ExecutiveDashboard() {
   const { data: utilizationTrends } = useUtilizationTrends();
   const { data: esatTrends } = useESATTrends();
   const { data: priorities } = useStrategicPriorities(metrics);
+  const coverageMetrics = useDataCoverageMetrics();
   const { data: spendAllocation } = useSpendAllocation();
 
   // Use centralized formatting utilities
@@ -100,6 +103,7 @@ export function ExecutiveDashboard() {
   }
 
   return (
+    <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
     <div className="space-y-6">
       {/* Executive Header with Data Quality */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -118,6 +122,7 @@ export function ExecutiveDashboard() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <DataConfidenceBadge metrics={coverageMetrics} />
           <Badge variant="outline" className={cn(
             "gap-1.5",
             metrics.utilizationRate >= metrics.targetUtilization 
@@ -430,5 +435,6 @@ export function ExecutiveDashboard() {
         </CardContent>
       </Card>
     </div>
+    </PageConfidenceGate>
   );
 }

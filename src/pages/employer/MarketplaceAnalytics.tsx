@@ -5,7 +5,7 @@ import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { ShoppingBag, TrendingUp, Users, Star, Coffee, Dumbbell, ShoppingCart, Plane, BookOpen, Baby } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend, Area, AreaChart } from 'recharts';
 import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
-import { EmployerGlobalFiltersBar } from '@/components/employer';
+import { EmployerGlobalFiltersBar, DataConfidenceBadge, PageConfidenceGate, useDataCoverageMetrics } from '@/components/employer';
 
 // Vibrant color palette
 const COLORS = {
@@ -69,13 +69,18 @@ export default function MarketplaceAnalyticsPage() {
   const totalActivations = categoryPerformance.reduce((sum, c) => sum + c.activations, 0);
   const totalSavings = categoryPerformance.reduce((sum, c) => sum + (c.activations * c.avgSavings), 0);
   const engagementRate = 78; // percentage of employees who activated at least one offer
+  const coverageMetrics = useDataCoverageMetrics();
 
   return (
+    <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground">Marketplace Analytics</h1>
-        <p className="text-muted-foreground">Track perk activations and employee savings</p>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-foreground">Marketplace Analytics</h1>
+          <p className="text-muted-foreground">Track perk activations and employee savings</p>
+        </div>
+        <DataConfidenceBadge metrics={coverageMetrics} />
       </div>
 
       {/* Global Filters */}

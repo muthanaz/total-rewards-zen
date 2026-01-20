@@ -9,7 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend
 import { useState } from 'react';
 import { DrillDownModal } from '@/components/dashboard';
 import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
-import { EmployerGlobalFiltersBar } from '@/components/employer';
+import { EmployerGlobalFiltersBar, DataConfidenceBadge, PageConfidenceGate, useDataCoverageMetrics } from '@/components/employer';
 
 const zombieCategories = [
   { 
@@ -89,6 +89,7 @@ const CustomLegend = () => (
 export default function ZombieSpendPage() {
   const [drillDownOpen, setDrillDownOpen] = useState(false);
   const [selectedData, setSelectedData] = useState<any>(null);
+  const coverageMetrics = useDataCoverageMetrics();
   
   const totalZombie = zombieCategories.reduce((sum, c) => sum + c.zombie, 0);
   const totalAllocated = zombieCategories.reduce((sum, c) => sum + c.allocated, 0);
@@ -118,14 +119,18 @@ export default function ZombieSpendPage() {
   };
 
   return (
+    <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
     <div className="space-y-6">
       {/* Header */}
-      <div>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex items-center gap-3">
           <Ghost className="h-8 w-8 text-amber-500" />
-          <h1 className="text-2xl font-display font-bold text-foreground">Zombie Spend Analysis</h1>
+          <div>
+            <h1 className="text-2xl font-display font-bold text-foreground">Zombie Spend Analysis</h1>
+            <p className="text-muted-foreground">Identify and recover underutilized benefit allocations</p>
+          </div>
         </div>
-        <p className="text-muted-foreground mt-1">Identify and recover underutilized benefit allocations</p>
+        <DataConfidenceBadge metrics={coverageMetrics} />
       </div>
 
       {/* Global Filters */}

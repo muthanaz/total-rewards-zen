@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Lightbulb, TrendingUp, Users, DollarSign, MessageSquare, Target, ArrowRight, CheckCircle } from 'lucide-react';
 import { formatCurrencyAED, formatInteger } from '@/lib/utils';
-import { EmployerGlobalFiltersBar } from '@/components/employer';
+import { EmployerGlobalFiltersBar, DataConfidenceBadge, PageConfidenceGate, useDataCoverageMetrics } from '@/components/employer';
 
 interface Recommendation {
   id: string;
@@ -103,6 +103,8 @@ const recommendations: Recommendation[] = [
 ];
 
 export default function RecommendationsPage() {
+  const coverageMetrics = useDataCoverageMetrics();
+
   const totalPotentialSavings = recommendations
     .filter(r => r.potentialSavings)
     .reduce((sum, r) => sum + (r.potentialSavings || 0), 0);
@@ -149,14 +151,18 @@ export default function RecommendationsPage() {
   };
 
   return (
+    <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
     <div className="space-y-6">
       {/* Header */}
-      <div>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex items-center gap-3">
           <Lightbulb className="h-8 w-8 text-accent" />
-          <h1 className="text-2xl font-display font-bold text-foreground">Recommendations</h1>
+          <div>
+            <h1 className="text-2xl font-display font-bold text-foreground">Recommendations</h1>
+            <p className="text-muted-foreground">Data-driven suggestions to optimize your benefits program</p>
+          </div>
         </div>
-        <p className="text-muted-foreground mt-1">Data-driven suggestions to optimize your benefits program</p>
+        <DataConfidenceBadge metrics={coverageMetrics} />
       </div>
 
       {/* Global Filters */}
