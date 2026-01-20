@@ -318,3 +318,232 @@ export function formatRelativeTime(date: string | Date): string {
   
   return then.toLocaleDateString();
 }
+
+// ============================================================================
+// MARKETPLACE CONTRACT
+// ============================================================================
+
+/**
+ * Offer sponsorship types
+ */
+export type OfferSponsorshipType = 'employer' | 'public';
+
+/**
+ * Offer verification status
+ */
+export type OfferVerificationStatus = 'verified' | 'pending' | 'unverified';
+
+/**
+ * Marketplace offer with enhanced metadata
+ */
+export interface MarketplaceOfferContract {
+  id: string;
+  title: string;
+  merchant: string;
+  category: string;
+  discount_percent: number | null;
+  rating: number | null;
+  description: string | null;
+  terms: string | null;
+  image_url: string | null;
+  is_active: boolean;
+  vendor_id: string | null;
+  created_at: string | null;
+  // Enhanced fields for cross-portal use
+  sponsorship?: OfferSponsorshipType;
+  verificationStatus?: OfferVerificationStatus;
+  employerNotes?: string;
+  maxActivationsPerEmployee?: number;
+}
+
+/**
+ * Activation event for analytics
+ */
+export interface MarketplaceActivationEvent {
+  offerId: string;
+  userId: string;
+  organizationId: string | null;
+  activatedAt: string;
+  category: string;
+  sponsorship: OfferSponsorshipType;
+  estimatedSavings: number;
+}
+
+/**
+ * Marketplace analytics summary (for employer portal)
+ */
+export interface MarketplaceAnalyticsSummary {
+  totalActivations: number;
+  totalEstimatedSavings: number;
+  topCategories: { category: string; count: number; savings: number }[];
+  sponsoredVsPublic: { sponsored: number; public: number };
+  activationTrend: { period: string; count: number }[];
+}
+
+/**
+ * Determine offer sponsorship based on offer data
+ * In production, this would come from the database
+ */
+export function getOfferSponsorship(offer: { discount_percent?: number | null; vendor_id?: string | null }): OfferSponsorshipType {
+  // Employer-sponsored offers typically have higher discounts or specific vendor relationships
+  // This is demo logic - in production, there would be an explicit field
+  if (offer.discount_percent && offer.discount_percent >= 15) return 'employer';
+  return 'public';
+}
+
+/**
+ * Get offer verification status
+ * In production, this would come from the database
+ */
+export function getOfferVerificationStatus(offer: { rating?: number | null; vendor_id?: string | null }): OfferVerificationStatus {
+  // Demo logic - verified partners have high ratings or explicit vendor records
+  if (offer.rating && offer.rating >= 4.5) return 'verified';
+  if (offer.vendor_id) return 'verified';
+  return 'pending';
+}
+
+/**
+ * Calculate estimated savings from an offer
+ */
+export function calculateOfferSavings(discountPercent: number | null, estimatedValue: number = 100): number {
+  if (!discountPercent) return 0;
+  return Math.round((discountPercent / 100) * estimatedValue);
+}
+
+/**
+ * Sponsorship badge configuration
+ */
+export const SPONSORSHIP_CONFIG: Record<OfferSponsorshipType, {
+  label: string;
+  labelAr: string;
+  tooltip: string;
+  tooltipAr: string;
+  className: string;
+}> = {
+  employer: {
+    label: 'Sponsored',
+    labelAr: 'برعاية صاحب العمل',
+    tooltip: 'Your employer subsidizes this offer for you',
+    tooltipAr: 'يقوم صاحب العمل بدعم هذا العرض لك',
+    className: 'bg-accent/10 text-accent border-accent/20',
+  },
+  public: {
+    label: 'Public Offer',
+    labelAr: 'عرض عام',
+    tooltip: 'Available to all employees on the platform',
+    tooltipAr: 'متاح لجميع الموظفين على المنصة',
+    className: 'bg-muted text-muted-foreground border-border',
+  },
+};
+
+/**
+ * Verification badge configuration
+ */
+export const VERIFICATION_CONFIG: Record<OfferVerificationStatus, {
+  label: string;
+  labelAr: string;
+  tooltip: string;
+  className: string;
+}> = {
+  verified: {
+    label: 'Verified Partner',
+    labelAr: 'شريك موثق',
+    tooltip: 'This partner has been vetted and verified by our team',
+    className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+  },
+  pending: {
+    label: 'Partner',
+    labelAr: 'شريك',
+    tooltip: 'Standard marketplace partner',
+    className: 'bg-muted text-muted-foreground border-border',
+  },
+  unverified: {
+    label: 'New Partner',
+    labelAr: 'شريك جديد',
+    tooltip: 'Recently added partner pending full verification',
+    className: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+  },
+};
+
+/**
+ * Recommendation reason types for personalization
+ */
+export type RecommendationReason = 
+  | 'location'
+  | 'family_status'
+  | 'benefit_usage'
+  | 'interest'
+  | 'popular'
+  | 'high_value'
+  | 'new_partner'
+  | 'expiring_soon';
+
+/**
+ * Recommendation with explanation
+ */
+export interface PersonalizedRecommendation {
+  offer: MarketplaceOfferContract;
+  reasons: RecommendationReason[];
+  explanation: string;
+  explanationAr: string;
+  score: number; // 0-100 relevance score
+}
+
+/**
+ * Generate recommendation explanation based on reasons
+ */
+export function getRecommendationExplanation(reasons: RecommendationReason[], profileContext?: {
+  location?: string;
+  hasChildren?: boolean;
+  interests?: string[];
+}): { en: string; ar: string } {
+  const primaryReason = reasons[0];
+  
+  switch (primaryReason) {
+    case 'location':
+      return {
+        en: `Based on your location${profileContext?.location ? `: ${profileContext.location}` : ''}`,
+        ar: `بناءً على موقعك${profileContext?.location ? `: ${profileContext.location}` : ''}`,
+      };
+    case 'family_status':
+      return {
+        en: 'Great for families with children',
+        ar: 'مثالي للعائلات مع الأطفال',
+      };
+    case 'benefit_usage':
+      return {
+        en: 'Complements your benefit usage',
+        ar: 'يكمل استخدامك للمزايا',
+      };
+    case 'interest':
+      return {
+        en: `Matches your interests${profileContext?.interests?.[0] ? `: ${profileContext.interests[0]}` : ''}`,
+        ar: `يتوافق مع اهتماماتك`,
+      };
+    case 'popular':
+      return {
+        en: 'Popular with colleagues',
+        ar: 'شائع بين الزملاء',
+      };
+    case 'high_value':
+      return {
+        en: 'Highest value offer in this category',
+        ar: 'أعلى قيمة في هذه الفئة',
+      };
+    case 'new_partner':
+      return {
+        en: 'New partner on the platform',
+        ar: 'شريك جديد على المنصة',
+      };
+    case 'expiring_soon':
+      return {
+        en: 'Offer ending soon',
+        ar: 'العرض ينتهي قريباً',
+      };
+    default:
+      return {
+        en: 'Recommended for you',
+        ar: 'موصى به لك',
+      };
+  }
+}
