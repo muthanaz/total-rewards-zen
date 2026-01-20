@@ -1,373 +1,336 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
 import { 
-  Tag, 
-  DollarSign, 
-  Eye, 
-  Users, 
-  Plus,
-  Edit,
-  ToggleLeft,
-  ToggleRight,
-  Wallet,
-  Calendar,
-  Sparkles,
-  Target,
+  LayoutDashboard, 
+  Tag,
   TrendingUp,
+  Users,
+  Wallet,
+  Plus,
+  ArrowRight,
+  CheckCircle,
+  Clock,
+  XCircle,
+  AlertTriangle,
+  Sparkles,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useVendor, useVendorOffers, useVendorAnalytics, usePayoutSummary } from '@/hooks/useVendorData';
 import { ChartWrapper, CHART_EXPLANATIONS, AnimatedLineChart, AnimatedBarChart } from '@/components/charts';
-import { useElementVisibility } from '@/contexts/UIVisibilityContext';
-import { PerformanceInsights } from '@/components/vendor/PerformanceInsights';
-import { PayoutThresholds } from '@/components/vendor/PayoutThresholds';
 import { PageLayout, MetricCard, MetricGrid } from '@/components/shared';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 
-const vendorMetrics = [
-  { label: 'Active Offers', labelAr: 'العروض النشطة', value: '12', change: 2, icon: Tag },
-  { label: 'Total Views', labelAr: 'إجمالي المشاهدات', value: '4,562', change: 18, icon: Eye },
-  { label: 'Redemptions', labelAr: 'عمليات الاسترداد', value: '847', change: 12, icon: Users },
-  { label: 'Total Earnings', labelAr: 'إجمالي الأرباح', value: 'AED 24,500', change: 15, icon: DollarSign },
-];
-
-const myOffers = [
-  { 
-    id: 1, 
-    title: '20% Off Premium Gym Membership', 
-    category: 'Fitness',
-    views: 1250, 
-    redemptions: 245, 
-    earnings: 8500,
-    status: 'active',
-    expiresAt: '2026-03-31',
-  },
-  { 
-    id: 2, 
-    title: 'Free Trial - Wellness App', 
-    category: 'Wellness',
-    views: 890, 
-    redemptions: 167, 
-    earnings: 4200,
-    status: 'active',
-    expiresAt: '2026-02-28',
-  },
-  { 
-    id: 3, 
-    title: '15% Off Health Checkup', 
-    category: 'Health',
-    views: 720, 
-    redemptions: 134, 
-    earnings: 5800,
-    status: 'active',
-    expiresAt: '2026-04-15',
-  },
-  { 
-    id: 4, 
-    title: 'Buy 1 Get 1 - Spa Treatment', 
-    category: 'Wellness',
-    views: 1102, 
-    redemptions: 201, 
-    earnings: 6000,
-    status: 'paused',
-    expiresAt: '2026-02-15',
-  },
-];
-
-const monthlyPerformanceChart = [
-  { name: 'Jul', value: 2800, secondaryValue: 520 },
-  { name: 'Aug', value: 3100, secondaryValue: 580 },
-  { name: 'Sep', value: 3400, secondaryValue: 640 },
-  { name: 'Oct', value: 3800, secondaryValue: 720 },
-  { name: 'Nov', value: 4200, secondaryValue: 790 },
-  { name: 'Dec', value: 4562, secondaryValue: 847 },
-];
-
-const monthlyEarningsChart = [
-  { name: 'Jul', value: 15.2 },
-  { name: 'Aug', value: 17.5 },
-  { name: 'Sep', value: 19.2 },
-  { name: 'Oct', value: 21.8 },
-  { name: 'Nov', value: 23.5 },
-  { name: 'Dec', value: 24.5 },
-];
-
-const recentTransactions = [
-  { id: 'TXN001', offer: '20% Off Premium Gym', user: 'Employee #4521', amount: 35, date: '2026-01-12', status: 'completed' },
-  { id: 'TXN002', offer: 'Free Trial - Wellness App', user: 'Employee #3892', amount: 25, date: '2026-01-12', status: 'completed' },
-  { id: 'TXN003', offer: '15% Off Health Checkup', user: 'Employee #2156', amount: 45, date: '2026-01-11', status: 'completed' },
-  { id: 'TXN004', offer: '20% Off Premium Gym', user: 'Employee #5678', amount: 35, date: '2026-01-11', status: 'pending' },
-  { id: 'TXN005', offer: 'Buy 1 Get 1 - Spa', user: 'Employee #1234', amount: 30, date: '2026-01-10', status: 'completed' },
-];
+const STATUS_CONFIG: Record<string, { label: string; labelAr: string; icon: React.ElementType; className: string }> = {
+  pending: { label: 'Pending', labelAr: 'قيد الانتظار', icon: Clock, className: 'bg-warning/10 text-warning border-warning/30' },
+  active: { label: 'Active', labelAr: 'نشط', icon: CheckCircle, className: 'bg-success/10 text-success border-success/30' },
+  suspended: { label: 'Suspended', labelAr: 'موقوف', icon: AlertTriangle, className: 'bg-muted text-muted-foreground border-border' },
+  rejected: { label: 'Rejected', labelAr: 'مرفوض', icon: XCircle, className: 'bg-destructive/10 text-destructive border-destructive/30' },
+};
 
 export default function VendorDashboard() {
+  const navigate = useNavigate();
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const { isVisible: showMetricsCards } = useElementVisibility('vendor', 'dashboard', 'metrics_cards');
-  const { isVisible: showOffersTab } = useElementVisibility('vendor', 'dashboard', 'offers_tab');
-  const { isVisible: showAnalyticsTab } = useElementVisibility('vendor', 'dashboard', 'analytics_tab');
-  const { isVisible: showTransactionsTab } = useElementVisibility('vendor', 'dashboard', 'transactions_tab');
-  const { isVisible: showEarningsTab } = useElementVisibility('vendor', 'dashboard', 'earnings_tab');
-
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
 
-  const filteredOffers = myOffers.filter(offer => 
-    offer.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    offer.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const { data: vendor, isLoading: vendorLoading } = useVendor();
+  const { data: offers, isLoading: offersLoading } = useVendorOffers();
+  const { data: analytics, isLoading: analyticsLoading } = useVendorAnalytics();
+  const { data: payoutSummary } = usePayoutSummary();
 
-  const headerActions = (
-    <Button size="lg" className="gap-2">
-      <Plus className="w-4 h-4" />
-      {t('Create New Offer', 'إنشاء عرض جديد')}
-    </Button>
-  );
+  const isLoading = vendorLoading || offersLoading || analyticsLoading;
+
+  const activeOffers = offers?.filter(o => o.status === 'active') || [];
+  const pendingOffers = offers?.filter(o => o.status === 'pending') || [];
+
+  const metrics = [
+    {
+      title: t('Active Offers', 'العروض النشطة'),
+      value: formatInteger(activeOffers.length),
+      icon: Tag,
+      trend: { value: 5, positive: true },
+    },
+    {
+      title: t('Total Activations', 'إجمالي التفعيلات'),
+      value: formatInteger(analytics?.totalActivations || 0),
+      icon: Users,
+      trend: { value: 12, positive: true },
+    },
+    {
+      title: t('Conversion Rate', 'معدل التحويل'),
+      value: formatPercent(analytics?.conversionRate || 0),
+      icon: TrendingUp,
+      trend: { value: 3, positive: true },
+    },
+    {
+      title: t('Pending Payout', 'المدفوعات المعلقة'),
+      value: formatCurrencyAED(payoutSummary?.pendingPayout || analytics?.pendingPayout || 0),
+      icon: Wallet,
+    },
+  ];
+
+  // Chart data from analytics
+  const activationsChartData = analytics?.activationsByDate.map(d => ({
+    name: d.date,
+    value: d.count,
+  })) || [];
+
+  const categoryChartData = analytics?.activationsByCategory.map(d => ({
+    name: d.category,
+    value: d.count,
+  })) || [];
+
+  if (!vendor && !vendorLoading) {
+    return (
+      <PageLayout
+        title={t('Vendor Dashboard', 'لوحة تحكم البائع')}
+        description={t('Set up your vendor profile to start creating offers', 'قم بإعداد ملف البائع الخاص بك لبدء إنشاء العروض')}
+        icon={LayoutDashboard}
+      >
+        <EmptyState
+          icon={Sparkles}
+          title={t('Welcome to the Vendor Portal', 'مرحبًا بك في بوابة البائعين')}
+          description={t('Complete your vendor profile to start creating offers for employees', 'أكمل ملف البائع الخاص بك لبدء إنشاء عروض للموظفين')}
+          action={{
+            label: t('Complete Profile', 'أكمل الملف الشخصي'),
+            onClick: () => navigate('/vendor/profile'),
+          }}
+        />
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout
-      title={t('Vendor Dashboard', 'لوحة تحكم المورد')}
-      description={t('Manage your offers and track performance', 'إدارة عروضك وتتبع الأداء')}
-      icon={Tag}
-      iconClassName="from-accent to-accent/80"
-      actions={headerActions}
+      title={t('Dashboard', 'لوحة التحكم')}
+      description={t(`Welcome back, ${vendor?.company_name || 'Vendor'}`, `مرحبًا بعودتك، ${vendor?.company_name || 'البائع'}`)}
+      icon={LayoutDashboard}
+      iconClassName="text-primary"
+      actions={
+        <Button onClick={() => navigate('/vendor/offers/new')}>
+          <Plus className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+          {t('Create Offer', 'إنشاء عرض')}
+        </Button>
+      }
     >
-      {/* Metrics Cards */}
-      {showMetricsCards && (
+      {/* Metrics */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28" />)}
+        </div>
+      ) : (
         <MetricGrid columns={4}>
-          {vendorMetrics.map((metric) => (
+          {metrics.map((metric, i) => (
             <MetricCard
-              key={metric.label}
-              title={language === 'ar' ? metric.labelAr : metric.label}
+              key={i}
+              title={metric.title}
               value={metric.value}
               icon={metric.icon}
-              trend={{ value: metric.change, label: t('this month', 'هذا الشهر') }}
-              variant="default"
+              trend={metric.trend}
             />
           ))}
         </MetricGrid>
       )}
 
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="offers" className="space-y-6">
-        <TabsList className="w-full justify-start flex-wrap">
-          {showOffersTab && <TabsTrigger value="offers">{t('My Offers', 'عروضي')}</TabsTrigger>}
-          {showAnalyticsTab && <TabsTrigger value="analytics">{t('Analytics', 'التحليلات')}</TabsTrigger>}
-          <TabsTrigger value="insights" className="gap-1">
-            <Sparkles className="w-3.5 h-3.5" />
-            {t('Insights', 'الرؤى')}
-          </TabsTrigger>
-          {showTransactionsTab && <TabsTrigger value="transactions">{t('Transactions', 'المعاملات')}</TabsTrigger>}
-          {showEarningsTab && <TabsTrigger value="earnings">{t('Earnings', 'الأرباح')}</TabsTrigger>}
-          <TabsTrigger value="payouts" className="gap-1">
-            <Target className="w-3.5 h-3.5" />
-            {t('Payouts', 'المدفوعات')}
-          </TabsTrigger>
-        </TabsList>
+      {/* Pending Offers Alert */}
+      {pendingOffers.length > 0 && (
+        <Card className="mt-6 border-warning/30 bg-warning/5">
+          <CardContent className="pt-6">
+            <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+              <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+                <div className="w-10 h-10 rounded-full bg-warning/20 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-warning" />
+                </div>
+                <div className={cn(isRTL && "text-right")}>
+                  <p className="font-medium">
+                    {t(`${pendingOffers.length} offer(s) pending review`, `${pendingOffers.length} عرض(عروض) قيد المراجعة`)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {t('Your offers are being reviewed by the admin team', 'يتم مراجعة عروضك من قبل فريق الإدارة')}
+                  </p>
+                </div>
+              </div>
+              <Button variant="outline" onClick={() => navigate('/vendor/offers')}>
+                {t('View Offers', 'عرض العروض')}
+                {isRTL ? <ArrowRight className="w-4 h-4 mr-2 rotate-180" /> : <ArrowRight className="w-4 h-4 ml-2" />}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-        {showOffersTab && (
-        <TabsContent value="offers" className="space-y-6">
-          {/* Search */}
-          <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
-            <Input
-              placeholder={t('Search offers...', 'بحث في العروض...')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-sm"
-            />
-          </div>
-
-          {/* Offers Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredOffers.map((offer) => (
-              <Card key={offer.id} className={cn(offer.status === 'paused' && "opacity-75")}>
-                <CardContent className="p-6">
-                  <div className={cn("flex items-start justify-between mb-4", isRTL && "flex-row-reverse")}>
-                    <div>
-                      <h3 className="font-semibold">{offer.title}</h3>
-                      <div className={cn("flex items-center gap-2 mt-1", isRTL && "flex-row-reverse")}>
-                        <Badge variant="secondary">{offer.category}</Badge>
-                        <Badge variant={offer.status === 'active' ? 'default' : 'outline'}>
-                          {offer.status === 'active' ? t('Active', 'نشط') : t('Paused', 'متوقف')}
-                        </Badge>
-                      </div>
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        {/* Charts */}
+        <div className="lg:col-span-2 space-y-6">
+          <Tabs defaultValue="activations">
+            <TabsList>
+              <TabsTrigger value="activations">{t('Activations', 'التفعيلات')}</TabsTrigger>
+              <TabsTrigger value="categories">{t('Categories', 'الفئات')}</TabsTrigger>
+            </TabsList>
+            <TabsContent value="activations" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">{t('Activations Over Time', 'التفعيلات عبر الزمن')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {activationsChartData.length > 0 ? (
+                    <AnimatedLineChart
+                      data={activationsChartData}
+                      height={300}
+                    />
+                  ) : (
+                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                      {t('No activation data yet', 'لا توجد بيانات تفعيل بعد')}
                     </div>
-                    <div className={cn("flex items-center gap-1", isRTL && "flex-row-reverse")}>
-                      <Button variant="ghost" size="icon">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        {offer.status === 'active' ? (
-                          <ToggleRight className="w-4 h-4 text-green-500" />
-                        ) : (
-                          <ToggleLeft className="w-4 h-4 text-muted-foreground" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4 py-4 border-t border-b">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold">{offer.views.toLocaleString()}</p>
-                      <p className="text-xs text-muted-foreground">{t('Views', 'المشاهدات')}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold">{offer.redemptions}</p>
-                      <p className="text-xs text-muted-foreground">{t('Redemptions', 'الاستردادات')}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-green-600">AED {offer.earnings.toLocaleString()}</p>
-                      <p className="text-xs text-muted-foreground">{t('Earnings', 'الأرباح')}</p>
-                    </div>
-                  </div>
-
-                  <div className={cn("flex items-center justify-between mt-4 text-sm text-muted-foreground", isRTL && "flex-row-reverse")}>
-                    <span className={cn("flex items-center gap-1", isRTL && "flex-row-reverse")}>
-                      <Calendar className="w-4 h-4" />
-                      {t('Expires:', 'ينتهي:')} {offer.expiresAt}
-                    </span>
-                    <span className="font-medium">
-                      {((offer.redemptions / offer.views) * 100).toFixed(1)}% {t('conversion', 'معدل التحويل')}
-                    </span>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        </TabsContent>
-        )}
+            </TabsContent>
+            <TabsContent value="categories" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">{t('Activations by Category', 'التفعيلات حسب الفئة')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {categoryChartData.length > 0 ? (
+                    <AnimatedBarChart
+                      data={categoryChartData}
+                      height={300}
+                    />
+                  ) : (
+                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                      {t('No category data yet', 'لا توجد بيانات فئات بعد')}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
 
-        {showAnalyticsTab && (
-        <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ChartWrapper
-              title={t('Views & Redemptions', 'المشاهدات والاستردادات')}
-              subtitle={t('Monthly engagement metrics', 'مقاييس التفاعل الشهرية')}
-              explanation={CHART_EXPLANATIONS.vendorPerformance}
-              timeRange={t('Last 6 months', 'آخر 6 أشهر')}
-            >
-              <AnimatedLineChart
-                data={monthlyPerformanceChart}
-                showSecondary={true}
-                primaryLabel={t('Views', 'المشاهدات')}
-                secondaryLabel={t('Redemptions', 'الاستردادات')}
-                height={280}
-              />
-            </ChartWrapper>
-
-            <ChartWrapper
-              title={t('Monthly Earnings', 'الأرباح الشهرية')}
-              subtitle={t('Revenue from redemptions', 'الإيرادات من الاستردادات')}
-              explanation="Commission earnings generated from successful offer redemptions."
-              timeRange={t('Last 6 months', 'آخر 6 أشهر')}
-            >
-              <AnimatedBarChart
-                data={monthlyEarningsChart}
-                height={280}
-                formatValue={(v) => `AED ${v}K`}
-              />
-            </ChartWrapper>
-          </div>
-        </TabsContent>
-        )}
-
-        <TabsContent value="insights" className="space-y-6">
-          <PerformanceInsights />
-        </TabsContent>
-
-        {showTransactionsTab && (
-        <TabsContent value="transactions" className="space-y-6">
+        {/* Recent Offers */}
+        <div className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>{t('Recent Transactions', 'المعاملات الأخيرة')}</CardTitle>
-              <CardDescription>
-                {t('Track redemptions and commission earnings', 'تتبع الاستردادات وأرباح العمولة')}
-              </CardDescription>
+            <CardHeader className={cn("flex flex-row items-center justify-between", isRTL && "flex-row-reverse")}>
+              <CardTitle className="text-lg">{t('Recent Offers', 'أحدث العروض')}</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/vendor/offers')}>
+                {t('View All', 'عرض الكل')}
+              </Button>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className={cn("py-3 text-left font-medium", isRTL && "text-right")}>{t('ID', 'المعرف')}</th>
-                      <th className={cn("py-3 text-left font-medium", isRTL && "text-right")}>{t('Offer', 'العرض')}</th>
-                      <th className={cn("py-3 text-left font-medium", isRTL && "text-right")}>{t('User', 'المستخدم')}</th>
-                      <th className={cn("py-3 text-left font-medium", isRTL && "text-right")}>{t('Commission', 'العمولة')}</th>
-                      <th className={cn("py-3 text-left font-medium", isRTL && "text-right")}>{t('Date', 'التاريخ')}</th>
-                      <th className={cn("py-3 text-left font-medium", isRTL && "text-right")}>{t('Status', 'الحالة')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentTransactions.map((txn) => (
-                      <tr key={txn.id} className="border-b last:border-0">
-                        <td className="py-4 font-mono text-sm">{txn.id}</td>
-                        <td className="py-4">{txn.offer}</td>
-                        <td className="py-4 text-muted-foreground">{txn.user}</td>
-                        <td className="py-4 font-medium text-green-600">AED {txn.amount}</td>
-                        <td className="py-4 text-muted-foreground">{txn.date}</td>
-                        <td className="py-4">
-                          <Badge variant={txn.status === 'completed' ? 'default' : 'secondary'}>
-                            {txn.status === 'completed' ? t('Completed', 'مكتمل') : t('Pending', 'قيد الانتظار')}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              {offersLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map(i => <Skeleton key={i} className="h-16" />)}
+                </div>
+              ) : offers?.length === 0 ? (
+                <EmptyState
+                  icon={Tag}
+                  title={t('No offers yet', 'لا توجد عروض بعد')}
+                  description={t('Create your first offer', 'أنشئ عرضك الأول')}
+                />
+              ) : (
+                <div className="space-y-3">
+                  {offers?.slice(0, 5).map(offer => {
+                    const statusConfig = STATUS_CONFIG[offer.status] || STATUS_CONFIG.pending;
+                    const StatusIcon = statusConfig.icon;
+                    return (
+                      <div 
+                        key={offer.id} 
+                        className={cn(
+                          "flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors",
+                          isRTL && "flex-row-reverse"
+                        )}
+                        onClick={() => navigate('/vendor/offers')}
+                      >
+                        <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+                          {offer.image_url ? (
+                            <img src={offer.image_url} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                              <Tag className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className={cn(isRTL && "text-right")}>
+                            <p className="font-medium text-sm line-clamp-1">{offer.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {offer.discount_percent ? `${offer.discount_percent}% off` : offer.category}
+                            </p>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className={cn("shrink-0", statusConfig.className)}>
+                          <StatusIcon className="w-3 h-3 me-1" />
+                          {language === 'ar' ? statusConfig.labelAr : statusConfig.label}
+                        </Badge>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">{t('Quick Actions', 'الإجراءات السريعة')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start" 
+                onClick={() => navigate('/vendor/offers/new')}
+              >
+                <Plus className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                {t('Create New Offer', 'إنشاء عرض جديد')}
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start" 
+                onClick={() => navigate('/vendor/analytics')}
+              >
+                <TrendingUp className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                {t('View Analytics', 'عرض التحليلات')}
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start" 
+                onClick={() => navigate('/vendor/earnings')}
+              >
+                <Wallet className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                {t('View Payouts', 'عرض المدفوعات')}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Commission Info */}
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <div className={cn("flex items-start gap-3", isRTL && "flex-row-reverse text-right")}>
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <Wallet className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium">{t('Commission Rate', 'معدل العمولة')}</p>
+                  <p className="text-2xl font-bold text-primary">{vendor?.commission_rate || 10}%</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t(
+                      'You earn this percentage on every successful redemption',
+                      'تكسب هذه النسبة على كل استرداد ناجح'
+                    )}
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-        )}
-
-        {showEarningsTab && (
-        <TabsContent value="earnings" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardContent className="p-6 text-center">
-                <Wallet className="w-8 h-8 mx-auto text-primary mb-2" />
-                <p className="text-sm text-muted-foreground">{t('Total Earnings (YTD)', 'إجمالي الأرباح (منذ بداية العام)')}</p>
-                <p className="text-3xl font-bold mt-1 text-green-600">AED 24,500</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6 text-center">
-                <DollarSign className="w-8 h-8 mx-auto text-primary mb-2" />
-                <p className="text-sm text-muted-foreground">{t('Pending Payout', 'الدفع المعلق')}</p>
-                <p className="text-3xl font-bold mt-1">AED 3,250</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6 text-center">
-                <TrendingUp className="w-8 h-8 mx-auto text-primary mb-2" />
-                <p className="text-sm text-muted-foreground">{t('Commission Rate', 'معدل العمولة')}</p>
-                <p className="text-3xl font-bold mt-1">10%</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('Payout History', 'سجل الدفعات')}</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center py-12">
-              <Wallet className="w-12 h-12 mx-auto text-muted-foreground/50" />
-              <p className="mt-4 text-muted-foreground">
-                {t('Payout history will appear here', 'سيظهر سجل الدفعات هنا')}
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        )}
-
-        <TabsContent value="payouts" className="space-y-6">
-          <PayoutThresholds />
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </PageLayout>
   );
 }
