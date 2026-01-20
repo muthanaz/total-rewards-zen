@@ -12,6 +12,7 @@ export { MarketplaceDisabledState } from './MarketplaceDisabledState';
 export { ClaimsExecView } from './ClaimsExecView';
 export { PoliciesOpsView } from './PoliciesOpsView';
 export { IntegrationsExecView } from './IntegrationsExecView';
+export { OpsOnlyGuard } from './OpsOnlyGuard';
 export { 
   OperationalLeversCard, 
   spendOperationalLevers, 
