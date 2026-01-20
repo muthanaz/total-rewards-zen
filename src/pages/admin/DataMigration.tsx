@@ -22,6 +22,7 @@ import { allTemplates, templateCategories, TemplateSection } from '@/components/
 import { downloadTemplate, downloadCompleteMigrationPackage } from '@/components/admin/ExcelGenerator';
 import SampleDataGenerator from '@/components/admin/SampleDataGenerator';
 import DataImportWizard from '@/components/admin/DataImportWizard';
+import AdminSeedData from '@/components/admin/AdminSeedData';
 
 export default function DataMigrationPage() {
   const { toast } = useToast();
@@ -124,6 +125,10 @@ export default function DataMigrationPage() {
           <TabsTrigger value="generator" className="gap-2">
             <Wand2 className="w-4 h-4" />
             Sample Data
+          </TabsTrigger>
+          <TabsTrigger value="admin-seed" className="gap-2">
+            <Database className="w-4 h-4" />
+            Admin Seed
           </TabsTrigger>
           <TabsTrigger value="validation" className="gap-2">
             <Settings className="w-4 h-4" />
@@ -231,6 +236,11 @@ export default function DataMigrationPage() {
         {/* Sample Data Generator Tab */}
         <TabsContent value="generator">
           <SampleDataGenerator />
+        </TabsContent>
+
+        {/* Admin Seed Data Tab */}
+        <TabsContent value="admin-seed">
+          <AdminSeedData />
         </TabsContent>
 
         {/* Validation Rules Tab */}
