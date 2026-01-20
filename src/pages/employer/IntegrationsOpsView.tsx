@@ -15,10 +15,13 @@ import {
   Link2,
   Unlink,
   FileSpreadsheet,
-  Download
+  Download,
+  Lock
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { EmployerGlobalFiltersBar } from '@/components/employer';
+import { PermissionGate } from '@/components/shared/PermissionGate';
+import { useEmployerPermissions } from '@/hooks/useEmployerPermissions';
 
 interface DataSource {
   id: string;
@@ -84,6 +87,8 @@ const importTemplates = [
 export function IntegrationsOpsView() {
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { hasPermission } = useEmployerPermissions();
+  const canManageIntegrations = hasPermission('can_manage_integrations');
 
   const handleSync = (sourceId: string, sourceName: string) => {
     setSyncingId(sourceId);
@@ -128,16 +133,25 @@ export function IntegrationsOpsView() {
           <h1 className="text-2xl font-display font-bold text-foreground">Integrations & Data</h1>
           <p className="text-muted-foreground">Manage data sources, mappings, and imports</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="gap-2">
-            <Link2 className="w-4 h-4" />
-            Add Connection
-          </Button>
-          <Button className="gap-2">
-            <Upload className="w-4 h-4" />
-            Import Data
-          </Button>
-        </div>
+        <PermissionGate 
+          permission="can_manage_integrations"
+          fallback={
+            <Badge variant="outline" className="gap-1 text-muted-foreground">
+              <Lock className="w-3 h-3" /> View Only
+            </Badge>
+          }
+        >
+          <div className="flex gap-2">
+            <Button variant="outline" className="gap-2">
+              <Link2 className="w-4 h-4" />
+              Add Connection
+            </Button>
+            <Button className="gap-2">
+              <Upload className="w-4 h-4" />
+              Import Data
+            </Button>
+          </div>
+        </PermissionGate>
       </div>
 
       {/* Global Filters */}

@@ -16,9 +16,12 @@ import {
   Clock,
   Search,
   FileCheck,
-  AlertTriangle
+  AlertTriangle,
+  Lock
 } from 'lucide-react';
 import { EmployerGlobalFiltersBar } from '@/components/employer';
+import { PermissionGate } from '@/components/shared/PermissionGate';
+import { useEmployerPermissions } from '@/hooks/useEmployerPermissions';
 
 const policyDocuments = [
   {
@@ -80,6 +83,8 @@ const pendingApprovals = [
 
 export function PoliciesOpsView() {
   const [searchQuery, setSearchQuery] = useState('');
+  const { hasPermission } = useEmployerPermissions();
+  const canManagePolicies = hasPermission('can_manage_policies');
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -107,10 +112,19 @@ export function PoliciesOpsView() {
           <h1 className="text-2xl font-display font-bold text-foreground">Policy Management</h1>
           <p className="text-muted-foreground">Create, edit, and manage organization policies</p>
         </div>
-        <Button className="gap-2">
-          <Plus className="w-4 h-4" />
-          Create New Policy
-        </Button>
+        <PermissionGate 
+          permission="can_manage_policies"
+          fallback={
+            <Badge variant="outline" className="gap-1 text-muted-foreground">
+              <Lock className="w-3 h-3" /> View Only
+            </Badge>
+          }
+        >
+          <Button className="gap-2">
+            <Plus className="w-4 h-4" />
+            Create New Policy
+          </Button>
+        </PermissionGate>
       </div>
 
       {/* Global Filters */}

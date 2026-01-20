@@ -553,6 +553,50 @@ export type Database = {
           },
         ]
       }
+      employer_permissions: {
+        Row: {
+          can_manage_integrations: boolean
+          can_manage_policies: boolean
+          can_process_claims: boolean
+          can_view_exec_analytics: boolean
+          created_at: string
+          id: string
+          organization_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          can_manage_integrations?: boolean
+          can_manage_policies?: boolean
+          can_process_claims?: boolean
+          can_view_exec_analytics?: boolean
+          created_at?: string
+          id?: string
+          organization_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          can_manage_integrations?: boolean
+          can_manage_policies?: boolean
+          can_process_claims?: boolean
+          can_view_exec_analytics?: boolean
+          created_at?: string
+          id?: string
+          organization_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employer_permissions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       health_providers: {
         Row: {
           address: string | null
@@ -2036,6 +2080,10 @@ export type Database = {
         }[]
       }
       get_user_organization_id: { Args: { _user_id: string }; Returns: string }
+      has_employer_permission: {
+        Args: { _permission: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["user_role"]
