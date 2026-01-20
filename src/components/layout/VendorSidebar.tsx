@@ -3,17 +3,20 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
-  Package,
   Tag,
+  PlusCircle,
+  Receipt,
   TrendingUp,
   Wallet,
+  FileText,
   Settings,
   Menu,
   X,
   LogOut,
   Store,
-  FileText,
   ChevronDown,
+  Users,
+  Shield,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -44,28 +47,35 @@ const navigationGroups: NavGroup[] = [
     ],
   },
   {
-    title: 'Offers Management',
-    titleAr: 'إدارة العروض',
+    title: 'Offers',
+    titleAr: 'العروض',
     items: [
       { label: 'My Offers', labelAr: 'عروضي', path: '/vendor/offers', icon: Tag },
-      { label: 'Create Offer', labelAr: 'إنشاء عرض', path: '/vendor/offers/new', icon: Package },
+      { label: 'Create Offer', labelAr: 'إنشاء عرض', path: '/vendor/offers/new', icon: PlusCircle },
     ],
   },
   {
-    title: 'Performance',
-    titleAr: 'الأداء',
+    title: 'Redemptions',
+    titleAr: 'الاستردادات',
     items: [
-      { label: 'Analytics', labelAr: 'التحليلات', path: '/vendor/analytics', icon: TrendingUp },
-      { label: 'Transactions', labelAr: 'المعاملات', path: '/vendor/transactions', icon: FileText },
-      { label: 'Earnings', labelAr: 'الأرباح', path: '/vendor/earnings', icon: Wallet },
+      { label: 'Voucher Redemptions', labelAr: 'استرداد القسائم', path: '/vendor/redemptions', icon: Receipt },
+      { label: 'Usage Analytics', labelAr: 'تحليلات الاستخدام', path: '/vendor/analytics', icon: TrendingUp },
     ],
   },
   {
-    title: 'Account',
-    titleAr: 'الحساب',
+    title: 'Payouts',
+    titleAr: 'المدفوعات',
     items: [
-      { label: 'Company Profile', labelAr: 'ملف الشركة', path: '/vendor/profile', icon: Store },
-      { label: 'Settings', labelAr: 'الإعدادات', path: '/vendor/settings', icon: Settings },
+      { label: 'Payout Summary', labelAr: 'ملخص المدفوعات', path: '/vendor/earnings', icon: Wallet },
+      { label: 'Invoices & Statements', labelAr: 'الفواتير والكشوفات', path: '/vendor/transactions', icon: FileText },
+    ],
+  },
+  {
+    title: 'Settings',
+    titleAr: 'الإعدادات',
+    items: [
+      { label: 'Profile & Verification', labelAr: 'الملف الشخصي والتحقق', path: '/vendor/profile', icon: Shield },
+      { label: 'Team & Access', labelAr: 'الفريق والصلاحيات', path: '/vendor/settings', icon: Users },
     ],
   },
 ];
@@ -103,15 +113,15 @@ export function VendorSidebar() {
           isRTL && "flex-row-reverse"
         )}>
           <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0">
-              <Store className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-primary flex items-center justify-center shrink-0">
+              <Store className="w-4 h-4 text-primary-foreground" />
             </div>
             <span className="font-display text-xl font-bold text-sidebar-foreground">bnft.</span>
             <span className={cn(
-              "px-2 py-0.5 text-xs font-medium rounded-full bg-purple-500/20 text-purple-400 shrink-0",
+              "px-2 py-0.5 text-xs font-medium rounded-full bg-accent/20 text-accent-foreground shrink-0",
               isRTL ? "mr-1" : "ml-1"
             )}>
-              Vendor
+              {language === 'ar' ? 'بائع' : 'Vendor'}
             </span>
           </div>
         </div>
