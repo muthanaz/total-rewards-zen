@@ -160,10 +160,13 @@ export function EmployeeChip({
     <span className={cn(
       "inline-flex items-center rounded-md font-medium transition-all cursor-pointer",
       "border border-transparent hover:border-border/50",
+      "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
       config.bgColor,
       config.color,
       sizeClasses[size],
       disabled && "opacity-50 cursor-not-allowed",
+      // RTL support
+      "rtl:flex-row-reverse",
       className
     )}>
       {showIcon && (
@@ -178,7 +181,7 @@ export function EmployeeChip({
       )}
       <span className="truncate max-w-[120px]">{name}</span>
       {variant === 'chip' && (
-        <ChevronRight className="w-3 h-3 opacity-50" />
+        <ChevronRight className="w-3 h-3 opacity-50 rtl:rotate-180" aria-hidden="true" />
       )}
     </span>
   );
@@ -188,7 +191,12 @@ export function EmployeeChip({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <button onClick={handleClick} disabled={disabled} className="focus:outline-none">
+            <button 
+              onClick={handleClick} 
+              disabled={disabled} 
+              className="focus-visible:outline-none rounded-md"
+              aria-label={`View ${name}'s profile`}
+            >
               {content}
             </button>
           </TooltipTrigger>
@@ -203,7 +211,12 @@ export function EmployeeChip({
 
   return (
     <>
-      <button onClick={handleClick} disabled={disabled} className="focus:outline-none">
+      <button 
+        onClick={handleClick} 
+        disabled={disabled} 
+        className="focus-visible:outline-none rounded-md"
+        aria-label={`View ${name}'s profile`}
+      >
         {content}
       </button>
       

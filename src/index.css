@@ -536,3 +536,332 @@
     margin-inline-start: 0.75rem;
   }
 }
+
+/* ============================================================================
+   ACCESSIBILITY & FOCUS STATES
+   ============================================================================ */
+@layer base {
+  /* Enhanced focus-visible for all interactive elements */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Specific focus styles for buttons and links */
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible,
+  [tabindex]:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background rounded-md;
+  }
+
+  /* Skip link for keyboard users */
+  .skip-link {
+    @apply absolute -top-10 left-4 z-[100] px-4 py-2 bg-primary text-primary-foreground rounded-md;
+    @apply focus:top-4 transition-all;
+  }
+
+  /* Reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE TABLE → LIST/ACCORDION ON MOBILE
+   ============================================================================ */
+@layer components {
+  /* Responsive table container */
+  .responsive-table-container {
+    @apply w-full;
+  }
+
+  .responsive-table-container table {
+    @apply w-full min-w-0;
+  }
+
+  /* Mobile card view for tables */
+  @media (max-width: 768px) {
+    .responsive-table-mobile thead {
+      @apply sr-only;
+    }
+
+    .responsive-table-mobile tbody {
+      @apply flex flex-col gap-3;
+    }
+
+    .responsive-table-mobile tr {
+      @apply flex flex-col p-4 rounded-xl border border-border/60 bg-card;
+    }
+
+    .responsive-table-mobile td {
+      @apply flex items-center justify-between py-2 border-b border-border/30 last:border-b-0;
+    }
+
+    .responsive-table-mobile td::before {
+      content: attr(data-label);
+      @apply font-medium text-muted-foreground text-sm mr-2 flex-shrink-0;
+    }
+
+    .responsive-table-mobile td:last-child {
+      @apply pt-3 flex-wrap gap-2;
+    }
+  }
+
+  /* Sticky table header on larger screens */
+  .table-sticky-header thead {
+    @apply sticky top-0 z-10 bg-background;
+  }
+
+  .table-sticky-header th {
+    @apply bg-muted/50 backdrop-blur-sm;
+  }
+}
+
+/* ============================================================================
+   MOBILE-OPTIMIZED SHEETS & DIALOGS
+   ============================================================================ */
+@layer components {
+  /* Full-width sheets on mobile */
+  @media (max-width: 640px) {
+    [data-radix-dialog-content][data-side="right"],
+    [data-radix-dialog-content][data-side="left"] {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+  }
+
+  /* Sheet with sticky footer */
+  .sheet-scrollable {
+    @apply flex flex-col h-full max-h-[100dvh];
+  }
+
+  .sheet-scrollable-content {
+    @apply flex-1 overflow-y-auto overscroll-contain -mx-6 px-6;
+    /* Safe area for mobile browsers */
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+
+  .sheet-sticky-footer {
+    @apply sticky bottom-0 -mx-6 px-6 py-4 bg-background border-t border-border mt-auto;
+    /* Safe area for mobile browsers */
+    padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+  }
+
+  /* Dialog mobile adjustments */
+  @media (max-width: 640px) {
+    .dialog-mobile-full {
+      @apply fixed inset-4 max-w-none w-auto translate-x-0 translate-y-0;
+      max-height: calc(100dvh - 2rem);
+    }
+  }
+}
+
+/* ============================================================================
+   RTL FIXES FOR FILTERS, TABLES, AND CHIPS
+   ============================================================================ */
+@layer components {
+  /* RTL filter bar - prevent horizontal overflow */
+  html.rtl .filter-bar-container {
+    @apply flex-row-reverse;
+  }
+
+  html.rtl .filter-bar-container > * {
+    @apply flex-shrink-0;
+  }
+
+  /* RTL table alignment */
+  html.rtl table th,
+  html.rtl table td {
+    text-align: right;
+  }
+
+  html.rtl table th:last-child,
+  html.rtl table td:last-child {
+    text-align: left;
+  }
+
+  /* RTL chip overflow fix */
+  html.rtl .chip-container {
+    @apply flex-row-reverse flex-wrap;
+    overflow-x: hidden;
+  }
+
+  /* RTL select trigger alignment */
+  html.rtl [data-radix-select-trigger] {
+    @apply flex-row-reverse text-right;
+  }
+
+  html.rtl [data-radix-select-trigger] svg {
+    @apply mr-0 ml-1.5;
+  }
+
+  /* RTL badge container */
+  html.rtl .badge-wrap {
+    @apply flex-row-reverse;
+  }
+
+  /* RTL scroll areas */
+  html.rtl .scroll-area-horizontal {
+    direction: rtl;
+  }
+}
+
+/* ============================================================================
+   CONTRAST & VISIBILITY IMPROVEMENTS
+   ============================================================================ */
+@layer base {
+  /* Ensure minimum contrast for muted text */
+  .text-muted-foreground {
+    /* Light mode: ensure at least 4.5:1 contrast */
+    color: hsl(220 9% 46%);
+  }
+
+  .dark .text-muted-foreground {
+    /* Dark mode: ensure at least 4.5:1 contrast */
+    color: hsl(220 9% 64%);
+  }
+}
+
+@layer components {
+  /* High contrast focus indicator */
+  .focus-indicator {
+    @apply ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Ensure badge text is readable */
+  .badge-accessible {
+    @apply font-medium;
+    min-height: 1.5rem;
+    line-height: 1.5rem;
+  }
+
+  /* Card focus state */
+  .card-interactive:focus-within {
+    @apply ring-2 ring-ring ring-offset-2;
+  }
+
+  /* Link underline on focus for better visibility */
+  a:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
+
+/* ============================================================================
+   MOBILE-FIRST CARD STACKING
+   ============================================================================ */
+@layer components {
+  /* Auto-stacking grid for cards */
+  .card-grid-responsive {
+    @apply grid gap-4;
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 640px) {
+    .card-grid-responsive {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .card-grid-responsive {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .card-grid-responsive {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  /* Metric card grid */
+  .metric-grid-responsive {
+    @apply grid gap-4;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 768px) {
+    .metric-grid-responsive {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .metric-grid-responsive {
+      grid-template-columns: repeat(5, 1fr);
+    }
+  }
+}
+
+/* ============================================================================
+   TOUCH TARGET SIZES (WCAG 2.2 AAA - 44x44px minimum)
+   ============================================================================ */
+@layer components {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .touch-target-sm {
+    min-height: 36px;
+    min-width: 36px;
+  }
+
+  /* Ensure buttons have adequate touch targets on mobile */
+  @media (max-width: 768px) {
+    button:not(.btn-compact),
+    [role="button"]:not(.btn-compact) {
+      min-height: 44px;
+    }
+
+    /* Larger tap targets for select triggers on mobile */
+    [data-radix-select-trigger] {
+      min-height: 44px;
+    }
+  }
+}
+
+/* ============================================================================
+   SCROLLBAR STYLING FOR OVERFLOW CONTAINERS
+   ============================================================================ */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
