@@ -1,111 +1,146 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface FeatureFlags {
   marketplaceEnabled: boolean;
+  govConnectEnabled: boolean;
+  advancedInsightsEnabled: boolean;
   // Add more feature flags here as needed
 }
 
 interface OrganizationSettings {
   marketplace_enabled?: boolean;
+  gov_connect_enabled?: boolean;
+  advanced_insights_enabled?: boolean;
   // Add more settings as needed
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
-  marketplaceEnabled: false, // Default OFF
+  marketplaceEnabled: true, // Default ON
+  govConnectEnabled: true,
+  advancedInsightsEnabled: true,
+};
+
+// Map frontend flag names to DB setting keys
+const FLAG_KEY_MAP: Record<keyof FeatureFlags, string> = {
+  marketplaceEnabled: 'marketplace_enabled',
+  govConnectEnabled: 'gov_connect_enabled',
+  advancedInsightsEnabled: 'advanced_insights_enabled',
 };
 
 /**
- * Hook to retrieve org-level feature flags from the organization settings
- * Falls back to defaults if no org or settings found
+ * Hook to retrieve and manage org-level feature flags from organization settings
+ * Persists to database and provides real-time updates
  */
-export function useFeatureFlags(): {
+export function useFeatureFlags(targetOrgId?: string): {
   flags: FeatureFlags;
   loading: boolean;
   isAdmin: boolean;
-  toggleFlag: (flag: keyof FeatureFlags, value: boolean) => Promise<void>;
+  toggleFlag: (flag: keyof FeatureFlags, value: boolean) => Promise<boolean>;
+  refetch: () => void;
 } {
   const { user, role } = useAuth();
-  const [orgSettings, setOrgSettings] = useState<OrganizationSettings | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [orgId, setOrgId] = useState<string | null>(null);
-
+  const queryClient = useQueryClient();
   const isAdmin = role === 'admin' || role === 'employer';
 
-  useEffect(() => {
-    const fetchOrgSettings = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
+  // Fetch org ID and settings
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['org-feature-flags', user?.id, targetOrgId],
+    queryFn: async () => {
+      if (!user) return null;
 
-      try {
-        // First get the user's organization
-        const { data: profile, error: profileError } = await supabase
+      let orgId = targetOrgId;
+
+      // If no target org specified, get user's own org
+      if (!orgId) {
+        const { data: profile } = await supabase
           .from('profiles')
           .select('organization_id')
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (profileError || !profile?.organization_id) {
-          setLoading(false);
-          return;
-        }
-
-        setOrgId(profile.organization_id);
-
-        // Then get the org settings
-        const { data: org, error: orgError } = await supabase
-          .from('organizations')
-          .select('settings')
-          .eq('id', profile.organization_id)
-          .maybeSingle();
-
-        if (orgError) {
-          console.error('Error fetching org settings:', orgError);
-          setLoading(false);
-          return;
-        }
-
-        if (org?.settings && typeof org.settings === 'object') {
-          setOrgSettings(org.settings as OrganizationSettings);
-        }
-      } catch (error) {
-        console.error('Error in fetchOrgSettings:', error);
-      } finally {
-        setLoading(false);
+        orgId = profile?.organization_id;
       }
+
+      if (!orgId) return null;
+
+      // Get org settings
+      const { data: org, error } = await supabase
+        .from('organizations')
+        .select('id, settings')
+        .eq('id', orgId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching org settings:', error);
+        return null;
+      }
+
+      return {
+        orgId: org?.id,
+        settings: (org?.settings as OrganizationSettings) || {},
+      };
+    },
+    enabled: !!user,
+    staleTime: 10000, // Cache for 10 seconds
+  });
+
+  // Parse flags from settings
+  const flags = useMemo<FeatureFlags>(() => {
+    if (!data?.settings) return DEFAULT_FLAGS;
+
+    return {
+      marketplaceEnabled: data.settings.marketplace_enabled ?? DEFAULT_FLAGS.marketplaceEnabled,
+      govConnectEnabled: data.settings.gov_connect_enabled ?? DEFAULT_FLAGS.govConnectEnabled,
+      advancedInsightsEnabled: data.settings.advanced_insights_enabled ?? DEFAULT_FLAGS.advancedInsightsEnabled,
     };
+  }, [data?.settings]);
 
-    fetchOrgSettings();
-  }, [user]);
+  // Mutation to update flags
+  const updateMutation = useMutation({
+    mutationFn: async ({ flag, value }: { flag: keyof FeatureFlags; value: boolean }) => {
+      if (!data?.orgId) throw new Error('No organization found');
 
-  const flags = useMemo<FeatureFlags>(() => ({
-    marketplaceEnabled: orgSettings?.marketplace_enabled ?? DEFAULT_FLAGS.marketplaceEnabled,
-  }), [orgSettings]);
+      const settingsKey = FLAG_KEY_MAP[flag];
+      const newSettings = {
+        ...data.settings,
+        [settingsKey]: value,
+      };
 
-  const toggleFlag = async (flag: keyof FeatureFlags, value: boolean) => {
-    if (!orgId || !isAdmin) return;
+      const { error } = await supabase
+        .from('organizations')
+        .update({ settings: newSettings })
+        .eq('id', data.orgId);
 
-    const settingsKey = flag === 'marketplaceEnabled' ? 'marketplace_enabled' : flag;
-    
-    const newSettings = {
-      ...orgSettings,
-      [settingsKey]: value,
-    };
+      if (error) throw error;
 
-    const { error } = await supabase
-      .from('organizations')
-      .update({ settings: newSettings })
-      .eq('id', orgId);
+      return { flag, value, orgId: data.orgId };
+    },
+    onSuccess: () => {
+      // Invalidate the query to refetch
+      queryClient.invalidateQueries({ queryKey: ['org-feature-flags'] });
+    },
+  });
 
-    if (!error) {
-      setOrgSettings(newSettings);
-    } else {
+  const toggleFlag = useCallback(async (flag: keyof FeatureFlags, value: boolean): Promise<boolean> => {
+    if (!isAdmin || !data?.orgId) return false;
+
+    try {
+      await updateMutation.mutateAsync({ flag, value });
+      return true;
+    } catch (error) {
       console.error('Error updating feature flag:', error);
+      return false;
     }
-  };
+  }, [isAdmin, data?.orgId, updateMutation]);
 
-  return { flags, loading, isAdmin, toggleFlag };
+  return { 
+    flags, 
+    loading: isLoading, 
+    isAdmin, 
+    toggleFlag,
+    refetch,
+  };
 }

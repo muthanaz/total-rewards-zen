@@ -77,10 +77,12 @@ export type Database = {
       audit_logs: {
         Row: {
           action: string
+          actor_role: string | null
           created_at: string
           details: Json | null
           id: string
           ip_address: string | null
+          outcome: string | null
           resource_id: string | null
           resource_type: string
           user_agent: string | null
@@ -88,10 +90,12 @@ export type Database = {
         }
         Insert: {
           action: string
+          actor_role?: string | null
           created_at?: string
           details?: Json | null
           id?: string
           ip_address?: string | null
+          outcome?: string | null
           resource_id?: string | null
           resource_type: string
           user_agent?: string | null
@@ -99,10 +103,12 @@ export type Database = {
         }
         Update: {
           action?: string
+          actor_role?: string | null
           created_at?: string
           details?: Json | null
           id?: string
           ip_address?: string | null
+          outcome?: string | null
           resource_id?: string | null
           resource_type?: string
           user_agent?: string | null
@@ -844,11 +850,16 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean | null
+          is_public: boolean | null
           merchant: string
           rating: number | null
+          sponsored: boolean | null
+          status: string
           tags: string[] | null
           terms: string | null
           title: string
+          valid_from: string | null
+          valid_to: string | null
           vendor_id: string | null
         }
         Insert: {
@@ -859,11 +870,16 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_public?: boolean | null
           merchant: string
           rating?: number | null
+          sponsored?: boolean | null
+          status?: string
           tags?: string[] | null
           terms?: string | null
           title: string
+          valid_from?: string | null
+          valid_to?: string | null
           vendor_id?: string | null
         }
         Update: {
@@ -874,11 +890,16 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_public?: boolean | null
           merchant?: string
           rating?: number | null
+          sponsored?: boolean | null
+          status?: string
           tags?: string[] | null
           terms?: string | null
           title?: string
+          valid_from?: string | null
+          valid_to?: string | null
           vendor_id?: string | null
         }
         Relationships: [
@@ -1099,6 +1120,7 @@ export type Database = {
           primary_color: string | null
           secondary_color: string | null
           settings: Json | null
+          status: string
           survey_end_month: number | null
           survey_start_month: number | null
           updated_at: string | null
@@ -1115,6 +1137,7 @@ export type Database = {
           primary_color?: string | null
           secondary_color?: string | null
           settings?: Json | null
+          status?: string
           survey_end_month?: number | null
           survey_start_month?: number | null
           updated_at?: string | null
@@ -1131,6 +1154,7 @@ export type Database = {
           primary_color?: string | null
           secondary_color?: string | null
           settings?: Json | null
+          status?: string
           survey_end_month?: number | null
           survey_start_month?: number | null
           updated_at?: string | null
@@ -1970,6 +1994,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           logo_url: string | null
+          status: string
           total_revenue: number | null
           total_transactions: number | null
           updated_at: string | null
@@ -1986,6 +2011,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
+          status?: string
           total_revenue?: number | null
           total_transactions?: number | null
           updated_at?: string | null
@@ -2002,6 +2028,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
+          status?: string
           total_revenue?: number | null
           total_transactions?: number | null
           updated_at?: string | null

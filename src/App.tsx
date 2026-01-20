@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,10 +12,12 @@ import { UIVisibilityProvider } from "@/contexts/UIVisibilityContext";
 import { PrivacyProvider } from "@/components/ui/privacy-toggle";
 import { DemoModeProvider } from "@/contexts/DemoModeContext";
 import { DemoModeBadge } from "@/components/demo";
+import { supabase } from "@/integrations/supabase/client";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import OrgSuspended from "./pages/OrgSuspended";
 
 import { EmployeeLayout } from "./components/layout/EmployeeLayout";
 import { EmployerLayout } from "./components/layout/EmployerLayout";
@@ -95,13 +98,53 @@ type UserRole = "employee" | "employer" | "admin" | "vendor";
 function ProtectedRoute({
   children,
   allowedRoles,
+  checkSuspension = true,
 }: {
   children: React.ReactNode;
   allowedRoles?: UserRole[];
+  checkSuspension?: boolean;
 }) {
   const { user, role, loading } = useAuth();
+  const [orgStatus, setOrgStatus] = useState<'active' | 'suspended' | 'loading'>('loading');
 
-  if (loading) {
+  // Check org suspension status
+  useEffect(() => {
+    async function checkOrgStatus() {
+      if (!user || role === 'admin' || !checkSuspension) {
+        setOrgStatus('active');
+        return;
+      }
+
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('organization_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (!profile?.organization_id) {
+          setOrgStatus('active');
+          return;
+        }
+
+        const { data: org } = await supabase
+          .from('organizations')
+          .select('status')
+          .eq('id', profile.organization_id)
+          .maybeSingle();
+
+        setOrgStatus((org?.status as 'active' | 'suspended') || 'active');
+      } catch {
+        setOrgStatus('active');
+      }
+    }
+
+    if (user && !loading) {
+      checkOrgStatus();
+    }
+  }, [user, role, loading, checkSuspension]);
+
+  if (loading || orgStatus === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         Loading...
@@ -111,6 +154,11 @@ function ProtectedRoute({
 
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  // Block suspended orgs (except admins)
+  if (orgStatus === 'suspended' && role !== 'admin') {
+    return <OrgSuspended />;
   }
 
   if (allowedRoles && role && !allowedRoles.includes(role)) {
