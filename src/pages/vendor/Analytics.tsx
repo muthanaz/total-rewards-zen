@@ -22,72 +22,101 @@ import {
   BarChart3,
   PieChart,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatInteger, formatPercent, formatCurrencyAED } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AnimatedLineChart } from '@/components/charts/AnimatedLineChart';
 import { AnimatedBarChart } from '@/components/charts/AnimatedBarChart';
 import { AnimatedDonutChart } from '@/components/charts/AnimatedDonutChart';
-
-const summaryMetrics = [
-  { label: 'Total Views', labelAr: 'إجمالي المشاهدات', value: '45,620', change: '+18%', trend: 'up' as const, icon: Eye },
-  { label: 'Total Redemptions', labelAr: 'إجمالي الاستردادات', value: '8,470', change: '+12%', trend: 'up' as const, icon: Users },
-  { label: 'Conversion Rate', labelAr: 'معدل التحويل', value: '18.6%', change: '+2.3%', trend: 'up' as const, icon: Target },
-  { label: 'Avg. Order Value', labelAr: 'متوسط قيمة الطلب', value: 'AED 285', change: '-3%', trend: 'down' as const, icon: TrendingUp },
-];
-
-const viewsTrendData = [
-  { name: 'Jul', value: 5200, secondaryValue: 820 },
-  { name: 'Aug', value: 6100, secondaryValue: 980 },
-  { name: 'Sep', value: 7400, secondaryValue: 1250 },
-  { name: 'Oct', value: 8200, secondaryValue: 1480 },
-  { name: 'Nov', value: 9100, secondaryValue: 1720 },
-  { name: 'Dec', value: 9620, secondaryValue: 2220 },
-];
-
-const offerPerformance = [
-  { name: 'Gym 20%', value: 1250 },
-  { name: 'Wellness App', value: 890 },
-  { name: 'Health Check', value: 720 },
-  { name: 'Spa BOGO', value: 1102 },
-  { name: 'Dental 30%', value: 560 },
-];
-
-const categoryBreakdown = [
-  { name: 'Fitness', value: 42, color: 'hsl(174 60% 45%)' },
-  { name: 'Wellness', value: 28, color: 'hsl(262 52% 55%)' },
-  { name: 'Health', value: 20, color: 'hsl(340 65% 55%)' },
-  { name: 'Other', value: 10, color: 'hsl(38 92% 50%)' },
-];
-
-const dayOfWeekData = [
-  { name: 'Mon', value: 1250 },
-  { name: 'Tue', value: 1480 },
-  { name: 'Wed', value: 1320 },
-  { name: 'Thu', value: 1190 },
-  { name: 'Fri', value: 850 },
-  { name: 'Sat', value: 620 },
-  { name: 'Sun', value: 910 },
-];
+import { PageLayout, MetricCard, MetricGrid } from '@/components/shared';
+import { useVendorAnalytics } from '@/hooks/useVendorData';
 
 export default function VendorAnalytics() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
   const [timeRange, setTimeRange] = useState('30days');
-
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
 
+  const { data: analytics, isLoading } = useVendorAnalytics();
+
+  const summaryMetrics = [
+    { 
+      title: t('Total Views', 'إجمالي المشاهدات'), 
+      value: formatInteger(45620), 
+      change: 18, 
+      positive: true, 
+      icon: Eye 
+    },
+    { 
+      title: t('Total Redemptions', 'إجمالي الاستردادات'), 
+      value: formatInteger(analytics?.totalRedemptions || 8470), 
+      change: 12, 
+      positive: true, 
+      icon: Users 
+    },
+    { 
+      title: t('Conversion Rate', 'معدل التحويل'), 
+      value: formatPercent(analytics?.conversionRate || 18.6), 
+      change: 2.3, 
+      positive: true, 
+      icon: Target 
+    },
+    { 
+      title: t('Avg. Order Value', 'متوسط قيمة الطلب'), 
+      value: formatCurrencyAED(285), 
+      change: 3, 
+      positive: false, 
+      icon: TrendingUp 
+    },
+  ];
+
+  const viewsTrendData = [
+    { name: 'Jul', value: 5200, secondaryValue: 820 },
+    { name: 'Aug', value: 6100, secondaryValue: 980 },
+    { name: 'Sep', value: 7400, secondaryValue: 1250 },
+    { name: 'Oct', value: 8200, secondaryValue: 1480 },
+    { name: 'Nov', value: 9100, secondaryValue: 1720 },
+    { name: 'Dec', value: 9620, secondaryValue: 2220 },
+  ];
+
+  const offerPerformance = analytics?.topOffers?.map(o => ({
+    name: o.title.substring(0, 15),
+    value: o.activations,
+  })) || [
+    { name: 'Gym 20%', value: 1250 },
+    { name: 'Wellness App', value: 890 },
+    { name: 'Health Check', value: 720 },
+    { name: 'Spa BOGO', value: 1102 },
+    { name: 'Dental 30%', value: 560 },
+  ];
+
+  const categoryBreakdown = analytics?.activationsByCategory?.map((c, i) => ({
+    name: c.category,
+    value: c.count,
+    color: ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--destructive))', 'hsl(var(--warning))'][i % 4],
+  })) || [
+    { name: 'Fitness', value: 42, color: 'hsl(var(--primary))' },
+    { name: 'Wellness', value: 28, color: 'hsl(var(--accent))' },
+    { name: 'Health', value: 20, color: 'hsl(var(--destructive))' },
+    { name: 'Other', value: 10, color: 'hsl(var(--warning))' },
+  ];
+
+  const dayOfWeekData = [
+    { name: 'Mon', value: 1250 },
+    { name: 'Tue', value: 1480 },
+    { name: 'Wed', value: 1320 },
+    { name: 'Thu', value: 1190 },
+    { name: 'Fri', value: 850 },
+    { name: 'Sat', value: 620 },
+    { name: 'Sun', value: 910 },
+  ];
+
   return (
-    <div className={cn("space-y-6", isRTL && "text-right")}>
-      {/* Header */}
-      <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
-        <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">
-            {t('Analytics', 'التحليلات')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('Deep dive into your offer performance', 'نظرة معمقة على أداء عروضك')}
-          </p>
-        </div>
+    <PageLayout
+      title={t('Analytics', 'التحليلات')}
+      description={t('Deep dive into your offer performance', 'نظرة معمقة على أداء عروضك')}
+      icon={BarChart3}
+      iconClassName="text-primary"
+      actions={
         <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger className="w-40">
@@ -106,45 +135,23 @@ export default function VendorAnalytics() {
             {t('Export', 'تصدير')}
           </Button>
         </div>
-      </div>
-
+      }
+    >
       {/* Summary Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {summaryMetrics.map((metric) => (
-          <Card key={metric.label} className="relative overflow-hidden hover:shadow-lg transition-all">
-            <CardContent className="p-6">
-              <div className={cn("flex items-start justify-between", isRTL && "flex-row-reverse")}>
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'ar' ? metric.labelAr : metric.label}
-                  </p>
-                  <p className="text-2xl font-bold mt-1">{metric.value}</p>
-                  <div className={cn("flex items-center gap-1 mt-2", isRTL && "flex-row-reverse")}>
-                    {metric.trend === 'up' ? (
-                      <ArrowUpRight className="w-4 h-4 text-green-500" />
-                    ) : (
-                      <ArrowDownRight className="w-4 h-4 text-red-500" />
-                    )}
-                    <span className={cn(
-                      "text-sm font-medium",
-                      metric.trend === 'up' ? "text-green-500" : "text-red-500"
-                    )}>
-                      {metric.change}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{t('vs last period', 'مقارنة بالفترة السابقة')}</span>
-                  </div>
-                </div>
-                <div className="p-3 rounded-xl bg-accent/10">
-                  <metric.icon className="w-5 h-5 text-accent" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+      <MetricGrid columns={4}>
+        {summaryMetrics.map((metric, i) => (
+          <MetricCard
+            key={i}
+            title={metric.title}
+            value={metric.value}
+            icon={metric.icon}
+            trend={{ value: metric.change, higherIsBetter: metric.positive }}
+          />
         ))}
-      </div>
+      </MetricGrid>
 
       {/* Main Content */}
-      <Tabs defaultValue="overview" className="space-y-6">
+      <Tabs defaultValue="overview" className="space-y-6 mt-6">
         <TabsList>
           <TabsTrigger value="overview">{t('Overview', 'نظرة عامة')}</TabsTrigger>
           <TabsTrigger value="offers">{t('By Offer', 'حسب العرض')}</TabsTrigger>
@@ -239,6 +246,6 @@ export default function VendorAnalytics() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </PageLayout>
   );
 }

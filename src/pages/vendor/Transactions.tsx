@@ -27,9 +27,11 @@ import {
   XCircle,
   Receipt,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED, formatInteger } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
+import { PageLayout, MetricCard, MetricGrid } from '@/components/shared';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface Transaction {
   id: string;
@@ -54,10 +56,10 @@ const transactions: Transaction[] = [
   { id: 'TXN008', offerTitle: 'Free Trial - Wellness App', employeeId: 'EMP-6543', originalAmount: 0, discountAmount: 0, commissionAmount: 25, codeUsed: 'BNFT-WELL-FREE', status: 'completed', redeemedAt: '2026-01-09 11:25' },
 ];
 
-const statusConfig = {
-  completed: { label: 'Completed', labelAr: 'مكتمل', icon: CheckCircle2, color: 'bg-green-500/10 text-green-600' },
-  pending: { label: 'Pending', labelAr: 'قيد الانتظار', icon: Clock, color: 'bg-amber-500/10 text-amber-600' },
-  failed: { label: 'Failed', labelAr: 'فشل', icon: XCircle, color: 'bg-red-500/10 text-red-600' },
+const STATUS_CONFIG = {
+  completed: { label: 'Completed', labelAr: 'مكتمل', icon: CheckCircle2, className: 'bg-success/10 text-success border-success/30' },
+  pending: { label: 'Pending', labelAr: 'قيد الانتظار', icon: Clock, className: 'bg-warning/10 text-warning border-warning/30' },
+  failed: { label: 'Failed', labelAr: 'فشل', icon: XCircle, className: 'bg-destructive/10 text-destructive border-destructive/30' },
 };
 
 export default function VendorTransactions() {
@@ -84,69 +86,34 @@ export default function VendorTransactions() {
     toast.success(t('Transactions exported successfully', 'تم تصدير المعاملات بنجاح'));
   };
 
+  const metrics = [
+    { title: t('Total Transactions', 'إجمالي المعاملات'), value: formatInteger(filteredTransactions.length), icon: Receipt },
+    { title: t('Completed', 'مكتملة'), value: formatInteger(filteredTransactions.filter(t => t.status === 'completed').length), icon: CheckCircle2, trend: { value: 12, positive: true } },
+    { title: t('Total Commission', 'إجمالي العمولة'), value: formatCurrencyAED(totalCommission), icon: Receipt },
+  ];
+
   return (
-    <div className={cn("space-y-6", isRTL && "text-right")}>
-      {/* Header */}
-      <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
-        <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">
-            {t('Transactions', 'المعاملات')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('Track all redemptions and commissions', 'تتبع جميع عمليات الاسترداد والعمولات')}
-          </p>
-        </div>
+    <PageLayout
+      title={t('Transactions', 'المعاملات')}
+      description={t('Track all redemptions and commissions', 'تتبع جميع عمليات الاسترداد والعمولات')}
+      icon={Receipt}
+      iconClassName="text-primary"
+      actions={
         <Button variant="outline" className="gap-2" onClick={handleExport}>
           <Download className="w-4 h-4" />
           {t('Export CSV', 'تصدير CSV')}
         </Button>
-      </div>
-
+      }
+    >
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
-              <div className="p-3 rounded-xl bg-accent/10">
-                <Receipt className="w-6 h-6 text-accent" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{t('Total Transactions', 'إجمالي المعاملات')}</p>
-                <p className="text-2xl font-bold">{filteredTransactions.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
-              <div className="p-3 rounded-xl bg-green-500/10">
-                <CheckCircle2 className="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{t('Completed', 'مكتملة')}</p>
-                <p className="text-2xl font-bold">{filteredTransactions.filter(t => t.status === 'completed').length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
-              <div className="p-3 rounded-xl bg-purple-500/10">
-                <Receipt className="w-6 h-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{t('Total Commission', 'إجمالي العمولة')}</p>
-                <p className="text-2xl font-bold text-accent">AED {totalCommission.toLocaleString()}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <MetricGrid columns={3}>
+        {metrics.map((metric, i) => (
+          <MetricCard key={i} title={metric.title} value={metric.value} icon={metric.icon} trend={metric.trend} />
+        ))}
+      </MetricGrid>
 
       {/* Filters */}
-      <Card>
+      <Card className="mt-6">
         <CardContent className="p-4">
           <div className={cn("flex flex-col md:flex-row gap-4", isRTL && "md:flex-row-reverse")}>
             <div className="relative flex-1">
@@ -174,46 +141,56 @@ export default function VendorTransactions() {
       </Card>
 
       {/* Transactions Table */}
-      <Card>
+      <Card className="mt-6">
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className={cn(isRTL && "text-right")}>{t('Transaction ID', 'معرف المعاملة')}</TableHead>
-                <TableHead className={cn(isRTL && "text-right")}>{t('Offer', 'العرض')}</TableHead>
-                <TableHead className={cn(isRTL && "text-right")}>{t('Employee', 'الموظف')}</TableHead>
-                <TableHead className={cn("text-right", isRTL && "text-left")}>{t('Original', 'الأصلي')}</TableHead>
-                <TableHead className={cn("text-right", isRTL && "text-left")}>{t('Discount', 'الخصم')}</TableHead>
-                <TableHead className={cn("text-right", isRTL && "text-left")}>{t('Commission', 'العمولة')}</TableHead>
-                <TableHead className={cn(isRTL && "text-right")}>{t('Status', 'الحالة')}</TableHead>
-                <TableHead className={cn(isRTL && "text-right")}>{t('Date', 'التاريخ')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTransactions.map((txn) => {
-                const StatusIcon = statusConfig[txn.status].icon;
-                return (
-                  <TableRow key={txn.id}>
-                    <TableCell className="font-mono text-sm">{txn.id}</TableCell>
-                    <TableCell className="font-medium">{txn.offerTitle}</TableCell>
-                    <TableCell className="text-muted-foreground">{txn.employeeId}</TableCell>
-                    <TableCell className="text-right">AED {txn.originalAmount}</TableCell>
-                    <TableCell className="text-right text-amber-600">-AED {txn.discountAmount}</TableCell>
-                    <TableCell className="text-right font-semibold text-accent">AED {txn.commissionAmount}</TableCell>
-                    <TableCell>
-                      <Badge className={cn("gap-1", statusConfig[txn.status].color)}>
-                        <StatusIcon className="w-3 h-3" />
-                        {language === 'ar' ? statusConfig[txn.status].labelAr : statusConfig[txn.status].label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{txn.redeemedAt}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+          {filteredTransactions.length === 0 ? (
+            <div className="p-8">
+              <EmptyState
+                icon={Receipt}
+                title={t('No transactions found', 'لا توجد معاملات')}
+                description={t('Transactions will appear here when employees redeem your offers', 'ستظهر المعاملات هنا عندما يسترد الموظفون عروضك')}
+              />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className={cn(isRTL && "text-right")}>{t('Transaction ID', 'معرف المعاملة')}</TableHead>
+                  <TableHead className={cn(isRTL && "text-right")}>{t('Offer', 'العرض')}</TableHead>
+                  <TableHead className={cn(isRTL && "text-right")}>{t('Employee', 'الموظف')}</TableHead>
+                  <TableHead className={cn("text-right", isRTL && "text-left")}>{t('Original', 'الأصلي')}</TableHead>
+                  <TableHead className={cn("text-right", isRTL && "text-left")}>{t('Discount', 'الخصم')}</TableHead>
+                  <TableHead className={cn("text-right", isRTL && "text-left")}>{t('Commission', 'العمولة')}</TableHead>
+                  <TableHead className={cn(isRTL && "text-right")}>{t('Status', 'الحالة')}</TableHead>
+                  <TableHead className={cn(isRTL && "text-right")}>{t('Date', 'التاريخ')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredTransactions.map((txn) => {
+                  const StatusIcon = STATUS_CONFIG[txn.status].icon;
+                  return (
+                    <TableRow key={txn.id}>
+                      <TableCell className="font-mono text-sm">{txn.id}</TableCell>
+                      <TableCell className="font-medium">{txn.offerTitle}</TableCell>
+                      <TableCell className="text-muted-foreground">{txn.employeeId}</TableCell>
+                      <TableCell className="text-right">{formatCurrencyAED(txn.originalAmount)}</TableCell>
+                      <TableCell className="text-right text-warning">-{formatCurrencyAED(txn.discountAmount)}</TableCell>
+                      <TableCell className="text-right font-semibold text-primary">{formatCurrencyAED(txn.commissionAmount)}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={cn("gap-1", STATUS_CONFIG[txn.status].className)}>
+                          <StatusIcon className="w-3 h-3" />
+                          {language === 'ar' ? STATUS_CONFIG[txn.status].labelAr : STATUS_CONFIG[txn.status].label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{txn.redeemedAt}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
-    </div>
+    </PageLayout>
   );
 }

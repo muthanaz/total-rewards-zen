@@ -27,6 +27,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
+import { PageLayout } from '@/components/shared';
 
 export default function VendorSettings() {
   const { language, direction } = useLanguage();
@@ -53,29 +54,24 @@ export default function VendorSettings() {
   };
 
   return (
-    <div className={cn("space-y-6", isRTL && "text-right")}>
-      {/* Header */}
-      <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
-        <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">
-            {t('Settings', 'الإعدادات')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('Manage your account settings and preferences', 'إدارة إعدادات حسابك والتفضيلات')}
-          </p>
-        </div>
+    <PageLayout
+      title={t('Settings', 'الإعدادات')}
+      description={t('Manage your account settings and preferences', 'إدارة إعدادات حسابك والتفضيلات')}
+      icon={Settings}
+      iconClassName="text-primary"
+      actions={
         <Button onClick={handleSave} className="gap-2">
           <Save className="w-4 h-4" />
           {t('Save All Changes', 'حفظ كل التغييرات')}
         </Button>
-      </div>
-
+      }
+    >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Notifications */}
         <Card>
           <CardHeader className={cn(isRTL && "text-right")}>
             <CardTitle className={cn("text-lg flex items-center gap-2", isRTL && "flex-row-reverse")}>
-              <Bell className="w-5 h-5 text-accent" />
+              <Bell className="w-5 h-5 text-primary" />
               {t('Notification Preferences', 'تفضيلات الإشعارات')}
             </CardTitle>
             <CardDescription>
@@ -144,7 +140,7 @@ export default function VendorSettings() {
         <Card>
           <CardHeader className={cn(isRTL && "text-right")}>
             <CardTitle className={cn("text-lg flex items-center gap-2", isRTL && "flex-row-reverse")}>
-              <Globe className="w-5 h-5 text-accent" />
+              <Globe className="w-5 h-5 text-primary" />
               {t('Preferences', 'التفضيلات')}
             </CardTitle>
             <CardDescription>
@@ -197,7 +193,7 @@ export default function VendorSettings() {
         <Card>
           <CardHeader className={cn(isRTL && "text-right")}>
             <CardTitle className={cn("text-lg flex items-center gap-2", isRTL && "flex-row-reverse")}>
-              <Shield className="w-5 h-5 text-accent" />
+              <Shield className="w-5 h-5 text-primary" />
               {t('Security', 'الأمان')}
             </CardTitle>
             <CardDescription>
@@ -215,7 +211,7 @@ export default function VendorSettings() {
             </Button>
             <div className="p-4 rounded-xl bg-muted/50">
               <div className={cn("flex items-start gap-3", isRTL && "flex-row-reverse")}>
-                <Shield className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                <Shield className="w-5 h-5 text-success shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium text-sm">{t('Your account is secure', 'حسابك آمن')}</p>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -231,7 +227,7 @@ export default function VendorSettings() {
         <Card>
           <CardHeader className={cn(isRTL && "text-right")}>
             <CardTitle className={cn("text-lg flex items-center gap-2", isRTL && "flex-row-reverse")}>
-              <CreditCard className="w-5 h-5 text-accent" />
+              <CreditCard className="w-5 h-5 text-primary" />
               {t('Payment Settings', 'إعدادات الدفع')}
             </CardTitle>
             <CardDescription>
@@ -242,8 +238,8 @@ export default function VendorSettings() {
             <div className="p-4 rounded-xl border border-border">
               <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
                 <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-                  <div className="p-2 rounded-lg bg-accent/10">
-                    <CreditCard className="w-5 h-5 text-accent" />
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <CreditCard className="w-5 h-5 text-primary" />
                   </div>
                   <div>
                     <p className="font-medium">{t('Bank Account', 'الحساب البنكي')}</p>
@@ -254,12 +250,12 @@ export default function VendorSettings() {
               </div>
             </div>
             <div className={cn("flex items-center gap-2 text-sm text-muted-foreground", isRTL && "flex-row-reverse")}>
-              <AlertTriangle className="w-4 h-4" />
+              <AlertTriangle className="w-4 h-4 text-warning" />
               <span>{t('Payouts are processed on the 15th of each month', 'تتم معالجة المدفوعات في الخامس عشر من كل شهر')}</span>
             </div>
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageLayout>
   );
 }
