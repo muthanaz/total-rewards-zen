@@ -113,10 +113,13 @@ export function useMarketplaceOffers() {
   return useQuery({
     queryKey: ['marketplace_offers'],
     queryFn: async () => {
+      const today = new Date().toISOString().split('T')[0];
       const { data, error } = await supabase
         .from('marketplace_offers')
         .select('*')
         .eq('is_active', true)
+        .eq('status', 'active') // P0: Only show admin-approved offers
+        .or(`valid_to.is.null,valid_to.gte.${today}`) // Exclude expired offers
         .order('rating', { ascending: false });
       if (error) throw error;
       return data;
