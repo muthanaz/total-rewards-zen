@@ -31,6 +31,7 @@ import {
   useSpendAllocation,
 } from '@/hooks/useEmployerDashboard';
 import { cn, formatCurrencyAED, formatPercent } from '@/lib/utils';
+import { EmployerGlobalFiltersBar } from './EmployerGlobalFiltersBar';
 
 const priorityColors = {
   critical: {
@@ -117,7 +118,6 @@ export function ExecutiveDashboard() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <PeriodSelector value={period} onChange={setPeriod} />
           <Badge variant="outline" className={cn(
             "gap-1.5",
             metrics.utilizationRate >= metrics.targetUtilization 
@@ -133,6 +133,9 @@ export function ExecutiveDashboard() {
           </Badge>
         </div>
       </div>
+
+      {/* Global Filters */}
+      <EmployerGlobalFiltersBar />
 
       {/* Strategic KPIs - C-Suite Focus with Enhanced Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">

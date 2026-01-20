@@ -1,11 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RePieChart, Pie, Cell, Legend } from 'recharts';
 import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
+import { EmployerGlobalFiltersBar } from '@/components/employer';
 
 // Vibrant color palette
 const COLORS = {
@@ -80,21 +80,13 @@ export default function SpendPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">Spend & Utilization</h1>
-          <p className="text-muted-foreground">Track benefits spend across your organization</p>
-        </div>
-        <Select defaultValue="2024">
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="2024">2024</SelectItem>
-            <SelectItem value="2023">2023</SelectItem>
-          </SelectContent>
-        </Select>
+      <div>
+        <h1 className="text-2xl font-display font-bold text-foreground">Spend & Utilization</h1>
+        <p className="text-muted-foreground">Track benefits spend across your organization</p>
       </div>
+
+      {/* Global Filters */}
+      <EmployerGlobalFiltersBar />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

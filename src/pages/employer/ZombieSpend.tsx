@@ -9,6 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend
 import { useState } from 'react';
 import { DrillDownModal } from '@/components/dashboard';
 import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
+import { EmployerGlobalFiltersBar } from '@/components/employer';
 
 const zombieCategories = [
   { 
@@ -126,6 +127,9 @@ export default function ZombieSpendPage() {
         </div>
         <p className="text-muted-foreground mt-1">Identify and recover underutilized benefit allocations</p>
       </div>
+
+      {/* Global Filters */}
+      <EmployerGlobalFiltersBar />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, AlertTriangle, CheckCircle, TrendingUp, Eye, MessageSquare, Edit } from 'lucide-react';
+import { EmployerGlobalFiltersBar } from '@/components/employer';
 
 const policyInsights = [
   {
@@ -85,6 +86,9 @@ export default function PoliciesPage() {
         <h1 className="text-2xl font-display font-bold text-foreground">Policy Insights</h1>
         <p className="text-muted-foreground">Analyze policy clarity and employee understanding</p>
       </div>
+
+      {/* Global Filters */}
+      <EmployerGlobalFiltersBar />
 
       {/* Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
