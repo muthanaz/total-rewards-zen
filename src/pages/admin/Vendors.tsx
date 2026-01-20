@@ -1,24 +1,23 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { PageLayout, MetricCard, MetricGrid, SectionCard } from '@/components/shared';
-import { PageHeader } from '@/components/shared/PageHeader';
+import { PageLayout, MetricCard, MetricGrid } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { 
-  Store, Search, Filter, Plus, CheckCircle, XCircle, Clock, 
-  AlertTriangle, Star, Eye, Ban, RefreshCw, FileCheck, Building2
+  Store, Search, Plus, CheckCircle, XCircle, Clock, 
+  Ban, Star, Eye, FileCheck, Building2
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import { useAdminAuditLog } from '@/hooks/useAdminAuditLog';
 
 const STATUS_CONFIG = {
   active: { label: 'Active', labelAr: 'نشط', color: 'bg-success/10 text-success border-success/30', icon: CheckCircle },
@@ -36,15 +35,29 @@ const SAMPLE_VENDORS = [
   { id: '6', company_name: 'TravelWise Agency', status: 'pending', categories: ['Travel', 'Lifestyle'], rating: 0, total_offers: 0, total_transactions: 0, commission_rate: 9, kyb_status: 'in_review', created_at: '2025-01-18' },
 ];
 
+interface VendorDisplay {
+  id: string;
+  company_name: string;
+  status: string;
+  categories: string[];
+  rating: number;
+  total_offers: number;
+  total_transactions: number;
+  commission_rate: number;
+  kyb_status: string;
+  created_at: string;
+}
+
 export default function AdminVendors() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
   const queryClient = useQueryClient();
+  const { createAuditLog } = useAdminAuditLog();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedVendor, setSelectedVendor] = useState<typeof SAMPLE_VENDORS[0] | null>(null);
+  const [selectedVendor, setSelectedVendor] = useState<VendorDisplay | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
 
   // Fetch real vendors from DB
@@ -60,19 +73,36 @@ export default function AdminVendors() {
     },
   });
 
-  // Merge DB vendors with sample data for demo - normalize to common type
-  const vendors = dbVendors?.length ? dbVendors.map(v => ({
-    id: v.id,
-    company_name: v.company_name,
-    status: v.is_active ? 'active' : 'pending',
-    categories: ['General'] as string[],
-    rating: 4.5,
-    total_offers: 0,
-    total_transactions: v.total_transactions || 0,
-    commission_rate: v.commission_rate || 10,
-    kyb_status: 'verified',
-    created_at: v.created_at || '',
-  })) : SAMPLE_VENDORS;
+  // Mutation to update vendor status
+  const updateVendorMutation = useMutation({
+    mutationFn: async ({ vendorId, status }: { vendorId: string; status: string }) => {
+      const { error } = await supabase
+        .from('vendors')
+        .update({ status, is_active: status === 'active' })
+        .eq('id', vendorId);
+      if (error) throw error;
+      return { vendorId, status };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-vendors'] });
+    },
+  });
+
+  // Merge DB vendors with sample data for demo
+  const vendors: VendorDisplay[] = dbVendors?.length 
+    ? dbVendors.map(v => ({
+        id: v.id,
+        company_name: v.company_name,
+        status: (v as any).status || (v.is_active ? 'active' : 'pending'),
+        categories: ['General'],
+        rating: 4.5,
+        total_offers: 0,
+        total_transactions: v.total_transactions || 0,
+        commission_rate: v.commission_rate || 10,
+        kyb_status: 'verified',
+        created_at: v.created_at || '',
+      })) 
+    : SAMPLE_VENDORS;
 
   const filteredVendors = vendors.filter(v => {
     const matchesSearch = v.company_name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -87,15 +117,39 @@ export default function AdminVendors() {
     { title: t('Suspended', 'معلق'), value: vendors.filter(v => v.status === 'suspended').length, icon: Ban },
   ];
 
-  const handleApprove = (vendor: typeof SAMPLE_VENDORS[0]) => {
-    toast.success(t(`Approved ${vendor.company_name}`, `تمت الموافقة على ${vendor.company_name}`));
+  const handleApprove = async (vendor: VendorDisplay) => {
+    try {
+      await updateVendorMutation.mutateAsync({ vendorId: vendor.id, status: 'active' });
+      await createAuditLog({
+        action: 'VENDOR_APPROVE',
+        entityType: 'vendor',
+        entityId: vendor.id,
+        metadata: { vendor_name: vendor.company_name, previous_status: vendor.status },
+      });
+      toast.success(t(`Approved ${vendor.company_name}`, `تمت الموافقة على ${vendor.company_name}`));
+      setDetailSheetOpen(false);
+    } catch (error) {
+      toast.error(t('Failed to approve vendor', 'فشل في الموافقة على البائع'));
+    }
   };
 
-  const handleSuspend = (vendor: typeof SAMPLE_VENDORS[0]) => {
-    toast.warning(t(`Suspended ${vendor.company_name}`, `تم تعليق ${vendor.company_name}`));
+  const handleSuspend = async (vendor: VendorDisplay) => {
+    try {
+      await updateVendorMutation.mutateAsync({ vendorId: vendor.id, status: 'suspended' });
+      await createAuditLog({
+        action: 'VENDOR_SUSPEND',
+        entityType: 'vendor',
+        entityId: vendor.id,
+        metadata: { vendor_name: vendor.company_name, previous_status: vendor.status },
+      });
+      toast.warning(t(`Suspended ${vendor.company_name}`, `تم تعليق ${vendor.company_name}`));
+      setDetailSheetOpen(false);
+    } catch (error) {
+      toast.error(t('Failed to suspend vendor', 'فشل في تعليق البائع'));
+    }
   };
 
-  const handleViewDetails = (vendor: typeof SAMPLE_VENDORS[0]) => {
+  const handleViewDetails = (vendor: VendorDisplay) => {
     setSelectedVendor(vendor);
     setDetailSheetOpen(true);
   };
