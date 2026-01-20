@@ -18,33 +18,36 @@ import {
   Star,
   Award,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatInteger, formatPercent } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
-
-const companyData = {
-  name: 'FitLife Wellness',
-  nameAr: 'فيت لايف للعافية',
-  description: 'Premium fitness and wellness services provider offering gym memberships, wellness programs, and health consultations.',
-  descriptionAr: 'مزود خدمات اللياقة والعافية المميزة يقدم عضويات النادي وبرامج العافية والاستشارات الصحية.',
-  website: 'https://fitlife-wellness.ae',
-  email: 'partners@fitlife-wellness.ae',
-  phone: '+971 4 123 4567',
-  address: 'Business Bay, Dubai, UAE',
-  categories: ['Fitness', 'Wellness', 'Health'],
-  joinedDate: 'October 2024',
-  totalOffers: 12,
-  totalRedemptions: 8470,
-  rating: 4.8,
-  commissionRate: 7,
-  verified: true,
-};
+import { PageLayout } from '@/components/shared';
+import { useVendor } from '@/hooks/useVendorData';
 
 export default function VendorProfile() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState(companyData);
+  
+  const { data: vendor } = useVendor();
+  
+  const [formData, setFormData] = useState({
+    name: vendor?.company_name || 'FitLife Wellness',
+    nameAr: 'فيت لايف للعافية',
+    description: vendor?.description || 'Premium fitness and wellness services provider offering gym memberships, wellness programs, and health consultations.',
+    descriptionAr: 'مزود خدمات اللياقة والعافية المميزة يقدم عضويات النادي وبرامج العافية والاستشارات الصحية.',
+    website: vendor?.website_url || 'https://fitlife-wellness.ae',
+    email: vendor?.contact_email || 'partners@fitlife-wellness.ae',
+    phone: vendor?.contact_phone || '+971 4 123 4567',
+    address: 'Business Bay, Dubai, UAE',
+    categories: ['Fitness', 'Wellness', 'Health'],
+    joinedDate: 'October 2024',
+    totalOffers: 12,
+    totalRedemptions: vendor?.total_transactions || 8470,
+    rating: 4.8,
+    commissionRate: vendor?.commission_rate || 7,
+    verified: true,
+  });
 
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
 
@@ -54,17 +57,12 @@ export default function VendorProfile() {
   };
 
   return (
-    <div className={cn("space-y-6", isRTL && "text-right")}>
-      {/* Header */}
-      <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between gap-4", isRTL && "md:flex-row-reverse")}>
-        <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">
-            {t('Company Profile', 'ملف الشركة')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('Manage your vendor profile and information', 'إدارة ملف المورد والمعلومات')}
-          </p>
-        </div>
+    <PageLayout
+      title={t('Company Profile', 'ملف الشركة')}
+      description={t('Manage your vendor profile and information', 'إدارة ملف المورد والمعلومات')}
+      icon={Store}
+      iconClassName="text-primary"
+      actions={
         <Button 
           onClick={() => isEditing ? handleSave() : setIsEditing(true)}
           className="gap-2"
@@ -72,8 +70,8 @@ export default function VendorProfile() {
           {isEditing ? <Save className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
           {isEditing ? t('Save Changes', 'حفظ التغييرات') : t('Edit Profile', 'تعديل الملف')}
         </Button>
-      </div>
-
+      }
+    >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Profile */}
         <div className="lg:col-span-2 space-y-6">
@@ -81,7 +79,7 @@ export default function VendorProfile() {
           <Card>
             <CardHeader className={cn(isRTL && "text-right")}>
               <CardTitle className={cn("text-lg flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                <Store className="w-5 h-5 text-accent" />
+                <Store className="w-5 h-5 text-primary" />
                 {t('Company Information', 'معلومات الشركة')}
               </CardTitle>
             </CardHeader>
@@ -151,7 +149,7 @@ export default function VendorProfile() {
           <Card>
             <CardHeader className={cn(isRTL && "text-right")}>
               <CardTitle className={cn("text-lg flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                <Phone className="w-5 h-5 text-accent" />
+                <Phone className="w-5 h-5 text-primary" />
                 {t('Contact Information', 'معلومات الاتصال')}
               </CardTitle>
             </CardHeader>
@@ -168,7 +166,7 @@ export default function VendorProfile() {
                       onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                     />
                   ) : (
-                    <a href={formData.website} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                    <a href={formData.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                       {formData.website}
                     </a>
                   )}
@@ -227,14 +225,14 @@ export default function VendorProfile() {
           <Card>
             <CardContent className="p-6">
               <div className={cn("flex items-center gap-4 mb-4", isRTL && "flex-row-reverse")}>
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                  <Store className="w-8 h-8 text-white" />
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                  <Store className="w-8 h-8 text-primary-foreground" />
                 </div>
                 <div>
                   <h3 className="font-semibold">{formData.name}</h3>
                   <div className={cn("flex items-center gap-2 mt-1", isRTL && "flex-row-reverse")}>
                     {formData.verified && (
-                      <Badge className="bg-green-500/10 text-green-600 gap-1">
+                      <Badge className="bg-success/10 text-success border-success/30 gap-1">
                         <Award className="w-3 h-3" />
                         {t('Verified', 'موثق')}
                       </Badge>
@@ -249,7 +247,7 @@ export default function VendorProfile() {
                 </div>
                 <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
                   <span className="text-sm text-muted-foreground">{t('Commission Rate', 'نسبة العمولة')}</span>
-                  <span className="font-medium text-accent">{formData.commissionRate}%</span>
+                  <span className="font-medium text-primary">{formatPercent(formData.commissionRate)}</span>
                 </div>
               </div>
             </CardContent>
@@ -259,8 +257,8 @@ export default function VendorProfile() {
           <Card>
             <CardContent className="p-6 space-y-4">
               <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
-                <div className="p-3 rounded-xl bg-accent/10">
-                  <Star className="w-5 h-5 text-accent" />
+                <div className="p-3 rounded-xl bg-primary/10">
+                  <Star className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{formData.rating}</p>
@@ -268,20 +266,20 @@ export default function VendorProfile() {
                 </div>
               </div>
               <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
-                <div className="p-3 rounded-xl bg-purple-500/10">
-                  <Building2 className="w-5 h-5 text-purple-600" />
+                <div className="p-3 rounded-xl bg-accent/10">
+                  <Building2 className="w-5 h-5 text-accent" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{formData.totalOffers}</p>
+                  <p className="text-2xl font-bold">{formatInteger(formData.totalOffers)}</p>
                   <p className="text-sm text-muted-foreground">{t('Active Offers', 'العروض النشطة')}</p>
                 </div>
               </div>
               <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
-                <div className="p-3 rounded-xl bg-green-500/10">
-                  <Calendar className="w-5 h-5 text-green-600" />
+                <div className="p-3 rounded-xl bg-success/10">
+                  <Calendar className="w-5 h-5 text-success" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{formData.totalRedemptions.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">{formatInteger(formData.totalRedemptions)}</p>
                   <p className="text-sm text-muted-foreground">{t('Total Redemptions', 'إجمالي الاستردادات')}</p>
                 </div>
               </div>
@@ -289,6 +287,6 @@ export default function VendorProfile() {
           </Card>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }
