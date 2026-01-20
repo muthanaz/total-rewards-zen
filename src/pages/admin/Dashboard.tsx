@@ -17,7 +17,7 @@ import {
   Calendar,
   Filter,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED, formatInteger } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ChartWrapper, CHART_EXPLANATIONS, AnimatedLineChart, AnimatedBarChart, AnimatedDonutChart } from '@/components/charts';
 import { VendorPerformanceTab } from '@/components/admin/VendorPerformanceTab';
@@ -40,11 +40,11 @@ const regionalBenchmarks = [
 ];
 
 const industryBreakdown = [
-  { name: 'Financial Services', value: 35, color: 'hsl(160 84% 39%)' },
-  { name: 'Technology', value: 25, color: 'hsl(262 52% 55%)' },
-  { name: 'Healthcare', value: 18, color: 'hsl(340 65% 55%)' },
-  { name: 'Retail', value: 12, color: 'hsl(199 89% 48%)' },
-  { name: 'Manufacturing', value: 10, color: 'hsl(38 92% 50%)' },
+  { name: 'Financial Services', value: 35, color: 'hsl(var(--success))' },
+  { name: 'Technology', value: 25, color: 'hsl(var(--accent))' },
+  { name: 'Healthcare', value: 18, color: 'hsl(var(--destructive))' },
+  { name: 'Retail', value: 12, color: 'hsl(var(--primary))' },
+  { name: 'Manufacturing', value: 10, color: 'hsl(var(--warning))' },
 ];
 
 const monthlyGrowthChart = [
@@ -202,7 +202,7 @@ export default function AdminDashboard() {
                       <div className={cn("flex items-center justify-between mb-1", isRTL && "flex-row-reverse")}>
                         <span className="font-medium">{benefit.name}</span>
                         <span className="text-sm text-muted-foreground">
-                          {t('Avg Value:', 'متوسط القيمة:')} AED {benefit.avgValue.toLocaleString()}
+                          {t('Avg Value:', 'متوسط القيمة:')} {formatCurrencyAED(benefit.avgValue)}
                         </span>
                       </div>
                       <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
@@ -245,8 +245,8 @@ export default function AdminDashboard() {
                       <tr key={region.region} className="border-b last:border-0">
                         <td className="py-4 font-medium">{region.region}</td>
                         <td className="py-4">{region.organizations}</td>
-                        <td className="py-4">{region.employees.toLocaleString()}</td>
-                        <td className="py-4">AED {region.avgSpend.toLocaleString()}</td>
+                        <td className="py-4">{formatInteger(region.employees)}</td>
+                        <td className="py-4">{formatCurrencyAED(region.avgSpend)}</td>
                         <td className="py-4">
                           <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
                             <Progress value={region.avgUtilization} className="w-20 h-2" />

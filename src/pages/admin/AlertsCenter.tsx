@@ -19,7 +19,7 @@ import { formatDistanceToNow } from 'date-fns';
 const SEVERITY_CONFIG = {
   critical: { label: 'Critical', labelAr: 'حرج', color: 'bg-destructive text-destructive-foreground', icon: XCircle, borderColor: 'border-destructive' },
   high: { label: 'High', labelAr: 'عالي', color: 'bg-warning text-warning-foreground', icon: AlertTriangle, borderColor: 'border-warning' },
-  medium: { label: 'Medium', labelAr: 'متوسط', color: 'bg-blue-500 text-white', icon: AlertCircle, borderColor: 'border-blue-500' },
+  medium: { label: 'Medium', labelAr: 'متوسط', color: 'bg-primary text-primary-foreground', icon: AlertCircle, borderColor: 'border-primary' },
   low: { label: 'Low', labelAr: 'منخفض', color: 'bg-muted text-muted-foreground', icon: Bell, borderColor: 'border-muted' },
 };
 
