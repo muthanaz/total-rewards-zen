@@ -60,9 +60,9 @@ interface AuditLogEntry {
 
 const ACTION_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   CREATE: { label: 'Created', icon: Plus, color: 'bg-success/10 text-success border-success/30' },
-  UPDATE: { label: 'Updated', icon: Edit, color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30' },
+  UPDATE: { label: 'Updated', icon: Edit, color: 'bg-primary/10 text-primary border-primary/30' },
   DELETE: { label: 'Deleted', icon: Trash2, color: 'bg-destructive/10 text-destructive border-destructive/30' },
-  LOGIN: { label: 'Login', icon: LogIn, color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30' },
+  LOGIN: { label: 'Login', icon: LogIn, color: 'bg-accent/10 text-accent-foreground border-accent/30' },
   LOGOUT: { label: 'Logout', icon: LogOut, color: 'bg-muted text-muted-foreground border-border' },
   VIEW: { label: 'Viewed', icon: Eye, color: 'bg-muted text-muted-foreground border-border' },
   APPROVE: { label: 'Approved', icon: CheckCircle, color: 'bg-success/10 text-success border-success/30' },

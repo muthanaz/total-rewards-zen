@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import { useAdminAuditLog } from '@/hooks/useAdminAuditLog';
 
 const FEATURE_FLAGS = [
   { id: 'marketplace', name: 'Marketplace', description: 'Employee perks and offers marketplace', icon: ShoppingBag, enabled_globally: true, orgs_override: [] },
@@ -30,6 +31,7 @@ export default function AdminFeatureFlags() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
+  const { createAuditLog } = useAdminAuditLog();
 
   const [flags, setFlags] = useState(FEATURE_FLAGS);
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,7 +43,7 @@ export default function AdminFeatureFlags() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('organizations')
-        .select('id, name')
+        .select('id, name, settings')
         .order('name');
       if (error) throw error;
       return data || [];
@@ -53,14 +55,27 @@ export default function AdminFeatureFlags() {
     f.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleToggleGlobal = (flagId: string) => {
+  const handleToggleGlobal = async (flagId: string) => {
+    const flag = flags.find(f => f.id === flagId);
+    const newValue = !flag?.enabled_globally;
+    
     setFlags(prev => prev.map(f => 
-      f.id === flagId ? { ...f, enabled_globally: !f.enabled_globally } : f
+      f.id === flagId ? { ...f, enabled_globally: newValue } : f
     ));
+    
+    // Log the action
+    await createAuditLog({
+      action: 'FLAG_TOGGLE',
+      entityType: 'feature_flag',
+      entityId: flagId,
+      metadata: { flag_name: flag?.name, before: flag?.enabled_globally, after: newValue },
+    });
+    
     toast.success(t('Feature flag updated', 'تم تحديث علامة الميزة'));
   };
 
-  const handleSaveAll = () => {
+  const handleSaveAll = async () => {
+    // In production, this would persist all flag states
     toast.success(t('All feature flags saved', 'تم حفظ جميع علامات الميزات'));
   };
 
@@ -145,7 +160,7 @@ export default function AdminFeatureFlags() {
                           </Badge>
                         )}
                         {flag.orgs_override.length > 0 && (
-                          <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/30">
+                          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
                             <Building2 className="w-3 h-3 me-1" />
                             {flag.orgs_override.length} {t('orgs', 'منظمات')}
                           </Badge>
