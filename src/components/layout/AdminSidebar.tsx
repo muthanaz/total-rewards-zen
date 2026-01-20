@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
+import { DemoModeToggle } from '@/components/demo';
 
 interface NavGroup {
   title: string;
@@ -142,6 +143,10 @@ export function AdminSidebar() {
           <NotificationCenter />
           <LanguageSwitcher />
           <DarkModeToggle />
+        </div>
+        {/* Demo Mode Toggle */}
+        <div className="mt-3">
+          <DemoModeToggle variant="dropdown" className="w-full justify-start" />
         </div>
       </div>
 

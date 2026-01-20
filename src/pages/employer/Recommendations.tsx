@@ -22,6 +22,7 @@ import { formatCurrencyAED, formatInteger } from '@/lib/utils';
 import { EmployerGlobalFiltersBar, DataConfidenceBadge, PageConfidenceGate, useDataCoverageMetrics } from '@/components/employer';
 import { toast } from 'sonner';
 import { format, formatDistanceToNow, isPast, addDays } from 'date-fns';
+import { DemoTip, DEMO_TIPS } from '@/components/demo';
 
 // ============= TYPE DEFINITIONS =============
 

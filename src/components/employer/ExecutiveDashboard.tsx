@@ -34,6 +34,7 @@ import {
 } from '@/hooks/useEmployerDashboard';
 import { cn, formatCurrencyAED, formatPercent } from '@/lib/utils';
 import { EmployerGlobalFiltersBar } from './EmployerGlobalFiltersBar';
+import { DemoTip, DEMO_TIPS } from '@/components/demo';
 
 const priorityColors = {
   critical: {
@@ -105,7 +106,8 @@ export function ExecutiveDashboard() {
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
     <div className="space-y-6">
-      {/* Executive Header with Data Quality */}
+      {/* Demo Tip */}
+      <DemoTip {...DEMO_TIPS.employerDashboard} variant="highlight" />
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">
