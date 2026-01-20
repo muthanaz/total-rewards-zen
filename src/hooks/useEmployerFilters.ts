@@ -36,7 +36,7 @@ export const FILTER_OPTIONS = {
     { value: 'custom', label: 'Custom Range' },
   ],
   departments: [
-    { value: 'all', label: 'All Departments' },
+    { value: 'all', label: 'Department' },
     { value: 'engineering', label: 'Engineering' },
     { value: 'sales', label: 'Sales' },
     { value: 'marketing', label: 'Marketing' },
@@ -45,7 +45,7 @@ export const FILTER_OPTIONS = {
     { value: 'finance', label: 'Finance' },
   ],
   grades: [
-    { value: 'all', label: 'All Grades' },
+    { value: 'all', label: 'Grade' },
     { value: 'L1', label: 'L1 - Entry' },
     { value: 'L2', label: 'L2 - Associate' },
     { value: 'L3', label: 'L3 - Senior' },
@@ -55,14 +55,14 @@ export const FILTER_OPTIONS = {
     { value: 'L7', label: 'L7 - Executive' },
   ],
   locations: [
-    { value: 'all', label: 'All Locations' },
+    { value: 'all', label: 'Location' },
     { value: 'dubai', label: 'Dubai' },
     { value: 'abu-dhabi', label: 'Abu Dhabi' },
     { value: 'sharjah', label: 'Sharjah' },
     { value: 'remote', label: 'Remote' },
   ],
   employmentTypes: [
-    { value: 'all', label: 'All Types' },
+    { value: 'all', label: 'Type' },
     { value: 'full-time', label: 'Full-Time' },
     { value: 'part-time', label: 'Part-Time' },
     { value: 'contract', label: 'Contract' },
