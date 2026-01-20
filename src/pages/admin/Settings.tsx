@@ -614,11 +614,11 @@ export default function AdminSettings() {
                     min="0"
                   />
                   <p className="text-xs text-muted-foreground">
-                    {t('Minimum balance for payout', 'الحد الأدنى للرصيد للدفع')}
+                    {t('Minimum accrued amount required for disbursement', 'الحد الأدنى للمبلغ المستحق للصرف')}
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label>{t('Payout Cycle', 'دورة الدفع')}</Label>
+                  <Label>{t('Disbursement Cycle', 'دورة الصرف')}</Label>
                   <Select
                     value={settings.payoutCycle}
                     onValueChange={(value) => setSettings({ ...settings, payoutCycle: value })}

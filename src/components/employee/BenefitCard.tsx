@@ -109,7 +109,7 @@ export function BenefitCard({
                 {formatCurrency(value)}
               </p>
               <p className="text-[13px] text-muted-foreground mt-1">
-                {isRTL ? 'القيمة السنوية' : 'Annual Value'}
+                {isRTL ? 'الاستحقاق السنوي' : 'Annual Entitlement'}
               </p>
             </div>
             <Badge 
@@ -130,7 +130,7 @@ export function BenefitCard({
             {/* Utilization details */}
             <div className={cn("flex items-center justify-between text-[13px]", isRTL && "flex-row-reverse")}>
               <span className="text-muted-foreground">
-                {formatCurrency(utilized)} {isRTL ? 'مستخدم' : 'used'}
+                {formatCurrency(utilized)} {isRTL ? 'مستخدم' : 'utilized'}
               </span>
               <span className={cn(
                 "font-medium",

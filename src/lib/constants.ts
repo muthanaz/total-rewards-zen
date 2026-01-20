@@ -39,15 +39,15 @@ export const MARKETPLACE_CATEGORIES = [
 ];
 
 export const DOCUMENT_TYPES = [
-  { id: 'salary_certificate_bank', name: 'Salary Certificate (Bank)', description: 'For bank loan applications' },
-  { id: 'salary_certificate_embassy', name: 'Salary Certificate (Embassy)', description: 'For visa applications' },
-  { id: 'salary_certificate_landlord', name: 'Salary Certificate (Landlord)', description: 'For rental agreements' },
-  { id: 'employment_letter', name: 'Employment Letter', description: 'General employment confirmation' },
-  { id: 'noc_letter', name: 'No Objection Letter', description: 'For various purposes' },
-  { id: 'leave_balance', name: 'Leave Balance Statement', description: 'Current leave entitlements' },
-  { id: 'insurance_confirmation', name: 'Insurance Confirmation', description: 'Medical coverage details' },
-  { id: 'dependent_letter', name: 'Dependent Support Letter', description: 'For dependent visas' },
-  { id: 'experience_letter', name: 'Experience Letter', description: 'For job applications' },
+  { id: 'salary_certificate_bank', name: 'Salary Certificate (Bank)', description: 'For financial institution applications' },
+  { id: 'salary_certificate_embassy', name: 'Salary Certificate (Embassy)', description: 'For visa and consular applications' },
+  { id: 'salary_certificate_landlord', name: 'Salary Certificate (Landlord)', description: 'For tenancy agreements' },
+  { id: 'employment_letter', name: 'Employment Verification Letter', description: 'Confirms employment status' },
+  { id: 'noc_letter', name: 'No Objection Certificate', description: 'For various administrative purposes' },
+  { id: 'leave_statement', name: 'Leave Entitlement Statement', description: 'Current leave accrual and balance' },
+  { id: 'insurance_confirmation', name: 'Insurance Coverage Confirmation', description: 'Medical insurance details' },
+  { id: 'dependent_letter', name: 'Dependent Support Letter', description: 'For dependent visa sponsorship' },
+  { id: 'experience_letter', name: 'Experience Certificate', description: 'For external applications' },
   { id: 'service_letter', name: 'Service Continuity Letter', description: 'For continuous service verification' },
 ];
 

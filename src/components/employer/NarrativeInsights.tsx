@@ -55,17 +55,17 @@ interface NarrativeInsightsProps {
 function ConfidenceIndicator({ confidence }: { confidence: 'high' | 'medium' | 'low' }) {
   const config = {
     high: { 
-      label: 'High confidence', 
+      label: 'Measured — Based on recorded data', 
       color: 'bg-emerald-500', 
       dots: 3 
     },
     medium: { 
-      label: 'Medium confidence', 
+      label: 'Estimated — Based on historical patterns', 
       color: 'bg-amber-500', 
       dots: 2 
     },
     low: { 
-      label: 'Low confidence', 
+      label: 'Proxy — Derived from related data', 
       color: 'bg-red-500', 
       dots: 1 
     },

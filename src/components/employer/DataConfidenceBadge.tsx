@@ -60,17 +60,20 @@ export function DataConfidenceBadge({
 
   const getConfidenceLevel = () => {
     if (isHighConfidence) return { 
-      label: t('High Confidence', 'ثقة عالية'), 
+      label: t('Measured', 'قياس فعلي'), 
+      description: t('Based on actual recorded data from integrated systems', 'بناءً على بيانات فعلية من الأنظمة المتكاملة'),
       color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
       icon: ShieldCheck 
     };
     if (isMediumConfidence) return { 
-      label: t('Medium Confidence', 'ثقة متوسطة'), 
+      label: t('Estimated', 'تقديري'), 
+      description: t('Projected value based on historical patterns', 'قيمة متوقعة بناءً على الأنماط التاريخية'),
       color: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
       icon: ShieldAlert 
     };
     return { 
-      label: t('Low Confidence', 'ثقة منخفضة'), 
+      label: t('Proxy', 'مُستَدَل'), 
+      description: t('Derived from related data sources; actual value may vary', 'مشتق من مصادر بيانات ذات صلة؛ قد تختلف القيمة الفعلية'),
       color: 'bg-red-500/10 text-red-600 border-red-500/20',
       icon: AlertTriangle 
     };
@@ -118,6 +121,9 @@ export function DataConfidenceBadge({
       </div>
     </div>
   );
+
+  // Trust disclaimer text
+  const trustDisclaimer = confidence.description;
 
   return (
     <TooltipProvider>

@@ -107,11 +107,11 @@ export default function VendorEarnings() {
           <CardContent className="p-6">
             <div className={cn("flex items-start justify-between", isRTL && "flex-row-reverse")}>
               <div>
-                <p className="text-sm text-muted-foreground">{t('Total Balance', 'الرصيد الإجمالي')}</p>
+                <p className="text-sm text-muted-foreground">{t('Total Accrued Revenue', 'إجمالي الإيرادات المستحقة')}</p>
                 <p className="text-3xl font-bold mt-1">AED {earningsData.totalEarnings.toLocaleString()}</p>
                 <div className={cn("flex items-center gap-1 mt-2 text-green-600", isRTL && "flex-row-reverse")}>
                   <ArrowUpRight className="w-4 h-4" />
-                  <span className="text-sm font-medium">+{growthPercent}%</span>
+                  <span className="text-sm font-medium">+{growthPercent}% vs. prior period</span>
                 </div>
               </div>
               <div className="p-3 rounded-xl bg-accent/10">
@@ -128,10 +128,10 @@ export default function VendorEarnings() {
           <CardContent className="p-6">
             <div className={cn("flex items-start justify-between", isRTL && "flex-row-reverse")}>
               <div>
-                <p className="text-sm text-muted-foreground">{t('Pending Payout', 'قيد الدفع')}</p>
+                <p className="text-sm text-muted-foreground">{t('Pending Disbursement', 'في انتظار الصرف')}</p>
                 <p className="text-3xl font-bold mt-1">AED {earningsData.pendingPayout.toLocaleString()}</p>
                 <p className="text-sm text-muted-foreground mt-2">
-                  {t('Next payout: Jan 15', 'الدفعة التالية: ١٥ يناير')}
+                  {t('Scheduled: Jan 15', 'مجدول: ١٥ يناير')}
                 </p>
               </div>
               <div className="p-3 rounded-xl bg-amber-500/10">
