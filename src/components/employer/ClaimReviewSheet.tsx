@@ -77,18 +77,18 @@ interface ClaimReviewSheetProps {
 }
 
 const REJECTION_REASONS = [
-  { value: 'incomplete_docs', label: 'Incomplete Documentation' },
-  { value: 'exceeds_limit', label: 'Exceeds Allowance Limit' },
-  { value: 'not_eligible', label: 'Not Eligible for Benefit' },
-  { value: 'duplicate', label: 'Duplicate Claim' },
-  { value: 'policy_violation', label: 'Policy Violation' },
-  { value: 'other', label: 'Other (specify in notes)' },
+  { value: 'incomplete_docs', label: 'Insufficient Documentation' },
+  { value: 'exceeds_limit', label: 'Exceeds Entitlement Limit' },
+  { value: 'not_eligible', label: 'Eligibility Criteria Not Met' },
+  { value: 'duplicate', label: 'Duplicate Submission' },
+  { value: 'policy_violation', label: 'Policy Non-Compliance' },
+  { value: 'other', label: 'Other (specify in reviewer notes)' },
 ];
 
 const PRIORITY_OPTIONS = [
-  { value: 'low', label: 'Low', color: 'text-slate-600' },
-  { value: 'normal', label: 'Normal', color: 'text-blue-600' },
-  { value: 'high', label: 'High', color: 'text-amber-600' },
+  { value: 'low', label: 'Low Priority', color: 'text-slate-600' },
+  { value: 'normal', label: 'Standard', color: 'text-blue-600' },
+  { value: 'high', label: 'High Priority', color: 'text-amber-600' },
   { value: 'urgent', label: 'Urgent', color: 'text-red-600' },
 ];
 
