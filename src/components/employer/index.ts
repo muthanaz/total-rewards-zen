@@ -6,3 +6,4 @@ export { PageConfidenceGate } from './PageConfidenceGate';
 export { PeriodSelector } from './PeriodSelector';
 export { TrendComparison, TrendIndicatorCompact } from './TrendComparison';
 export { EmployerGlobalFiltersBar, FilterSummaryPill } from './EmployerGlobalFiltersBar';
+export { MarketplaceDisabledState } from './MarketplaceDisabledState';
