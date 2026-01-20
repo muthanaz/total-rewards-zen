@@ -52,3 +52,15 @@ export type { TimelineEvent } from './RequestTimeline';
 
 // Policy Applicability (employee view)
 export { PolicyApplicabilityCard } from './PolicyApplicabilityCard';
+
+// Phase 2 Gate
+export { Phase2Gate, MarketplacePhase2Gate, VendorPortalGate } from './Phase2Gate';
+
+// Enum Display Chips (human-readable labels with tooltips)
+export { 
+  LifeAreaChip, 
+  BenefitTypeChip, 
+  formatEnumLabel,
+  getLifeAreaLabel,
+  getBenefitTypeLabel,
+} from './EnumChip';
