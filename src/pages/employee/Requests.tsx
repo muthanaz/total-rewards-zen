@@ -38,9 +38,14 @@ import {
 } from "lucide-react";
 import { useRequests } from "@/hooks/useSupabaseData";
 import PerDiemWidget from "@/components/employee/PerDiemWidget";
+import {
+  getStatusDisplayLabel,
+  getStatusBadgeStyle,
+  REQUEST_STATUSES,
+  type RequestStatus,
+} from "@/lib/crossPortalContract";
 
-type RequestType = "claim" | "request" | "question";
-type Status = "Draft" | "Submitted" | "In Review" | "Needs Info" | "Approved" | "Rejected" | "Paid";
+type LocalRequestType = "claim" | "request" | "question";
 
 type Category =
   | "Housing"
@@ -58,13 +63,13 @@ type Priority = "Low" | "Normal" | "High";
 
 type RequestItem = {
   id: string;
-  type: RequestType;
+  type: LocalRequestType;
   category: Category;
   title: string;
   description: string;
   amount?: number;
   currency?: "AED";
-  status: Status;
+  status: RequestStatus; // Now uses DB enum type
   priority: Priority;
   createdAt: string;
   updatedAt: string;
@@ -85,7 +90,7 @@ const demoItems: RequestItem[] = [
     description: "Monthly fuel reimbursement as per policy. Receipts attached.",
     amount: 420,
     currency: "AED",
-    status: "In Review",
+    status: "in_review",
     priority: "Normal",
     createdAt: "2026-01-05",
     updatedAt: "2026-01-08",
@@ -103,7 +108,7 @@ const demoItems: RequestItem[] = [
     description: "Requesting salary advance to cover annual rent; repay over 10 months.",
     amount: 85000,
     currency: "AED",
-    status: "Needs Info",
+    status: "pending", // Maps to "Missing Docs" display label  
     priority: "High",
     createdAt: "2026-01-02",
     updatedAt: "2026-01-06",
@@ -119,7 +124,7 @@ const demoItems: RequestItem[] = [
     category: "Schooling",
     title: "Eligibility: nursery fees",
     description: "Does the schooling benefit cover nursery fees for age 3?",
-    status: "Submitted",
+    status: "submitted",
     priority: "Normal",
     createdAt: "2025-12-18",
     updatedAt: "2025-12-18",
@@ -137,7 +142,7 @@ const demoItems: RequestItem[] = [
     description: "Monthly gym reimbursement under wellbeing program.",
     amount: 250,
     currency: "AED",
-    status: "Paid",
+    status: "paid",
     priority: "Low",
     createdAt: "2025-12-01",
     updatedAt: "2025-12-10",
@@ -162,7 +167,7 @@ const categories: Category[] = [
   "Other",
 ];
 
-const requestTypeCopy: Record<RequestType, { title: string; desc: string; icon: any }> = {
+const requestTypeCopy: Record<LocalRequestType, { title: string; desc: string; icon: any }> = {
   claim: { title: "Submit a Claim", desc: "Reimbursement for eligible expenses (attach receipts/invoices).", icon: Receipt },
   request: { title: "Make a Request", desc: "Approvals/changes (e.g., allowance advance, benefit change, exceptions).", icon: FileText },
   question: { title: "Ask a Question", desc: "Clarify policy/eligibility with a tracked answer trail.", icon: HelpCircle },
@@ -172,7 +177,7 @@ type BenefitShortcut = {
   key: string;
   label: string;
   category: Category;
-  suggestedType: RequestType;
+  suggestedType: LocalRequestType;
   suggestedTitle: string;
   suggestedDescription: string;
 };
@@ -234,40 +239,28 @@ function formatMoney(amount?: number, currency: "AED" = "AED") {
   return `${currency} ${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
-function statusTone(status: Status) {
-  switch (status) {
-    case "Approved":
-    case "Paid":
-      return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
-    case "Needs Info":
-      return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
-    case "Rejected":
-      return "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20";
-    case "In Review":
-      return "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20";
-    case "Submitted":
-      return "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20";
-    case "Draft":
-    default:
-      return "bg-muted text-muted-foreground border-border";
-  }
+// Use crossPortalContract for status styling - single source of truth
+function statusTone(status: RequestStatus | string) {
+  const style = getStatusBadgeStyle(status);
+  return style.className;
 }
 
-function StatusIcon({ status }: { status: Status }) {
-  if (status === "Approved" || status === "Paid") return <CheckCircle2 className="w-4 h-4" />;
-  if (status === "Needs Info") return <AlertTriangle className="w-4 h-4" />;
+function StatusIcon({ status }: { status: RequestStatus | string }) {
+  if (status === "approved" || status === "paid") return <CheckCircle2 className="w-4 h-4" />;
+  if (status === "pending") return <AlertTriangle className="w-4 h-4" />;
   return <Clock className="w-4 h-4" />;
 }
 
-function statusProgress(status: Status) {
+function statusProgress(status: RequestStatus | string) {
   switch (status) {
-    case "Draft": return 15;
-    case "Submitted": return 35;
-    case "In Review": return 55;
-    case "Needs Info": return 55;
-    case "Approved": return 80;
-    case "Paid": return 100;
-    case "Rejected": return 100;
+    case "draft": return 15;
+    case "submitted": return 35;
+    case "in_review": return 55;
+    case "pending": return 55;
+    case "approved": return 80;
+    case "paid": return 100;
+    case "rejected": return 100;
+    case "closed": return 100;
     default: return 35;
   }
 }
@@ -288,14 +281,15 @@ function mapDbRequestToUI(r: any): RequestItem {
   const created = toISODate(r.created_at ?? r.createdAt) || "—";
   const updated = toISODate(r.updated_at ?? r.updatedAt ?? r.created_at) || created;
 
-  const type: RequestType =
-    (r.type as RequestType) ?? (r.request_type as RequestType) ?? "request";
+  const type: LocalRequestType =
+    (r.type as LocalRequestType) ?? (r.request_type as LocalRequestType) ?? "request";
 
   const category: Category =
     (r.category as Category) ?? (r.benefit_category as Category) ?? "Other";
 
-  const status: Status =
-    (r.status as Status) ?? "Submitted";
+  // Status comes directly from DB enum now
+  const status: RequestStatus =
+    (r.status as RequestStatus) ?? "submitted";
 
   const priority: Priority =
     (r.priority as Priority) ?? "Normal";
@@ -304,7 +298,7 @@ function mapDbRequestToUI(r: any): RequestItem {
     id: r.reference ?? r.id ?? `REQ-${Math.floor(Math.random() * 9999)}`,
     type,
     category,
-    title: r.title ?? "Request",
+    title: r.subject ?? r.title ?? "Request",
     description: r.description ?? r.details ?? "—",
     amount: r.amount ?? r.requested_amount ?? undefined,
     currency: "AED",
@@ -332,11 +326,11 @@ export default function Requests() {
 
   const items: RequestItem[] = supabaseItems.length > 0 ? supabaseItems : localItems;
 
-  const [tab, setTab] = useState<RequestType | "all">("all");
+  const [tab, setTab] = useState<LocalRequestType | "all">("all");
   const [filters, setFilters] = useState<{
     q: string;
     category: Category | "all";
-    status: Status | "all";
+    status: RequestStatus | "all";
     sort: "newest" | "oldest" | "amount_desc" | "amount_asc";
   }>({ q: "", category: "all", status: "all", sort: "newest" });
 
@@ -344,7 +338,7 @@ export default function Requests() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [activeItem, setActiveItem] = useState<RequestItem | null>(null);
 
-  const [createType, setCreateType] = useState<RequestType>("claim");
+  const [createType, setCreateType] = useState<LocalRequestType>("claim");
   const [form, setForm] = useState<{
     category: Category;
     title: string;
@@ -407,7 +401,7 @@ export default function Requests() {
     return { byType };
   }, [items]);
 
-  const openCreate = (type: RequestType) => {
+  const openCreate = (type: LocalRequestType) => {
     setCreateType(type);
     setForm({
       category: "Other",
@@ -450,7 +444,7 @@ export default function Requests() {
       description: form.description.trim() || "—",
       amount: amountNum,
       currency: amountNum !== undefined ? "AED" : undefined,
-      status: asDraft ? "Draft" : "Submitted",
+      status: asDraft ? "draft" : "submitted",
       priority: form.priority,
       createdAt: today,
       updatedAt: today,
@@ -464,7 +458,7 @@ export default function Requests() {
     setCreateOpen(false);
   };
 
-  const QuickCard = ({ type }: { type: RequestType }) => {
+  const QuickCard = ({ type }: { type: LocalRequestType }) => {
     const Icon = requestTypeCopy[type].icon;
     return (
       <Card className="hover:shadow-md transition-shadow">
@@ -593,12 +587,12 @@ export default function Requests() {
 
               <div className="lg:col-span-3">
                 <Label>Status</Label>
-                <Select value={filters.status} onValueChange={(v) => setFilters((p) => ({ ...p, status: v as any }))}>
+                <Select value={filters.status} onValueChange={(v) => setFilters((p) => ({ ...p, status: v as RequestStatus | "all" }))}>
                   <SelectTrigger><SelectValue placeholder="All statuses" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All</SelectItem>
-                    {(["Draft","Submitted","In Review","Needs Info","Approved","Rejected","Paid"] as Status[]).map((s) => (
-                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    {(["draft", "submitted", "pending", "in_review", "approved", "rejected", "paid", "closed"] as RequestStatus[]).map((s) => (
+                      <SelectItem key={s} value={s}>{getStatusDisplayLabel(s)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -637,7 +631,7 @@ export default function Requests() {
                                   <Badge variant="outline" className={`text-xs ${statusTone(i.status)}`}>
                                     <span className="inline-flex items-center gap-1">
                                       <StatusIcon status={i.status} />
-                                      {i.status}
+                                      {getStatusDisplayLabel(i.status)}
                                     </span>
                                   </Badge>
                                   {i.priority === "High" && (
