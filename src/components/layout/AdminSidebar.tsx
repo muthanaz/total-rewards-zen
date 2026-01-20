@@ -77,8 +77,16 @@ const navigationGroups: NavGroup[] = [
     titleAr: 'البيانات والتكاملات',
     items: [
       { label: 'Data Sources', labelAr: 'مصادر البيانات', path: '/admin/data-sources', icon: Database },
-      { label: 'Data Quality', labelAr: 'جودة البيانات', path: '/admin/data-quality', icon: Activity },
+      { label: 'Data Quality Rules', labelAr: 'قواعد جودة البيانات', path: '/admin/data-quality-rules', icon: ShieldCheck },
       { label: 'Sync Monitor', labelAr: 'مراقبة المزامنة', path: '/admin/sync-monitor', icon: Server },
+    ],
+  },
+  {
+    title: 'Content & Alerts',
+    titleAr: 'المحتوى والتنبيهات',
+    items: [
+      { label: 'Policy Library', labelAr: 'مكتبة السياسات', path: '/admin/policy-library', icon: FileText },
+      { label: 'Alerts Center', labelAr: 'مركز التنبيهات', path: '/admin/alerts', icon: AlertTriangle, badge: 3 },
     ],
   },
   {
@@ -87,6 +95,7 @@ const navigationGroups: NavGroup[] = [
     items: [
       { label: 'Audit Log', labelAr: 'سجل التدقيق', path: '/admin/audit-log', icon: FileText },
       { label: 'Security Settings', labelAr: 'إعدادات الأمان', path: '/admin/security', icon: ShieldCheck },
+      { label: 'Sessions', labelAr: 'الجلسات', path: '/admin/sessions', icon: Users },
     ],
   },
   {
