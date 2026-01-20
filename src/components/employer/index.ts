@@ -7,3 +7,13 @@ export { PeriodSelector } from './PeriodSelector';
 export { TrendComparison, TrendIndicatorCompact } from './TrendComparison';
 export { EmployerGlobalFiltersBar, FilterSummaryPill } from './EmployerGlobalFiltersBar';
 export { MarketplaceDisabledState } from './MarketplaceDisabledState';
+export { ClaimsExecView } from './ClaimsExecView';
+export { PoliciesOpsView } from './PoliciesOpsView';
+export { IntegrationsExecView } from './IntegrationsExecView';
+export { 
+  OperationalLeversCard, 
+  spendOperationalLevers, 
+  zombieOperationalLevers, 
+  segmentsOperationalLevers, 
+  recommendationsOperationalLevers 
+} from './OperationalLeversCard';
