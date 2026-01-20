@@ -14,7 +14,8 @@ import {
   TrendingUp,
   Target,
   Zap,
-  Bell
+  Bell,
+  Info
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ChartContainer, ProgressBarList } from '@/components/charts';
@@ -25,6 +26,12 @@ import { TrendIndicatorCompact } from './TrendComparison';
 import { useClaimMetrics, useClaimsByCategory, useRecentActivity } from '@/hooks/useEmployerDashboard';
 import { cn } from '@/lib/utils';
 import { EmployerGlobalFiltersBar } from './EmployerGlobalFiltersBar';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const upcomingTasks = [
   { task: 'Q1 Benefits Review Meeting', date: 'Tomorrow, 10:00 AM', type: 'meeting' },
@@ -77,8 +84,9 @@ export function HROpsDashboard() {
       type: 'task',
       title: 'Enrollments',
       count: claimMetrics?.enrollmentsPending || 5,
-      description: 'Pending activation',
-      path: '/employer/segments',
+      description: 'Pending activations',
+      tooltip: 'Benefit enrollments waiting for eligibility verification or provider enrollment',
+      path: '/employer/segments?status=pending-enrollment',
       icon: Users,
       color: 'text-success',
       bgColor: 'bg-success/10',
@@ -126,29 +134,48 @@ export function HROpsDashboard() {
       <EmployerGlobalFiltersBar compact />
 
       {/* Action Items */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {pendingActions.map((action, index) => (
-          <Link key={index} to={action.path}>
-            <Card className={cn("hover:shadow-md transition-all cursor-pointer", action.borderColor)}>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div className={cn("p-2 rounded-lg", action.bgColor)}>
-                    <action.icon className={cn("w-4 h-4", action.color)} />
+      <TooltipProvider>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {pendingActions.map((action, index) => (
+            <Link key={index} to={action.path}>
+              <Card className={cn("hover:shadow-md transition-all cursor-pointer h-full", action.borderColor)}>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className={cn("p-2 rounded-lg", action.bgColor)}>
+                      <action.icon className={cn("w-4 h-4", action.color)} />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {action.tooltip && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button 
+                              className="p-1 rounded-full hover:bg-muted/50 transition-colors"
+                              onClick={(e) => e.preventDefault()}
+                            >
+                              <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[200px]">
+                            <p className="text-xs">{action.tooltip}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {action.type === 'urgent' && (
+                        <Badge variant="outline" className="bg-destructive/10 text-destructive border-0 text-[10px] animate-pulse">
+                          Urgent
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                  {action.type === 'urgent' && (
-                    <Badge variant="outline" className="bg-destructive/10 text-destructive border-0 text-[10px] animate-pulse">
-                      Urgent
-                    </Badge>
-                  )}
-                </div>
-                <p className={cn("text-2xl font-bold", action.color)}>{action.count}</p>
-                <p className="text-sm font-medium mt-1">{action.title}</p>
-                <p className="text-xs text-muted-foreground">{action.description}</p>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+                  <p className={cn("text-2xl font-bold", action.color)}>{action.count}</p>
+                  <p className="text-sm font-medium mt-1">{action.title}</p>
+                  <p className="text-xs text-muted-foreground">{action.description}</p>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </TooltipProvider>
 
       {/* Performance Metrics */}
       <Card className="border-border/50">
