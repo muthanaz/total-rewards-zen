@@ -1,17 +1,31 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building2, ExternalLink, Fingerprint, Briefcase, MapPin, Heart, Phone } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Building2, ExternalLink, Fingerprint, Briefcase, MapPin, Heart, Phone, AlertTriangle, Info } from 'lucide-react';
 import { GOV_CONNECT_CATEGORIES } from '@/lib/constants';
+import { DataDisclaimer } from '@/components/employee/DataConfidenceChip';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 const icons: Record<string, any> = { identity: Fingerprint, employment: Briefcase, local: MapPin, health: Heart, telecom: Phone };
 
 export default function GovConnectPage() {
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-display font-bold flex items-center gap-3"><Building2 className="w-7 h-7 text-accent" />Gov Connect</h1>
-        <p className="text-muted-foreground mt-1">Quick access to UAE government and service portals</p>
-      </div>
+      <PageHeader
+        title="Gov Connect"
+        description="Quick access to UAE government and service portals"
+        icon={Building2}
+        iconClassName="from-accent to-accent/80 shadow-accent/25"
+      />
+
+      {/* Disclaimer */}
+      <DataDisclaimer>
+        <strong>Informational only.</strong> This page provides links to external government portals for your convenience. 
+        For any actions requiring HR assistance (visa processing, work permit renewals, dependent sponsorship), 
+        please <a href="/employee/requests?type=request" className="text-accent underline">submit a request</a> to your HR team.
+      </DataDisclaimer>
+
+      {/* Categories Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {GOV_CONNECT_CATEGORIES.map((category) => {
           const Icon = icons[category.id] || Building2;
@@ -39,6 +53,26 @@ export default function GovConnectPage() {
           );
         })}
       </div>
+
+      {/* HR Action Card */}
+      <Card className="border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-transparent">
+        <CardContent className="py-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-amber-500/10 shrink-0">
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-sm">Need HR assistance?</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                For visa processing, work permit renewals, or dependent sponsorship, HR action is required.
+              </p>
+            </div>
+            <Button size="sm" variant="outline" asChild>
+              <a href="/employee/requests?type=request&category=Other">Request HR Help</a>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
