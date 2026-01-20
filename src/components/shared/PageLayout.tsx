@@ -23,6 +23,8 @@ interface PageLayoutProps {
   className?: string;
   // Control spacing
   spacing?: 'default' | 'compact' | 'none';
+  // Animate entrance
+  animate?: boolean;
 }
 
 const spacingClasses = {
@@ -65,9 +67,14 @@ export function PageLayout({
   children,
   className,
   spacing = 'default',
+  animate = true,
 }: PageLayoutProps) {
   return (
-    <div className={cn('animate-fade-in', spacingClasses[spacing], className)}>
+    <div className={cn(
+      animate && 'animate-fade-in',
+      spacingClasses[spacing],
+      className
+    )}>
       {/* Page Header */}
       <PageHeader
         title={title}
@@ -85,5 +92,27 @@ export function PageLayout({
       {/* Main Content */}
       {children}
     </div>
+  );
+}
+
+// Section wrapper for consistent spacing within pages
+interface PageSectionProps {
+  children: ReactNode;
+  className?: string;
+  title?: string;
+  description?: string;
+}
+
+export function PageSection({ children, className, title, description }: PageSectionProps) {
+  return (
+    <section className={cn('space-y-4', className)}>
+      {(title || description) && (
+        <div className="space-y-1">
+          {title && <h2 className="text-lg font-display font-semibold">{title}</h2>}
+          {description && <p className="text-sm text-muted-foreground">{description}</p>}
+        </div>
+      )}
+      {children}
+    </section>
   );
 }

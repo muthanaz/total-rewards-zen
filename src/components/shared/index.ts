@@ -3,11 +3,14 @@
 
 // Page Structure
 export { PageHeader } from './PageHeader';
-export { PageLayout } from './PageLayout';
+export { PageLayout, PageSection } from './PageLayout';
 export { FilterBar } from './FilterBar';
 
 // Section Components
 export { SectionCard, CompactSectionCard } from './SectionCard';
+
+// Metric Components
+export { MetricCard, MetricGrid, InlineStat } from './MetricCard';
 
 // Drill Down / Detail Views
 export { DrillDownSheet, DrillDownSummaryGrid } from './DrillDownSheet';
