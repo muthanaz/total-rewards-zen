@@ -1,9 +1,10 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import { 
   LayoutDashboard, 
   Tag,
@@ -17,75 +18,90 @@ import {
   XCircle,
   AlertTriangle,
   Sparkles,
+  Eye,
+  Edit,
+  Activity,
+  Zap,
+  Target,
+  BarChart3,
+  CircleDollarSign,
+  Info,
+  Lightbulb,
+  FileCheck,
+  Image,
+  Type,
+  MapPin,
+  Gift,
+  Calendar,
+  RefreshCw,
 } from 'lucide-react';
 import { cn, formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useVendor, useVendorOffers, useVendorAnalytics, usePayoutSummary } from '@/hooks/useVendorData';
-import { ChartWrapper, CHART_EXPLANATIONS, AnimatedLineChart, AnimatedBarChart } from '@/components/charts';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useVendor } from '@/hooks/useVendorData';
+import { 
+  useVendorDashboard, 
+  useVendorActivity, 
+  useVendorProfileCompleteness,
+  useSeedVendorDemoData,
+  type OfferSummary,
+  type ActivityEvent,
+} from '@/hooks/useVendorDashboard';
+import { AnimatedLineChart } from '@/components/charts';
 import { PageLayout, MetricCard, MetricGrid } from '@/components/shared';
-import { Skeleton } from '@/components/ui/skeleton';
-import { EmptyState } from '@/components/ui/empty-state';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { formatDistanceToNow } from 'date-fns';
+import { useState } from 'react';
+
+// ============= STATUS CONFIGURATION =============
 
 const STATUS_CONFIG: Record<string, { label: string; labelAr: string; icon: React.ElementType; className: string }> = {
-  pending: { label: 'Pending', labelAr: 'قيد الانتظار', icon: Clock, className: 'bg-warning/10 text-warning border-warning/30' },
-  active: { label: 'Active', labelAr: 'نشط', icon: CheckCircle, className: 'bg-success/10 text-success border-success/30' },
+  pending: { label: 'Pending Approval', labelAr: 'قيد الموافقة', icon: Clock, className: 'bg-warning/10 text-warning border-warning/30' },
+  active: { label: 'Active in Marketplace', labelAr: 'نشط في السوق', icon: CheckCircle, className: 'bg-success/10 text-success border-success/30' },
+  expired: { label: 'Expired', labelAr: 'منتهي الصلاحية', icon: Calendar, className: 'bg-muted text-muted-foreground border-border' },
   suspended: { label: 'Suspended', labelAr: 'موقوف', icon: AlertTriangle, className: 'bg-muted text-muted-foreground border-border' },
   rejected: { label: 'Rejected', labelAr: 'مرفوض', icon: XCircle, className: 'bg-destructive/10 text-destructive border-destructive/30' },
 };
 
+const ACTIVITY_ICONS: Record<string, React.ElementType> = {
+  activation: Users,
+  redemption: CircleDollarSign,
+  approval: CheckCircle,
+  rejection: XCircle,
+  creation: Plus,
+};
+
+// ============= MAIN COMPONENT =============
+
 export default function VendorDashboard() {
   const navigate = useNavigate();
   const { language, direction } = useLanguage();
+  const { isDemoMode } = useDemoMode();
   const isRTL = direction === 'rtl';
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
 
   const { data: vendor, isLoading: vendorLoading } = useVendor();
-  const { data: offers, isLoading: offersLoading } = useVendorOffers();
-  const { data: analytics, isLoading: analyticsLoading } = useVendorAnalytics();
-  const { data: payoutSummary } = usePayoutSummary();
+  const { data: dashboardData, isLoading: dashboardLoading } = useVendorDashboard();
+  const { data: activityEvents, isLoading: activityLoading } = useVendorActivity();
+  const { data: profileCompleteness } = useVendorProfileCompleteness();
+  const seedDemoData = useSeedVendorDemoData();
 
-  const isLoading = vendorLoading || offersLoading || analyticsLoading;
+  const [selectedOffer, setSelectedOffer] = useState<OfferSummary | null>(null);
 
-  const activeOffers = offers?.filter(o => o.status === 'active') || [];
-  const pendingOffers = offers?.filter(o => o.status === 'pending') || [];
+  const isLoading = vendorLoading || dashboardLoading;
+  const metrics = dashboardData?.metrics;
+  const offers = dashboardData?.offers || [];
+  const trendData = dashboardData?.trendData || [];
+  const hasData = dashboardData?.hasData ?? false;
 
-  const metrics = [
-    {
-      title: t('Active Offers', 'العروض النشطة'),
-      value: formatInteger(activeOffers.length),
-      icon: Tag,
-      trend: { value: 5, positive: true },
-    },
-    {
-      title: t('Total Activations', 'إجمالي التفعيلات'),
-      value: formatInteger(analytics?.totalActivations || 0),
-      icon: Users,
-      trend: { value: 12, positive: true },
-    },
-    {
-      title: t('Conversion Rate', 'معدل التحويل'),
-      value: formatPercent(analytics?.conversionRate || 0),
-      icon: TrendingUp,
-      trend: { value: 3, positive: true },
-    },
-    {
-      title: t('Pending Payout', 'المدفوعات المعلقة'),
-      value: formatCurrencyAED(payoutSummary?.pendingPayout || analytics?.pendingPayout || 0),
-      icon: Wallet,
-    },
-  ];
-
-  // Chart data from analytics
-  const activationsChartData = analytics?.activationsByDate.map(d => ({
+  // Convert trend data for chart
+  const chartData = trendData.map(d => ({
     name: d.date,
-    value: d.count,
-  })) || [];
+    value: d.activations,
+    secondaryValue: d.redemptions,
+  }));
 
-  const categoryChartData = analytics?.activationsByCategory.map(d => ({
-    name: d.category,
-    value: d.count,
-  })) || [];
-
+  // Handle no vendor profile
   if (!vendor && !vendorLoading) {
     return (
       <PageLayout
@@ -106,168 +122,395 @@ export default function VendorDashboard() {
     );
   }
 
+  // Handle empty state with demo seeding option
+  if (!hasData && !isLoading && isDemoMode) {
+    return (
+      <PageLayout
+        title={t('Dashboard', 'لوحة التحكم')}
+        description={t(`Welcome, ${vendor?.company_name || 'Vendor'}`, `مرحبًا، ${vendor?.company_name || 'البائع'}`)}
+        icon={LayoutDashboard}
+        iconClassName="text-primary"
+        actions={
+          <Button onClick={() => navigate('/vendor/offers/new')}>
+            <Plus className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+            {t('Create Offer', 'إنشاء عرض')}
+          </Button>
+        }
+      >
+        <div className="max-w-2xl mx-auto">
+          <Card className="border-dashed border-2 border-primary/20">
+            <CardContent className="pt-8 pb-8 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <BarChart3 className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">
+                {t('Your Dashboard is Ready', 'لوحة التحكم جاهزة')}
+              </h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                {t(
+                  'Create your first offer to start tracking activations, redemptions, and earnings.',
+                  'أنشئ عرضك الأول لبدء تتبع التفعيلات والاستردادات والأرباح.'
+                )}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button onClick={() => navigate('/vendor/offers/new')}>
+                  <Plus className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                  {t('Create Your First Offer', 'أنشئ عرضك الأول')}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => seedDemoData.mutate()}
+                  disabled={seedDemoData.isPending}
+                >
+                  <RefreshCw className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2", seedDemoData.isPending && "animate-spin")} />
+                  {t('Load Demo Data', 'تحميل بيانات تجريبية')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* What happens next guidance */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Lightbulb className="w-5 h-5 text-warning" />
+                {t('What Happens Next?', 'ماذا يحدث بعد ذلك؟')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className={cn("flex gap-3", isRTL && "flex-row-reverse text-right")}>
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-sm font-medium text-primary">1</div>
+                <div>
+                  <p className="font-medium">{t('Create an Offer', 'أنشئ عرضًا')}</p>
+                  <p className="text-sm text-muted-foreground">{t('Add your discount, terms, and images.', 'أضف خصمك وشروطك وصورك.')}</p>
+                </div>
+              </div>
+              <div className={cn("flex gap-3", isRTL && "flex-row-reverse text-right")}>
+                <div className="w-8 h-8 rounded-full bg-warning/10 flex items-center justify-center shrink-0 text-sm font-medium text-warning">2</div>
+                <div>
+                  <p className="font-medium">{t('Admin Review', 'مراجعة الإدارة')}</p>
+                  <p className="text-sm text-muted-foreground">{t('Your offer is reviewed for quality and compliance (usually 1-2 business days).', 'يتم مراجعة عرضك للجودة والامتثال (عادة 1-2 أيام عمل).')}</p>
+                </div>
+              </div>
+              <div className={cn("flex gap-3", isRTL && "flex-row-reverse text-right")}>
+                <div className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center shrink-0 text-sm font-medium text-success">3</div>
+                <div>
+                  <p className="font-medium">{t('Go Live', 'انطلق')}</p>
+                  <p className="text-sm text-muted-foreground">{t('Once approved, your offer appears in the Employee Marketplace.', 'بمجرد الموافقة، يظهر عرضك في سوق الموظفين.')}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </PageLayout>
+    );
+  }
+
   return (
     <PageLayout
       title={t('Dashboard', 'لوحة التحكم')}
-      description={t(`Welcome back, ${vendor?.company_name || 'Vendor'}`, `مرحبًا بعودتك، ${vendor?.company_name || 'البائع'}`)}
+      description={t(`Track your performance, redemptions, and payouts.`, `تتبع أداءك واستردادك ومدفوعاتك.`)}
       icon={LayoutDashboard}
       iconClassName="text-primary"
       actions={
-        <Button onClick={() => navigate('/vendor/offers/new')}>
-          <Plus className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
-          {t('Create Offer', 'إنشاء عرض')}
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate('/vendor/analytics')}>
+            <BarChart3 className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+            {t('View Analytics', 'عرض التحليلات')}
+          </Button>
+          <Button onClick={() => navigate('/vendor/offers/new')}>
+            <Plus className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+            {t('Create Offer', 'إنشاء عرض')}
+          </Button>
+        </div>
       }
     >
-      {/* Metrics */}
+      {/* KPI Metrics Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28" />)}
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-28" />)}
         </div>
       ) : (
-        <MetricGrid columns={4}>
-          {metrics.map((metric, i) => (
-            <MetricCard
-              key={i}
-              title={metric.title}
-              value={metric.value}
-              icon={metric.icon}
-              trend={metric.trend}
-            />
-          ))}
+        <MetricGrid columns={3}>
+          <MetricCard
+            title={t('Active Offers', 'العروض النشطة')}
+            value={formatInteger(metrics?.activeOffers || 0)}
+            icon={Tag}
+            iconClassName="bg-success/10 text-success"
+            tooltip={{ notes: t('Offers currently visible in the Employee Marketplace', 'العروض المرئية حاليًا في سوق الموظفين') }}
+          />
+          <MetricCard
+            title={t('Pending Offers', 'عروض قيد الانتظار')}
+            value={formatInteger(metrics?.pendingOffers || 0)}
+            icon={Clock}
+            iconClassName="bg-warning/10 text-warning"
+            tooltip={{ notes: t('Offers awaiting admin approval', 'العروض في انتظار موافقة الإدارة') }}
+          />
+          <MetricCard
+            title={t('Activations (30d)', 'التفعيلات (30 يوم)')}
+            value={formatInteger(metrics?.activations30d || 0)}
+            icon={Users}
+            iconClassName="bg-primary/10 text-primary"
+            tooltip={{ formula: t('Count of employees who activated your offers in last 30 days', 'عدد الموظفين الذين فعّلوا عروضك في آخر 30 يومًا') }}
+          />
+          <MetricCard
+            title={t('Redemption Rate', 'معدل الاسترداد')}
+            value={metrics?.activations30d ? formatPercent(metrics?.redemptionRate || 0) : '—'}
+            icon={TrendingUp}
+            iconClassName="bg-accent/10 text-accent"
+            tooltip={{ formula: t('Redemptions ÷ Activations × 100', 'الاستردادات ÷ التفعيلات × 100') }}
+          />
+          <MetricCard
+            title={t('Earnings (30d)', 'الأرباح (30 يوم)')}
+            value={formatCurrencyAED(metrics?.earnings30d || 0)}
+            icon={CircleDollarSign}
+            iconClassName="bg-success/10 text-success"
+            tooltip={{ notes: t('Commission earned from redemptions in last 30 days', 'العمولة المكتسبة من الاستردادات في آخر 30 يومًا') }}
+          />
+          <MetricCard
+            title={t('Pending Payout', 'المدفوعات المعلقة')}
+            value={formatCurrencyAED(metrics?.pendingPayout || 0)}
+            icon={Wallet}
+            iconClassName="bg-warning/10 text-warning"
+            tooltip={{ notes: t('Unsettled commission amount', 'مبلغ العمولة غير المسددة') }}
+            onClick={() => navigate('/vendor/earnings')}
+          />
         </MetricGrid>
       )}
 
       {/* Pending Offers Alert */}
-      {pendingOffers.length > 0 && (
+      {(metrics?.pendingOffers || 0) > 0 && (
         <Card className="mt-6 border-warning/30 bg-warning/5">
           <CardContent className="pt-6">
-            <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+            <div className={cn("flex items-center justify-between flex-wrap gap-4", isRTL && "flex-row-reverse")}>
               <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
                 <div className="w-10 h-10 rounded-full bg-warning/20 flex items-center justify-center">
                   <Clock className="w-5 h-5 text-warning" />
                 </div>
                 <div className={cn(isRTL && "text-right")}>
                   <p className="font-medium">
-                    {t(`${pendingOffers.length} offer(s) pending review`, `${pendingOffers.length} عرض(عروض) قيد المراجعة`)}
+                    {t(`${metrics?.pendingOffers} offer(s) pending approval`, `${metrics?.pendingOffers} عرض(عروض) قيد الموافقة`)}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {t('Your offers are being reviewed by the admin team', 'يتم مراجعة عروضك من قبل فريق الإدارة')}
+                    {t('Your offers are being reviewed by the admin team. This typically takes 1-2 business days.', 'يتم مراجعة عروضك من قبل فريق الإدارة. يستغرق هذا عادة 1-2 أيام عمل.')}
                   </p>
                 </div>
               </div>
               <Button variant="outline" onClick={() => navigate('/vendor/offers')}>
                 {t('View Offers', 'عرض العروض')}
-                {isRTL ? <ArrowRight className="w-4 h-4 mr-2 rotate-180" /> : <ArrowRight className="w-4 h-4 ml-2" />}
+                <ArrowRight className={cn("w-4 h-4", isRTL ? "mr-2 rotate-180" : "ml-2")} />
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Main Content */}
+      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        {/* Charts */}
+        {/* Left Column: Charts + Offers Table */}
         <div className="lg:col-span-2 space-y-6">
-          <Tabs defaultValue="activations">
-            <TabsList>
-              <TabsTrigger value="activations">{t('Activations', 'التفعيلات')}</TabsTrigger>
-              <TabsTrigger value="categories">{t('Categories', 'الفئات')}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="activations" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">{t('Activations Over Time', 'التفعيلات عبر الزمن')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {activationsChartData.length > 0 ? (
-                    <AnimatedLineChart
-                      data={activationsChartData}
-                      height={300}
-                    />
-                  ) : (
-                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                      {t('No activation data yet', 'لا توجد بيانات تفعيل بعد')}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="categories" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">{t('Activations by Category', 'التفعيلات حسب الفئة')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {categoryChartData.length > 0 ? (
-                    <AnimatedBarChart
-                      data={categoryChartData}
-                      height={300}
-                    />
-                  ) : (
-                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                      {t('No category data yet', 'لا توجد بيانات فئات بعد')}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
+          {/* Performance Trend Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Activity className="w-5 h-5 text-primary" />
+                {t('Performance Trend (30 Days)', 'اتجاه الأداء (30 يومًا)')}
+              </CardTitle>
+              <CardDescription>
+                {t('Daily activations and redemptions for your offers', 'التفعيلات والاستردادات اليومية لعروضك')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {chartData.length > 0 && chartData.some(d => d.value > 0 || d.secondaryValue > 0) ? (
+                <AnimatedLineChart
+                  data={chartData}
+                  height={280}
+                  showArea
+                  showSecondary
+                  primaryLabel={t('Activations', 'التفعيلات')}
+                  secondaryLabel={t('Redemptions', 'الاستردادات')}
+                />
+              ) : (
+                <div className="h-[280px] flex flex-col items-center justify-center text-muted-foreground">
+                  <Activity className="w-12 h-12 mb-3 opacity-30" />
+                  <p>{t('No activity data yet', 'لا توجد بيانات نشاط بعد')}</p>
+                  <p className="text-sm">{t('Activations will appear here once employees engage with your offers', 'ستظهر التفعيلات هنا بمجرد تفاعل الموظفين مع عروضك')}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Recent Offers */}
-        <div className="space-y-6">
+          {/* Your Offers Table */}
           <Card>
             <CardHeader className={cn("flex flex-row items-center justify-between", isRTL && "flex-row-reverse")}>
-              <CardTitle className="text-lg">{t('Recent Offers', 'أحدث العروض')}</CardTitle>
+              <div>
+                <CardTitle className="text-lg">{t('Your Offers', 'عروضك')}</CardTitle>
+                <CardDescription>{t('Sorted by status priority and recency', 'مرتبة حسب أولوية الحالة والحداثة')}</CardDescription>
+              </div>
               <Button variant="ghost" size="sm" onClick={() => navigate('/vendor/offers')}>
                 {t('View All', 'عرض الكل')}
+                <ArrowRight className={cn("w-4 h-4", isRTL ? "mr-1 rotate-180" : "ml-1")} />
               </Button>
             </CardHeader>
             <CardContent>
-              {offersLoading ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map(i => <Skeleton key={i} className="h-16" />)}
-                </div>
-              ) : offers?.length === 0 ? (
+              {offers.length === 0 ? (
                 <EmptyState
                   icon={Tag}
                   title={t('No offers yet', 'لا توجد عروض بعد')}
-                  description={t('Create your first offer', 'أنشئ عرضك الأول')}
+                  description={t('Create your first offer to reach employees', 'أنشئ عرضك الأول للوصول إلى الموظفين')}
+                  action={{
+                    label: t('Create Offer', 'إنشاء عرض'),
+                    onClick: () => navigate('/vendor/offers/new'),
+                  }}
                 />
               ) : (
-                <div className="space-y-3">
-                  {offers?.slice(0, 5).map(offer => {
+                <div className="space-y-2">
+                  {offers.slice(0, 5).map(offer => {
                     const statusConfig = STATUS_CONFIG[offer.status] || STATUS_CONFIG.pending;
                     const StatusIcon = statusConfig.icon;
+                    const isEditable = offer.status === 'pending' || offer.status === 'rejected';
+                    
                     return (
                       <div 
-                        key={offer.id} 
+                        key={offer.id}
                         className={cn(
-                          "flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors",
+                          "flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors",
                           isRTL && "flex-row-reverse"
                         )}
-                        onClick={() => navigate('/vendor/offers')}
                       >
-                        <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
-                          {offer.image_url ? (
-                            <img src={offer.image_url} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                        <div className={cn("flex items-center gap-3 flex-1 min-w-0", isRTL && "flex-row-reverse")}>
+                          {offer.imageUrl ? (
+                            <img src={offer.imageUrl} alt="" className="w-12 h-12 rounded-lg object-cover shrink-0" />
                           ) : (
-                            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
                               <Tag className="w-5 h-5 text-muted-foreground" />
                             </div>
                           )}
-                          <div className={cn(isRTL && "text-right")}>
-                            <p className="font-medium text-sm line-clamp-1">{offer.title}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {offer.discount_percent ? `${offer.discount_percent}% off` : offer.category}
-                            </p>
+                          <div className={cn("min-w-0 flex-1", isRTL && "text-right")}>
+                            <p className="font-medium text-sm truncate">{offer.title}</p>
+                            <div className={cn("flex items-center gap-2 text-xs text-muted-foreground mt-0.5", isRTL && "flex-row-reverse")}>
+                              <span>{offer.discountDisplay}</span>
+                              <span>•</span>
+                              <span>{offer.category}</span>
+                            </div>
                           </div>
                         </div>
-                        <Badge variant="outline" className={cn("shrink-0", statusConfig.className)}>
-                          <StatusIcon className="w-3 h-3 me-1" />
-                          {language === 'ar' ? statusConfig.labelAr : statusConfig.label}
-                        </Badge>
+                        
+                        <div className={cn("flex items-center gap-2 shrink-0", isRTL && "flex-row-reverse")}>
+                          <Badge variant="outline" className={cn("text-xs", statusConfig.className)}>
+                            <StatusIcon className="w-3 h-3 me-1" />
+                            {language === 'ar' ? statusConfig.labelAr : statusConfig.label}
+                          </Badge>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8"
+                            onClick={() => setSelectedOffer(offer)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          {isEditable && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8"
+                              onClick={() => navigate(`/vendor/offers?edit=${offer.id}`)}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column: Activity + Payout + Guidance */}
+        <div className="space-y-6">
+          {/* Payout Snapshot */}
+          <Card className="border-accent/20 bg-gradient-to-br from-card to-accent/5">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-accent" />
+                {t('Payout Snapshot', 'ملخص المدفوعات')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+                <span className="text-sm text-muted-foreground">{t('Pending Payout', 'مدفوعات معلقة')}</span>
+                <span className="text-xl font-bold">{formatCurrencyAED(metrics?.pendingPayout || 0)}</span>
+              </div>
+              <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+                <span className="text-sm text-muted-foreground">{t('Lifetime Earnings', 'الأرباح الإجمالية')}</span>
+                <span className="font-medium">{formatCurrencyAED(metrics?.lifetimeEarnings || 0)}</span>
+              </div>
+              
+              {/* Threshold Progress */}
+              <div className="pt-2">
+                <div className={cn("flex items-center justify-between text-xs mb-1", isRTL && "flex-row-reverse")}>
+                  <span className="text-muted-foreground">{t('To next tier', 'للمستوى التالي')}</span>
+                  <span className="font-medium">68%</span>
+                </div>
+                <Progress value={68} className="h-2" />
+              </div>
+              
+              <Button 
+                variant="outline" 
+                className="w-full mt-2"
+                onClick={() => navigate('/vendor/earnings')}
+              >
+                {t('View Earnings & Payouts', 'عرض الأرباح والمدفوعات')}
+                <ArrowRight className={cn("w-4 h-4", isRTL ? "mr-2 rotate-180" : "ml-2")} />
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Activity className="w-5 h-5 text-primary" />
+                {t('Recent Activity', 'النشاط الأخير')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {activityLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map(i => <Skeleton key={i} className="h-12" />)}
+                </div>
+              ) : !activityEvents || activityEvents.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  <Activity className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">{t('No recent activity', 'لا يوجد نشاط حديث')}</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {activityEvents.slice(0, 6).map(event => {
+                    const Icon = ACTIVITY_ICONS[event.type] || Activity;
+                    const isPositive = event.type === 'activation' || event.type === 'redemption' || event.type === 'approval';
+                    
+                    return (
+                      <div 
+                        key={event.id}
+                        className={cn("flex items-start gap-3", isRTL && "flex-row-reverse")}
+                      >
+                        <div className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
+                          isPositive ? "bg-success/10" : "bg-muted"
+                        )}>
+                          <Icon className={cn("w-4 h-4", isPositive ? "text-success" : "text-muted-foreground")} />
+                        </div>
+                        <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
+                          <p className="text-sm font-medium truncate">{event.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">{event.offerTitle}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(event.timestamp), { addSuffix: true })}
+                          </p>
+                        </div>
                       </div>
                     );
                   })}
@@ -276,10 +519,25 @@ export default function VendorDashboard() {
             </CardContent>
           </Card>
 
+          {/* Vendor Guidance */}
+          <VendorGuidanceCard 
+            profileCompleteness={profileCompleteness}
+            hasOffers={offers.length > 0}
+            hasPendingOffers={(metrics?.pendingOffers || 0) > 0}
+            hasActiveOffers={(metrics?.activeOffers || 0) > 0}
+            lowConversion={(metrics?.redemptionRate || 0) < 30 && (metrics?.activations30d || 0) > 10}
+            navigate={navigate}
+            t={t}
+            isRTL={isRTL}
+          />
+
           {/* Quick Actions */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">{t('Quick Actions', 'الإجراءات السريعة')}</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Zap className="w-5 h-5 text-warning" />
+                {t('Quick Actions', 'إجراءات سريعة')}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button 
@@ -295,42 +553,276 @@ export default function VendorDashboard() {
                 className="w-full justify-start" 
                 onClick={() => navigate('/vendor/analytics')}
               >
-                <TrendingUp className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
-                {t('View Analytics', 'عرض التحليلات')}
+                <BarChart3 className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                {t('View Full Analytics', 'عرض التحليلات الكاملة')}
               </Button>
               <Button 
                 variant="outline" 
                 className="w-full justify-start" 
-                onClick={() => navigate('/vendor/earnings')}
+                onClick={() => navigate('/vendor/profile')}
               >
-                <Wallet className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
-                {t('View Payouts', 'عرض المدفوعات')}
+                <FileCheck className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                {t('Update Profile', 'تحديث الملف الشخصي')}
               </Button>
-            </CardContent>
-          </Card>
-
-          {/* Commission Info */}
-          <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="pt-6">
-              <div className={cn("flex items-start gap-3", isRTL && "flex-row-reverse text-right")}>
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                  <Wallet className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium">{t('Commission Rate', 'معدل العمولة')}</p>
-                  <p className="text-2xl font-bold text-primary">{vendor?.commission_rate || 10}%</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {t(
-                      'You earn this percentage on every successful redemption',
-                      'تكسب هذه النسبة على كل استرداد ناجح'
-                    )}
-                  </p>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Offer Detail Sheet */}
+      <Sheet open={!!selectedOffer} onOpenChange={() => setSelectedOffer(null)}>
+        <SheetContent className="sm:max-w-lg">
+          {selectedOffer && (
+            <>
+              <SheetHeader>
+                <SheetTitle>{selectedOffer.title}</SheetTitle>
+                <SheetDescription>{selectedOffer.merchant}</SheetDescription>
+              </SheetHeader>
+              <div className="mt-6 space-y-4">
+                {selectedOffer.imageUrl && (
+                  <img 
+                    src={selectedOffer.imageUrl} 
+                    alt={selectedOffer.title}
+                    className="w-full h-48 object-cover rounded-lg"
+                  />
+                )}
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t('Status', 'الحالة')}</p>
+                    <Badge variant="outline" className={STATUS_CONFIG[selectedOffer.status]?.className}>
+                      {language === 'ar' 
+                        ? STATUS_CONFIG[selectedOffer.status]?.labelAr 
+                        : STATUS_CONFIG[selectedOffer.status]?.label}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t('Category', 'الفئة')}</p>
+                    <p className="font-medium">{selectedOffer.category}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t('Discount', 'الخصم')}</p>
+                    <p className="font-medium">{selectedOffer.discountDisplay}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t('Valid Until', 'صالح حتى')}</p>
+                    <p className="font-medium">{selectedOffer.validTo || '—'}</p>
+                  </div>
+                </div>
+                
+                {/* Status explanation */}
+                <Card className="bg-muted/50">
+                  <CardContent className="pt-4">
+                    <div className={cn("flex gap-3", isRTL && "flex-row-reverse")}>
+                      <Info className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+                      <div>
+                        {selectedOffer.status === 'pending' && (
+                          <p className="text-sm">{t('This offer is awaiting admin approval. Once approved, it will be visible to employees in the Marketplace.', 'هذا العرض في انتظار موافقة الإدارة. بمجرد الموافقة، سيكون مرئيًا للموظفين في السوق.')}</p>
+                        )}
+                        {selectedOffer.status === 'active' && (
+                          <p className="text-sm">{t('This offer is live and visible to employees in the Marketplace. Editing will require re-approval.', 'هذا العرض نشط ومرئي للموظفين في السوق. سيتطلب التعديل إعادة الموافقة.')}</p>
+                        )}
+                        {selectedOffer.status === 'expired' && (
+                          <p className="text-sm">{t('This offer has expired. Create a new offer or extend the validity period.', 'انتهت صلاحية هذا العرض. أنشئ عرضًا جديدًا أو قم بتمديد فترة الصلاحية.')}</p>
+                        )}
+                        {selectedOffer.status === 'rejected' && (
+                          <p className="text-sm">{t('This offer was not approved. Please review the admin feedback and resubmit.', 'لم تتم الموافقة على هذا العرض. يرجى مراجعة ملاحظات الإدارة وإعادة الإرسال.')}</p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <div className="flex gap-2 pt-4">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => {
+                      setSelectedOffer(null);
+                      navigate('/vendor/offers');
+                    }}
+                  >
+                    {t('Manage Offers', 'إدارة العروض')}
+                  </Button>
+                  {(selectedOffer.status === 'pending' || selectedOffer.status === 'rejected') && (
+                    <Button 
+                      className="flex-1"
+                      onClick={() => {
+                        setSelectedOffer(null);
+                        navigate(`/vendor/offers?edit=${selectedOffer.id}`);
+                      }}
+                    >
+                      {t('Edit Offer', 'تعديل العرض')}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </PageLayout>
+  );
+}
+
+// ============= GUIDANCE COMPONENT =============
+
+interface VendorGuidanceCardProps {
+  profileCompleteness?: {
+    completionPercent: number;
+    missingFields: string[];
+  };
+  hasOffers: boolean;
+  hasPendingOffers: boolean;
+  hasActiveOffers: boolean;
+  lowConversion: boolean;
+  navigate: (path: string) => void;
+  t: (en: string, ar: string) => string;
+  isRTL: boolean;
+}
+
+function VendorGuidanceCard({ 
+  profileCompleteness, 
+  hasOffers, 
+  hasPendingOffers, 
+  hasActiveOffers,
+  lowConversion,
+  navigate, 
+  t, 
+  isRTL 
+}: VendorGuidanceCardProps) {
+  // Determine which guidance to show
+  const profileIncomplete = profileCompleteness && profileCompleteness.completionPercent < 100;
+  
+  if (profileIncomplete) {
+    return (
+      <Card className="border-primary/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Target className="w-5 h-5 text-primary" />
+            {t('Complete Your Profile', 'أكمل ملفك الشخصي')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Progress value={profileCompleteness.completionPercent} className="h-2" />
+          <p className="text-sm text-muted-foreground">
+            {t(
+              `${profileCompleteness.completionPercent}% complete. Add ${profileCompleteness.missingFields.join(', ')} to improve visibility.`,
+              `${profileCompleteness.completionPercent}% مكتمل. أضف ${profileCompleteness.missingFields.join('، ')} لتحسين الظهور.`
+            )}
+          </p>
+          <Button size="sm" variant="outline" onClick={() => navigate('/vendor/profile')}>
+            {t('Complete Profile', 'أكمل الملف الشخصي')}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  if (!hasOffers) {
+    return (
+      <Card className="border-primary/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Gift className="w-5 h-5 text-primary" />
+            {t('Create Your First Offer', 'أنشئ عرضك الأول')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-3">
+            {t(
+              'Top-performing categories: Health & Fitness, Food & Coffee, and Learning & Skills.',
+              'الفئات الأفضل أداءً: الصحة واللياقة، الطعام والقهوة، والتعلم والمهارات.'
+            )}
+          </p>
+          <Button size="sm" onClick={() => navigate('/vendor/offers/new')}>
+            <Plus className={cn("w-4 h-4", isRTL ? "ml-1" : "mr-1")} />
+            {t('Create Offer', 'إنشاء عرض')}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  if (hasPendingOffers && !hasActiveOffers) {
+    return (
+      <Card className="border-warning/20 bg-warning/5">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Clock className="w-5 h-5 text-warning" />
+            {t('Approval in Progress', 'الموافقة قيد التنفيذ')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-2">
+            {t(
+              'Your offers are being reviewed. Typical review time is 1-2 business days.',
+              'يتم مراجعة عروضك. وقت المراجعة النموذجي هو 1-2 أيام عمل.'
+            )}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {t(
+              "We'll notify you via email once your offers are approved.",
+              'سنقوم بإعلامك عبر البريد الإلكتروني بمجرد الموافقة على عروضك.'
+            )}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  if (lowConversion) {
+    return (
+      <Card className="border-accent/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Lightbulb className="w-5 h-5 text-accent" />
+            {t('Improve Conversions', 'تحسين التحويلات')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-3">
+            {t('Tips to boost your redemption rate:', 'نصائح لتعزيز معدل الاسترداد:')}
+          </p>
+          <ul className={cn("text-sm space-y-1.5", isRTL && "text-right")}>
+            <li className={cn("flex items-start gap-2", isRTL && "flex-row-reverse")}>
+              <Image className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+              <span>{t('Add high-quality images', 'أضف صورًا عالية الجودة')}</span>
+            </li>
+            <li className={cn("flex items-start gap-2", isRTL && "flex-row-reverse")}>
+              <Type className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+              <span>{t('Use clear, benefit-focused titles', 'استخدم عناوين واضحة تركز على الفوائد')}</span>
+            </li>
+            <li className={cn("flex items-start gap-2", isRTL && "flex-row-reverse")}>
+              <MapPin className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+              <span>{t('Add location details if applicable', 'أضف تفاصيل الموقع إن أمكن')}</span>
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // Default: Commission info
+  return (
+    <Card className="border-primary/20 bg-primary/5">
+      <CardContent className="pt-6">
+        <div className={cn("flex items-start gap-3", isRTL && "flex-row-reverse text-right")}>
+          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+            <Wallet className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <p className="font-medium">{t('Your Commission Rate', 'معدل عمولتك')}</p>
+            <p className="text-2xl font-bold text-primary">10%</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t(
+                'Earn this on every successful redemption. Increase it by reaching higher tiers.',
+                'اكسب هذه النسبة على كل استرداد ناجح. زدها بالوصول إلى مستويات أعلى.'
+              )}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
