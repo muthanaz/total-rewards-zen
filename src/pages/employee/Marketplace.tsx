@@ -19,8 +19,8 @@ import { CuratedPerks } from '@/components/dashboard/CuratedPerks';
 import { BankCardBenefits } from '@/components/employee/BankCardBenefits';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { NoSearchResults, EmptyState } from '@/components/ui/empty-state';
+// Removed Phase2Gate - Marketplace is now fully functional
 import { cn } from '@/lib/utils';
-import { MarketplacePhase2Gate } from '@/components/shared/Phase2Gate';
 import { format, isPast, isWithinInterval, addDays } from 'date-fns';
 
 // Category config with vibrant but balanced colors
@@ -776,11 +776,7 @@ function MarketplaceContent() {
   );
 }
 
-// Default export with Phase 2 gate wrapper
+// Default export - renders the full Marketplace experience directly
 export default function MarketplacePage() {
-  return (
-    <MarketplacePhase2Gate>
-      <MarketplaceContent />
-    </MarketplacePhase2Gate>
-  );
+  return <MarketplaceContent />;
 }
