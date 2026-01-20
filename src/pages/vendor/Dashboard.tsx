@@ -21,8 +21,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { AnimatedLineChart } from '@/components/charts/AnimatedLineChart';
-import { AnimatedBarChart } from '@/components/charts/AnimatedBarChart';
+import { ChartWrapper, CHART_EXPLANATIONS, AnimatedLineChart, AnimatedBarChart } from '@/components/charts';
 import { useElementVisibility } from '@/contexts/UIVisibilityContext';
 import { PerformanceInsights } from '@/components/vendor/PerformanceInsights';
 import { PayoutThresholds } from '@/components/vendor/PayoutThresholds';
@@ -245,33 +244,33 @@ export default function VendorDashboard() {
         {showAnalyticsTab && (
         <TabsContent value="analytics" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('Views & Redemptions', 'المشاهدات والاستردادات')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <AnimatedLineChart
-                  data={monthlyPerformanceChart}
-                  showSecondary={true}
-                  primaryLabel={t('Views', 'المشاهدات')}
-                  secondaryLabel={t('Redemptions', 'الاستردادات')}
-                  height={300}
-                />
-              </CardContent>
-            </Card>
+            <ChartWrapper
+              title={t('Views & Redemptions', 'المشاهدات والاستردادات')}
+              subtitle={t('Monthly engagement metrics', 'مقاييس التفاعل الشهرية')}
+              explanation={CHART_EXPLANATIONS.vendorPerformance}
+              timeRange={t('Last 6 months', 'آخر 6 أشهر')}
+            >
+              <AnimatedLineChart
+                data={monthlyPerformanceChart}
+                showSecondary={true}
+                primaryLabel={t('Views', 'المشاهدات')}
+                secondaryLabel={t('Redemptions', 'الاستردادات')}
+                height={280}
+              />
+            </ChartWrapper>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('Monthly Earnings', 'الأرباح الشهرية')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <AnimatedBarChart
-                  data={monthlyEarningsChart}
-                  height={300}
-                  formatValue={(v) => `AED ${v}K`}
-                />
-              </CardContent>
-            </Card>
+            <ChartWrapper
+              title={t('Monthly Earnings', 'الأرباح الشهرية')}
+              subtitle={t('Revenue from redemptions', 'الإيرادات من الاستردادات')}
+              explanation="Commission earnings generated from successful offer redemptions."
+              timeRange={t('Last 6 months', 'آخر 6 أشهر')}
+            >
+              <AnimatedBarChart
+                data={monthlyEarningsChart}
+                height={280}
+                formatValue={(v) => `AED ${v}K`}
+              />
+            </ChartWrapper>
           </div>
         </TabsContent>
         )}
