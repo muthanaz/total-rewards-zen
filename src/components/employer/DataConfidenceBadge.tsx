@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,11 +15,14 @@ import {
   XCircle,
   Clock,
   Database,
-  ArrowRight
+  ArrowRight,
+  ExternalLink,
+  Info
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Link } from 'react-router-dom';
+import { ConfidenceDetailsDrawer } from './ConfidenceDetailsDrawer';
 
 export interface DataCoverageMetrics {
   employeeCoverage: number; // % of employees with complete profiles
@@ -35,6 +39,7 @@ interface DataConfidenceBadgeProps {
   threshold?: number;
   className?: string;
   showDetails?: boolean;
+  showViewDetails?: boolean; // Show "View details" link
 }
 
 export function DataConfidenceBadge({
@@ -42,9 +47,12 @@ export function DataConfidenceBadge({
   threshold = 70,
   className,
   showDetails = true,
+  showViewDetails = true,
 }: DataConfidenceBadgeProps) {
-  const { language } = useLanguage();
+  const { language, direction } = useLanguage();
+  const isRTL = direction === 'rtl';
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Calculate overall coverage
   const overallCoverage = Math.round(
@@ -103,9 +111,9 @@ export function DataConfidenceBadge({
     value: number; 
     threshold?: number;
   }) => (
-    <div className="flex items-center justify-between py-1">
+    <div className={cn("flex items-center justify-between py-1", isRTL && "flex-row-reverse")}>
       <span className="text-xs text-muted-foreground">{label}</span>
-      <div className="flex items-center gap-1.5">
+      <div className={cn("flex items-center gap-1.5", isRTL && "flex-row-reverse")}>
         <span className={cn(
           "text-xs font-medium",
           value >= 85 ? "text-emerald-600" :
@@ -122,104 +130,144 @@ export function DataConfidenceBadge({
     </div>
   );
 
-  // Trust disclaimer text
-  const trustDisclaimer = confidence.description;
-
   return (
-    <TooltipProvider>
-      <Tooltip delayDuration={200}>
-        <TooltipTrigger asChild>
-          <Badge 
-            variant="outline" 
-            className={cn(
-              "gap-1.5 cursor-help transition-colors",
-              confidence.color,
-              className
-            )}
+    <>
+      <TooltipProvider>
+        <Tooltip delayDuration={200}>
+          <TooltipTrigger asChild>
+            <Badge 
+              variant="outline" 
+              className={cn(
+                "gap-1.5 cursor-help transition-colors",
+                confidence.color,
+                className
+              )}
+              onClick={(e) => {
+                e.preventDefault();
+                setDrawerOpen(true);
+              }}
+            >
+              <ConfidenceIcon className="w-3.5 h-3.5" />
+              <span className="font-medium">{overallCoverage}%</span>
+              {showDetails && (
+                <span className="text-[10px] opacity-75">{confidence.label}</span>
+              )}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent 
+            side="bottom" 
+            align="end" 
+            className="w-80 p-0"
           >
-            <ConfidenceIcon className="w-3.5 h-3.5" />
-            <span className="font-medium">{overallCoverage}%</span>
-            {showDetails && (
-              <span className="text-[10px] opacity-75">{confidence.label}</span>
-            )}
-          </Badge>
-        </TooltipTrigger>
-        <TooltipContent 
-          side="bottom" 
-          align="end" 
-          className="w-72 p-0"
-        >
-          <div className="p-3 space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="font-semibold text-sm">
-                {t('Data Coverage', 'تغطية البيانات')}
-              </h4>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="w-3 h-3" />
-                {formatLastSync(metrics.lastSyncTime)}
-              </div>
-            </div>
-
-            <div className="space-y-0.5 border-t pt-2">
-              <CoverageRow 
-                label={t('Employee Profiles', 'ملفات الموظفين')} 
-                value={metrics.employeeCoverage} 
-              />
-              <CoverageRow 
-                label={t('Benefit Entitlements', 'استحقاقات المزايا')} 
-                value={metrics.entitlementCoverage} 
-              />
-              <CoverageRow 
-                label={t('Policy Documents', 'وثائق السياسات')} 
-                value={metrics.policyCoverage} 
-              />
-              <CoverageRow 
-                label={t('Claims Data', 'بيانات المطالبات')} 
-                value={metrics.claimsCoverage} 
-              />
-            </div>
-
-            {metrics.missingFields && metrics.missingFields.length > 0 && (
-              <div className="border-t pt-2">
-                <p className="text-xs font-medium text-red-600 mb-1">
-                  {t('Missing:', 'مفقود:')}
-                </p>
+            <div className="p-3 space-y-3">
+              {/* Explanation header */}
+              <div className={cn("flex items-start gap-2 pb-2 border-b", isRTL && "flex-row-reverse")}>
+                <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
                 <p className="text-xs text-muted-foreground">
-                  {metrics.missingFields.slice(0, 3).join(', ')}
-                  {metrics.missingFields.length > 3 && ` +${metrics.missingFields.length - 3} more`}
+                  {t(
+                    'Based on data completeness, freshness, and mapping coverage across your integrated systems.',
+                    'بناءً على اكتمال البيانات وحداثتها وتغطية التعيين عبر الأنظمة المتكاملة.'
+                  )}
                 </p>
               </div>
-            )}
 
-            {metrics.estimatedFields && metrics.estimatedFields.length > 0 && (
-              <div className="border-t pt-2">
-                <p className="text-xs font-medium text-amber-600 mb-1">
-                  {t('Estimated:', 'تقديري:')}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {metrics.estimatedFields.slice(0, 3).join(', ')}
-                </p>
+              <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
+                <h4 className="font-semibold text-sm">
+                  {t('Data Coverage', 'تغطية البيانات')}
+                </h4>
+                <div className={cn("flex items-center gap-1 text-xs text-muted-foreground", isRTL && "flex-row-reverse")}>
+                  <Clock className="w-3 h-3" />
+                  {formatLastSync(metrics.lastSyncTime)}
+                </div>
               </div>
-            )}
 
-            {isLowConfidence && (
-              <Button 
-                asChild 
-                size="sm" 
-                variant="outline" 
-                className="w-full mt-2 gap-1.5 text-xs"
-              >
-                <Link to="/employer/integrations?tab=import">
-                  <Database className="w-3 h-3" />
-                  {t('Improve Data Coverage', 'تحسين تغطية البيانات')}
-                  <ArrowRight className="w-3 h-3" />
-                </Link>
-              </Button>
-            )}
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+              <div className="space-y-0.5 border-t pt-2">
+                <CoverageRow 
+                  label={t('Employee Profiles', 'ملفات الموظفين')} 
+                  value={metrics.employeeCoverage} 
+                />
+                <CoverageRow 
+                  label={t('Benefit Entitlements', 'استحقاقات المزايا')} 
+                  value={metrics.entitlementCoverage} 
+                />
+                <CoverageRow 
+                  label={t('Policy Documents', 'وثائق السياسات')} 
+                  value={metrics.policyCoverage} 
+                />
+                <CoverageRow 
+                  label={t('Claims Data', 'بيانات المطالبات')} 
+                  value={metrics.claimsCoverage} 
+                />
+              </div>
+
+              {metrics.missingFields && metrics.missingFields.length > 0 && (
+                <div className="border-t pt-2">
+                  <p className="text-xs font-medium text-red-600 mb-1">
+                    {t('Missing:', 'مفقود:')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {metrics.missingFields.slice(0, 3).join(', ')}
+                    {metrics.missingFields.length > 3 && ` +${metrics.missingFields.length - 3} more`}
+                  </p>
+                </div>
+              )}
+
+              {metrics.estimatedFields && metrics.estimatedFields.length > 0 && (
+                <div className="border-t pt-2">
+                  <p className="text-xs font-medium text-amber-600 mb-1">
+                    {t('Estimated:', 'تقديري:')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {metrics.estimatedFields.slice(0, 3).join(', ')}
+                  </p>
+                </div>
+              )}
+
+              {/* View Details Link */}
+              {showViewDetails && (
+                <div className="border-t pt-2">
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className={cn("w-full gap-1.5 text-xs text-primary hover:text-primary", isRTL && "flex-row-reverse")}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setDrawerOpen(true);
+                    }}
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    {t('View full details', 'عرض التفاصيل الكاملة')}
+                  </Button>
+                </div>
+              )}
+
+              {isLowConfidence && (
+                <Button 
+                  asChild 
+                  size="sm" 
+                  variant="outline" 
+                  className={cn("w-full mt-2 gap-1.5 text-xs", isRTL && "flex-row-reverse")}
+                >
+                  <Link to="/employer/integrations?tab=import">
+                    <Database className="w-3 h-3" />
+                    {t('Improve Data Coverage', 'تحسين تغطية البيانات')}
+                    <ArrowRight className="w-3 h-3" />
+                  </Link>
+                </Button>
+              )}
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      {/* Confidence Details Drawer */}
+      <ConfidenceDetailsDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        metrics={metrics}
+        threshold={threshold}
+      />
+    </>
   );
 }
 
