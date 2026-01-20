@@ -27,6 +27,7 @@ import { AnimatedDonutChart } from '@/components/charts/AnimatedDonutChart';
 import { AnimatedLineChart } from '@/components/charts/AnimatedLineChart';
 import { StackedAreaChart } from '@/components/charts/StackedAreaChart';
 import { toast } from 'sonner';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 const spendSummary = [
   { label: 'Total Platform Spend', value: 'AED 24.5M', change: '+15%', trend: 'up' },

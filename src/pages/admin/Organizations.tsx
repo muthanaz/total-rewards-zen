@@ -8,12 +8,10 @@ import {
   Users, 
   Search,
   MoreHorizontal,
-  Check,
-  X,
   RefreshCw,
   Globe,
-  Mail,
   Settings,
+  X,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -53,6 +51,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { MetricCard, MetricGrid } from '@/components/shared';
 
 interface Organization {
   id: string;
@@ -320,65 +320,40 @@ export default function OrganizationsPage() {
     users.filter(u => !u.organization_id || u.organization_id !== selectedOrg?.id);
 
   return (
-    <div className={cn("space-y-8", isRTL && "text-right")}>
+    <div className={cn("space-y-6", isRTL && "text-right")}>
       {/* Header */}
-      <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-4", isRTL && "sm:flex-row-reverse")}>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {t('Organizations', 'المنظمات')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('Manage organizations and user assignments', 'إدارة المنظمات وتعيينات المستخدمين')}
-          </p>
-        </div>
-        <Button onClick={() => { setFormData({ name: '', domain: '' }); setCreateDialogOpen(true); }}>
-          <Plus className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
-          {t('Add Organization', 'إضافة منظمة')}
-        </Button>
-      </div>
+      <PageHeader
+        title={t('Organizations', 'المنظمات')}
+        description={t('Manage organizations and user assignments', 'إدارة المنظمات وتعيينات المستخدمين')}
+        icon={Building2}
+        actions={
+          <Button onClick={() => { setFormData({ name: '', domain: '' }); setCreateDialogOpen(true); }}>
+            <Plus className="w-4 h-4 me-2" />
+            {t('Add Organization', 'إضافة منظمة')}
+          </Button>
+        }
+      />
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6">
-            <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
-              <div className="p-3 rounded-xl bg-primary/10">
-                <Building2 className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{organizations.length}</p>
-                <p className="text-sm text-muted-foreground">{t('Total Organizations', 'إجمالي المنظمات')}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
-              <div className="p-3 rounded-xl bg-success/10">
-                <Users className="w-6 h-6 text-success" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{users.filter(u => u.organization_id).length}</p>
-                <p className="text-sm text-muted-foreground">{t('Assigned Users', 'المستخدمون المعينون')}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
-              <div className="p-3 rounded-xl bg-warning/10">
-                <Users className="w-6 h-6 text-warning" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{users.filter(u => !u.organization_id).length}</p>
-                <p className="text-sm text-muted-foreground">{t('Unassigned Users', 'مستخدمون غير معينين')}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <MetricGrid columns={3}>
+        <MetricCard
+          title={t('Total Organizations', 'إجمالي المنظمات')}
+          value={organizations.length.toString()}
+          icon={Building2}
+        />
+        <MetricCard
+          title={t('Assigned Users', 'المستخدمون المعينون')}
+          value={users.filter(u => u.organization_id).length.toString()}
+          icon={Users}
+          iconClassName="from-success to-success/80"
+        />
+        <MetricCard
+          title={t('Unassigned Users', 'مستخدمون غير معينين')}
+          value={users.filter(u => !u.organization_id).length.toString()}
+          icon={Users}
+          iconClassName="from-warning to-warning/80"
+        />
+      </MetricGrid>
 
       {/* Search and Table */}
       <Card>
