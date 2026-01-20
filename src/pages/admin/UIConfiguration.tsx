@@ -14,31 +14,32 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { useAdminAuditLog } from '@/hooks/useAdminAuditLog';
 
 const ROLE_CONFIG = {
   employee: { 
     icon: Users, 
     label: 'Employee', 
     labelAr: 'الموظف',
-    color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' 
+    color: 'bg-primary/10 text-primary border-primary/20' 
   },
   employer: { 
     icon: Briefcase, 
     label: 'Employer', 
     labelAr: 'صاحب العمل',
-    color: 'bg-purple-500/10 text-purple-600 border-purple-500/20' 
+    color: 'bg-accent/10 text-accent-foreground border-accent/20' 
   },
   vendor: { 
     icon: Store, 
     label: 'Vendor', 
     labelAr: 'البائع',
-    color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' 
+    color: 'bg-warning/10 text-warning border-warning/20' 
   },
   admin: { 
     icon: ShieldCheck, 
     label: 'Admin', 
     labelAr: 'المسؤول',
-    color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' 
+    color: 'bg-success/10 text-success border-success/20' 
   },
 };
 
@@ -49,10 +50,11 @@ const PAGE_LABELS: Record<string, { en: string; ar: string }> = {
 
 export default function UIConfiguration() {
   const { isElementVisible, setElementVisibility, loading } = useUIVisibility();
-  const { direction } = useLanguage();
+  const { direction, language } = useLanguage();
   const isRTL = direction === 'rtl';
   const [activeRole, setActiveRole] = useState<UserRole>('employee');
   const [updating, setUpdating] = useState<string | null>(null);
+  const { createAuditLog } = useAdminAuditLog();
 
   const handleToggle = async (role: UserRole, pageKey: string, elementKey: string, currentValue: boolean) => {
     const toggleId = `${role}-${pageKey}-${elementKey}`;
@@ -60,6 +62,20 @@ export default function UIConfiguration() {
     
     try {
       await setElementVisibility(role, pageKey, elementKey, !currentValue);
+      
+      // P1 FIX: Audit log for UI config changes
+      await createAuditLog({
+        action: 'SETTINGS_UPDATE',
+        entityType: 'settings',
+        entityId: `ui_visibility_${role}_${pageKey}_${elementKey}`,
+        metadata: { 
+          role, 
+          page_key: pageKey, 
+          element_key: elementKey,
+          new_value: !currentValue,
+        },
+      });
+      
       toast.success(
         isRTL 
           ? `تم ${!currentValue ? 'إظهار' : 'إخفاء'} العنصر بنجاح`

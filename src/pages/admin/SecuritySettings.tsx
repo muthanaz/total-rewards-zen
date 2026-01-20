@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { PageLayout, SectionCard } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { 
   ShieldCheck, Key, Lock, Users, Globe, AlertTriangle,
@@ -16,31 +19,150 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import { useAdminAuditLog } from '@/hooks/useAdminAuditLog';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface SecuritySettings {
+  mfa_required: boolean;
+  mfa_methods: string[];
+  session_timeout: number;
+  password_min_length: number;
+  password_require_uppercase: boolean;
+  password_require_numbers: boolean;
+  password_require_symbols: boolean;
+  max_login_attempts: number;
+  lockout_duration: number;
+  sso_enabled: boolean;
+  sso_provider: string;
+  ip_allowlist_enabled: boolean;
+  ip_allowlist: string;
+}
+
+const DEFAULT_SETTINGS: SecuritySettings = {
+  mfa_required: true,
+  mfa_methods: ['totp', 'sms'],
+  session_timeout: 30,
+  password_min_length: 12,
+  password_require_uppercase: true,
+  password_require_numbers: true,
+  password_require_symbols: true,
+  max_login_attempts: 5,
+  lockout_duration: 15,
+  sso_enabled: false,
+  sso_provider: '',
+  ip_allowlist_enabled: false,
+  ip_allowlist: '',
+};
 
 export default function AdminSecuritySettings() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
+  const { user } = useAuth();
+  const { createAuditLog } = useAdminAuditLog();
+  const queryClient = useQueryClient();
 
-  const [settings, setSettings] = useState({
-    mfa_required: true,
-    mfa_methods: ['totp', 'sms'],
-    session_timeout: 30,
-    password_min_length: 12,
-    password_require_uppercase: true,
-    password_require_numbers: true,
-    password_require_symbols: true,
-    max_login_attempts: 5,
-    lockout_duration: 15,
-    sso_enabled: false,
-    sso_provider: '',
-    ip_allowlist_enabled: false,
-    ip_allowlist: '',
+  const [settings, setSettings] = useState<SecuritySettings>(DEFAULT_SETTINGS);
+
+  // Fetch security settings from org settings JSONB
+  const { data: orgData, isLoading } = useQuery({
+    queryKey: ['admin-security-settings'],
+    queryFn: async () => {
+      if (!user) return null;
+      
+      // Get user's org or first org for admin
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (!profile?.organization_id) {
+        // Admin: get first org
+        const { data: orgs } = await supabase.from('organizations').select('id, settings').limit(1);
+        return orgs?.[0] || null;
+      }
+      
+      const { data: org } = await supabase
+        .from('organizations')
+        .select('id, settings')
+        .eq('id', profile.organization_id)
+        .single();
+      
+      return org;
+    },
+    enabled: !!user,
+  });
+
+  // Load settings from org data
+  useEffect(() => {
+    if (orgData?.settings) {
+      const storedSettings = orgData.settings as any;
+      setSettings(prev => ({
+        ...prev,
+        ...storedSettings.security_settings,
+      }));
+    }
+  }, [orgData]);
+
+  // Mutation to save settings
+  const saveMutation = useMutation({
+    mutationFn: async (newSettings: SecuritySettings) => {
+      if (!orgData?.id) throw new Error('No organization found');
+      
+      const currentOrgSettings = (orgData.settings || {}) as any;
+      const updatedSettings = {
+        ...currentOrgSettings,
+        security_settings: newSettings,
+      };
+
+      const { error } = await supabase
+        .from('organizations')
+        .update({ settings: updatedSettings })
+        .eq('id', orgData.id);
+
+      if (error) throw error;
+      return newSettings;
+    },
+    onSuccess: async () => {
+      await createAuditLog({
+        action: 'SETTINGS_UPDATE',
+        entityType: 'settings',
+        entityId: 'security_settings',
+        metadata: { 
+          section: 'security',
+          mfa_required: settings.mfa_required,
+          session_timeout: settings.session_timeout,
+          sso_enabled: settings.sso_enabled,
+        },
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['admin-security-settings'] });
+      toast.success(t('Security settings saved', 'تم حفظ إعدادات الأمان'));
+    },
+    onError: () => {
+      toast.error(t('Failed to save settings', 'فشل في حفظ الإعدادات'));
+    },
   });
 
   const handleSave = () => {
-    toast.success(t('Security settings saved', 'تم حفظ إعدادات الأمان'));
+    saveMutation.mutate(settings);
   };
+
+  if (isLoading) {
+    return (
+      <PageLayout
+        title={t('Security Settings', 'إعدادات الأمان')}
+        description={t('Loading...', 'جاري التحميل...')}
+        icon={ShieldCheck}
+      >
+        <div className="space-y-4">
+          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-48 w-full" />
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout
@@ -49,9 +171,9 @@ export default function AdminSecuritySettings() {
       icon={ShieldCheck}
       iconClassName="from-emerald-500 to-teal-500"
       actions={
-        <Button onClick={handleSave}>
+        <Button onClick={handleSave} disabled={saveMutation.isPending}>
           <Save className="w-4 h-4 me-2" />
-          {t('Save Changes', 'حفظ التغييرات')}
+          {saveMutation.isPending ? t('Saving...', 'جاري الحفظ...') : t('Save Changes', 'حفظ التغييرات')}
         </Button>
       }
     >

@@ -56,6 +56,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { MetricCard, MetricGrid } from '@/components/shared';
+import { useAdminAuditLog } from '@/hooks/useAdminAuditLog';
 
 interface UserWithRole {
   id: string;
@@ -87,6 +88,7 @@ const STATUS_CONFIG: Record<string, { label: string; labelAr: string; color: str
 export default function UsersRolesPage() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
+  const { createAuditLog } = useAdminAuditLog();
   
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
@@ -156,6 +158,8 @@ export default function UsersRolesPage() {
     
     setSubmitting(true);
     try {
+      const previousRole = selectedUser.role;
+      
       // Delete existing role first, then insert new one
       await supabase
         .from('user_roles')
@@ -167,6 +171,18 @@ export default function UsersRolesPage() {
         .insert({ user_id: selectedUser.user_id, role: newRole as any });
 
       if (error) throw error;
+
+      // P1 FIX: Audit log for role changes
+      await createAuditLog({
+        action: 'USER_ROLE_CHANGE',
+        entityType: 'user',
+        entityId: selectedUser.user_id,
+        metadata: { 
+          user_email: selectedUser.email,
+          previous_role: previousRole,
+          new_role: newRole,
+        },
+      });
 
       toast.success(t('Role updated successfully', 'تم تحديث الدور بنجاح'));
       setChangeRoleDialogOpen(false);
