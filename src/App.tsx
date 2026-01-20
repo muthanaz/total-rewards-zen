@@ -47,6 +47,7 @@ import SegmentsPage from "./pages/employer/Segments";
 import ClaimsPage from "./pages/employer/Claims";
 import MarketplaceAnalyticsPage from "./pages/employer/MarketplaceAnalytics";
 import PoliciesPage from "./pages/employer/Policies";
+import PolicyInsightsPage from "./pages/employer/PolicyInsights";
 import IntegrationsPage from "./pages/employer/Integrations";
 import KnowledgeCenterPage from "./pages/employer/KnowledgeCenter";
 import RecommendationsPage from "./pages/employer/Recommendations";
@@ -170,6 +171,7 @@ function AppRoutes() {
         <Route path="claims" element={<ClaimsPage />} />
         <Route path="marketplace" element={<MarketplaceAnalyticsPage />} />
         <Route path="policies" element={<PoliciesPage />} />
+        <Route path="policy-insights" element={<PolicyInsightsPage />} />
         <Route path="integrations" element={<IntegrationsPage />} />
         <Route path="knowledge" element={<KnowledgeCenterPage />} />
         <Route path="recommendations" element={<RecommendationsPage />} />

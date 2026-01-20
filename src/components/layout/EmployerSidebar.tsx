@@ -122,7 +122,7 @@ const execNavigationGroups: NavGroup[] = [
     label: 'Strategy',
     items: [
       { label: 'Recommendations', path: '/employer/recommendations', icon: Lightbulb },
-      { label: 'Policy Insights', path: '/employer/policies', icon: TrendingUp },
+      { label: 'Policy Insights', path: '/employer/policy-insights', icon: TrendingUp },
     ],
   },
   // 5) Marketplace (Phase 2 - feature-flagged)
