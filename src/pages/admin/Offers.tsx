@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PageLayout, MetricCard, MetricGrid } from '@/components/shared';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { useAdminAuditLog } from '@/hooks/useAdminAuditLog';
 
 const OFFER_STATUS = {
   active: { label: 'Active', labelAr: 'نشط', color: 'bg-success/10 text-success border-success/30' },
@@ -30,6 +31,8 @@ export default function AdminOffers() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
+  const queryClient = useQueryClient();
+  const { createAuditLog } = useAdminAuditLog();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -50,29 +53,92 @@ export default function AdminOffers() {
     },
   });
 
+  // P0 FIX: Mutation to approve/reject offers
+  const updateOfferMutation = useMutation({
+    mutationFn: async ({ offerId, status, isActive }: { offerId: string; status: string; isActive: boolean }) => {
+      const { error } = await supabase
+        .from('marketplace_offers')
+        .update({ status, is_active: isActive })
+        .eq('id', offerId);
+      if (error) throw error;
+      return { offerId, status };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-offers'] });
+      queryClient.invalidateQueries({ queryKey: ['marketplace_offers'] }); // Employee side
+      queryClient.invalidateQueries({ queryKey: ['vendor-offers'] }); // Vendor side
+    },
+  });
+
   const categories = [...new Set(offers?.map(o => o.category) || [])];
 
   const filteredOffers = offers?.filter(o => {
     const matchesSearch = o.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           o.merchant.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || (o.is_active ? 'active' : 'pending') === statusFilter;
+    const matchesStatus = statusFilter === 'all' || o.status === statusFilter || 
+                          (statusFilter === 'active' && o.is_active) ||
+                          (statusFilter === 'pending' && o.status === 'pending');
     const matchesCategory = categoryFilter === 'all' || o.category === categoryFilter;
     return matchesSearch && matchesStatus && matchesCategory;
   }) || [];
 
   const metrics = [
     { title: t('Total Offers', 'إجمالي العروض'), value: offers?.length || 0, icon: Tag },
-    { title: t('Active', 'نشط'), value: offers?.filter(o => o.is_active).length || 0, icon: CheckCircle },
-    { title: t('Pending Review', 'بانتظار المراجعة'), value: offers?.filter(o => !o.is_active).length || 0, icon: Clock },
+    { title: t('Active', 'نشط'), value: offers?.filter(o => o.status === 'active' && o.is_active).length || 0, icon: CheckCircle },
+    { title: t('Pending Review', 'بانتظار المراجعة'), value: offers?.filter(o => o.status === 'pending').length || 0, icon: Clock },
     { title: t('Avg. Discount', 'متوسط الخصم'), value: `${Math.round((offers?.reduce((acc, o) => acc + (o.discount_percent || 0), 0) || 0) / (offers?.length || 1))}%`, icon: Percent },
   ];
 
-  const handleApprove = (offer: any) => {
-    toast.success(t(`Approved: ${offer.title}`, `تمت الموافقة: ${offer.title}`));
+  // P0 FIX: Actually update DB on approve
+  const handleApprove = async (offer: any) => {
+    try {
+      await updateOfferMutation.mutateAsync({ 
+        offerId: offer.id, 
+        status: 'active', 
+        isActive: true 
+      });
+      await createAuditLog({
+        action: 'OFFER_APPROVE',
+        entityType: 'offer',
+        entityId: offer.id,
+        metadata: { 
+          offer_title: offer.title, 
+          vendor_id: offer.vendor_id,
+          previous_status: offer.status,
+          actor_role: 'admin',
+        },
+      });
+      toast.success(t(`Approved: ${offer.title}`, `تمت الموافقة: ${offer.title}`));
+      setDetailSheetOpen(false);
+    } catch (error) {
+      toast.error(t('Failed to approve offer', 'فشل في الموافقة على العرض'));
+    }
   };
 
-  const handleReject = (offer: any) => {
-    toast.error(t(`Rejected: ${offer.title}`, `تم الرفض: ${offer.title}`));
+  // P0 FIX: Actually update DB on reject
+  const handleReject = async (offer: any) => {
+    try {
+      await updateOfferMutation.mutateAsync({ 
+        offerId: offer.id, 
+        status: 'rejected', 
+        isActive: false 
+      });
+      await createAuditLog({
+        action: 'OFFER_REJECT',
+        entityType: 'offer',
+        entityId: offer.id,
+        metadata: { 
+          offer_title: offer.title, 
+          vendor_id: offer.vendor_id,
+          previous_status: offer.status,
+          actor_role: 'admin',
+        },
+      });
+      toast.error(t(`Rejected: ${offer.title}`, `تم الرفض: ${offer.title}`));
+      setDetailSheetOpen(false);
+    } catch (error) {
+      toast.error(t('Failed to reject offer', 'فشل في رفض العرض'));
+    }
   };
 
   return (

@@ -59,6 +59,7 @@ interface OfferDetailSheetProps {
   onActivate: (offer: any) => void;
   isSaved?: boolean;
   onToggleSave?: (offerId: string) => void;
+  isActivating?: boolean;
 }
 
 const REDEMPTION_CONFIG: Record<RedemptionMethod, { 
@@ -113,6 +114,7 @@ export function OfferDetailSheet({
   onActivate,
   isSaved = false,
   onToggleSave,
+  isActivating = false,
 }: OfferDetailSheetProps) {
   const { language, direction } = useLanguage();
   const { toast } = useToast();
@@ -318,9 +320,10 @@ export function OfferDetailSheet({
                 className="w-full gap-2" 
                 size="lg"
                 onClick={handleActivate}
+                disabled={isActivating}
               >
                 <CheckCircle className="w-4 h-4" />
-                {t('Activate Offer', 'تفعيل العرض')}
+                {isActivating ? t('Activating...', 'جاري التفعيل...') : t('Activate Offer', 'تفعيل العرض')}
               </Button>
 
               <Button
