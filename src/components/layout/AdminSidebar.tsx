@@ -3,12 +3,12 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
-  Globe,
-  TrendingUp,
-  Users,
   Building2,
+  Users,
   Store,
-  FileBarChart,
+  Tag,
+  ShieldCheck,
+  FileText,
   Settings,
   Menu,
   X,
@@ -16,10 +16,14 @@ import {
   Shield,
   ChevronDown,
   Database,
-  Target,
-  Wallet,
+  Activity,
+  AlertTriangle,
   Sliders,
-  FileSpreadsheet,
+  ToggleLeft,
+  CreditCard,
+  ClipboardList,
+  Server,
+  Link2,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -40,29 +44,15 @@ interface NavItem {
   labelAr: string;
   path: string;
   icon: React.ElementType;
+  badge?: number;
 }
 
 const navigationGroups: NavGroup[] = [
   {
-    title: 'Platform Overview',
-    titleAr: 'نظرة عامة على المنصة',
+    title: 'Overview',
+    titleAr: 'نظرة عامة',
     items: [
       { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/admin', icon: LayoutDashboard },
-    ],
-  },
-  {
-    title: 'Benchmarking',
-    titleAr: 'المقارنة المعيارية',
-    items: [
-      { label: 'Regional & Industry', labelAr: 'إقليمي وصناعي', path: '/admin/benchmarks', icon: Globe },
-    ],
-  },
-  {
-    title: 'Market Intelligence',
-    titleAr: 'ذكاء السوق',
-    items: [
-      { label: 'User Intent & Segments', labelAr: 'نوايا وشرائح المستخدمين', path: '/admin/market', icon: Users },
-      { label: 'Spending Patterns', labelAr: 'أنماط الإنفاق', path: '/admin/spending', icon: Wallet },
     ],
   },
   {
@@ -70,7 +60,33 @@ const navigationGroups: NavGroup[] = [
     titleAr: 'إدارة المنصة',
     items: [
       { label: 'Organizations', labelAr: 'المنظمات', path: '/admin/organizations', icon: Building2 },
-      { label: 'Saved Reports', labelAr: 'التقارير المحفوظة', path: '/admin/reports', icon: FileBarChart },
+      { label: 'Users & Roles', labelAr: 'المستخدمون والأدوار', path: '/admin/users', icon: Users },
+    ],
+  },
+  {
+    title: 'Marketplace Governance',
+    titleAr: 'حوكمة السوق',
+    items: [
+      { label: 'Vendors', labelAr: 'البائعون', path: '/admin/vendors', icon: Store },
+      { label: 'Offers & Vouchers', labelAr: 'العروض والقسائم', path: '/admin/offers', icon: Tag },
+      { label: 'Moderation Queue', labelAr: 'قائمة المراجعة', path: '/admin/moderation', icon: ClipboardList, badge: 3 },
+    ],
+  },
+  {
+    title: 'Data & Integrations',
+    titleAr: 'البيانات والتكاملات',
+    items: [
+      { label: 'Data Sources', labelAr: 'مصادر البيانات', path: '/admin/data-sources', icon: Database },
+      { label: 'Data Quality', labelAr: 'جودة البيانات', path: '/admin/data-quality', icon: Activity },
+      { label: 'Sync Monitor', labelAr: 'مراقبة المزامنة', path: '/admin/sync-monitor', icon: Server },
+    ],
+  },
+  {
+    title: 'Security & Compliance',
+    titleAr: 'الأمان والامتثال',
+    items: [
+      { label: 'Audit Log', labelAr: 'سجل التدقيق', path: '/admin/audit-log', icon: FileText },
+      { label: 'Security Settings', labelAr: 'إعدادات الأمان', path: '/admin/security', icon: ShieldCheck },
     ],
   },
   {
@@ -78,14 +94,14 @@ const navigationGroups: NavGroup[] = [
     titleAr: 'التكوين',
     items: [
       { label: 'UI Configuration', labelAr: 'تكوين الواجهة', path: '/admin/ui-config', icon: Sliders },
-      { label: 'Data Migration', labelAr: 'ترحيل البيانات', path: '/admin/data-migration', icon: FileSpreadsheet },
+      { label: 'Feature Flags', labelAr: 'علامات الميزات', path: '/admin/feature-flags', icon: ToggleLeft },
     ],
   },
   {
-    title: 'Settings',
-    titleAr: 'الإعدادات',
+    title: 'Billing',
+    titleAr: 'الفوترة',
     items: [
-      { label: 'Platform Settings', labelAr: 'إعدادات المنصة', path: '/admin/settings', icon: Settings },
+      { label: 'Plans & Invoices', labelAr: 'الخطط والفواتير', path: '/admin/billing', icon: CreditCard },
     ],
   },
 ];
@@ -156,11 +172,11 @@ export function AdminSidebar() {
         isRTL && "text-right"
       )}>
         {navigationGroups.map((group) => (
-          <div key={group.title} className="mb-4">
+          <div key={group.title} className="mb-3">
             <button
               onClick={() => toggleGroup(group.title)}
               className={cn(
-                "flex items-center justify-between w-full px-2 py-2 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider hover:text-sidebar-foreground/70 transition-colors",
+                "flex items-center justify-between w-full px-2 py-1.5 text-[11px] font-semibold text-sidebar-foreground/50 uppercase tracking-wider hover:text-sidebar-foreground/70 transition-colors",
                 isRTL && "flex-row-reverse"
               )}
             >
@@ -188,6 +204,11 @@ export function AdminSidebar() {
                     <span className={cn("text-sm flex-1", isRTL && "text-right")}>
                       {language === 'ar' ? item.labelAr : item.label}
                     </span>
+                    {item.badge && item.badge > 0 && (
+                      <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-destructive text-destructive-foreground">
+                        {item.badge}
+                      </span>
+                    )}
                   </Link>
                 ))}
               </div>

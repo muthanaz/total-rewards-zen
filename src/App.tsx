@@ -64,6 +64,8 @@ import AdminOrganizations from "./pages/admin/Organizations";
 import AdminOrganizationSettings from "./pages/admin/OrganizationSettings";
 import AdminUIConfiguration from "./pages/admin/UIConfiguration";
 import AdminDataMigration from "./pages/admin/DataMigration";
+import AdminUsersRoles from "./pages/admin/UsersRoles";
+import AdminAuditLog from "./pages/admin/AuditLog";
 
 import VendorDashboard from "./pages/vendor/Dashboard";
 import VendorOffers from "./pages/vendor/Offers";
@@ -195,9 +197,21 @@ function AppRoutes() {
         <Route path="reports" element={<AdminSavedReports />} />
         <Route path="organizations" element={<AdminOrganizations />} />
         <Route path="organizations/:orgId/settings" element={<AdminOrganizationSettings />} />
+        <Route path="users" element={<AdminUsersRoles />} />
+        <Route path="audit-log" element={<AdminAuditLog />} />
         <Route path="settings" element={<AdminSettings />} />
         <Route path="ui-config" element={<AdminUIConfiguration />} />
         <Route path="data-migration" element={<AdminDataMigration />} />
+        {/* Placeholder routes for new pages */}
+        <Route path="vendors" element={<AdminOrganizations />} />
+        <Route path="offers" element={<AdminSavedReports />} />
+        <Route path="moderation" element={<AdminSavedReports />} />
+        <Route path="data-sources" element={<AdminDataMigration />} />
+        <Route path="data-quality" element={<AdminDataMigration />} />
+        <Route path="sync-monitor" element={<AdminDataMigration />} />
+        <Route path="security" element={<AdminSettings />} />
+        <Route path="feature-flags" element={<AdminUIConfiguration />} />
+        <Route path="billing" element={<AdminSettings />} />
       </Route>
 
       {/* Vendor Routes */}
