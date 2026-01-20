@@ -6,7 +6,6 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   TrendingUp, 
@@ -43,6 +42,8 @@ import {
 import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
 import { calculateUtilization, calculateAggregateUtilization } from '@/lib/crossPortalContract';
 import { EmployerGlobalFiltersBar, DataConfidenceBadge, PageConfidenceGate, useDataCoverageMetrics } from '@/components/employer';
+import { DrillDownSheet, DrillDownSummaryGrid } from '@/components/shared';
+import { toast } from 'sonner';
 import {
   Table,
   TableBody,
@@ -280,7 +281,7 @@ interface DrilldownSheetProps {
   benefit: typeof spendByBenefitType[0] | null;
 }
 
-function DrilldownSheet({ isOpen, onClose, benefit }: DrilldownSheetProps) {
+function BenefitDrilldownSheet({ isOpen, onClose, benefit }: DrilldownSheetProps) {
   const [drillLevel, setDrillLevel] = useState<'department' | 'grade' | 'segment'>('department');
 
   if (!benefit) return null;
@@ -297,118 +298,103 @@ function DrilldownSheet({ isOpen, onClose, benefit }: DrilldownSheetProps) {
     utilized: benefit.spend,
   });
 
+  const summaryItems = [
+    { 
+      label: 'Entitled', 
+      value: formatCurrencyAED(benefit.entitled),
+      tooltip: <InfoTooltip formula={METRIC_DEFINITIONS.entitledValue.formula} dataSource={METRIC_DEFINITIONS.entitledValue.dataSource} />
+    },
+    { 
+      label: 'Claimed', 
+      value: formatCurrencyAED(benefit.spend),
+      tooltip: <InfoTooltip formula={METRIC_DEFINITIONS.claimedAmount.formula} dataSource={METRIC_DEFINITIONS.claimedAmount.dataSource} />
+    },
+    { 
+      label: 'Utilization', 
+      value: formatPercent(utilization.rate),
+      tooltip: <InfoTooltip formula={METRIC_DEFINITIONS.utilizationRate.formula} dataSource={METRIC_DEFINITIONS.utilizationRate.dataSource} />
+    },
+  ];
+
+  const levels = [
+    { id: 'department', label: 'Department', icon: Building2 },
+    { id: 'grade', label: 'Grade', icon: Target },
+    { id: 'segment', label: 'Segment', icon: Users },
+  ];
+
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            <Layers className="h-5 w-5" />
-            {benefit.name} Spend Drilldown
-          </SheetTitle>
-        </SheetHeader>
-
-        <div className="mt-6 space-y-6">
-          {/* Summary */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <p className="text-sm text-muted-foreground">Entitled</p>
-              <p className="text-lg font-bold">{formatCurrencyAED(benefit.entitled)}</p>
-              <InfoTooltip formula={METRIC_DEFINITIONS.entitledValue.formula} dataSource={METRIC_DEFINITIONS.entitledValue.dataSource} />
-            </div>
-            <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <p className="text-sm text-muted-foreground">Claimed</p>
-              <p className="text-lg font-bold">{formatCurrencyAED(benefit.spend)}</p>
-              <InfoTooltip formula={METRIC_DEFINITIONS.claimedAmount.formula} dataSource={METRIC_DEFINITIONS.claimedAmount.dataSource} />
-            </div>
-            <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <p className="text-sm text-muted-foreground">Utilization</p>
-              <p className="text-lg font-bold">{formatPercent(utilization.rate)}</p>
-              <InfoTooltip formula={METRIC_DEFINITIONS.utilizationRate.formula} dataSource={METRIC_DEFINITIONS.utilizationRate.dataSource} />
-            </div>
-          </div>
-
-          {/* Drilldown Level Selector */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">View by:</span>
-            <Button 
-              variant={drillLevel === 'department' ? 'default' : 'outline'} 
-              size="sm"
-              onClick={() => setDrillLevel('department')}
-            >
-              <Building2 className="h-4 w-4 mr-1" />
-              Department
-            </Button>
-            <Button 
-              variant={drillLevel === 'grade' ? 'default' : 'outline'} 
-              size="sm"
-              onClick={() => setDrillLevel('grade')}
-            >
-              <Target className="h-4 w-4 mr-1" />
-              Grade
-            </Button>
-            <Button 
-              variant={drillLevel === 'segment' ? 'default' : 'outline'} 
-              size="sm"
-              onClick={() => setDrillLevel('segment')}
-            >
-              <Users className="h-4 w-4 mr-1" />
-              Segment
-            </Button>
-          </div>
-
-          {/* Drilldown Table */}
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>
-                  {drillLevel === 'department' ? 'Department' : drillLevel === 'grade' ? 'Grade' : 'Segment'}
-                </TableHead>
-                <TableHead className="text-right">
-                  Entitled
-                  <InfoTooltip formula="Sum of annual_allowance for this group" dataSource="benefit_entitlements" />
-                </TableHead>
-                <TableHead className="text-right">
-                  Claimed
-                  <InfoTooltip formula="Sum of approved/paid claims for this group" dataSource="requests" />
-                </TableHead>
-                <TableHead className="text-right">Employees</TableHead>
-                <TableHead className="text-right">
-                  Utilization
-                  <InfoTooltip formula={METRIC_DEFINITIONS.utilizationRate.formula} dataSource="Calculated" />
-                </TableHead>
+    <DrillDownSheet
+      open={isOpen}
+      onOpenChange={(open) => !open && onClose()}
+      title={`${benefit.name} Spend Drilldown`}
+      subtitle="Analyze spend distribution across organizational dimensions"
+      icon={Layers}
+      levels={levels}
+      activeLevel={drillLevel}
+      onLevelChange={(id) => setDrillLevel(id as 'department' | 'grade' | 'segment')}
+      summary={<DrillDownSummaryGrid items={summaryItems} columns={3} />}
+      size="lg"
+      actions={{
+        export: {
+          label: 'Export CSV',
+          onClick: () => toast.success('Export started'),
+        },
+        primary: {
+          label: 'View Recommendations',
+          onClick: () => {},
+        },
+      }}
+    >
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>
+              {drillLevel === 'department' ? 'Department' : drillLevel === 'grade' ? 'Grade' : 'Segment'}
+            </TableHead>
+            <TableHead className="text-right">
+              Entitled
+              <InfoTooltip formula="Sum of annual_allowance for this group" dataSource="benefit_entitlements" />
+            </TableHead>
+            <TableHead className="text-right">
+              Claimed
+              <InfoTooltip formula="Sum of approved/paid claims for this group" dataSource="requests" />
+            </TableHead>
+            <TableHead className="text-right">Employees</TableHead>
+            <TableHead className="text-right">
+              Utilization
+              <InfoTooltip formula={METRIC_DEFINITIONS.utilizationRate.formula} dataSource="Calculated" />
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {currentData.map((row) => {
+            const rowUtil = calculateUtilization({
+              allocated: row.entitled,
+              utilized: row.spend,
+            });
+            return (
+              <TableRow key={row.name}>
+                <TableCell className="font-medium">{row.name}</TableCell>
+                <TableCell className="text-right">{formatCurrencyAED(row.entitled, { abbreviate: false })}</TableCell>
+                <TableCell className="text-right">{formatCurrencyAED(row.spend, { abbreviate: false })}</TableCell>
+                <TableCell className="text-right">{formatInteger(row.employees)}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <Progress value={rowUtil.rate} className="w-16 h-2" />
+                    <span className={
+                      rowUtil.rate >= 80 ? 'text-success' : 
+                      rowUtil.rate >= 60 ? 'text-warning' : 'text-destructive'
+                    }>
+                      {formatPercent(rowUtil.rate)}
+                    </span>
+                  </div>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {currentData.map((row) => {
-                const rowUtil = calculateUtilization({
-                  allocated: row.entitled,
-                  utilized: row.spend,
-                });
-                return (
-                  <TableRow key={row.name}>
-                    <TableCell className="font-medium">{row.name}</TableCell>
-                    <TableCell className="text-right">{formatCurrencyAED(row.entitled, { abbreviate: false })}</TableCell>
-                    <TableCell className="text-right">{formatCurrencyAED(row.spend, { abbreviate: false })}</TableCell>
-                    <TableCell className="text-right">{formatInteger(row.employees)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Progress value={rowUtil.rate} className="w-16 h-2" />
-                        <span className={
-                          rowUtil.rate >= 80 ? 'text-emerald-600' : 
-                          rowUtil.rate >= 60 ? 'text-amber-600' : 'text-red-500'
-                        }>
-                          {formatPercent(rowUtil.rate)}
-                        </span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      </SheetContent>
-    </Sheet>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </DrillDownSheet>
   );
 }
 
@@ -1104,7 +1090,7 @@ export default function SpendPage() {
       </Tabs>
 
       {/* Drilldown Sheet */}
-      <DrilldownSheet 
+      <BenefitDrilldownSheet 
         isOpen={!!selectedBenefit} 
         onClose={() => setSelectedBenefit(null)} 
         benefit={selectedBenefit} 
