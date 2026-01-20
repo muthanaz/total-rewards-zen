@@ -5,23 +5,34 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Gift, Star, CheckCircle, Grid3X3, List, Sparkles, 
   ShoppingBag, Coffee, Activity, Users, BookOpen, Home, Car, Plane,
   CreditCard, Search, X, Clock, Ticket, Heart, AlertCircle,
-  Calendar, Tag, Building2, Link as LinkIcon, QrCode, Wallet
+  Calendar, Tag, Building2, ShieldCheck, Filter
 } from 'lucide-react';
 import { useMarketplaceOffers, usePerkActivations } from '@/hooks/useSupabaseData';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { MARKETPLACE_CATEGORIES } from '@/lib/constants';
 import { CuratedPerks } from '@/components/dashboard/CuratedPerks';
 import { BankCardBenefits } from '@/components/employee/BankCardBenefits';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { NoSearchResults, EmptyState } from '@/components/ui/empty-state';
-// Removed Phase2Gate - Marketplace is now fully functional
 import { cn } from '@/lib/utils';
-import { format, isPast, isWithinInterval, addDays } from 'date-fns';
+import { format, isPast, addDays } from 'date-fns';
+import { 
+  getOfferSponsorship, 
+  getOfferVerificationStatus,
+  SPONSORSHIP_CONFIG,
+  VERIFICATION_CONFIG,
+  type OfferSponsorshipType,
+} from '@/lib/crossPortalContract';
+import { MarketplaceSavingsWidget, generateMockSavingsData } from '@/components/employee/MarketplaceSavingsWidget';
+import { PersonalizedRecommendationsStrip } from '@/components/employee/PersonalizedRecommendationsStrip';
+import { OfferDetailSheet } from '@/components/employee/OfferDetailSheet';
 
 // Category config with vibrant but balanced colors
 const CATEGORY_CONFIG: Record<string, { icon: React.ElementType; color: string; bgLight: string; bgDark: string }> = {
@@ -34,7 +45,6 @@ const CATEGORY_CONFIG: Record<string, { icon: React.ElementType; color: string; 
   'Mobility': { icon: Car, color: 'text-cyan-500', bgLight: 'bg-cyan-50 dark:bg-cyan-950/30', bgDark: 'bg-cyan-500' },
   'Lifestyle & Shopping': { icon: Sparkles, color: 'text-pink-500', bgLight: 'bg-pink-50 dark:bg-pink-950/30', bgDark: 'bg-pink-500' },
   'Travel & Experiences': { icon: Plane, color: 'text-indigo-500', bgLight: 'bg-indigo-50 dark:bg-indigo-950/30', bgDark: 'bg-indigo-500' },
-  // Wellness - for category tabs
   'Wellness': { icon: Heart, color: 'text-pink-500', bgLight: 'bg-pink-50 dark:bg-pink-950/30', bgDark: 'bg-pink-500' },
   'Food & Dining': { icon: Coffee, color: 'text-amber-500', bgLight: 'bg-amber-50 dark:bg-amber-950/30', bgDark: 'bg-amber-500' },
   'Fitness': { icon: Activity, color: 'text-emerald-500', bgLight: 'bg-emerald-50 dark:bg-emerald-950/30', bgDark: 'bg-emerald-500' },
@@ -56,19 +66,6 @@ const CATEGORY_TABS = [
   'Experiences',
 ];
 
-// Redemption method types
-type RedemptionMethod = 'code' | 'deeplink' | 'voucher' | 'payroll';
-
-const REDEMPTION_CONFIG: Record<RedemptionMethod, { label: string; description: string }> = {
-  'code': { label: 'Promo Code', description: 'Copy code and use at checkout' },
-  'deeplink': { label: 'Direct Link', description: 'Click to apply discount automatically' },
-  'voucher': { label: 'E-Voucher', description: 'Download voucher to present in-store' },
-  'payroll': { label: 'Payroll Deduction', description: 'Deducted from your salary' },
-};
-
-// Offer sponsorship type
-type SponsorshipType = 'employer' | 'public';
-
 // Voucher status helper
 type VoucherStatus = 'active' | 'redeemed' | 'expired';
 
@@ -86,44 +83,36 @@ interface VoucherData {
   expiresAt: string;
   status: VoucherStatus;
   code?: string;
-  redemptionMethod?: RedemptionMethod;
-}
-
-// Helper to determine sponsorship type (demo logic)
-function getOfferSponsorship(offer: any): SponsorshipType {
-  // In real implementation, this would come from the offer data
-  // For demo, we mark offers with high discounts as employer-sponsored
-  return (offer.discount_percent && offer.discount_percent >= 15) ? 'employer' : 'public';
-}
-
-// Helper to determine redemption method (demo logic)
-function getRedemptionMethod(offer: any): RedemptionMethod {
-  // In real implementation, this would come from the offer data
-  const category = offer.category?.toLowerCase() || '';
-  if (category.includes('fitness') || category.includes('health')) return 'voucher';
-  if (category.includes('learning')) return 'deeplink';
-  if (category.includes('shopping')) return 'payroll';
-  return 'code';
 }
 
 function MarketplaceContent() {
   const { data: offers = [] } = useMarketplaceOffers();
   const { data: activations = [] } = usePerkActivations();
   const { bankCards, profile, children } = useProfile();
+  const { language, direction } = useLanguage();
   const { toast } = useToast();
+  const isRTL = direction === 'rtl';
+  const t = (en: string, ar: string) => (language === 'ar' ? ar : en);
+
+  // State
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState<string>('All');
-  const [sortBy, setSortBy] = useState<string>('discount');
+  const [sortBy, setSortBy] = useState<string>('recommended');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [savedOffers, setSavedOffers] = useState<Set<string>>(new Set());
   const [voucherFilter, setVoucherFilter] = useState<VoucherStatus | 'all'>('all');
+  const [sponsorshipFilter, setSponsorshipFilter] = useState<'all' | 'sponsored' | 'public'>('all');
+  const [selectedOffer, setSelectedOffer] = useState<any | null>(null);
+
+  // Mock savings data based on activations
+  const savingsData = useMemo(() => generateMockSavingsData(activations), [activations]);
 
   // Map activations to vouchers
   const vouchers: VoucherData[] = useMemo(() => {
     return activations.map((activation: any) => {
-      const expiresAt = addDays(new Date(activation.activated_at), 30); // 30-day validity
+      const expiresAt = addDays(new Date(activation.activated_at), 30);
       const isExpired = isPast(expiresAt);
-      const isRedeemed = false; // Would come from actual redemption data
+      const isRedeemed = false;
       
       return {
         id: activation.id,
@@ -133,7 +122,7 @@ function MarketplaceContent() {
         status: isExpired ? 'expired' : isRedeemed ? 'redeemed' : 'active' as VoucherStatus,
         code: `BNFT${activation.id.slice(0, 6).toUpperCase()}`,
       };
-    }).filter((v: VoucherData) => v.offer); // Filter out any without offer data
+    }).filter((v: VoucherData) => v.offer);
   }, [activations]);
 
   const filteredVouchers = useMemo(() => {
@@ -141,7 +130,7 @@ function MarketplaceContent() {
     return vouchers.filter(v => v.status === voucherFilter);
   }, [vouchers, voucherFilter]);
 
-  // Match categories for filtering (simplified mapping)
+  // Category mapping for filtering
   const categoryMapping: Record<string, string[]> = {
     'Wellness': ['Health & Fitness', 'Lifestyle & Shopping'],
     'Food & Dining': ['Food & Coffee', 'Everyday Essentials'],
@@ -154,6 +143,8 @@ function MarketplaceContent() {
 
   const filteredOffers = useMemo(() => {
     let filtered = [...offers];
+    
+    // Search filter
     if (searchTerm) {
       filtered = filtered.filter(o => 
         o.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -161,11 +152,31 @@ function MarketplaceContent() {
         o.description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
+    
+    // Category filter
     if (category !== 'All') {
       const matchingCategories = categoryMapping[category] || [category];
       filtered = filtered.filter(o => matchingCategories.includes(o.category));
     }
+    
+    // Sponsorship filter
+    if (sponsorshipFilter !== 'all') {
+      filtered = filtered.filter(o => {
+        const sponsorship = getOfferSponsorship(o);
+        return sponsorshipFilter === 'sponsored' ? sponsorship === 'employer' : sponsorship === 'public';
+      });
+    }
+    
+    // Sort
     switch (sortBy) {
+      case 'recommended':
+        // Score-based sorting (higher discounts + ratings = more recommended)
+        filtered.sort((a, b) => {
+          const scoreA = (a.discount_percent || 0) + ((a.rating || 0) * 5);
+          const scoreB = (b.discount_percent || 0) + ((b.rating || 0) * 5);
+          return scoreB - scoreA;
+        });
+        break;
       case 'discount': 
         filtered.sort((a, b) => (b.discount_percent || 0) - (a.discount_percent || 0)); 
         break;
@@ -177,21 +188,7 @@ function MarketplaceContent() {
         break;
     }
     return filtered;
-  }, [offers, searchTerm, category, sortBy]);
-
-  // Personalized recommendations based on profile
-  const recommendedOffers = useMemo(() => {
-    // Simple recommendation logic based on profile
-    const hasChildren = children.length > 0;
-    const interests = ['Travel', 'Fitness', 'Technology']; // Would come from profile
-    
-    return offers.filter(o => {
-      if (hasChildren && o.category === 'Family & Parenting') return true;
-      if (o.category === 'Health & Fitness') return true;
-      if (o.rating && o.rating >= 4.5) return true;
-      return false;
-    }).slice(0, 6);
-  }, [offers, children]);
+  }, [offers, searchTerm, category, sortBy, sponsorshipFilter]);
 
   // Count offers per category tab
   const categoryCounts = useMemo(() => {
@@ -203,11 +200,19 @@ function MarketplaceContent() {
     return counts;
   }, [offers]);
 
+  // Count sponsored vs public
+  const sponsoredCount = offers.filter(o => getOfferSponsorship(o) === 'employer').length;
+  const publicCount = offers.length - sponsoredCount;
+
   const handleActivate = (offer: any) => {
     toast({ 
-      title: "Offer Activated! 🎉", 
-      description: `${offer.title} has been activated. Check "My Vouchers" for your code.` 
+      title: t("Offer Activated! 🎉", "تم تفعيل العرض! 🎉"), 
+      description: t(
+        `${offer.title} has been activated. Check "My Vouchers" for your code.`,
+        `تم تفعيل ${offer.title}. تحقق من "قسائمي" للحصول على الرمز.`
+      )
     });
+    setSelectedOffer(null);
   };
 
   const handleSave = (offerId: string) => {
@@ -215,10 +220,10 @@ function MarketplaceContent() {
       const next = new Set(prev);
       if (next.has(offerId)) {
         next.delete(offerId);
-        toast({ title: "Removed from saved" });
+        toast({ title: t("Removed from saved", "تمت الإزالة من المحفوظات") });
       } else {
         next.add(offerId);
-        toast({ title: "Saved for later ❤️" });
+        toast({ title: t("Saved for later ❤️", "تم الحفظ لوقت لاحق ❤️") });
       }
       return next;
     });
@@ -231,24 +236,21 @@ function MarketplaceContent() {
   const getVoucherStatusBadge = (status: VoucherStatus) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">Active</Badge>;
+        return <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">{t('Active', 'نشط')}</Badge>;
       case 'redeemed':
-        return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20">Redeemed</Badge>;
+        return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20">{t('Redeemed', 'مستخدم')}</Badge>;
       case 'expired':
-        return <Badge className="bg-slate-500/10 text-slate-600 border-slate-500/20">Expired</Badge>;
+        return <Badge className="bg-slate-500/10 text-slate-600 border-slate-500/20">{t('Expired', 'منتهي')}</Badge>;
     }
   };
-
-  // Count sponsored vs public offers
-  const sponsoredCount = offers.filter(o => getOfferSponsorship(o) === 'employer').length;
 
   // Empty state when no offers available
   if (offers.length === 0) {
     return (
       <div className="space-y-8 animate-fade-in">
         <PageHeader
-          title="Perks & Partners"
-          description="Exclusive discounts and benefits for employees"
+          title={t("Perks & Partners", "الامتيازات والشراكات")}
+          description={t("Exclusive discounts and benefits for employees", "خصومات ومزايا حصرية للموظفين")}
           icon={Gift}
           iconClassName="from-accent to-accent/80 shadow-accent/25"
         />
@@ -258,22 +260,24 @@ function MarketplaceContent() {
             <div className="mx-auto w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
               <AlertCircle className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="font-semibold text-lg mb-2">No Offers Available Yet</h3>
+            <h3 className="font-semibold text-lg mb-2">
+              {t('No Offers Available Yet', 'لا توجد عروض متاحة بعد')}
+            </h3>
             <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6">
-              Marketplace offers are enabled by your employer based on eligibility and benefit entitlements. 
-              Ask HR to enable the marketplace for your organization.
+              {t(
+                'Marketplace offers are enabled by your employer based on eligibility and benefit entitlements. Ask HR to enable the marketplace for your organization.',
+                'يتم تفعيل عروض السوق من قبل صاحب العمل بناءً على الأهلية واستحقاقات المزايا.'
+              )}
             </p>
             <div className="p-4 rounded-xl bg-muted/50 max-w-sm mx-auto text-sm text-left space-y-2">
-              <p className="font-medium">How it works:</p>
+              <p className="font-medium">{t('How it works:', 'كيف يعمل:')}</p>
               <ul className="text-muted-foreground space-y-1">
-                <li>• <span className="text-accent font-medium">Employer-Sponsored</span> — Exclusive discounts subsidized by your company</li>
-                <li>• <span className="text-muted-foreground font-medium">Public Offers</span> — Partner discounts available to all employees</li>
-                <li>• Offers are curated based on your profile</li>
-                <li>• Eligibility depends on your benefit tier</li>
+                <li>• <span className="text-accent font-medium">{t('Employer-Sponsored', 'برعاية صاحب العمل')}</span> — {t('Exclusive discounts subsidized by your company', 'خصومات حصرية مدعومة من شركتك')}</li>
+                <li>• <span className="text-muted-foreground font-medium">{t('Public Offers', 'العروض العامة')}</span> — {t('Partner discounts available to all employees', 'خصومات الشركاء المتاحة لجميع الموظفين')}</li>
               </ul>
             </div>
             <Button variant="outline" className="mt-6" asChild>
-              <a href="/employee/requests?type=question">Ask HR about Marketplace</a>
+              <a href="/employee/requests?type=question">{t('Ask HR about Marketplace', 'اسأل الموارد البشرية عن السوق')}</a>
             </Button>
           </CardContent>
         </Card>
@@ -282,51 +286,84 @@ function MarketplaceContent() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <PageHeader
-        title="Perks & Partners"
-        description="Exclusive discounts and benefits for employees"
+        title={t("Perks & Partners", "الامتيازات والشراكات")}
+        description={t("Exclusive discounts and benefits curated for you", "خصومات ومزايا حصرية مختارة لك")}
         icon={Gift}
         iconClassName="from-accent to-accent/80 shadow-accent/25"
         badge={{
-          label: `${offers.length} Active Offers`,
+          label: `${offers.length} ${t('Active Offers', 'عرض نشط')}`,
           icon: Sparkles,
           variant: 'accent',
         }}
       />
 
-      {/* Sponsorship Legend */}
-      <div className="flex items-center gap-4 text-xs">
-        <div className="flex items-center gap-2">
-          <Badge className="bg-accent/10 text-accent border-0 gap-1">
-            <Building2 className="w-3 h-3" />
-            Employer-Sponsored
-          </Badge>
-          <span className="text-muted-foreground">({sponsoredCount} offers) — Exclusive discounts subsidized by your company</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="gap-1">
-            Public Offer
-          </Badge>
-          <span className="text-muted-foreground">— Partner discounts available to all employees</span>
-        </div>
+      {/* Savings Widget + Sponsorship Legend */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <MarketplaceSavingsWidget
+          totalSavings={savingsData.totalSavings}
+          totalActivations={savingsData.totalActivations}
+          topCategories={savingsData.topCategories}
+        />
+
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs font-medium text-muted-foreground mb-3">
+              {t('Offer Types', 'أنواع العروض')}
+            </p>
+            <div className={cn('space-y-2', isRTL && 'text-right')}>
+              <div className={cn('flex items-center gap-3', isRTL && 'flex-row-reverse')}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge className={cn('gap-1 cursor-help', SPONSORSHIP_CONFIG.employer.className)}>
+                      <Building2 className="w-3 h-3" />
+                      {t('Sponsored', 'برعاية صاحب العمل')}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs max-w-[200px]">
+                      {t(SPONSORSHIP_CONFIG.employer.tooltip, SPONSORSHIP_CONFIG.employer.tooltipAr)}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+                <span className="text-xs text-muted-foreground">
+                  {sponsoredCount} {t('offers', 'عرض')} — {t('Subsidized by your employer', 'مدعومة من صاحب عملك')}
+                </span>
+              </div>
+              <div className={cn('flex items-center gap-3', isRTL && 'flex-row-reverse')}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="outline" className="gap-1 cursor-help">
+                      {t('Public', 'عام')}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs max-w-[200px]">
+                      {t(SPONSORSHIP_CONFIG.public.tooltip, SPONSORSHIP_CONFIG.public.tooltipAr)}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+                <span className="text-xs text-muted-foreground">
+                  {publicCount} {t('offers', 'عرض')} — {t('Available to all employees', 'متاح لجميع الموظفين')}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Main Tabs */}
-      <Tabs defaultValue="personalized" className="space-y-6">
+      <Tabs defaultValue="offers" className="space-y-6">
         <TabsList className="h-auto gap-1 bg-muted/50 p-1">
-          <TabsTrigger value="personalized" className="gap-2 data-[state=active]:bg-background">
-            <Sparkles className="w-4 h-4" />
-            Recommended
-          </TabsTrigger>
-          <TabsTrigger value="browse" className="gap-2 data-[state=active]:bg-background">
-            <Grid3X3 className="w-4 h-4" />
-            Browse All
+          <TabsTrigger value="offers" className="gap-2 data-[state=active]:bg-background">
+            <ShoppingBag className="w-4 h-4" />
+            {t('Offers', 'العروض')}
           </TabsTrigger>
           <TabsTrigger value="vouchers" className="gap-2 data-[state=active]:bg-background">
             <Ticket className="w-4 h-4" />
-            My Vouchers
+            {t('My Vouchers', 'قسائمي')}
             {vouchers.filter(v => v.status === 'active').length > 0 && (
               <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">
                 {vouchers.filter(v => v.status === 'active').length}
@@ -335,418 +372,415 @@ function MarketplaceContent() {
           </TabsTrigger>
           <TabsTrigger value="bank-benefits" className="gap-2 data-[state=active]:bg-background">
             <CreditCard className="w-4 h-4" />
-            Bank Card Benefits
+            {t('Bank Card Benefits', 'مزايا البطاقة المصرفية')}
           </TabsTrigger>
         </TabsList>
 
-        {/* Personalized/Recommended Tab */}
-        <TabsContent value="personalized" className="space-y-8">
-          {/* AI Curated Section */}
-          <CuratedPerks onActivate={handleActivate} />
-          
-          {/* Recommended For You based on profile */}
-          {recommendedOffers.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-accent" />
-                <h3 className="font-display font-semibold text-lg">Recommended For You</h3>
-              </div>
-              <p className="text-sm text-muted-foreground -mt-2">
-                Based on your profile, location, and {children.length > 0 ? 'family status' : 'interests'}
-              </p>
-              
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {recommendedOffers.map((offer, index) => {
-                  const config = getCategoryConfig(offer.category);
-                  return (
-                    <Card 
-                      key={offer.id} 
-                      className="overflow-hidden group hover:shadow-lg transition-all duration-300 flex flex-col border-border/60 hover:border-border"
-                      style={{ animationDelay: `${index * 40}ms` }}
-                    >
-                      <div className={cn("h-1", config.bgDark)} />
-                      
-                      {offer.image_url && (
-                        <div className="relative h-32 bg-muted overflow-hidden">
-                          <img 
-                            src={offer.image_url} 
-                            alt={offer.title} 
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                          />
-                          {offer.discount_percent && (
-                            <Badge className="absolute top-2 left-2 bg-rose-500 hover:bg-rose-500 text-white border-0 text-xs font-bold">
-                              -{offer.discount_percent}%
-                            </Badge>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute top-2 right-2 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background"
-                            onClick={(e) => { e.preventDefault(); handleSave(offer.id); }}
-                          >
-                            <Heart className={cn("w-4 h-4", savedOffers.has(offer.id) && "fill-rose-500 text-rose-500")} />
-                          </Button>
-                        </div>
-                      )}
-                      
-                      <CardContent className="p-3 space-y-2 flex flex-col flex-1">
-                        <Badge variant="outline" className={cn("w-fit text-[10px] gap-1 border-0", config.bgLight, config.color)}>
-                          <config.icon className="w-3 h-3" />
-                          {offer.category.split(' & ')[0]}
+        {/* Offers Tab */}
+        <TabsContent value="offers" className="space-y-6">
+          {/* Smart Personalization Strip */}
+          <PersonalizedRecommendationsStrip
+            offers={offers}
+            onSelectOffer={setSelectedOffer}
+            onActivate={handleActivate}
+          />
+
+          {/* Filters Section */}
+          <Card>
+            <CardContent className="p-4">
+              <div className={cn('flex flex-col md:flex-row md:items-center gap-4', isRTL && 'md:flex-row-reverse')}>
+                {/* Category Pills */}
+                <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide flex-1">
+                  {CATEGORY_TABS.map((cat) => {
+                    const config = getCategoryConfig(cat);
+                    const Icon = cat === 'All' ? Grid3X3 : config.icon;
+                    const count = categoryCounts[cat] || 0;
+                    const isSelected = category === cat;
+                    
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setCategory(cat)}
+                        className={cn(
+                          "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs whitespace-nowrap transition-all",
+                          "hover:shadow-sm",
+                          isSelected 
+                            ? cat === 'All' 
+                              ? "bg-foreground text-background border-foreground"
+                              : `${config.bgDark} text-white border-transparent`
+                            : "bg-background border-border hover:border-foreground/30"
+                        )}
+                      >
+                        <Icon className={cn("w-3.5 h-3.5", isSelected ? "text-inherit" : config.color)} />
+                        <span className="font-medium">{cat}</span>
+                        <Badge variant="secondary" className={cn(
+                          "text-[9px] px-1 h-4",
+                          isSelected ? "bg-white/20 text-inherit" : ""
+                        )}>
+                          {count}
                         </Badge>
-                        
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-sm leading-snug line-clamp-2">{offer.title}</h3>
-                          <p className="text-xs text-muted-foreground mt-1">{offer.merchant}</p>
-                        </div>
-                        
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="flex-1" onClick={() => handleSave(offer.id)}>
-                            <Heart className={cn("w-3.5 h-3.5 mr-1", savedOffers.has(offer.id) && "fill-current")} />
-                            Save
-                          </Button>
-                          <Button size="sm" className="flex-1" onClick={() => handleActivate(offer)}>
-                            Redeem
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Additional Filters */}
+                <div className={cn('flex items-center gap-2 shrink-0', isRTL && 'flex-row-reverse')}>
+                  <Select value={sponsorshipFilter} onValueChange={(v) => setSponsorshipFilter(v as any)}>
+                    <SelectTrigger className="w-[130px] h-8 text-xs">
+                      <Filter className="w-3 h-3 mr-1" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('All Offers', 'جميع العروض')}</SelectItem>
+                      <SelectItem value="sponsored">{t('Sponsored', 'برعاية صاحب العمل')}</SelectItem>
+                      <SelectItem value="public">{t('Public', 'عام')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-[130px] h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recommended">{t('Recommended', 'موصى به')}</SelectItem>
+                      <SelectItem value="discount">{t('Highest Value', 'أعلى قيمة')}</SelectItem>
+                      <SelectItem value="rating">{t('Top Rated', 'الأعلى تقييماً')}</SelectItem>
+                      <SelectItem value="newest">{t('Newest', 'الأحدث')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
-          )}
-        </TabsContent>
 
-        {/* Browse All Tab */}
-        <TabsContent value="browse" className="space-y-6">
-          {/* Category Tabs - Horizontal scrollable */}
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {CATEGORY_TABS.map((cat) => {
-              const config = getCategoryConfig(cat);
-              const Icon = cat === 'All' ? Grid3X3 : config.icon;
-              const count = categoryCounts[cat] || 0;
-              const isSelected = category === cat;
-              
-              return (
-                <button
-                  key={cat}
-                  onClick={() => setCategory(cat)}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-full border whitespace-nowrap transition-all",
-                    "hover:shadow-sm",
-                    isSelected 
-                      ? cat === 'All' 
-                        ? "bg-foreground text-background border-foreground shadow-sm"
-                        : `${config.bgDark} text-white border-transparent shadow-sm`
-                      : "bg-background border-border hover:border-foreground/30"
+              {/* Search */}
+              <div className="mt-3">
+                <div className="relative">
+                  <Search className={cn("absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground", isRTL ? 'right-3' : 'left-3')} />
+                  <Input 
+                    placeholder={t("Search offers, merchants...", "ابحث عن العروض، التجار...")}
+                    value={searchTerm} 
+                    onChange={(e) => setSearchTerm(e.target.value)} 
+                    className={cn("h-9 bg-muted/50", isRTL ? 'pr-9' : 'pl-9')}
+                  />
+                  {searchTerm && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={cn("absolute top-1/2 -translate-y-1/2 h-6 w-6", isRTL ? 'left-2' : 'right-2')}
+                      onClick={() => setSearchTerm('')}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
                   )}
-                >
-                  <Icon className={cn("w-4 h-4", isSelected ? "text-inherit" : config.color)} />
-                  <span className="text-sm font-medium">{cat}</span>
-                  <Badge variant="secondary" className={cn(
-                    "text-[10px] px-1.5 h-5",
-                    isSelected ? "bg-white/20 text-inherit" : ""
-                  )}>
-                    {count}
-                  </Badge>
-                </button>
-              );
-            })}
-          </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* Search and Controls */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <h3 className="font-display font-semibold text-lg">
-                {category === 'All' ? 'All Offers' : category}
+          {/* Results Header */}
+          <div className={cn('flex items-center justify-between', isRTL && 'flex-row-reverse')}>
+            <div className={cn('flex items-center gap-3', isRTL && 'flex-row-reverse')}>
+              <h3 className="font-semibold">
+                {category === 'All' ? t('All Offers', 'جميع العروض') : category}
               </h3>
-              <Badge variant="outline" className="font-normal">
-                {filteredOffers.length} offers
+              <Badge variant="outline" className="font-normal text-xs">
+                {filteredOffers.length} {t('offers', 'عرض')}
               </Badge>
-              {category !== 'All' && (
-                <Button variant="ghost" size="sm" onClick={() => setCategory('All')} className="h-7 px-2 text-muted-foreground">
+              {(category !== 'All' || sponsorshipFilter !== 'all' || searchTerm) && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => { setCategory('All'); setSponsorshipFilter('all'); setSearchTerm(''); }} 
+                  className="h-7 px-2 text-muted-foreground text-xs"
+                >
                   <X className="w-3 h-3 mr-1" />
-                  Clear
+                  {t('Clear filters', 'مسح الفلاتر')}
                 </Button>
               )}
             </div>
             
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1 md:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search offers..." 
-                  value={searchTerm} 
-                  onChange={(e) => setSearchTerm(e.target.value)} 
-                  className="pl-9 h-9 bg-background" 
-                />
-              </div>
-              
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[140px] h-9 bg-background">
-                  <SelectValue placeholder="Sort By" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="discount">Best Discount</SelectItem>
-                  <SelectItem value="rating">Top Rated</SelectItem>
-                  <SelectItem value="newest">Newest</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <div className="flex border rounded-lg overflow-hidden bg-background">
-                <Button 
-                  variant={viewMode === 'grid' ? 'default' : 'ghost'} 
-                  size="sm" 
-                  className="rounded-none h-9 px-3"
-                  onClick={() => setViewMode('grid')}
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </Button>
-                <Button 
-                  variant={viewMode === 'list' ? 'default' : 'ghost'} 
-                  size="sm" 
-                  className="rounded-none h-9 px-3"
-                  onClick={() => setViewMode('list')}
-                >
-                  <List className="w-4 h-4" />
-                </Button>
-              </div>
+            <div className="flex border rounded-lg overflow-hidden bg-background">
+              <Button 
+                variant={viewMode === 'grid' ? 'default' : 'ghost'} 
+                size="sm" 
+                className="rounded-none h-8 px-2.5"
+                onClick={() => setViewMode('grid')}
+              >
+                <Grid3X3 className="w-3.5 h-3.5" />
+              </Button>
+              <Button 
+                variant={viewMode === 'list' ? 'default' : 'ghost'} 
+                size="sm" 
+                className="rounded-none h-8 px-2.5"
+                onClick={() => setViewMode('list')}
+              >
+                <List className="w-3.5 h-3.5" />
+              </Button>
             </div>
           </div>
 
-          {/* Offers Grid/List */}
+          {/* Offers Grid */}
           {filteredOffers.length > 0 ? (
-            viewMode === 'grid' ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filteredOffers.map((offer, index) => {
-                  const config = getCategoryConfig(offer.category);
+            <div className={cn(
+              viewMode === 'grid' 
+                ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                : "space-y-2"
+            )}>
+              {filteredOffers.map((offer, index) => {
+                const config = getCategoryConfig(offer.category);
+                const sponsorship = getOfferSponsorship(offer) as OfferSponsorshipType;
+                const verification = getOfferVerificationStatus(offer);
+                const sponsorConfig = SPONSORSHIP_CONFIG[sponsorship];
+
+                if (viewMode === 'list') {
                   return (
                     <Card 
-                      key={offer.id} 
-                      className="overflow-hidden group hover:shadow-lg transition-all duration-300 flex flex-col border-border/60 hover:border-border"
-                      style={{ animationDelay: `${index * 40}ms` }}
+                      key={offer.id}
+                      className="overflow-hidden hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => setSelectedOffer(offer)}
                     >
-                      <div className={cn("h-1", config.bgDark)} />
-                      
-                      {offer.image_url && (
-                        <div className="relative h-36 bg-muted overflow-hidden">
-                          <img 
-                            src={offer.image_url} 
-                            alt={offer.title} 
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                          />
-                          {offer.discount_percent && (
-                            <div className="absolute top-3 left-3">
-                              <Badge className="bg-rose-500 hover:bg-rose-500 text-white border-0 text-xs font-bold shadow-lg px-2.5">
+                      <CardContent className="p-3">
+                        <div className={cn('flex items-center gap-4', isRTL && 'flex-row-reverse')}>
+                          {offer.image_url && (
+                            <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted shrink-0">
+                              <img src={offer.image_url} alt={offer.title} className="w-full h-full object-cover" />
+                            </div>
+                          )}
+                          <div className={cn('flex-1 min-w-0', isRTL && 'text-right')}>
+                            <div className={cn('flex items-center gap-2 mb-1', isRTL && 'flex-row-reverse')}>
+                              <span className="text-xs text-muted-foreground">{offer.merchant}</span>
+                              {verification === 'verified' && (
+                                <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                              )}
+                              <Badge className={cn('text-[9px] px-1.5', sponsorConfig.className)}>
+                                {t(sponsorConfig.label, sponsorConfig.labelAr)}
+                              </Badge>
+                            </div>
+                            <p className="font-medium text-sm truncate">{offer.title}</p>
+                            <div className={cn('flex items-center gap-3 mt-1', isRTL && 'flex-row-reverse')}>
+                              <Badge variant="outline" className={cn("text-[10px] gap-1 border-0", config.bgLight, config.color)}>
+                                <config.icon className="w-3 h-3" />
+                                {offer.category.split(' & ')[0]}
+                              </Badge>
+                              {offer.rating && (
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                  {offer.rating}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className={cn('text-right shrink-0', isRTL && 'text-left')}>
+                            {offer.discount_percent && (
+                              <Badge className="bg-rose-500 hover:bg-rose-500 text-white border-0 font-bold mb-2">
                                 -{offer.discount_percent}%
                               </Badge>
-                            </div>
-                          )}
-                          {offer.rating && (
-                            <div className="absolute top-3 right-3">
-                              <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm gap-1 text-xs">
-                                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                                {offer.rating}
-                              </Badge>
-                            </div>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute bottom-2 right-2 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => { e.preventDefault(); handleSave(offer.id); }}
-                          >
-                            <Heart className={cn("w-4 h-4", savedOffers.has(offer.id) && "fill-rose-500 text-rose-500")} />
-                          </Button>
-                        </div>
-                      )}
-                      
-                      <CardContent className="p-4 space-y-3 flex flex-col flex-1">
-                        <Badge variant="outline" className={cn("w-fit text-[10px] gap-1 border-0", config.bgLight, config.color)}>
-                          <config.icon className="w-3 h-3" />
-                          {offer.category.split(' & ')[0]}
-                        </Badge>
-                        
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-accent transition-colors">
-                            {offer.title}
-                          </h3>
-                          <p className="text-xs text-muted-foreground mt-1.5">{offer.merchant}</p>
-                        </div>
-
-                        {/* Eligibility indicator */}
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <CheckCircle className="w-3 h-3 text-emerald-500" />
-                          <span>Eligible</span>
-                        </div>
-                        
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="flex-1 gap-1" onClick={() => handleSave(offer.id)}>
-                            <Heart className={cn("w-3.5 h-3.5", savedOffers.has(offer.id) && "fill-current")} />
-                            Save
-                          </Button>
-                          <Button size="sm" className="flex-1 gap-1" onClick={() => handleActivate(offer)}>
-                            Redeem
-                          </Button>
+                            )}
+                            <Button size="sm" className="w-full" onClick={(e) => { e.stopPropagation(); handleActivate(offer); }}>
+                              {t('Activate', 'تفعيل')}
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
                   );
-                })}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {filteredOffers.map((offer, index) => {
-                  const config = getCategoryConfig(offer.category);
-                  return (
-                    <Card 
-                      key={offer.id} 
-                      className="overflow-hidden group hover:shadow-sm transition-all border-border/60 hover:border-border"
-                      style={{ animationDelay: `${index * 25}ms` }}
-                    >
-                      <div className="flex items-center gap-4 p-4">
-                        <div className={cn("w-1 self-stretch rounded-full", config.bgDark)} />
-                        
-                        {offer.image_url && (
-                          <div className="w-20 h-20 bg-muted rounded-xl overflow-hidden shrink-0">
-                            <img src={offer.image_url} alt={offer.title} className="w-full h-full object-cover" />
-                          </div>
-                        )}
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <Badge variant="outline" className={cn("text-[10px] gap-1 border-0 mb-1.5", config.bgLight, config.color)}>
-                                <config.icon className="w-3 h-3" />
-                                {offer.category.split(' & ')[0]}
+                }
+
+                return (
+                  <Card 
+                    key={offer.id} 
+                    className="overflow-hidden group hover:shadow-lg transition-all duration-300 flex flex-col border-border/60 hover:border-accent/30 cursor-pointer"
+                    style={{ animationDelay: `${index * 30}ms` }}
+                    onClick={() => setSelectedOffer(offer)}
+                  >
+                    <div className={cn("h-1", config.bgDark)} />
+                    
+                    {offer.image_url && (
+                      <div className="relative h-32 bg-muted overflow-hidden">
+                        <img 
+                          src={offer.image_url} 
+                          alt={offer.title} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                        />
+                        {/* Badges */}
+                        <div className={cn('absolute top-2 left-2 right-2 flex justify-between items-start', isRTL && 'flex-row-reverse')}>
+                          {offer.discount_percent && (
+                            <Badge className="bg-rose-500 hover:bg-rose-500 text-white border-0 text-[10px] font-bold">
+                              -{offer.discount_percent}%
+                            </Badge>
+                          )}
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge className={cn('text-[9px] border cursor-help', sponsorConfig.className)}>
+                                {sponsorship === 'employer' && <Building2 className="w-2.5 h-2.5 mr-0.5" />}
+                                {t(sponsorConfig.label, sponsorConfig.labelAr)}
                               </Badge>
-                              <h3 className="font-semibold text-sm group-hover:text-accent transition-colors">
-                                {offer.title}
-                              </h3>
-                              <p className="text-xs text-muted-foreground mt-0.5">{offer.merchant}</p>
-                            </div>
-                            {offer.discount_percent && (
-                              <Badge className="bg-rose-500 hover:bg-rose-500 text-white border-0 shrink-0 text-xs font-bold">
-                                -{offer.discount_percent}%
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-3 mt-2">
-                            {offer.rating && (
-                              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                                {offer.rating}
-                              </span>
-                            )}
-                            <span className="flex items-center gap-1 text-xs text-emerald-600">
-                              <CheckCircle className="w-3 h-3" />
-                              Eligible
-                            </span>
-                          </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom">
+                              <p className="text-xs">{t(sponsorConfig.tooltip, sponsorConfig.tooltipAr)}</p>
+                            </TooltipContent>
+                          </Tooltip>
                         </div>
                         
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => handleSave(offer.id)}>
-                            <Heart className={cn("w-3.5 h-3.5", savedOffers.has(offer.id) && "fill-current")} />
-                          </Button>
-                          <Button size="sm" className="gap-1.5" onClick={() => handleActivate(offer)}>
-                            <CheckCircle className="w-3.5 h-3.5" />
-                            Redeem
+                        {/* Verified & Save */}
+                        <div className={cn('absolute bottom-2 left-2 right-2 flex justify-between items-end', isRTL && 'flex-row-reverse')}>
+                          {verification === 'verified' && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge className={cn('text-[9px] gap-1', VERIFICATION_CONFIG.verified.className)}>
+                                  <ShieldCheck className="w-2.5 h-2.5" />
+                                  {t('Verified', 'موثق')}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">{VERIFICATION_CONFIG.verified.tooltip}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 bg-background/80 backdrop-blur-sm hover:bg-background opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => { e.stopPropagation(); handleSave(offer.id); }}
+                          >
+                            <Heart className={cn("w-3.5 h-3.5", savedOffers.has(offer.id) && "fill-rose-500 text-rose-500")} />
                           </Button>
                         </div>
                       </div>
-                    </Card>
-                  );
-                })}
-              </div>
-            )
+                    )}
+                    
+                    <CardContent className="p-3 space-y-2 flex flex-col flex-1">
+                      <div className={cn('flex items-center gap-2', isRTL && 'flex-row-reverse')}>
+                        <Badge variant="outline" className={cn("text-[9px] gap-1 border-0", config.bgLight, config.color)}>
+                          <config.icon className="w-2.5 h-2.5" />
+                          {offer.category.split(' & ')[0]}
+                        </Badge>
+                        {offer.rating && (
+                          <span className="text-[10px] text-muted-foreground flex items-center gap-0.5 ml-auto">
+                            <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                            {offer.rating}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1">
+                        <h3 className={cn("font-medium text-sm leading-tight line-clamp-2 group-hover:text-accent transition-colors", isRTL && 'text-right')}>
+                          {offer.title}
+                        </h3>
+                        <p className={cn("text-xs text-muted-foreground mt-1", isRTL && 'text-right')}>
+                          {offer.merchant}
+                        </p>
+                      </div>
+
+                      <div className={cn('flex items-center gap-1 text-[10px] text-muted-foreground', isRTL && 'flex-row-reverse')}>
+                        <CheckCircle className="w-3 h-3 text-emerald-500" />
+                        <span>{t('Eligible', 'مؤهل')}</span>
+                      </div>
+                      
+                      <Button 
+                        size="sm" 
+                        className="w-full gap-1 h-8 text-xs" 
+                        onClick={(e) => { e.stopPropagation(); handleActivate(offer); }}
+                      >
+                        {t('Activate', 'تفعيل')}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           ) : (
             <NoSearchResults 
-              query={searchTerm || category !== 'All' ? (searchTerm || category) : undefined}
-              onClear={() => { setSearchTerm(''); setCategory('All'); }}
+              query={searchTerm || category} 
+              onClear={() => { setSearchTerm(''); setCategory('All'); setSponsorshipFilter('all'); }} 
             />
           )}
         </TabsContent>
 
-        {/* My Vouchers Tab */}
+        {/* Vouchers Tab */}
         <TabsContent value="vouchers" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-display font-semibold text-lg">My Vouchers</h3>
-              <p className="text-sm text-muted-foreground">
-                Vouchers you've activated from offers
-              </p>
-            </div>
-            
-            <Select value={voucherFilter} onValueChange={(v) => setVoucherFilter(v as VoucherStatus | 'all')}>
-              <SelectTrigger className="w-[140px] h-9 bg-background">
-                <SelectValue placeholder="Filter" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Vouchers</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="redeemed">Redeemed</SelectItem>
-                <SelectItem value="expired">Expired</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Voucher Filters */}
+          <div className={cn('flex items-center gap-2', isRTL && 'flex-row-reverse')}>
+            {(['all', 'active', 'redeemed', 'expired'] as const).map((status) => (
+              <Button
+                key={status}
+                variant={voucherFilter === status ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setVoucherFilter(status)}
+                className="text-xs"
+              >
+                {status === 'all' ? t('All', 'الكل') : 
+                 status === 'active' ? t('Active', 'نشط') :
+                 status === 'redeemed' ? t('Redeemed', 'مستخدم') :
+                 t('Expired', 'منتهي')}
+                {status === 'active' && vouchers.filter(v => v.status === 'active').length > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-4 px-1 text-[9px]">
+                    {vouchers.filter(v => v.status === 'active').length}
+                  </Badge>
+                )}
+              </Button>
+            ))}
           </div>
 
+          {/* Vouchers List */}
           {filteredVouchers.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredVouchers.map((voucher) => {
                 const config = getCategoryConfig(voucher.offer.category);
                 return (
-                  <Card key={voucher.id} className={cn(
-                    "overflow-hidden",
-                    voucher.status === 'expired' && "opacity-60"
-                  )}>
+                  <Card key={voucher.id} className="overflow-hidden">
                     <div className={cn("h-1", config.bgDark)} />
-                    <CardContent className="p-4 space-y-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <Badge variant="outline" className={cn("text-[10px] gap-1 border-0 mb-2", config.bgLight, config.color)}>
-                            <config.icon className="w-3 h-3" />
-                            {voucher.offer.category.split(' & ')[0]}
-                          </Badge>
-                          <h4 className="font-semibold text-sm">{voucher.offer.title}</h4>
-                          <p className="text-xs text-muted-foreground">{voucher.offer.merchant}</p>
-                        </div>
-                        {getVoucherStatusBadge(voucher.status)}
-                      </div>
-
-                      {voucher.status === 'active' && voucher.code && (
-                        <div className="p-3 rounded-lg bg-muted/50 border border-dashed border-border">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Voucher Code</p>
-                              <p className="font-mono font-bold text-lg">{voucher.code}</p>
-                            </div>
+                    <CardContent className="p-4">
+                      <div className={cn('flex gap-4', isRTL && 'flex-row-reverse')}>
+                        {voucher.offer.image_url && (
+                          <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted shrink-0">
+                            <img 
+                              src={voucher.offer.image_url} 
+                              alt={voucher.offer.title} 
+                              className="w-full h-full object-cover" 
+                            />
+                          </div>
+                        )}
+                        <div className={cn('flex-1 min-w-0', isRTL && 'text-right')}>
+                          <div className={cn('flex items-center gap-2 mb-1', isRTL && 'flex-row-reverse')}>
+                            {getVoucherStatusBadge(voucher.status)}
                             {voucher.offer.discount_percent && (
-                              <Badge className="bg-rose-500 text-white border-0 text-sm px-3">
+                              <Badge variant="outline" className="text-[10px]">
                                 -{voucher.offer.discount_percent}%
                               </Badge>
                             )}
                           </div>
-                        </div>
-                      )}
+                          <h4 className="font-medium text-sm truncate">{voucher.offer.title}</h4>
+                          <p className="text-xs text-muted-foreground">{voucher.offer.merchant}</p>
+                          
+                          <div className={cn('flex items-center gap-4 mt-3 text-xs text-muted-foreground', isRTL && 'flex-row-reverse')}>
+                            <div className={cn('flex items-center gap-1', isRTL && 'flex-row-reverse')}>
+                              <Calendar className="w-3 h-3" />
+                              <span>{t('Expires', 'ينتهي')}: {format(new Date(voucher.expiresAt), 'MMM d, yyyy')}</span>
+                            </div>
+                          </div>
 
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Tag className="w-3 h-3" />
-                          <span>Activated {format(new Date(voucher.activatedAt), 'MMM d, yyyy')}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          <span>Expires {format(new Date(voucher.expiresAt), 'MMM d')}</span>
+                          {voucher.status === 'active' && voucher.code && (
+                            <div className="mt-3">
+                              <div className={cn('flex items-center gap-2', isRTL && 'flex-row-reverse')}>
+                                <code className="flex-1 px-3 py-1.5 bg-muted rounded text-sm font-mono text-center">
+                                  {voucher.code}
+                                </code>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(voucher.code || '');
+                                    toast({ title: t('Code copied!', 'تم نسخ الرمز!') });
+                                  }}
+                                >
+                                  {t('Copy', 'نسخ')}
+                                </Button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
-
-                      {voucher.status === 'active' && (
-                        <Button className="w-full" size="sm">
-                          Use Voucher
-                        </Button>
-                      )}
                     </CardContent>
                   </Card>
                 );
@@ -755,13 +789,9 @@ function MarketplaceContent() {
           ) : (
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
-                <div className="mx-auto w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-3">
-                  <Ticket className="w-6 h-6 text-muted-foreground" />
-                </div>
-                <h4 className="font-semibold mb-1">No Vouchers Yet</h4>
-                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                  Activate offers to receive voucher codes you can use at partner merchants.
-                </p>
+                <Ticket className="w-10 h-10 mx-auto text-muted-foreground/50 mb-3" />
+                <h3 className="font-medium mb-1">{t('No vouchers yet', 'لا توجد قسائم بعد')}</h3>
+                <p className="text-sm text-muted-foreground">{t('Activate offers to get vouchers', 'قم بتفعيل العروض للحصول على قسائم')}</p>
               </CardContent>
             </Card>
           )}
@@ -772,6 +802,16 @@ function MarketplaceContent() {
           <BankCardBenefits cards={bankCards} />
         </TabsContent>
       </Tabs>
+
+      {/* Offer Detail Sheet */}
+      <OfferDetailSheet
+        offer={selectedOffer}
+        isOpen={!!selectedOffer}
+        onClose={() => setSelectedOffer(null)}
+        onActivate={handleActivate}
+        isSaved={selectedOffer ? savedOffers.has(selectedOffer.id) : false}
+        onToggleSave={handleSave}
+      />
     </div>
   );
 }
