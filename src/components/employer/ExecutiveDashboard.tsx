@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
-import { ChartContainer, AnimatedDonutChart, AnimatedLineChart } from '@/components/charts';
+import { ChartWrapper, CHART_EXPLANATIONS, AnimatedDonutChart, AnimatedLineChart } from '@/components/charts';
 import { DataQualityBadge, DataConfidenceIndicator } from './DataQualityBadge';
 import { DataConfidenceBadge, useDataCoverageMetrics } from './DataConfidenceBadge';
 import { PageConfidenceGate } from './PageConfidenceGate';
@@ -328,10 +328,14 @@ export function ExecutiveDashboard() {
       {/* Visual Analytics Row - Enhanced with Dual Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Utilization Trend */}
-        <ChartContainer 
+        <ChartWrapper 
           title="Utilization Trend" 
-          formula="Quarterly benefit utilization %" 
+          subtitle="Quarterly benefit utilization rate"
+          formula="(Claimed Amount / Entitled Amount) × 100"
           dataSource="Benefits Platform"
+          explanation={CHART_EXPLANATIONS.utilizationTrend}
+          timeRange="Last 6 months"
+          confidenceMetrics={coverageMetrics}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -354,13 +358,16 @@ export function ExecutiveDashboard() {
             height={160}
             yDomain={[50, 80]}
           />
-        </ChartContainer>
+        </ChartWrapper>
 
-        {/* ESAT Trend - NEW */}
-        <ChartContainer 
+        {/* ESAT Trend */}
+        <ChartWrapper 
           title="Employee Satisfaction Trend" 
-          formula="Monthly ESAT score (0-100)" 
+          subtitle="Monthly ESAT score"
+          formula="(Sum of ratings / Total responses) × 20"
           dataSource="Survey Data"
+          explanation={CHART_EXPLANATIONS.satisfactionScore}
+          timeRange="Last 6 months"
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -383,19 +390,21 @@ export function ExecutiveDashboard() {
             height={160}
             yDomain={[60, 100]}
           />
-        </ChartContainer>
+        </ChartWrapper>
 
         {/* Spend Allocation */}
-        <ChartContainer 
+        <ChartWrapper 
           title="Investment Allocation" 
-          formula="% of total benefits budget by category" 
+          subtitle="Budget distribution by category"
+          formula="Category Spend / Total Spend × 100"
           dataSource="Finance"
+          explanation={CHART_EXPLANATIONS.spendDistribution}
         >
           <AnimatedDonutChart 
             data={spendChartData} 
             height={220}
           />
-        </ChartContainer>
+        </ChartWrapper>
       </div>
 
       {/* Value Recovery Opportunity */}

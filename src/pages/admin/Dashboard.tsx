@@ -19,9 +19,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { AnimatedLineChart } from '@/components/charts/AnimatedLineChart';
-import { AnimatedBarChart } from '@/components/charts/AnimatedBarChart';
-import { AnimatedDonutChart } from '@/components/charts/AnimatedDonutChart';
+import { ChartWrapper, CHART_EXPLANATIONS, AnimatedLineChart, AnimatedBarChart, AnimatedDonutChart } from '@/components/charts';
 import { VendorPerformanceTab } from '@/components/admin/VendorPerformanceTab';
 import { DataQualityDashboard } from '@/components/admin/DataQualityDashboard';
 import { AdminActionCenter } from '@/components/admin/AdminActionCenter';
