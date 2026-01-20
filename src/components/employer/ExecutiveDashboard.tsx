@@ -20,6 +20,7 @@ import {
 import { Link } from 'react-router-dom';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { ChartWrapper, CHART_EXPLANATIONS, AnimatedDonutChart, AnimatedLineChart } from '@/components/charts';
+import { NarrativeInsights, generateUtilizationInsight, generateSpendInsight, generateZombieInsight, generateSatisfactionInsight, NarrativeInsight } from './NarrativeInsights';
 import { DataQualityBadge, DataConfidenceIndicator } from './DataQualityBadge';
 import { DataConfidenceBadge, useDataCoverageMetrics } from './DataConfidenceBadge';
 import { PageConfidenceGate } from './PageConfidenceGate';
@@ -143,6 +144,39 @@ export function ExecutiveDashboard() {
 
       {/* Global Filters */}
       <EmployerGlobalFiltersBar />
+
+      {/* Narrative Insights - Decision Support */}
+      <NarrativeInsights
+        insights={[
+          generateUtilizationInsight(
+            metrics.utilizationRate,
+            utilizationTrends?.[utilizationTrends.length - 2]?.current || 62,
+            metrics.targetUtilization
+          ),
+          generateSatisfactionInsight(
+            metrics.esatScore,
+            esatTrends?.[esatTrends.length - 2]?.current || 79,
+            metrics.esatBenchmark
+          ),
+          generateZombieInsight(
+            metrics.zombieSpend,
+            metrics.recoveryPotential,
+            'Housing Allowance'
+          ),
+          generateSpendInsight(
+            metrics.budgetUtilized,
+            (metrics.budgetUtilized / metrics.totalInvestment) * 100,
+            'Health & Insurance'
+          ),
+        ]}
+        coverageMetrics={coverageMetrics}
+        title="Key Insights"
+        subtitle="AI-generated analysis based on your current data"
+        onCreateRecommendation={(insight) => {
+          // Navigate to recommendations with pre-filled data
+          window.location.href = `/employer/recommendations?create=true&source=${insight.id}`;
+        }}
+      />
 
       {/* Strategic KPIs - C-Suite Focus with Enhanced Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">

@@ -20,7 +20,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recha
 import { useState } from 'react';
 import { DrillDownModal } from '@/components/dashboard';
 import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
-import { EmployerGlobalFiltersBar, DataConfidenceBadge, PageConfidenceGate, useDataCoverageMetrics } from '@/components/employer';
+import { EmployerGlobalFiltersBar, DataConfidenceBadge, PageConfidenceGate, useDataCoverageMetrics, NarrativeInsights, NarrativeInsight } from '@/components/employer';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { toast } from 'sonner';
 
@@ -609,6 +609,49 @@ export default function ZombieSpendPage() {
         </div>
 
         <EmployerGlobalFiltersBar />
+
+        {/* Narrative Insights */}
+        <NarrativeInsights
+          insights={[
+            {
+              id: 'zombie-top-category',
+              change: 'Housing Allowance has the highest unrealized value',
+              metricValue: formatCurrencyAED(zombieBenefits[0]?.zombie || 0),
+              impact: `${zombieBenefits[0]?.affectedEmployees || 0} employees haven't claimed their full entitlement. Primary cause: ${reasonLabels[zombieBenefits[0]?.primaryReason || 'awareness'].label}.`,
+              action: 'Launch an awareness campaign with step-by-step claim guide',
+              actionPath: '/employer/recommendations?create=true&source=zombie-housing',
+              trend: 'down',
+              trendIsPositive: false,
+              confidence: 'high',
+            },
+            {
+              id: 'zombie-recovery-potential',
+              change: 'Recovery playbooks show strong ROI potential',
+              metricValue: formatCurrencyAED(totalZombie * (avgRecoveryRate / 100)),
+              impact: `Historical data suggests ${avgRecoveryRate}% of zombie spend can be recovered through targeted interventions.`,
+              action: 'Prioritize playbooks for top 2 underutilized benefits',
+              trend: 'up',
+              trendIsPositive: true,
+              confidence: 'medium',
+            },
+            {
+              id: 'zombie-documentation',
+              change: 'Documentation friction identified in 3 benefits',
+              impact: 'Employees are dropping off during the claim process due to complex documentation requirements.',
+              action: 'Simplify documentation or enable direct vendor billing',
+              actionPath: '/employer/policies',
+              trend: 'down',
+              trendIsPositive: false,
+              confidence: 'high',
+            },
+          ]}
+          coverageMetrics={coverageMetrics}
+          title="Recovery Insights"
+          subtitle="AI-identified opportunities to recapture benefit value"
+          onCreateRecommendation={(insight) => {
+            window.location.href = `/employer/recommendations?create=true&source=${insight.id}`;
+          }}
+        />
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

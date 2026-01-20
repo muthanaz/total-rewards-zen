@@ -19,7 +19,7 @@ import {
   ChevronRight, Send, CircleDot, PlayCircle, PauseCircle, CheckCircle2, XCircle
 } from 'lucide-react';
 import { formatCurrencyAED, formatInteger } from '@/lib/utils';
-import { EmployerGlobalFiltersBar, DataConfidenceBadge, PageConfidenceGate, useDataCoverageMetrics } from '@/components/employer';
+import { EmployerGlobalFiltersBar, DataConfidenceBadge, PageConfidenceGate, useDataCoverageMetrics, NarrativeInsights, NarrativeInsight } from '@/components/employer';
 import { toast } from 'sonner';
 import { format, formatDistanceToNow, isPast, addDays } from 'date-fns';
 import { DemoTip, DEMO_TIPS } from '@/components/demo';
@@ -749,6 +749,46 @@ export default function RecommendationsPage() {
         </div>
 
         <EmployerGlobalFiltersBar />
+
+        {/* Narrative Insights */}
+        <NarrativeInsights
+          insights={[
+            {
+              id: 'actions-blocked',
+              change: `${blockedCount} actions are currently blocked`,
+              impact: blockedCount > 0 
+                ? 'Blocked items are preventing value realization. Resolve dependencies to unblock progress.'
+                : 'All active items are progressing without blockers.',
+              action: blockedCount > 0 ? 'Review blocked items and assign owners to resolve' : 'Maintain current momentum',
+              trend: blockedCount > 0 ? 'down' : 'neutral',
+              trendIsPositive: blockedCount === 0,
+              confidence: 'high',
+            },
+            {
+              id: 'actions-impact',
+              change: 'Actions in pipeline have significant expected impact',
+              metricValue: formatCurrencyAED(expectedImpactThisQuarter),
+              impact: 'Combined cost avoidance and efficiency gains from completing all planned actions this quarter.',
+              action: 'Prioritize high-impact items approaching due dates',
+              actionPath: '/employer/recommendations?filter=high-impact',
+              trend: 'up',
+              trendIsPositive: true,
+              confidence: 'medium',
+            },
+            ...(overdueCount > 0 ? [{
+              id: 'actions-overdue',
+              change: `${overdueCount} action${overdueCount > 1 ? 's are' : ' is'} overdue`,
+              impact: 'Overdue items indicate potential resource constraints or scope issues. Review and adjust timelines.',
+              action: 'Triage overdue items: reschedule, reassign, or close',
+              trend: 'down' as const,
+              trendIsPositive: false,
+              confidence: 'high' as const,
+            }] : []),
+          ]}
+          coverageMetrics={coverageMetrics}
+          title="Action Plan Insights"
+          subtitle="Status summary and recommended next steps"
+        />
 
         {/* Executive Summary Strip */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
