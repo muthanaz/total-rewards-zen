@@ -365,5 +365,6 @@ export default function ZombieSpendPage() {
         formatValue={(v) => formatCurrencyAED(v, { abbreviate: false })}
       />
     </div>
+    </PageConfidenceGate>
   );
 }

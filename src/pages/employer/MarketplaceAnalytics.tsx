@@ -462,5 +462,6 @@ export default function MarketplaceAnalyticsPage() {
         </CardContent>
       </Card>
     </div>
+    </PageConfidenceGate>
   );
 }

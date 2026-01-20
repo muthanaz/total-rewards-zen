@@ -439,5 +439,6 @@ export default function SpendPage() {
         </TabsContent>
       </Tabs>
     </div>
+    </PageConfidenceGate>
   );
 }

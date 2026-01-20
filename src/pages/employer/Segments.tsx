@@ -449,5 +449,6 @@ export default function SegmentsPage() {
         </CardContent>
       </Card>
     </div>
+    </PageConfidenceGate>
   );
 }

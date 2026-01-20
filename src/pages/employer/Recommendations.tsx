@@ -320,5 +320,6 @@ export default function RecommendationsPage() {
         </CardContent>
       </Card>
     </div>
+    </PageConfidenceGate>
   );
 }
