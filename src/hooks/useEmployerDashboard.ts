@@ -520,20 +520,24 @@ export function useSpendAllocation() {
         ];
       }
 
-      // Group by benefit type using standard labels
-      const BENEFIT_TYPE_LABELS: Record<string, string> = {
+      // Group by benefit type using standard labels from constants
+      const BENEFIT_TYPE_LABEL_MAP: Record<string, string> = {
         cash_allowances: 'Cash Entitlements',
         health_protection: 'Health & Protection',
         time_off_flex: 'Leave & Flexibility',
         growth_career: 'Career Development',
         wealth_ownership: 'Wealth & Equity',
         wellbeing: 'Wellbeing',
+        reimbursement: 'Reimbursement',
+        insurance: 'Insurance Coverage',
+        time_off: 'Time Off',
+        other: 'Other Benefits',
       };
       
       const types: { [key: string]: number } = {};
       data.forEach(e => {
         const type = (e.benefits as any)?.benefit_type || 'other';
-        const label = BENEFIT_TYPE_LABELS[type] || type.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+        const label = BENEFIT_TYPE_LABEL_MAP[type] || 'Other Benefits';
         if (!types[label]) types[label] = 0;
         types[label] += e.annual_allowance || 0;
       });
