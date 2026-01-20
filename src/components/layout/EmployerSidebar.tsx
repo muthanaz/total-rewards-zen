@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
@@ -18,6 +18,8 @@ import {
   ChevronDown,
   Briefcase,
   Eye,
+  TrendingUp,
+  Shield,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -25,13 +27,15 @@ import { Button } from '@/components/ui/button';
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
-import { useEmployerViewMode } from '@/contexts/EmployerViewModeContext';
+import { useEmployerViewMode, ViewMode } from '@/contexts/EmployerViewModeContext';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
 interface NavGroup {
   id: string;
   label: string;
   items: NavItem[];
+  /** If set, only show in these view modes */
+  modes?: ViewMode[];
   /** If true, the group is feature-flagged and may be hidden */
   featureFlag?: keyof ReturnType<typeof useFeatureFlags>['flags'];
 }
@@ -40,18 +44,20 @@ interface NavItem {
   label: string;
   path: string;
   icon: React.ElementType;
+  /** If set, only show in these view modes */
+  modes?: ViewMode[];
 }
 
 /**
- * Employer Navigation - Clean, consistent, and correctly sequenced
+ * HR Operations Navigation - Tactical, day-to-day tasks
  */
-const navigationGroups: NavGroup[] = [
+const opsNavigationGroups: NavGroup[] = [
   // 1) Overview
   {
     id: 'overview',
     label: 'Overview',
     items: [
-      { label: 'Dashboard', path: '/employer', icon: LayoutDashboard },
+      { label: 'Ops Dashboard', path: '/employer', icon: LayoutDashboard },
     ],
   },
   // 2) Operations
@@ -60,25 +66,63 @@ const navigationGroups: NavGroup[] = [
     label: 'Operations',
     items: [
       { label: 'Claims & Approvals', path: '/employer/claims', icon: FileCheck },
-      { label: 'Employee Segments', path: '/employer/segments', icon: Users },
     ],
   },
-  // 3) Financials
+  // 3) Policies & Knowledge
+  {
+    id: 'policies',
+    label: 'Policies & Knowledge',
+    items: [
+      { label: 'Policies', path: '/employer/policies', icon: FileText },
+      { label: 'Knowledge Center', path: '/employer/knowledge', icon: BookOpen },
+    ],
+  },
+  // 4) Data & Settings
+  {
+    id: 'settings',
+    label: 'Data & Settings',
+    items: [
+      { label: 'Integrations & Data', path: '/employer/integrations', icon: Database },
+    ],
+  },
+];
+
+/**
+ * Executive Navigation - Strategic, high-level insights
+ */
+const execNavigationGroups: NavGroup[] = [
+  // 1) Overview
+  {
+    id: 'overview',
+    label: 'Overview',
+    items: [
+      { label: 'Executive Dashboard', path: '/employer', icon: LayoutDashboard },
+    ],
+  },
+  // 2) Financials & Value
   {
     id: 'financials',
-    label: 'Financials',
+    label: 'Financials & Value',
     items: [
       { label: 'Spend & Utilization', path: '/employer/spend', icon: DollarSign },
       { label: 'Zombie Spend', path: '/employer/zombie', icon: Ghost },
     ],
   },
-  // 4) Policies & Insights
+  // 3) Workforce Insights
   {
-    id: 'policies',
-    label: 'Policies & Insights',
+    id: 'workforce',
+    label: 'Workforce Insights',
     items: [
-      { label: 'Policies', path: '/employer/policies', icon: FileText },
+      { label: 'Employee Segments', path: '/employer/segments', icon: Users },
+    ],
+  },
+  // 4) Strategy
+  {
+    id: 'strategy',
+    label: 'Strategy',
+    items: [
       { label: 'Recommendations', path: '/employer/recommendations', icon: Lightbulb },
+      { label: 'Policy Insights', path: '/employer/policies', icon: TrendingUp },
     ],
   },
   // 5) Marketplace (Phase 2 - feature-flagged)
@@ -95,8 +139,7 @@ const navigationGroups: NavGroup[] = [
     id: 'settings',
     label: 'Data & Settings',
     items: [
-      { label: 'Integrations & Data', path: '/employer/integrations', icon: Database },
-      { label: 'Knowledge Center', path: '/employer/knowledge', icon: BookOpen },
+      { label: 'Data Confidence', path: '/employer/integrations', icon: Shield },
     ],
   },
 ];
@@ -109,10 +152,24 @@ export function EmployerSidebar() {
   const { viewMode, setViewMode, isExecutive } = useEmployerViewMode();
   const { flags } = useFeatureFlags();
   const [mobileOpen, setMobileOpen] = useState(false);
+  
+  // Get the appropriate navigation based on view mode
+  const baseGroups = isExecutive ? execNavigationGroups : opsNavigationGroups;
+  
   const [expandedGroups, setExpandedGroups] = useState<string[]>(
-    navigationGroups.map((g) => g.id)
+    baseGroups.map((g) => g.id)
   );
   const isRTL = direction === 'rtl';
+
+  // Filter groups based on feature flags
+  const visibleGroups = useMemo(() => {
+    return baseGroups.filter((group) => {
+      if (group.featureFlag) {
+        return flags[group.featureFlag];
+      }
+      return true;
+    });
+  }, [baseGroups, flags]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -129,13 +186,12 @@ export function EmployerSidebar() {
     );
   };
 
-  // Filter groups based on feature flags from org settings
-  const visibleGroups = navigationGroups.filter((group) => {
-    if (group.featureFlag) {
-      return flags[group.featureFlag];
-    }
-    return true;
-  });
+  const handleModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    // Reset expanded groups when mode changes
+    const newGroups = mode === 'executive' ? execNavigationGroups : opsNavigationGroups;
+    setExpandedGroups(newGroups.map((g) => g.id));
+  };
 
   const sidebarContent = (
     <>
@@ -156,11 +212,14 @@ export function EmployerSidebar() {
             </span>
             <span
               className={cn(
-                'px-2 py-0.5 text-xs font-medium rounded-full bg-sidebar-accent text-sidebar-primary shrink-0',
+                'px-2 py-0.5 text-xs font-medium rounded-full shrink-0',
+                isExecutive 
+                  ? 'bg-violet-500/20 text-violet-300' 
+                  : 'bg-sidebar-accent text-sidebar-primary',
                 isRTL ? 'mr-1' : 'ml-1'
               )}
             >
-              Employer
+              {isExecutive ? 'Executive' : 'HR Ops'}
             </span>
           </div>
         </div>
@@ -169,7 +228,7 @@ export function EmployerSidebar() {
         <div className="mt-4 p-1 bg-sidebar-accent/50 rounded-xl">
           <div className="grid grid-cols-2 gap-1">
             <button
-              onClick={() => setViewMode('operational')}
+              onClick={() => handleModeChange('operational')}
               className={cn(
                 'flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200',
                 !isExecutive
@@ -181,7 +240,7 @@ export function EmployerSidebar() {
               <span>HR Ops</span>
             </button>
             <button
-              onClick={() => setViewMode('executive')}
+              onClick={() => handleModeChange('executive')}
               className={cn(
                 'flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200',
                 isExecutive
@@ -232,7 +291,7 @@ export function EmployerSidebar() {
               <div className="space-y-0.5 mt-1">
                 {group.items.map((item) => (
                   <Link
-                    key={item.path}
+                    key={item.path + item.label}
                     to={item.path}
                     onClick={() => setMobileOpen(false)}
                     className={cn(
