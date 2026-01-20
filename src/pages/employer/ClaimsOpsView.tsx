@@ -17,10 +17,13 @@ import {
   Eye, 
   AlertTriangle,
   Timer,
-  UserCheck
+  UserCheck,
+  Lock
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { EmployerGlobalFiltersBar } from '@/components/employer';
+import { PermissionGate } from '@/components/shared/PermissionGate';
+import { useEmployerPermissions } from '@/hooks/useEmployerPermissions';
 
 interface Request {
   id: string;
@@ -126,6 +129,8 @@ export function ClaimsOpsView() {
   const [selectedForBulk, setSelectedForBulk] = useState<string[]>([]);
   const [reviewNotes, setReviewNotes] = useState('');
   const { toast } = useToast();
+  const { hasPermission } = useEmployerPermissions();
+  const canProcessClaims = hasPermission('can_process_claims');
 
   const filteredRequests = requests.filter(req => {
     const matchesSearch = req.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -311,16 +316,25 @@ export function ClaimsOpsView() {
                   </p>
                 </div>
               </div>
-              <Button 
-                onClick={() => {
-                  setSelectedForBulk(lowRiskPending.map(r => r.id));
-                  handleBulkApprove();
-                }}
-                className="gap-2"
+              <PermissionGate 
+                permission="can_process_claims"
+                fallback={
+                  <Badge variant="outline" className="gap-1 text-muted-foreground">
+                    <Lock className="w-3 h-3" /> View Only
+                  </Badge>
+                }
               >
-                <CheckCircle className="w-4 h-4" />
-                Approve All Low-Risk
-              </Button>
+                <Button 
+                  onClick={() => {
+                    setSelectedForBulk(lowRiskPending.map(r => r.id));
+                    handleBulkApprove();
+                  }}
+                  className="gap-2"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Approve All Low-Risk
+                </Button>
+              </PermissionGate>
             </div>
           </CardContent>
         </Card>
@@ -547,16 +561,26 @@ export function ClaimsOpsView() {
           
           <DialogFooter>
             {selectedRequest?.status === 'pending' ? (
-              <>
-                <Button variant="outline" onClick={() => handleAction('reject')}>
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Reject
-                </Button>
-                <Button onClick={() => handleAction('approve')}>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Approve
-                </Button>
-              </>
+              <PermissionGate 
+                permission="can_process_claims"
+                fallback={
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Lock className="w-4 h-4" />
+                    <span className="text-sm">You don't have permission to process claims</span>
+                  </div>
+                }
+              >
+                <>
+                  <Button variant="outline" onClick={() => handleAction('reject')}>
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Reject
+                  </Button>
+                  <Button onClick={() => handleAction('approve')}>
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Approve
+                  </Button>
+                </>
+              </PermissionGate>
             ) : (
               <Button variant="outline" onClick={() => setSelectedRequest(null)}>Close</Button>
             )}
