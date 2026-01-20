@@ -23,6 +23,7 @@ import { downloadTemplate, downloadCompleteMigrationPackage } from '@/components
 import SampleDataGenerator from '@/components/admin/SampleDataGenerator';
 import DataImportWizard from '@/components/admin/DataImportWizard';
 import AdminSeedData from '@/components/admin/AdminSeedData';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 export default function DataMigrationPage() {
   const { toast } = useToast();
@@ -60,22 +61,19 @@ export default function DataMigrationPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-display font-bold flex items-center gap-3">
-            <Database className="w-7 h-7 text-accent" />
-            Data Migration & Onboarding
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Comprehensive templates, import tools, and sample data generation
-          </p>
-        </div>
-        <Button onClick={handleDownloadAll} className="gap-2">
-          <Download className="w-4 h-4" />
-          Download All Templates
-        </Button>
-      </div>
+      {/* Header using shared PageHeader component */}
+      <PageHeader
+        title="Data Migration & Onboarding"
+        description="Comprehensive templates, import tools, and sample data generation"
+        icon={Database}
+        iconClassName="from-accent to-accent/80"
+        actions={
+          <Button onClick={handleDownloadAll} className="gap-2">
+            <Download className="w-4 h-4" />
+            Download All Templates
+          </Button>
+        }
+      />
 
       {/* Progress Overview */}
       <Card className="border-accent/20 bg-gradient-to-r from-card to-accent/5">
@@ -104,7 +102,7 @@ export default function DataMigrationPage() {
               <p className="text-sm text-muted-foreground">Categories</p>
             </div>
             <div className="text-center p-4 rounded-lg bg-background/50">
-              <p className="text-3xl font-bold text-emerald-500">100%</p>
+              <p className="text-3xl font-bold text-success">100%</p>
               <p className="text-sm text-muted-foreground">Coverage</p>
             </div>
           </div>

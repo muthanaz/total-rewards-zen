@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { useAdminAuditLog } from '@/hooks/useAdminAuditLog';
 import {
   Dialog,
   DialogContent,
@@ -76,6 +77,7 @@ export default function OrganizationsPage() {
   const navigate = useNavigate();
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
+  const { createAuditLog } = useAdminAuditLog();
   
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -158,14 +160,24 @@ export default function OrganizationsPage() {
 
     setSubmitting(true);
     try {
-      const { error } = await supabase
+      const { data: newOrg, error } = await supabase
         .from('organizations')
         .insert({
           name: formData.name.trim(),
           domain: formData.domain.trim() || null,
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
+
+      // Audit log for org creation
+      await createAuditLog({
+        action: 'ORG_CREATE',
+        entityType: 'organization',
+        entityId: newOrg?.id || 'unknown',
+        metadata: { org_name: formData.name.trim(), domain: formData.domain.trim() || null },
+      });
 
       toast.success(t('Organization created successfully', 'تم إنشاء المنظمة بنجاح'));
       setCreateDialogOpen(false);
@@ -187,6 +199,9 @@ export default function OrganizationsPage() {
 
     setSubmitting(true);
     try {
+      const previousName = selectedOrg.name;
+      const previousDomain = selectedOrg.domain;
+      
       const { error } = await supabase
         .from('organizations')
         .update({
@@ -197,6 +212,19 @@ export default function OrganizationsPage() {
         .eq('id', selectedOrg.id);
 
       if (error) throw error;
+
+      // Audit log for org update
+      await createAuditLog({
+        action: 'ORG_UPDATE',
+        entityType: 'organization',
+        entityId: selectedOrg.id,
+        metadata: { 
+          org_name: formData.name.trim(),
+          previous_name: previousName,
+          previous_domain: previousDomain,
+          new_domain: formData.domain.trim() || null,
+        },
+      });
 
       toast.success(t('Organization updated successfully', 'تم تحديث المنظمة بنجاح'));
       setEditDialogOpen(false);
@@ -216,6 +244,9 @@ export default function OrganizationsPage() {
 
     setSubmitting(true);
     try {
+      const deletedOrgName = selectedOrg.name;
+      const deletedOrgId = selectedOrg.id;
+      
       // First, unassign all users from this org
       const { error: updateError } = await supabase
         .from('profiles')
@@ -231,6 +262,14 @@ export default function OrganizationsPage() {
         .eq('id', selectedOrg.id);
 
       if (error) throw error;
+
+      // Audit log for org deletion
+      await createAuditLog({
+        action: 'ORG_DELETE',
+        entityType: 'organization',
+        entityId: deletedOrgId,
+        metadata: { org_name: deletedOrgName },
+      });
 
       toast.success(t('Organization deleted successfully', 'تم حذف المنظمة بنجاح'));
       setDeleteDialogOpen(false);
