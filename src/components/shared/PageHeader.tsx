@@ -13,8 +13,12 @@ interface PageHeaderProps {
     icon?: LucideIcon;
     variant?: 'default' | 'accent' | 'success' | 'warning';
   };
+  // Support for inline data confidence badge
+  confidenceBadge?: ReactNode;
   actions?: ReactNode;
   className?: string;
+  // Compact mode for nested sections
+  compact?: boolean;
 }
 
 const badgeVariants = {
@@ -30,23 +34,35 @@ export function PageHeader({
   icon: Icon,
   iconClassName,
   badge,
+  confidenceBadge,
   actions,
   className,
+  compact = false,
 }: PageHeaderProps) {
   return (
-    <div className={cn('flex flex-col md:flex-row md:items-center justify-between gap-4', className)}>
+    <div className={cn(
+      'flex flex-col md:flex-row md:items-center justify-between gap-4',
+      compact && 'gap-2',
+      className
+    )}>
       <div className="flex items-start gap-3">
         {Icon && (
           <div className={cn(
             "p-2 rounded-xl bg-gradient-to-br shadow-lg shrink-0",
+            compact && "p-1.5 rounded-lg",
             iconClassName || "from-accent to-accent/80 shadow-accent/25"
           )}>
-            <Icon className="w-6 h-6 text-white" />
+            <Icon className={cn("text-white", compact ? "w-4 h-4" : "w-6 h-6")} />
           </div>
         )}
         <div>
-          <h1 className="text-2xl font-display font-bold flex items-center gap-3 flex-wrap">
-            {title}
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className={cn(
+              "font-display font-bold",
+              compact ? "text-lg" : "text-2xl"
+            )}>
+              {title}
+            </h1>
             {badge && (
               <Badge 
                 variant="outline" 
@@ -56,9 +72,15 @@ export function PageHeader({
                 {badge.label}
               </Badge>
             )}
-          </h1>
+            {confidenceBadge}
+          </div>
           {description && (
-            <p className="text-muted-foreground mt-1">{description}</p>
+            <p className={cn(
+              "text-muted-foreground mt-1",
+              compact && "text-sm"
+            )}>
+              {description}
+            </p>
           )}
         </div>
       </div>

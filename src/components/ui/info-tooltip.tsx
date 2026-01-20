@@ -5,14 +5,15 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-interface InfoTooltipProps {
+export interface InfoTooltipProps {
   formula?: string;
   dataSource?: string;
   lastUpdated?: string;
+  notes?: string;
   children?: React.ReactNode;
 }
 
-export function InfoTooltip({ formula, dataSource, lastUpdated, children }: InfoTooltipProps) {
+export function InfoTooltip({ formula, dataSource, lastUpdated, notes, children }: InfoTooltipProps) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -41,6 +42,12 @@ export function InfoTooltip({ formula, dataSource, lastUpdated, children }: Info
               <div>
                 <p className="text-xs font-medium text-muted-foreground">Last Updated</p>
                 <p className="text-sm">{lastUpdated}</p>
+              </div>
+            )}
+            {notes && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">Notes</p>
+                <p className="text-sm">{notes}</p>
               </div>
             )}
           </>
