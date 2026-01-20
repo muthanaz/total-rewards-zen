@@ -74,6 +74,10 @@ import AdminSyncMonitor from "./pages/admin/SyncMonitor";
 import AdminSecuritySettings from "./pages/admin/SecuritySettings";
 import AdminFeatureFlags from "./pages/admin/FeatureFlags";
 import AdminBilling from "./pages/admin/Billing";
+import AdminDataQualityRules from "./pages/admin/DataQualityRules";
+import AdminPolicyLibrary from "./pages/admin/PolicyLibrary";
+import AdminAlertsCenter from "./pages/admin/AlertsCenter";
+import AdminSessionManagement from "./pages/admin/SessionManagement";
 
 import VendorDashboard from "./pages/vendor/Dashboard";
 import VendorOffers from "./pages/vendor/Offers";
@@ -217,11 +221,16 @@ function AppRoutes() {
         {/* Data & Integrations */}
         <Route path="data-sources" element={<AdminDataSources />} />
         <Route path="data-quality" element={<AdminDataMigration />} />
+        <Route path="data-quality-rules" element={<AdminDataQualityRules />} />
         <Route path="sync-monitor" element={<AdminSyncMonitor />} />
         {/* Security & Configuration */}
         <Route path="security" element={<AdminSecuritySettings />} />
+        <Route path="sessions" element={<AdminSessionManagement />} />
         <Route path="feature-flags" element={<AdminFeatureFlags />} />
         <Route path="billing" element={<AdminBilling />} />
+        {/* Content & Alerts */}
+        <Route path="policy-library" element={<AdminPolicyLibrary />} />
+        <Route path="alerts" element={<AdminAlertsCenter />} />
       </Route>
 
       {/* Vendor Routes */}
