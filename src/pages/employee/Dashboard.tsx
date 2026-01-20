@@ -21,6 +21,7 @@ import { QuickActionsStrip } from '@/components/employee/QuickActionsStrip';
 import { ProfileCompleteness } from '@/components/employee/ProfileCompleteness';
 import { useEmployeeDashboard } from '@/hooks/useEmployeeDashboard';
 import { DataQualityBadge } from '@/components/employer/DataQualityBadge';
+import { DemoTip, DEMO_TIPS } from '@/components/demo';
 
 // Benefit value types
 type BenefitValueType = 'guaranteed' | 'employer_cost' | 'performance' | 'budget';
@@ -263,6 +264,9 @@ export default function EmployeeDashboard() {
   
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Demo Tip for Employee Benefits */}
+      <DemoTip {...DEMO_TIPS.employeeBenefits} variant="highlight" />
+      
       {/* Personalized Header with Profile Completeness */}
       <ProfileCompleteness
         firstName={profileData.firstName}

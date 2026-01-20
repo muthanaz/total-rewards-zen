@@ -9,6 +9,8 @@ import { ProfileProvider } from "@/contexts/ProfileContext";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
 import { UIVisibilityProvider } from "@/contexts/UIVisibilityContext";
 import { PrivacyProvider } from "@/components/ui/privacy-toggle";
+import { DemoModeProvider } from "@/contexts/DemoModeContext";
+import { DemoModeBadge } from "@/components/demo";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -229,15 +231,18 @@ const App = () => (
         <AuthProvider>
           <ProfileProvider>
             <PrivacyProvider>
-              <UIVisibilityProvider>
-                <SecurityProvider enableSessionTimeout={true}>
-                  <TooltipProvider>
-                    <Toaster />
-                    <Sonner />
-                    <AppRoutes />
-                  </TooltipProvider>
-                </SecurityProvider>
-              </UIVisibilityProvider>
+              <DemoModeProvider>
+                <UIVisibilityProvider>
+                  <SecurityProvider enableSessionTimeout={true}>
+                    <TooltipProvider>
+                      <Toaster />
+                      <Sonner />
+                      <AppRoutes />
+                      <DemoModeBadge />
+                    </TooltipProvider>
+                  </SecurityProvider>
+                </UIVisibilityProvider>
+              </DemoModeProvider>
             </PrivacyProvider>
           </ProfileProvider>
         </AuthProvider>
