@@ -10,7 +10,7 @@ import {
   Gift, Star, CheckCircle, Grid3X3, List, Sparkles, 
   ShoppingBag, Coffee, Activity, Users, BookOpen, Home, Car, Plane,
   CreditCard, Search, X, Clock, Ticket, Heart, AlertCircle,
-  Calendar, Tag, Building2, ShieldCheck, Filter
+  Calendar, Tag, Building2, ShieldCheck, Filter, Info, HelpCircle
 } from 'lucide-react';
 import { useMarketplaceOffers, usePerkActivations } from '@/hooks/useSupabaseData';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -33,25 +33,33 @@ import {
 import { MarketplaceSavingsWidget, generateMockSavingsData } from '@/components/employee/MarketplaceSavingsWidget';
 import { PersonalizedRecommendationsStrip } from '@/components/employee/PersonalizedRecommendationsStrip';
 import { OfferDetailSheet } from '@/components/employee/OfferDetailSheet';
+import { MarketplaceOfferMedia, MarketplaceOfferSkeleton } from '@/components/employee/MarketplaceOfferMedia';
+import { 
+  formatDiscountLabel, 
+  getOfferMicrocopy, 
+  getCategoryStyle,
+  SEMANTIC_CATEGORY_STYLES,
+  DEFAULT_CATEGORY_STYLE 
+} from '@/lib/marketplaceHelpers';
 
-// Category config with vibrant but balanced colors
-const CATEGORY_CONFIG: Record<string, { icon: React.ElementType; color: string; bgLight: string; bgDark: string }> = {
-  'Everyday Essentials': { icon: ShoppingBag, color: 'text-rose-500', bgLight: 'bg-rose-50 dark:bg-rose-950/30', bgDark: 'bg-rose-500' },
-  'Food & Coffee': { icon: Coffee, color: 'text-amber-500', bgLight: 'bg-amber-50 dark:bg-amber-950/30', bgDark: 'bg-amber-500' },
-  'Health & Fitness': { icon: Activity, color: 'text-emerald-500', bgLight: 'bg-emerald-50 dark:bg-emerald-950/30', bgDark: 'bg-emerald-500' },
-  'Family & Parenting': { icon: Users, color: 'text-sky-500', bgLight: 'bg-sky-50 dark:bg-sky-950/30', bgDark: 'bg-sky-500' },
-  'Learning & Skills': { icon: BookOpen, color: 'text-violet-500', bgLight: 'bg-violet-50 dark:bg-violet-950/30', bgDark: 'bg-violet-500' },
-  'Home & Living': { icon: Home, color: 'text-orange-500', bgLight: 'bg-orange-50 dark:bg-orange-950/30', bgDark: 'bg-orange-500' },
-  'Mobility': { icon: Car, color: 'text-cyan-500', bgLight: 'bg-cyan-50 dark:bg-cyan-950/30', bgDark: 'bg-cyan-500' },
-  'Lifestyle & Shopping': { icon: Sparkles, color: 'text-pink-500', bgLight: 'bg-pink-50 dark:bg-pink-950/30', bgDark: 'bg-pink-500' },
-  'Travel & Experiences': { icon: Plane, color: 'text-indigo-500', bgLight: 'bg-indigo-50 dark:bg-indigo-950/30', bgDark: 'bg-indigo-500' },
-  'Wellness': { icon: Heart, color: 'text-pink-500', bgLight: 'bg-pink-50 dark:bg-pink-950/30', bgDark: 'bg-pink-500' },
-  'Food & Dining': { icon: Coffee, color: 'text-amber-500', bgLight: 'bg-amber-50 dark:bg-amber-950/30', bgDark: 'bg-amber-500' },
-  'Fitness': { icon: Activity, color: 'text-emerald-500', bgLight: 'bg-emerald-50 dark:bg-emerald-950/30', bgDark: 'bg-emerald-500' },
-  'Learning': { icon: BookOpen, color: 'text-violet-500', bgLight: 'bg-violet-50 dark:bg-violet-950/30', bgDark: 'bg-violet-500' },
-  'Family': { icon: Users, color: 'text-sky-500', bgLight: 'bg-sky-50 dark:bg-sky-950/30', bgDark: 'bg-sky-500' },
-  'Transport': { icon: Car, color: 'text-cyan-500', bgLight: 'bg-cyan-50 dark:bg-cyan-950/30', bgDark: 'bg-cyan-500' },
-  'Experiences': { icon: Plane, color: 'text-indigo-500', bgLight: 'bg-indigo-50 dark:bg-indigo-950/30', bgDark: 'bg-indigo-500' },
+// Icon mapping for categories
+const CATEGORY_ICONS: Record<string, React.ElementType> = {
+  'Everyday Essentials': ShoppingBag,
+  'Food & Coffee': Coffee,
+  'Health & Fitness': Activity,
+  'Family & Parenting': Users,
+  'Learning & Skills': BookOpen,
+  'Home & Living': Home,
+  'Mobility': Car,
+  'Lifestyle & Shopping': Sparkles,
+  'Travel & Experiences': Plane,
+  'Wellness': Heart,
+  'Food & Dining': Coffee,
+  'Fitness': Activity,
+  'Learning': BookOpen,
+  'Family': Users,
+  'Transport': Car,
+  'Experiences': Plane,
 };
 
 // Simplified category tabs
@@ -86,7 +94,7 @@ interface VoucherData {
 }
 
 function MarketplaceContent() {
-  const { data: offers = [] } = useMarketplaceOffers();
+  const { data: offers = [], isLoading } = useMarketplaceOffers();
   const { data: activations = [] } = usePerkActivations();
   const { bankCards, profile, children } = useProfile();
   const { language, direction } = useLanguage();
@@ -230,24 +238,26 @@ function MarketplaceContent() {
   };
 
   const getCategoryConfig = (cat: string) => {
-    return CATEGORY_CONFIG[cat] || { icon: ShoppingBag, color: 'text-gray-500', bgLight: 'bg-gray-50', bgDark: 'bg-gray-500' };
+    const style = getCategoryStyle(cat);
+    const Icon = CATEGORY_ICONS[cat] || ShoppingBag;
+    return { ...style, icon: Icon };
   };
 
   const getVoucherStatusBadge = (status: VoucherStatus) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">{t('Active', 'نشط')}</Badge>;
+        return <Badge className="bg-success/10 text-success border-success/20">{t('Active', 'نشط')}</Badge>;
       case 'redeemed':
-        return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20">{t('Redeemed', 'مستخدم')}</Badge>;
+        return <Badge className="bg-info/10 text-info border-info/20">{t('Redeemed', 'مستخدم')}</Badge>;
       case 'expired':
-        return <Badge className="bg-slate-500/10 text-slate-600 border-slate-500/20">{t('Expired', 'منتهي')}</Badge>;
+        return <Badge className="bg-muted text-muted-foreground border-border">{t('Expired', 'منتهي')}</Badge>;
     }
   };
 
   // Empty state when no offers available
-  if (offers.length === 0) {
+  if (offers.length === 0 && !isLoading) {
     return (
-      <div className="space-y-8 animate-fade-in">
+      <div className="space-y-6 animate-fade-in">
         <PageHeader
           title={t("Perks & Partners", "الامتيازات والشراكات")}
           description={t("Exclusive discounts and benefits for employees", "خصومات ومزايا حصرية للموظفين")}
@@ -285,9 +295,28 @@ function MarketplaceContent() {
     );
   }
 
+  // Loading state with premium skeletons
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <PageHeader
+          title={t("Perks & Partners", "الامتيازات والشراكات")}
+          description={t("Exclusive discounts and benefits curated for you", "خصومات ومزايا حصرية مختارة لك")}
+          icon={Gift}
+          iconClassName="from-accent to-accent/80 shadow-accent/25"
+        />
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <MarketplaceOfferSkeleton key={i} viewMode="grid" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
+    <div className="space-y-5 animate-fade-in">
+      {/* Header - tighter spacing */}
       <PageHeader
         title={t("Perks & Partners", "الامتيازات والشراكات")}
         description={t("Exclusive discounts and benefits curated for you", "خصومات ومزايا حصرية مختارة لك")}
@@ -298,6 +327,7 @@ function MarketplaceContent() {
           icon: Sparkles,
           variant: 'accent',
         }}
+        compact
       />
 
       {/* Savings Widget + Sponsorship Legend */}
@@ -310,14 +340,29 @@ function MarketplaceContent() {
 
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs font-medium text-muted-foreground mb-3">
-              {t('Offer Types', 'أنواع العروض')}
-            </p>
-            <div className={cn('space-y-2', isRTL && 'text-right')}>
-              <div className={cn('flex items-center gap-3', isRTL && 'flex-row-reverse')}>
+            <div className={cn('flex items-center gap-2 mb-3', isRTL && 'flex-row-reverse')}>
+              <p className="text-xs font-medium text-muted-foreground">
+                {t('Offer Types', 'أنواع العروض')}
+              </p>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[250px]">
+                  <p className="text-xs">
+                    {t(
+                      'Offers are categorized by how they are funded. Sponsored offers are subsidized by your employer, while public offers are available to all employees at partner rates.',
+                      'يتم تصنيف العروض حسب طريقة تمويلها. العروض المدعومة يتم تمويلها من صاحب العمل، بينما العروض العامة متاحة لجميع الموظفين بأسعار الشركاء.'
+                    )}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <div className={cn('space-y-3', isRTL && 'text-right')}>
+              <div className={cn('flex items-start gap-3', isRTL && 'flex-row-reverse')}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Badge className={cn('gap-1 cursor-help', SPONSORSHIP_CONFIG.employer.className)}>
+                    <Badge className={cn('gap-1 cursor-help shrink-0', SPONSORSHIP_CONFIG.employer.className)}>
                       <Building2 className="w-3 h-3" />
                       {t('Sponsored', 'برعاية صاحب العمل')}
                     </Badge>
@@ -328,14 +373,19 @@ function MarketplaceContent() {
                     </p>
                   </TooltipContent>
                 </Tooltip>
-                <span className="text-xs text-muted-foreground">
-                  {sponsoredCount} {t('offers', 'عرض')} — {t('Subsidized by your employer', 'مدعومة من صاحب عملك')}
-                </span>
+                <div className="space-y-0.5">
+                  <span className="text-xs text-foreground font-medium">
+                    {sponsoredCount} {t('offers', 'عرض')}
+                  </span>
+                  <p className="text-[11px] text-muted-foreground">
+                    {t('Subsidized by your employer', 'مدعومة من صاحب عملك')}
+                  </p>
+                </div>
               </div>
-              <div className={cn('flex items-center gap-3', isRTL && 'flex-row-reverse')}>
+              <div className={cn('flex items-start gap-3', isRTL && 'flex-row-reverse')}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Badge variant="outline" className="gap-1 cursor-help">
+                    <Badge variant="outline" className="gap-1 cursor-help shrink-0">
                       {t('Public', 'عام')}
                     </Badge>
                   </TooltipTrigger>
@@ -345,9 +395,14 @@ function MarketplaceContent() {
                     </p>
                   </TooltipContent>
                 </Tooltip>
-                <span className="text-xs text-muted-foreground">
-                  {publicCount} {t('offers', 'عرض')} — {t('Available to all employees', 'متاح لجميع الموظفين')}
-                </span>
+                <div className="space-y-0.5">
+                  <span className="text-xs text-foreground font-medium">
+                    {publicCount} {t('offers', 'عرض')}
+                  </span>
+                  <p className="text-[11px] text-muted-foreground">
+                    {t('Available to all employees', 'متاح لجميع الموظفين')}
+                  </p>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -355,7 +410,7 @@ function MarketplaceContent() {
       </div>
 
       {/* Main Tabs */}
-      <Tabs defaultValue="offers" className="space-y-6">
+      <Tabs defaultValue="offers" className="space-y-5">
         <TabsList className="h-auto gap-1 bg-muted/50 p-1">
           <TabsTrigger value="offers" className="gap-2 data-[state=active]:bg-background">
             <ShoppingBag className="w-4 h-4" />
@@ -377,7 +432,7 @@ function MarketplaceContent() {
         </TabsList>
 
         {/* Offers Tab */}
-        <TabsContent value="offers" className="space-y-6">
+        <TabsContent value="offers" className="space-y-5">
           {/* Smart Personalization Strip */}
           <PersonalizedRecommendationsStrip
             offers={offers}
@@ -407,11 +462,11 @@ function MarketplaceContent() {
                           isSelected 
                             ? cat === 'All' 
                               ? "bg-foreground text-background border-foreground"
-                              : `${config.bgDark} text-white border-transparent`
+                              : cn(config.solidBgClass, "text-white border-transparent")
                             : "bg-background border-border hover:border-foreground/30"
                         )}
                       >
-                        <Icon className={cn("w-3.5 h-3.5", isSelected ? "text-inherit" : config.color)} />
+                        <Icon className={cn("w-3.5 h-3.5", isSelected ? "text-inherit" : config.textClass)} />
                         <span className="font-medium">{cat}</span>
                         <Badge variant="secondary" className={cn(
                           "text-[9px] px-1 h-4",
@@ -531,49 +586,56 @@ function MarketplaceContent() {
                 const sponsorship = getOfferSponsorship(offer) as OfferSponsorshipType;
                 const verification = getOfferVerificationStatus(offer);
                 const sponsorConfig = SPONSORSHIP_CONFIG[sponsorship];
+                const discountLabel = formatDiscountLabel({ discountPercent: offer.discount_percent }, language as 'en' | 'ar');
+                const microcopy = getOfferMicrocopy(offer, language as 'en' | 'ar');
 
                 if (viewMode === 'list') {
                   return (
                     <Card 
                       key={offer.id}
-                      className="overflow-hidden hover:shadow-md transition-all cursor-pointer"
+                      className="overflow-hidden hover:shadow-md transition-all cursor-pointer group"
                       onClick={() => setSelectedOffer(offer)}
                     >
                       <CardContent className="p-3">
                         <div className={cn('flex items-center gap-4', isRTL && 'flex-row-reverse')}>
-                          {offer.image_url && (
-                            <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted shrink-0">
-                              <img src={offer.image_url} alt={offer.title} className="w-full h-full object-cover" />
-                            </div>
-                          )}
+                          <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-border/50">
+                            <MarketplaceOfferMedia
+                              imageUrl={offer.image_url}
+                              vendorName={offer.merchant}
+                              title={offer.title}
+                              size="sm"
+                              className="w-full h-full"
+                            />
+                          </div>
                           <div className={cn('flex-1 min-w-0', isRTL && 'text-right')}>
                             <div className={cn('flex items-center gap-2 mb-1', isRTL && 'flex-row-reverse')}>
                               <span className="text-xs text-muted-foreground">{offer.merchant}</span>
                               {verification === 'verified' && (
-                                <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                                <ShieldCheck className="w-3 h-3 text-success" />
                               )}
                               <Badge className={cn('text-[9px] px-1.5', sponsorConfig.className)}>
                                 {t(sponsorConfig.label, sponsorConfig.labelAr)}
                               </Badge>
                             </div>
                             <p className="font-medium text-sm truncate">{offer.title}</p>
+                            <p className="text-[11px] text-muted-foreground truncate">{microcopy}</p>
                             <div className={cn('flex items-center gap-3 mt-1', isRTL && 'flex-row-reverse')}>
-                              <Badge variant="outline" className={cn("text-[10px] gap-1 border-0", config.bgLight, config.color)}>
+                              <Badge variant="outline" className={cn("text-[10px] gap-1 border-0", config.bgClass, config.textClass)}>
                                 <config.icon className="w-3 h-3" />
                                 {offer.category.split(' & ')[0]}
                               </Badge>
                               {offer.rating && (
                                 <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                  <Star className="w-3 h-3 fill-warning text-warning" />
                                   {offer.rating}
                                 </span>
                               )}
                             </div>
                           </div>
                           <div className={cn('text-right shrink-0', isRTL && 'text-left')}>
-                            {offer.discount_percent && (
-                              <Badge className="bg-rose-500 hover:bg-rose-500 text-white border-0 font-bold mb-2">
-                                -{offer.discount_percent}%
+                            {discountLabel && (
+                              <Badge className="bg-success hover:bg-success text-success-foreground border-0 font-semibold mb-2">
+                                {discountLabel}
                               </Badge>
                             )}
                             <Button size="sm" className="w-full" onClick={(e) => { e.stopPropagation(); handleActivate(offer); }}>
@@ -593,87 +655,92 @@ function MarketplaceContent() {
                     style={{ animationDelay: `${index * 30}ms` }}
                     onClick={() => setSelectedOffer(offer)}
                   >
-                    <div className={cn("h-1", config.bgDark)} />
+                    <div className={cn("h-1", config.solidBgClass)} />
                     
-                    {offer.image_url && (
-                      <div className="relative h-32 bg-muted overflow-hidden">
-                        <img 
-                          src={offer.image_url} 
-                          alt={offer.title} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                        />
-                        {/* Badges */}
-                        <div className={cn('absolute top-2 left-2 right-2 flex justify-between items-start', isRTL && 'flex-row-reverse')}>
-                          {offer.discount_percent && (
-                            <Badge className="bg-rose-500 hover:bg-rose-500 text-white border-0 text-[10px] font-bold">
-                              -{offer.discount_percent}%
+                    <div className="relative">
+                      <MarketplaceOfferMedia
+                        imageUrl={offer.image_url}
+                        vendorName={offer.merchant}
+                        title={offer.title}
+                        size="md"
+                        className="border-b border-border/30"
+                      />
+                      
+                      {/* Badges overlay */}
+                      <div className={cn('absolute top-2 left-2 right-2 flex justify-between items-start', isRTL && 'flex-row-reverse')}>
+                        {discountLabel && (
+                          <Badge className="bg-success hover:bg-success text-success-foreground border-0 text-[10px] font-semibold shadow-sm">
+                            {discountLabel}
+                          </Badge>
+                        )}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge className={cn('text-[9px] border cursor-help shadow-sm', sponsorConfig.className)}>
+                              {sponsorship === 'employer' && <Building2 className="w-2.5 h-2.5 mr-0.5" />}
+                              {t(sponsorConfig.label, sponsorConfig.labelAr)}
                             </Badge>
-                          )}
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            <p className="text-xs">{t(sponsorConfig.tooltip, sponsorConfig.tooltipAr)}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      
+                      {/* Verified & Save */}
+                      <div className={cn('absolute bottom-2 left-2 right-2 flex justify-between items-end', isRTL && 'flex-row-reverse')}>
+                        {verification === 'verified' && (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Badge className={cn('text-[9px] border cursor-help', sponsorConfig.className)}>
-                                {sponsorship === 'employer' && <Building2 className="w-2.5 h-2.5 mr-0.5" />}
-                                {t(sponsorConfig.label, sponsorConfig.labelAr)}
+                              <Badge className={cn('text-[9px] gap-1 shadow-sm', VERIFICATION_CONFIG.verified.className)}>
+                                <ShieldCheck className="w-2.5 h-2.5" />
+                                {t('Verified', 'موثق')}
                               </Badge>
                             </TooltipTrigger>
-                            <TooltipContent side="bottom">
-                              <p className="text-xs">{t(sponsorConfig.tooltip, sponsorConfig.tooltipAr)}</p>
+                            <TooltipContent>
+                              <p className="text-xs">{VERIFICATION_CONFIG.verified.tooltip}</p>
                             </TooltipContent>
                           </Tooltip>
-                        </div>
-                        
-                        {/* Verified & Save */}
-                        <div className={cn('absolute bottom-2 left-2 right-2 flex justify-between items-end', isRTL && 'flex-row-reverse')}>
-                          {verification === 'verified' && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge className={cn('text-[9px] gap-1', VERIFICATION_CONFIG.verified.className)}>
-                                  <ShieldCheck className="w-2.5 h-2.5" />
-                                  {t('Verified', 'موثق')}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="text-xs">{VERIFICATION_CONFIG.verified.tooltip}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 bg-background/80 backdrop-blur-sm hover:bg-background opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => { e.stopPropagation(); handleSave(offer.id); }}
-                          >
-                            <Heart className={cn("w-3.5 h-3.5", savedOffers.has(offer.id) && "fill-rose-500 text-rose-500")} />
-                          </Button>
-                        </div>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 bg-background/80 backdrop-blur-sm hover:bg-background opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                          onClick={(e) => { e.stopPropagation(); handleSave(offer.id); }}
+                        >
+                          <Heart className={cn("w-3.5 h-3.5", savedOffers.has(offer.id) && "fill-destructive text-destructive")} />
+                        </Button>
                       </div>
-                    )}
+                    </div>
                     
                     <CardContent className="p-3 space-y-2 flex flex-col flex-1">
                       <div className={cn('flex items-center gap-2', isRTL && 'flex-row-reverse')}>
-                        <Badge variant="outline" className={cn("text-[9px] gap-1 border-0", config.bgLight, config.color)}>
+                        <Badge variant="outline" className={cn("text-[9px] gap-1 border-0", config.bgClass, config.textClass)}>
                           <config.icon className="w-2.5 h-2.5" />
                           {offer.category.split(' & ')[0]}
                         </Badge>
                         {offer.rating && (
                           <span className="text-[10px] text-muted-foreground flex items-center gap-0.5 ml-auto">
-                            <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                            <Star className="w-2.5 h-2.5 fill-warning text-warning" />
                             {offer.rating}
                           </span>
                         )}
                       </div>
                       
                       <div className="flex-1">
-                        <h3 className={cn("font-medium text-sm leading-tight line-clamp-2 group-hover:text-accent transition-colors", isRTL && 'text-right')}>
+                        <h3 className={cn("font-medium text-sm leading-tight line-clamp-1 group-hover:text-accent transition-colors", isRTL && 'text-right')}>
                           {offer.title}
                         </h3>
-                        <p className={cn("text-xs text-muted-foreground mt-1", isRTL && 'text-right')}>
+                        <p className={cn("text-xs text-muted-foreground truncate", isRTL && 'text-right')}>
                           {offer.merchant}
+                        </p>
+                        {/* Microcopy line */}
+                        <p className={cn("text-[11px] text-muted-foreground/80 mt-0.5 truncate", isRTL && 'text-right')}>
+                          {microcopy}
                         </p>
                       </div>
 
                       <div className={cn('flex items-center gap-1 text-[10px] text-muted-foreground', isRTL && 'flex-row-reverse')}>
-                        <CheckCircle className="w-3 h-3 text-emerald-500" />
+                        <CheckCircle className="w-3 h-3 text-success" />
                         <span>{t('Eligible', 'مؤهل')}</span>
                       </div>
                       
@@ -698,7 +765,7 @@ function MarketplaceContent() {
         </TabsContent>
 
         {/* Vouchers Tab */}
-        <TabsContent value="vouchers" className="space-y-6">
+        <TabsContent value="vouchers" className="space-y-5">
           {/* Voucher Filters */}
           <div className={cn('flex items-center gap-2', isRTL && 'flex-row-reverse')}>
             {(['all', 'active', 'redeemed', 'expired'] as const).map((status) => (
@@ -727,26 +794,28 @@ function MarketplaceContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredVouchers.map((voucher) => {
                 const config = getCategoryConfig(voucher.offer.category);
+                const discountLabel = formatDiscountLabel({ discountPercent: voucher.offer.discount_percent }, language as 'en' | 'ar');
+                
                 return (
                   <Card key={voucher.id} className="overflow-hidden">
-                    <div className={cn("h-1", config.bgDark)} />
+                    <div className={cn("h-1", config.solidBgClass)} />
                     <CardContent className="p-4">
                       <div className={cn('flex gap-4', isRTL && 'flex-row-reverse')}>
-                        {voucher.offer.image_url && (
-                          <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted shrink-0">
-                            <img 
-                              src={voucher.offer.image_url} 
-                              alt={voucher.offer.title} 
-                              className="w-full h-full object-cover" 
-                            />
-                          </div>
-                        )}
+                        <div className="w-20 h-20 rounded-lg overflow-hidden shrink-0 border border-border/50">
+                          <MarketplaceOfferMedia
+                            imageUrl={voucher.offer.image_url}
+                            vendorName={voucher.offer.merchant}
+                            title={voucher.offer.title}
+                            size="sm"
+                            className="w-full h-full"
+                          />
+                        </div>
                         <div className={cn('flex-1 min-w-0', isRTL && 'text-right')}>
                           <div className={cn('flex items-center gap-2 mb-1', isRTL && 'flex-row-reverse')}>
                             {getVoucherStatusBadge(voucher.status)}
-                            {voucher.offer.discount_percent && (
+                            {discountLabel && (
                               <Badge variant="outline" className="text-[10px]">
-                                -{voucher.offer.discount_percent}%
+                                {discountLabel}
                               </Badge>
                             )}
                           </div>
@@ -798,7 +867,7 @@ function MarketplaceContent() {
         </TabsContent>
 
         {/* Bank Card Benefits Tab */}
-        <TabsContent value="bank-benefits" className="space-y-6">
+        <TabsContent value="bank-benefits" className="space-y-5">
           <BankCardBenefits cards={bankCards} />
         </TabsContent>
       </Tabs>
