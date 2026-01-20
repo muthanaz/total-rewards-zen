@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Users, Baby, Briefcase, GraduationCap, Heart, Car, TrendingUp } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { EmployerGlobalFiltersBar } from '@/components/employer';
 
 // Vibrant color palette
 const COLORS = {
@@ -123,6 +124,9 @@ export default function SegmentsPage() {
         <h1 className="text-2xl font-display font-bold text-foreground">Employee Segments</h1>
         <p className="text-muted-foreground">Analyze benefit usage patterns across employee groups</p>
       </div>
+
+      {/* Global Filters */}
+      <EmployerGlobalFiltersBar showEmploymentType />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

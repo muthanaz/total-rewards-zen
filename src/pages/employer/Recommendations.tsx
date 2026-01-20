@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Lightbulb, TrendingUp, Users, DollarSign, MessageSquare, Target, ArrowRight, CheckCircle } from 'lucide-react';
 import { formatCurrencyAED, formatInteger } from '@/lib/utils';
+import { EmployerGlobalFiltersBar } from '@/components/employer';
 
 interface Recommendation {
   id: string;
@@ -157,6 +158,9 @@ export default function RecommendationsPage() {
         </div>
         <p className="text-muted-foreground mt-1">Data-driven suggestions to optimize your benefits program</p>
       </div>
+
+      {/* Global Filters */}
+      <EmployerGlobalFiltersBar />
 
       {/* Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

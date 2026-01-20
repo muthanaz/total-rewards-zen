@@ -32,6 +32,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { EmployerGlobalFiltersBar } from '@/components/employer';
 import {
   Dialog,
   DialogContent,
@@ -323,6 +324,9 @@ export default function IntegrationsPage() {
         <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
         <p className="text-muted-foreground">{t('subtitle')}</p>
       </div>
+
+      {/* Global Filters */}
+      <EmployerGlobalFiltersBar compact />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

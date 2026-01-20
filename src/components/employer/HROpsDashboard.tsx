@@ -22,6 +22,7 @@ import { DataQualityBadge } from './DataQualityBadge';
 import { TrendIndicatorCompact } from './TrendComparison';
 import { useClaimMetrics, useClaimsByCategory, useRecentActivity } from '@/hooks/useEmployerDashboard';
 import { cn } from '@/lib/utils';
+import { EmployerGlobalFiltersBar } from './EmployerGlobalFiltersBar';
 
 const upcomingTasks = [
   { task: 'Q1 Benefits Review Meeting', date: 'Tomorrow, 10:00 AM', type: 'meeting' },
@@ -113,6 +114,9 @@ export function HROpsDashboard() {
           SLA Compliance: {claimMetrics?.slaCompliance || 94}%
         </Badge>
       </div>
+
+      {/* Global Filters */}
+      <EmployerGlobalFiltersBar compact />
 
       {/* Action Items */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from '@/components/ui/textarea';
 import { ClipboardCheck, Clock, CheckCircle, XCircle, Search, Filter, Eye, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { EmployerGlobalFiltersBar } from '@/components/employer';
 
 interface Request {
   id: string;
@@ -182,6 +183,9 @@ export default function ClaimsPage() {
         <h1 className="text-2xl font-display font-bold text-foreground">Claims & Approvals</h1>
         <p className="text-muted-foreground">Review and manage employee requests and claims</p>
       </div>
+
+      {/* Global Filters */}
+      <EmployerGlobalFiltersBar compact />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

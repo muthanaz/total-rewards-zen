@@ -5,6 +5,7 @@ import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { ShoppingBag, TrendingUp, Users, Star, Coffee, Dumbbell, ShoppingCart, Plane, BookOpen, Baby } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend, Area, AreaChart } from 'recharts';
 import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
+import { EmployerGlobalFiltersBar } from '@/components/employer';
 
 // Vibrant color palette
 const COLORS = {
@@ -76,6 +77,9 @@ export default function MarketplaceAnalyticsPage() {
         <h1 className="text-2xl font-display font-bold text-foreground">Marketplace Analytics</h1>
         <p className="text-muted-foreground">Track perk activations and employee savings</p>
       </div>
+
+      {/* Global Filters */}
+      <EmployerGlobalFiltersBar />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
