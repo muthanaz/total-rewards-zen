@@ -17,3 +17,11 @@ export {
   segmentsOperationalLevers, 
   recommendationsOperationalLevers 
 } from './OperationalLeversCard';
+export { 
+  NarrativeInsights, 
+  generateUtilizationInsight,
+  generateSpendInsight,
+  generateZombieInsight,
+  generateSatisfactionInsight,
+} from './NarrativeInsights';
+export type { NarrativeInsight } from './NarrativeInsights';

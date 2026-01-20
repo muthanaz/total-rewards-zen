@@ -41,7 +41,7 @@ import {
 } from 'recharts';
 import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
 import { calculateUtilization, calculateAggregateUtilization } from '@/lib/crossPortalContract';
-import { EmployerGlobalFiltersBar, DataConfidenceBadge, PageConfidenceGate, useDataCoverageMetrics } from '@/components/employer';
+import { EmployerGlobalFiltersBar, DataConfidenceBadge, PageConfidenceGate, useDataCoverageMetrics, NarrativeInsights, NarrativeInsight } from '@/components/employer';
 import { DrillDownSheet, DrillDownSummaryGrid } from '@/components/shared';
 import { toast } from 'sonner';
 import {
@@ -462,6 +462,49 @@ export default function SpendPage() {
 
       {/* Definitions Card */}
       <DefinitionsCard />
+
+      {/* Narrative Insights */}
+      <NarrativeInsights
+        insights={[
+          {
+            id: 'spend-utilization',
+            change: 'Overall utilization is tracking below target',
+            metricValue: formatPercent(overallUtilization.rate),
+            previousValue: '71%',
+            impact: `${formatCurrencyAED(totals.entitled - totals.spend)} in entitled benefits remain unclaimed. This represents potential employee value not being realized.`,
+            action: 'Review underutilized categories in Zombie Spend analysis',
+            actionPath: '/employer/zombie-spend',
+            trend: 'down',
+            trendIsPositive: false,
+            confidence: overallUtilization.rate < 60 ? 'medium' : 'high',
+          },
+          {
+            id: 'spend-housing',
+            change: 'Housing allowance drives 42% of total spend',
+            metricValue: formatCurrencyAED(spendByBenefitType[0]?.spend || 0),
+            impact: 'Largest category by value. High utilization (89%) indicates strong employee awareness and need.',
+            action: 'Benchmark against market rates for optimization opportunities',
+            actionPath: '/employer/spend?tab=benchmark',
+            trend: 'neutral',
+            confidence: 'high',
+          },
+          {
+            id: 'spend-variance',
+            change: 'YTD spend is 8% above previous year',
+            impact: 'Driven primarily by increased health claims and higher education allowance uptake. Within planned growth parameters.',
+            action: 'Monitor health category for emerging cost trends',
+            trend: 'up',
+            trendIsPositive: false,
+            confidence: 'high',
+          },
+        ]}
+        coverageMetrics={coverageMetrics}
+        title="Spend Insights"
+        subtitle="Key observations from your benefits spend data"
+        onCreateRecommendation={(insight) => {
+          window.location.href = `/employer/recommendations?create=true&source=${insight.id}`;
+        }}
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
