@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   ClipboardCheck, 
@@ -24,6 +23,8 @@ import { useToast } from '@/hooks/use-toast';
 import { EmployerGlobalFiltersBar } from '@/components/employer';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useEmployerPermissions } from '@/hooks/useEmployerPermissions';
+import { ClaimReviewSheet } from '@/components/employer/ClaimReviewSheet';
+import { useProfile } from '@/contexts/ProfileContext';
 
 interface Request {
   id: string;
@@ -125,12 +126,14 @@ export function ClaimsOpsView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('pending');
   const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [selectedForBulk, setSelectedForBulk] = useState<string[]>([]);
   const [reviewNotes, setReviewNotes] = useState('');
   const { toast } = useToast();
   const { hasPermission } = useEmployerPermissions();
   const canProcessClaims = hasPermission('can_process_claims');
+  const { profile } = useProfile();
+  const organizationId = profile?.organization_id || null;
 
   const filteredRequests = requests.filter(req => {
     const matchesSearch = req.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -455,7 +458,7 @@ export function ClaimsOpsView() {
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => setSelectedRequest(request)}
+                        onClick={() => setSelectedRequestId(request.id)}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -491,102 +494,20 @@ export function ClaimsOpsView() {
         </div>
       )}
 
-      {/* Request Detail Dialog */}
-      <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{selectedRequest?.subject}</DialogTitle>
-            <DialogDescription>
-              Submitted by {selectedRequest?.employeeName} ({selectedRequest?.employeeId})
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedRequest && (
-            <div className="space-y-4">
-              <div className="flex gap-2 flex-wrap">
-                {getTypeBadge(selectedRequest.type)}
-                {getStatusBadge(selectedRequest.status)}
-                {getRiskBadge(selectedRequest.riskLevel)}
-                {getSlaStatus(selectedRequest.slaDeadline, selectedRequest.status)}
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Category</p>
-                  <p className="font-medium">{selectedRequest.category}</p>
-                </div>
-                {selectedRequest.amount && (
-                  <div>
-                    <p className="text-muted-foreground">Amount</p>
-                    <p className="font-medium">AED {selectedRequest.amount.toLocaleString()}</p>
-                  </div>
-                )}
-                <div>
-                  <p className="text-muted-foreground">Submitted</p>
-                  <p className="font-medium">{new Date(selectedRequest.submittedAt).toLocaleString()}</p>
-                </div>
-                {selectedRequest.assignedTo && (
-                  <div>
-                    <p className="text-muted-foreground">Assigned To</p>
-                    <p className="font-medium">{selectedRequest.assignedTo}</p>
-                  </div>
-                )}
-              </div>
-              
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Description</p>
-                <p className="text-sm bg-muted/30 p-3 rounded-lg">{selectedRequest.description}</p>
-              </div>
-
-              {selectedRequest.reviewerNotes && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Reviewer Notes</p>
-                  <p className="text-sm bg-muted/30 p-3 rounded-lg">{selectedRequest.reviewerNotes}</p>
-                </div>
-              )}
-
-              {selectedRequest.status === 'pending' && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Add Review Notes</p>
-                  <Textarea
-                    placeholder="Add notes for the employee..."
-                    value={reviewNotes}
-                    onChange={(e) => setReviewNotes(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-          
-          <DialogFooter>
-            {selectedRequest?.status === 'pending' ? (
-              <PermissionGate 
-                permission="can_process_claims"
-                fallback={
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Lock className="w-4 h-4" />
-                    <span className="text-sm">You don't have permission to process claims</span>
-                  </div>
-                }
-              >
-                <>
-                  <Button variant="outline" onClick={() => handleAction('reject')}>
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Reject
-                  </Button>
-                  <Button onClick={() => handleAction('approve')}>
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Approve
-                  </Button>
-                </>
-              </PermissionGate>
-            ) : (
-              <Button variant="outline" onClick={() => setSelectedRequest(null)}>Close</Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Claim Review Sheet */}
+      <ClaimReviewSheet
+        requestId={selectedRequestId}
+        organizationId={organizationId}
+        open={!!selectedRequestId}
+        onOpenChange={(open) => !open && setSelectedRequestId(null)}
+        onStatusChange={() => {
+          // Refresh the list when status changes
+          toast({
+            title: 'Request Updated',
+            description: 'The request list has been refreshed.',
+          });
+        }}
+      />
     </div>
   );
 }
