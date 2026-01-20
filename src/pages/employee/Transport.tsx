@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Car, Fuel, Plane, CreditCard, CheckCircle, Wallet, TrendingDown, Percent, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -74,16 +75,13 @@ export default function TransportPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-          <Car className="w-7 h-7 text-accent" />
-          Transport & Mobility
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Fuel, car allowance, and annual flight tickets
-        </p>
-      </div>
+      {/* Header - Using PageHeader pattern */}
+      <PageHeader
+        title="Transport & Mobility"
+        description="Fuel, car allowance, and annual flight tickets"
+        icon={Car}
+        iconClassName="from-chart-2 to-chart-2/80 shadow-chart-2/25"
+      />
 
       {/* 1. Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

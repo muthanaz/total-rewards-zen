@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Home, Search, Star, Clock, ExternalLink, MapPin, Bath, Bed, Wallet, TrendingDown, Percent, CheckCircle2 } from 'lucide-react';
 import { useHousingAreas, useHousingListings } from '@/hooks/useSupabaseData';
 import { BENEFIT_CATEGORIES } from '@/lib/benefitCategories';
@@ -95,24 +96,18 @@ export default function HousingPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-            <div className={cn("p-2 rounded-xl", housingCategory.bgLightClass)}>
-              <Home className={cn("w-6 h-6", housingCategory.textClass)} />
-            </div>
-            Housing Allowance
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Find the perfect home within your allowance or calculate your top-up
-          </p>
-        </div>
-        <Badge variant="outline" className={cn("gap-1.5", rag.bgClass, rag.textClass, rag.borderClass)}>
-          <CheckCircle2 className="w-4 h-4" />
-          {utilizationPercent}% {rag.label}
-        </Badge>
-      </div>
+      {/* Header - Using PageHeader pattern */}
+      <PageHeader
+        title="Housing Allowance"
+        description="Find the perfect home within your allowance or calculate your top-up"
+        icon={Home}
+        iconClassName="from-accent to-accent/80 shadow-accent/25"
+        badge={{
+          label: `${utilizationPercent}% ${rag.label}`,
+          icon: CheckCircle2,
+          variant: utilizationPercent >= 80 ? 'success' : utilizationPercent >= 50 ? 'warning' : 'default',
+        }}
+      />
 
       {/* 1. Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

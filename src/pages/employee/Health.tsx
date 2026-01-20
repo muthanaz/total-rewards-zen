@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile, Wallet, TrendingDown, Percent } from 'lucide-react';
 import { useHealthProviders } from '@/hooks/useSupabaseData';
@@ -124,16 +125,13 @@ export default function HealthPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-3">
-          <Heart className="w-7 h-7 text-accent" />
-          Health Insurance
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Comprehensive coverage for you and your family
-        </p>
-      </div>
+      {/* Header - Using PageHeader pattern */}
+      <PageHeader
+        title="Health Insurance"
+        description="Comprehensive coverage for you and your family"
+        icon={Heart}
+        iconClassName="from-chart-5 to-chart-5/80 shadow-chart-5/25"
+      />
 
       {/* 1. Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
