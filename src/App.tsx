@@ -66,6 +66,14 @@ import AdminUIConfiguration from "./pages/admin/UIConfiguration";
 import AdminDataMigration from "./pages/admin/DataMigration";
 import AdminUsersRoles from "./pages/admin/UsersRoles";
 import AdminAuditLog from "./pages/admin/AuditLog";
+import AdminVendors from "./pages/admin/Vendors";
+import AdminOffers from "./pages/admin/Offers";
+import AdminModeration from "./pages/admin/Moderation";
+import AdminDataSources from "./pages/admin/DataSources";
+import AdminSyncMonitor from "./pages/admin/SyncMonitor";
+import AdminSecuritySettings from "./pages/admin/SecuritySettings";
+import AdminFeatureFlags from "./pages/admin/FeatureFlags";
+import AdminBilling from "./pages/admin/Billing";
 
 import VendorDashboard from "./pages/vendor/Dashboard";
 import VendorOffers from "./pages/vendor/Offers";
@@ -202,16 +210,18 @@ function AppRoutes() {
         <Route path="settings" element={<AdminSettings />} />
         <Route path="ui-config" element={<AdminUIConfiguration />} />
         <Route path="data-migration" element={<AdminDataMigration />} />
-        {/* Placeholder routes for new pages */}
-        <Route path="vendors" element={<AdminOrganizations />} />
-        <Route path="offers" element={<AdminSavedReports />} />
-        <Route path="moderation" element={<AdminSavedReports />} />
-        <Route path="data-sources" element={<AdminDataMigration />} />
+        {/* Marketplace Governance */}
+        <Route path="vendors" element={<AdminVendors />} />
+        <Route path="offers" element={<AdminOffers />} />
+        <Route path="moderation" element={<AdminModeration />} />
+        {/* Data & Integrations */}
+        <Route path="data-sources" element={<AdminDataSources />} />
         <Route path="data-quality" element={<AdminDataMigration />} />
-        <Route path="sync-monitor" element={<AdminDataMigration />} />
-        <Route path="security" element={<AdminSettings />} />
-        <Route path="feature-flags" element={<AdminUIConfiguration />} />
-        <Route path="billing" element={<AdminSettings />} />
+        <Route path="sync-monitor" element={<AdminSyncMonitor />} />
+        {/* Security & Configuration */}
+        <Route path="security" element={<AdminSecuritySettings />} />
+        <Route path="feature-flags" element={<AdminFeatureFlags />} />
+        <Route path="billing" element={<AdminBilling />} />
       </Route>
 
       {/* Vendor Routes */}
