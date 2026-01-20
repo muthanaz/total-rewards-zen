@@ -19,6 +19,7 @@ import { BankCardBenefits } from '@/components/employee/BankCardBenefits';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { NoSearchResults } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
+import { MarketplacePhase2Gate } from '@/components/shared/Phase2Gate';
 
 // Category config with vibrant but balanced colors
 const CATEGORY_CONFIG: Record<string, { icon: React.ElementType; color: string; bgLight: string; bgDark: string }> = {
@@ -33,7 +34,7 @@ const CATEGORY_CONFIG: Record<string, { icon: React.ElementType; color: string; 
   'Travel & Experiences': { icon: Plane, color: 'text-indigo-500', bgLight: 'bg-indigo-50 dark:bg-indigo-950/30', bgDark: 'bg-indigo-500' },
 };
 
-export default function MarketplacePage() {
+function MarketplaceContent() {
   const { data: offers = [] } = useMarketplaceOffers();
   const { bankCards } = useProfile();
   const { toast } = useToast();
@@ -399,5 +400,14 @@ export default function MarketplacePage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+// Default export with Phase 2 gate wrapper
+export default function MarketplacePage() {
+  return (
+    <MarketplacePhase2Gate>
+      <MarketplaceContent />
+    </MarketplacePhase2Gate>
   );
 }
