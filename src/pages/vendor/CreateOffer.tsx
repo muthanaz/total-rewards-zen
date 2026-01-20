@@ -1,347 +1,280 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { 
-  Tag,
-  Calendar,
-  Percent,
-  FileText,
-  Image,
-  ArrowLeft,
-  ArrowRight,
-  Save,
-  Eye,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { PlusCircle, ArrowLeft, ArrowRight, Tag, Calendar, FileText, Image as ImageIcon, CheckCircle, AlertCircle, Sparkles, Clock } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCreateOffer, CreateOfferInput } from '@/hooks/useVendorData';
+import { PageLayout } from '@/components/shared';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
-const categories = [
-  { value: 'fitness', label: 'Fitness', labelAr: 'اللياقة' },
-  { value: 'wellness', label: 'Wellness', labelAr: 'العافية' },
-  { value: 'health', label: 'Health', labelAr: 'الصحة' },
-  { value: 'education', label: 'Education', labelAr: 'التعليم' },
-  { value: 'food', label: 'Food & Dining', labelAr: 'الطعام والمطاعم' },
-  { value: 'entertainment', label: 'Entertainment', labelAr: 'الترفيه' },
-  { value: 'travel', label: 'Travel', labelAr: 'السفر' },
-  { value: 'retail', label: 'Retail', labelAr: 'التجزئة' },
+const CATEGORIES = [
+  { id: 'wellness', label: 'Wellness & Fitness', labelAr: 'الصحة واللياقة' },
+  { id: 'learning', label: 'Learning & Development', labelAr: 'التعلم والتطوير' },
+  { id: 'food', label: 'Food & Dining', labelAr: 'الطعام والمطاعم' },
+  { id: 'transport', label: 'Transport', labelAr: 'المواصلات' },
+  { id: 'family', label: 'Family & Lifestyle', labelAr: 'الأسرة ونمط الحياة' },
+  { id: 'entertainment', label: 'Entertainment', labelAr: 'الترفيه' },
+  { id: 'retail', label: 'Retail & Shopping', labelAr: 'التسوق' },
+  { id: 'travel', label: 'Travel', labelAr: 'السفر' },
 ];
 
-const discountTypes = [
-  { value: 'percentage', label: 'Percentage Off', labelAr: 'خصم بالنسبة المئوية' },
-  { value: 'fixed', label: 'Fixed Amount Off', labelAr: 'خصم بمبلغ ثابت' },
-  { value: 'bogo', label: 'Buy One Get One', labelAr: 'اشترِ واحداً واحصل على الثاني' },
-  { value: 'free_trial', label: 'Free Trial', labelAr: 'تجربة مجانية' },
+const OFFER_TYPES = [
+  { id: 'code', label: 'Voucher Code', labelAr: 'رمز القسيمة' },
+  { id: 'deeplink', label: 'Direct Link', labelAr: 'رابط مباشر' },
+  { id: 'payroll', label: 'Payroll Deduction', labelAr: 'خصم من الراتب' },
 ];
+
+const LOCATIONS = [
+  { id: 'all', label: 'All UAE', labelAr: 'جميع الإمارات' },
+  { id: 'ad', label: 'Abu Dhabi', labelAr: 'أبوظبي' },
+  { id: 'dxb', label: 'Dubai', labelAr: 'دبي' },
+];
+
+const WIZARD_STEPS = [
+  { id: 'basics', label: 'Basics', labelAr: 'الأساسيات', icon: Tag },
+  { id: 'validity', label: 'Validity', labelAr: 'الصلاحية', icon: Calendar },
+  { id: 'terms', label: 'Terms', labelAr: 'الشروط', icon: FileText },
+  { id: 'assets', label: 'Assets', labelAr: 'الأصول', icon: ImageIcon },
+  { id: 'review', label: 'Review', labelAr: 'المراجعة', icon: CheckCircle },
+];
+
+interface FormData extends CreateOfferInput {
+  offer_type: 'code' | 'deeplink' | 'payroll';
+  usage_limit: number | undefined;
+  location: string;
+}
 
 export default function VendorCreateOffer() {
+  const navigate = useNavigate();
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
-  const navigate = useNavigate();
-  
-  const [formData, setFormData] = useState({
+  const t = (en: string, ar: string) => language === 'ar' ? ar : en;
+
+  const { mutate: createOffer, isPending } = useCreateOffer();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [formData, setFormData] = useState<FormData>({
     title: '',
-    titleAr: '',
     description: '',
-    descriptionAr: '',
     category: '',
-    discountType: '',
-    discountValue: '',
+    discount_percent: undefined,
+    valid_from: '',
+    valid_to: '',
+    is_public: true,
     terms: '',
-    termsAr: '',
-    startDate: '',
-    endDate: '',
-    isActive: true,
-    limitRedemptions: false,
-    maxRedemptions: '',
+    image_url: '',
+    tags: [],
+    offer_type: 'code',
+    usage_limit: undefined,
+    location: 'all',
   });
 
-  const t = (en: string, ar: string) => language === 'ar' ? ar : en;
-  const BackIcon = isRTL ? ArrowRight : ArrowLeft;
+  const handleChange = (field: keyof FormData, value: any) => setFormData(prev => ({ ...prev, [field]: value }));
+  const handleNext = () => currentStep < WIZARD_STEPS.length - 1 && setCurrentStep(prev => prev + 1);
+  const handleBack = () => currentStep > 0 && setCurrentStep(prev => prev - 1);
 
-  const handleChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleSubmit = () => {
+    if (!formData.title || !formData.category) {
+      toast.error(t('Please fill in required fields', 'يرجى ملء الحقول المطلوبة'));
+      return;
+    }
+    createOffer(formData, { onSuccess: () => navigate('/vendor/offers') });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.success(t('Offer created successfully!', 'تم إنشاء العرض بنجاح!'));
-    navigate('/vendor/offers');
-  };
+  const handleSaveDraft = () => toast.success(t('Draft saved', 'تم حفظ المسودة'));
+  const progress = ((currentStep + 1) / WIZARD_STEPS.length) * 100;
+  const CurrentStepIcon = WIZARD_STEPS[currentStep].icon;
 
-  const handleSaveDraft = () => {
-    toast.success(t('Draft saved', 'تم حفظ المسودة'));
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="title">{t('Offer Title', 'عنوان العرض')} *</Label>
+              <Input id="title" placeholder={t('e.g., 30% Off Gym Membership', 'مثال: خصم 30% على عضوية النادي')} value={formData.title} onChange={(e) => handleChange('title', e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="category">{t('Category', 'الفئة')} *</Label>
+              <Select value={formData.category} onValueChange={(v) => handleChange('category', v)}>
+                <SelectTrigger><SelectValue placeholder={t('Select category', 'اختر الفئة')} /></SelectTrigger>
+                <SelectContent>{CATEGORIES.map(cat => <SelectItem key={cat.id} value={cat.id}>{language === 'ar' ? cat.labelAr : cat.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">{t('Short Description', 'وصف قصير')}</Label>
+              <Textarea id="description" placeholder={t('Describe your offer...', 'صف عرضك...')} value={formData.description || ''} onChange={(e) => handleChange('description', e.target.value)} rows={3} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="discount">{t('Discount Percentage', 'نسبة الخصم')}</Label>
+                <div className="relative">
+                  <Input id="discount" type="number" min={1} max={100} placeholder="25" value={formData.discount_percent || ''} onChange={(e) => handleChange('discount_percent', parseInt(e.target.value) || undefined)} />
+                  <span className="absolute right-3 top-2.5 text-muted-foreground">%</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="offer_type">{t('Offer Type', 'نوع العرض')}</Label>
+                <Select value={formData.offer_type} onValueChange={(v: any) => handleChange('offer_type', v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{OFFER_TYPES.map(type => <SelectItem key={type.id} value={type.id}>{language === 'ar' ? type.labelAr : type.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        );
+      case 1:
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label htmlFor="valid_from">{t('Start Date', 'تاريخ البدء')}</Label><Input id="valid_from" type="date" value={formData.valid_from || ''} onChange={(e) => handleChange('valid_from', e.target.value)} /></div>
+              <div className="space-y-2"><Label htmlFor="valid_to">{t('End Date', 'تاريخ الانتهاء')}</Label><Input id="valid_to" type="date" value={formData.valid_to || ''} onChange={(e) => handleChange('valid_to', e.target.value)} /></div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="usage_limit">{t('Usage Limit (Optional)', 'حد الاستخدام (اختياري)')}</Label>
+              <Input id="usage_limit" type="number" placeholder={t('Leave empty for unlimited', 'اتركه فارغًا للاستخدام غير المحدود')} value={formData.usage_limit || ''} onChange={(e) => handleChange('usage_limit', parseInt(e.target.value) || undefined)} />
+            </div>
+            <Card className="border-primary/20 bg-primary/5"><CardContent className="pt-4">
+              <div className={cn("flex items-start gap-3", isRTL && "flex-row-reverse text-right")}>
+                <Clock className="w-5 h-5 text-primary mt-0.5" />
+                <div><p className="text-sm font-medium">{t('Validity Tip', 'نصيحة الصلاحية')}</p><p className="text-xs text-muted-foreground mt-1">{t('Offers with clear end dates create urgency. We recommend 1-3 month validity periods.', 'العروض ذات تواريخ الانتهاء الواضحة تخلق الإلحاح. نوصي بفترات صلاحية من 1-3 أشهر.')}</p></div>
+              </div>
+            </CardContent></Card>
+          </div>
+        );
+      case 2:
+        return (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="terms">{t('Terms & Conditions', 'الشروط والأحكام')}</Label>
+              <Textarea id="terms" placeholder={t('Enter any exclusions, restrictions...', 'أدخل أي استثناءات أو قيود...')} value={formData.terms || ''} onChange={(e) => handleChange('terms', e.target.value)} rows={5} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="location">{t('Location', 'الموقع')}</Label>
+              <Select value={formData.location} onValueChange={(v) => handleChange('location', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{LOCATIONS.map(loc => <SelectItem key={loc.id} value={loc.id}>{language === 'ar' ? loc.labelAr : loc.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className={cn("flex items-center justify-between p-4 border rounded-lg", isRTL && "flex-row-reverse")}>
+              <div className={cn(isRTL && "text-right")}><Label>{t('Public Offer', 'عرض عام')}</Label><p className="text-xs text-muted-foreground mt-1">{t('Available to all employees', 'متاح لجميع الموظفين')}</p></div>
+              <Switch checked={formData.is_public ?? true} onCheckedChange={(v) => handleChange('is_public', v)} />
+            </div>
+          </div>
+        );
+      case 3:
+        return (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="image_url">{t('Offer Image URL', 'رابط صورة العرض')}</Label>
+              <Input id="image_url" placeholder="https://example.com/image.jpg" value={formData.image_url || ''} onChange={(e) => handleChange('image_url', e.target.value)} />
+              <p className="text-xs text-muted-foreground">{t('Recommended: 800x600px', 'موصى به: 800x600 بكسل')}</p>
+            </div>
+            <div className="border-2 border-dashed rounded-lg p-8 text-center">
+              {formData.image_url ? (
+                <img src={formData.image_url} alt="Offer preview" className="max-h-48 mx-auto rounded-lg object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              ) : (
+                <div className="text-muted-foreground">
+                  <ImageIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">{t('No image uploaded', 'لم يتم رفع صورة')}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      case 4:
+        return (
+          <div className="space-y-6">
+            <Card className="border-warning/30 bg-warning/5"><CardContent className="pt-4">
+              <div className={cn("flex items-start gap-3", isRTL && "flex-row-reverse text-right")}>
+                <AlertCircle className="w-5 h-5 text-warning mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">{t('What happens next?', 'ماذا يحدث بعد ذلك؟')}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('Your offer will be submitted for admin review. Once approved, it will appear in the Employee Marketplace within 24-48 hours.', 'سيتم إرسال عرضك للمراجعة. بمجرد الموافقة، سيظهر في سوق الموظفين خلال 24-48 ساعة.')}</p>
+                </div>
+              </div>
+            </CardContent></Card>
+            <div className="grid gap-4">
+              <div className={cn("flex justify-between py-2 border-b", isRTL && "flex-row-reverse")}><span className="text-muted-foreground">{t('Title', 'العنوان')}</span><span className="font-medium">{formData.title || '-'}</span></div>
+              <div className={cn("flex justify-between py-2 border-b", isRTL && "flex-row-reverse")}><span className="text-muted-foreground">{t('Category', 'الفئة')}</span><span className="font-medium">{CATEGORIES.find(c => c.id === formData.category)?.[language === 'ar' ? 'labelAr' : 'label'] || '-'}</span></div>
+              <div className={cn("flex justify-between py-2 border-b", isRTL && "flex-row-reverse")}><span className="text-muted-foreground">{t('Discount', 'الخصم')}</span><span className="font-medium">{formData.discount_percent ? `${formData.discount_percent}%` : '-'}</span></div>
+              <div className={cn("flex justify-between py-2 border-b", isRTL && "flex-row-reverse")}><span className="text-muted-foreground">{t('Validity', 'الصلاحية')}</span><span className="font-medium">{formData.valid_from && formData.valid_to ? `${formData.valid_from} - ${formData.valid_to}` : t('Not specified', 'غير محدد')}</span></div>
+              <div className={cn("flex justify-between py-2", isRTL && "flex-row-reverse")}><span className="text-muted-foreground">{t('Visibility', 'الرؤية')}</span><Badge variant={formData.is_public ? "default" : "secondary"}>{formData.is_public ? t('Public', 'عام') : t('Employer-Sponsored', 'برعاية')}</Badge></div>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
-    <div className={cn("space-y-6", isRTL && "text-right")}>
-      {/* Header */}
-      <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={() => navigate('/vendor/offers')}
-        >
-          <BackIcon className="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">
-            {t('Create New Offer', 'إنشاء عرض جديد')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('Set up a new offer for employees', 'أنشئ عرضاً جديداً للموظفين')}
-          </p>
+    <PageLayout
+      title={t('Create New Offer', 'إنشاء عرض جديد')}
+      description={t('Launch a new offer for employees in the marketplace', 'أطلق عرضًا جديدًا للموظفين في السوق')}
+      icon={PlusCircle}
+      iconClassName="text-primary"
+      actions={<Button variant="ghost" onClick={() => navigate('/vendor/offers')}>{isRTL ? <ArrowRight className="w-4 h-4 ml-2" /> : <ArrowLeft className="w-4 h-4 mr-2" />}{t('Back to Offers', 'العودة إلى العروض')}</Button>}
+    >
+      <Card className="mb-6"><CardContent className="pt-6">
+        <div className="flex items-center justify-between mb-4">
+          {WIZARD_STEPS.map((step, index) => {
+            const StepIcon = step.icon;
+            const isCompleted = index < currentStep;
+            const isCurrent = index === currentStep;
+            return (
+              <div key={step.id} className={cn("flex flex-col items-center gap-2 flex-1", index < WIZARD_STEPS.length - 1 && "relative")}>
+                <div className={cn("w-10 h-10 rounded-full flex items-center justify-center transition-colors", isCompleted ? "bg-success text-success-foreground" : isCurrent ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+                  {isCompleted ? <CheckCircle className="w-5 h-5" /> : <StepIcon className="w-5 h-5" />}
+                </div>
+                <span className={cn("text-xs font-medium", isCurrent ? "text-foreground" : "text-muted-foreground")}>{language === 'ar' ? step.labelAr : step.label}</span>
+              </div>
+            );
+          })}
         </div>
-      </div>
+        <Progress value={progress} className="h-2" />
+      </CardContent></Card>
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Form */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Basic Information */}
-            <Card>
-              <CardHeader className={cn(isRTL && "text-right")}>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Tag className="w-5 h-5 text-accent" />
-                  {t('Basic Information', 'المعلومات الأساسية')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">{t('Offer Title (English)', 'عنوان العرض (بالإنجليزية)')}</Label>
-                    <Input 
-                      id="title"
-                      placeholder={t('e.g., 20% Off Premium Gym Membership', 'مثال: ٢٠٪ خصم على عضوية النادي المميزة')}
-                      value={formData.title}
-                      onChange={(e) => handleChange('title', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="titleAr">{t('Offer Title (Arabic)', 'عنوان العرض (بالعربية)')}</Label>
-                    <Input 
-                      id="titleAr"
-                      dir="rtl"
-                      placeholder="٢٠٪ خصم على عضوية النادي المميزة"
-                      value={formData.titleAr}
-                      onChange={(e) => handleChange('titleAr', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">{t('Description (English)', 'الوصف (بالإنجليزية)')}</Label>
-                  <Textarea 
-                    id="description"
-                    placeholder={t('Describe your offer...', 'صف عرضك...')}
-                    value={formData.description}
-                    onChange={(e) => handleChange('description', e.target.value)}
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="descriptionAr">{t('Description (Arabic)', 'الوصف (بالعربية)')}</Label>
-                  <Textarea 
-                    id="descriptionAr"
-                    dir="rtl"
-                    placeholder="صف عرضك..."
-                    value={formData.descriptionAr}
-                    onChange={(e) => handleChange('descriptionAr', e.target.value)}
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t('Category', 'الفئة')}</Label>
-                  <Select value={formData.category} onValueChange={(v) => handleChange('category', v)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('Select a category', 'اختر فئة')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map(cat => (
-                        <SelectItem key={cat.value} value={cat.value}>
-                          {language === 'ar' ? cat.labelAr : cat.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Discount Details */}
-            <Card>
-              <CardHeader className={cn(isRTL && "text-right")}>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Percent className="w-5 h-5 text-accent" />
-                  {t('Discount Details', 'تفاصيل الخصم')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>{t('Discount Type', 'نوع الخصم')}</Label>
-                    <Select value={formData.discountType} onValueChange={(v) => handleChange('discountType', v)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('Select discount type', 'اختر نوع الخصم')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {discountTypes.map(type => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {language === 'ar' ? type.labelAr : type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="discountValue">{t('Discount Value', 'قيمة الخصم')}</Label>
-                    <Input 
-                      id="discountValue"
-                      placeholder={formData.discountType === 'percentage' ? '20' : '100'}
-                      value={formData.discountValue}
-                      onChange={(e) => handleChange('discountValue', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="terms">{t('Terms & Conditions (English)', 'الشروط والأحكام (بالإنجليزية)')}</Label>
-                  <Textarea 
-                    id="terms"
-                    placeholder={t('Enter terms and conditions...', 'أدخل الشروط والأحكام...')}
-                    value={formData.terms}
-                    onChange={(e) => handleChange('terms', e.target.value)}
-                    rows={3}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Validity Period */}
-            <Card>
-              <CardHeader className={cn(isRTL && "text-right")}>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-accent" />
-                  {t('Validity Period', 'فترة الصلاحية')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="startDate">{t('Start Date', 'تاريخ البدء')}</Label>
-                    <Input 
-                      id="startDate"
-                      type="date"
-                      value={formData.startDate}
-                      onChange={(e) => handleChange('startDate', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="endDate">{t('End Date', 'تاريخ الانتهاء')}</Label>
-                    <Input 
-                      id="endDate"
-                      type="date"
-                      value={formData.endDate}
-                      onChange={(e) => handleChange('endDate', e.target.value)}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Status */}
-            <Card>
-              <CardHeader className={cn(isRTL && "text-right")}>
-                <CardTitle className="text-lg">{t('Status', 'الحالة')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                  <Label htmlFor="isActive">{t('Active immediately', 'تفعيل فوري')}</Label>
-                  <Switch 
-                    id="isActive"
-                    checked={formData.isActive}
-                    onCheckedChange={(v) => handleChange('isActive', v)}
-                  />
-                </div>
-                <div className={cn("flex items-center justify-between", isRTL && "flex-row-reverse")}>
-                  <Label htmlFor="limitRedemptions">{t('Limit redemptions', 'تحديد عدد الاستردادات')}</Label>
-                  <Switch 
-                    id="limitRedemptions"
-                    checked={formData.limitRedemptions}
-                    onCheckedChange={(v) => handleChange('limitRedemptions', v)}
-                  />
-                </div>
-                {formData.limitRedemptions && (
-                  <div className="space-y-2">
-                    <Label htmlFor="maxRedemptions">{t('Maximum Redemptions', 'الحد الأقصى للاستردادات')}</Label>
-                    <Input 
-                      id="maxRedemptions"
-                      type="number"
-                      placeholder="500"
-                      value={formData.maxRedemptions}
-                      onChange={(e) => handleChange('maxRedemptions', e.target.value)}
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Image Upload Placeholder */}
-            <Card>
-              <CardHeader className={cn(isRTL && "text-right")}>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Image className="w-5 h-5 text-accent" />
-                  {t('Offer Image', 'صورة العرض')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="border-2 border-dashed border-border rounded-xl p-8 text-center">
-                  <Image className="w-12 h-12 mx-auto text-muted-foreground/50" />
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {t('Drag & drop or click to upload', 'اسحب وأفلت أو انقر للتحميل')}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    PNG, JPG up to 5MB
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Actions */}
-            <div className="space-y-2">
-              <Button type="submit" className="w-full gap-2">
-                <Save className="w-4 h-4" />
-                {t('Create Offer', 'إنشاء العرض')}
-              </Button>
-              <Button type="button" variant="outline" className="w-full gap-2" onClick={handleSaveDraft}>
-                <FileText className="w-4 h-4" />
-                {t('Save as Draft', 'حفظ كمسودة')}
-              </Button>
-              <Button type="button" variant="ghost" className="w-full gap-2">
-                <Eye className="w-4 h-4" />
-                {t('Preview', 'معاينة')}
-              </Button>
+      <Card>
+        <CardHeader>
+          <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"><CurrentStepIcon className="w-5 h-5 text-primary" /></div>
+            <div className={cn(isRTL && "text-right")}>
+              <CardTitle>{t(`Step ${currentStep + 1}: `, `الخطوة ${currentStep + 1}: `)}{language === 'ar' ? WIZARD_STEPS[currentStep].labelAr : WIZARD_STEPS[currentStep].label}</CardTitle>
+              <CardDescription>
+                {currentStep === 0 && t('Enter the basic details of your offer', 'أدخل التفاصيل الأساسية لعرضك')}
+                {currentStep === 1 && t('Set when your offer is available', 'حدد متى يكون عرضك متاحًا')}
+                {currentStep === 2 && t('Define terms, exclusions, and eligibility', 'حدد الشروط والاستثناءات')}
+                {currentStep === 3 && t('Add images and branding assets', 'أضف الصور والأصول')}
+                {currentStep === 4 && t('Review and submit your offer', 'راجع وأرسل عرضك')}
+              </CardDescription>
             </div>
           </div>
+        </CardHeader>
+        <CardContent>{renderStepContent()}</CardContent>
+      </Card>
+
+      <div className={cn("flex justify-between mt-6", isRTL && "flex-row-reverse")}>
+        <div className={cn("flex gap-2", isRTL && "flex-row-reverse")}>
+          {currentStep > 0 && <Button variant="outline" onClick={handleBack}>{isRTL ? <ArrowRight className="w-4 h-4 ml-2" /> : <ArrowLeft className="w-4 h-4 mr-2" />}{t('Back', 'رجوع')}</Button>}
+          <Button variant="ghost" onClick={handleSaveDraft}>{t('Save Draft', 'حفظ كمسودة')}</Button>
         </div>
-      </form>
-    </div>
+        <div>
+          {currentStep < WIZARD_STEPS.length - 1 ? (
+            <Button onClick={handleNext}>{t('Next', 'التالي')}{isRTL ? <ArrowLeft className="w-4 h-4 mr-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}</Button>
+          ) : (
+            <Button onClick={handleSubmit} disabled={isPending}><Sparkles className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />{isPending ? t('Submitting...', 'جاري الإرسال...') : t('Submit for Review', 'إرسال للمراجعة')}</Button>
+          )}
+        </div>
+      </div>
+    </PageLayout>
   );
 }
