@@ -259,5 +259,6 @@ export default function PoliciesPage() {
         </TabsContent>
       </Tabs>
     </div>
+    </PageConfidenceGate>
   );
 }
