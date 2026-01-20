@@ -1,12 +1,21 @@
+/**
+ * Benefit Type Labels
+ * Maps database enum values to human-readable labels for display
+ */
 export const BENEFIT_TYPE_LABELS: Record<string, string> = {
-  cash_allowances: 'Cash & Allowances',
+  cash_allowances: 'Cash Entitlements',
   health_protection: 'Health & Protection',
-  time_off_flex: 'Time Off & Flex',
-  growth_career: 'Growth & Career',
-  wealth_ownership: 'Wealth & Ownership',
+  time_off_flex: 'Leave & Flexibility',
+  growth_career: 'Career Development',
+  wealth_ownership: 'Wealth & Equity',
   wellbeing: 'Wellbeing',
 };
 
+/**
+ * Life Area Labels
+ * Maps database enum values to human-readable labels for display
+ * These categorize benefits by the life domain they support
+ */
 export const LIFE_AREA_LABELS: Record<string, string> = {
   home_living: 'Home & Living',
   family_parenting: 'Family & Parenting',

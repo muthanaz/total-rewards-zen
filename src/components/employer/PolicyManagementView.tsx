@@ -37,6 +37,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { PolicyEditorSheet } from './PolicyEditorSheet';
 import { format } from 'date-fns';
 import { isPolicyVersionActive } from '@/lib/crossPortalContract';
+import { LifeAreaChip, getLifeAreaLabel } from '@/components/shared/EnumChip';
+import { LIFE_AREA_LABELS } from '@/lib/constants';
 
 type PolicyStatus = 'published' | 'draft' | 'archived';
 
@@ -85,10 +87,15 @@ export function PolicyManagementView() {
   };
 
   const filteredPolicies = useMemo(() => {
-    return policies.filter(policy =>
-      policy.benefit.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      policy.benefit.life_area?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const query = searchQuery.toLowerCase();
+    return policies.filter(policy => {
+      const nameMatch = policy.benefit.name.toLowerCase().includes(query);
+      // Search by both raw enum and human label
+      const lifeAreaLabel = getLifeAreaLabel(policy.benefit.life_area).toLowerCase();
+      const lifeAreaMatch = policy.benefit.life_area?.toLowerCase().includes(query) || 
+                           lifeAreaLabel.includes(query);
+      return nameMatch || lifeAreaMatch;
+    });
   }, [policies, searchQuery]);
 
   const publishedCount = policies.filter(p => getVersionStatus(p) === 'published').length;
@@ -228,7 +235,7 @@ export function PolicyManagementView() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline">{policy.benefit.life_area}</Badge>
+                            <LifeAreaChip value={policy.benefit.life_area || ''} showTooltip={true} />
                           </TableCell>
                           <TableCell>
                             {currentVersion ? `v${currentVersion.version}` : '—'}

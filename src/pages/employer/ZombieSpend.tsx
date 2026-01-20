@@ -26,7 +26,7 @@ import { toast } from 'sonner';
 
 // ============= TYPE DEFINITIONS =============
 
-type BenefitType = 'cash_allowance' | 'reimbursement' | 'insurance' | 'time_off';
+type BenefitType = 'cash_allowances' | 'reimbursement' | 'insurance' | 'time_off';
 type ZombieReason = 'awareness' | 'eligibility_confusion' | 'documentation_friction' | 'approval_delay' | 'vendor_availability' | 'timing_cycle';
 type PlaybookType = 'awareness_campaign' | 'process_simplification' | 'policy_simplification' | 'ops_improvement' | 'vendor_enablement';
 
@@ -69,10 +69,10 @@ interface ZombieBenefit {
 // ============= ZOMBIE DEFINITIONS BY BENEFIT TYPE =============
 
 const zombieDefinitions: Record<BenefitType, { title: string; description: string; calculation: string }> = {
-  cash_allowance: {
-    title: 'Cash Allowance',
+  cash_allowances: {
+    title: 'Cash Entitlements',
     description: 'Fixed monetary allocations that expire if unclaimed within the fiscal year.',
-    calculation: 'Allocated Amount - Claimed Amount = Zombie Spend',
+    calculation: 'Allocated Amount − Claimed Amount = Zombie Spend',
   },
   reimbursement: {
     title: 'Reimbursement',
@@ -232,7 +232,7 @@ const zombieBenefits: ZombieBenefit[] = [
   {
     id: 'flight-001',
     benefit: 'Annual Flight Tickets',
-    benefitType: 'cash_allowance',
+    benefitType: 'cash_allowances',
     allocated: 200000,
     utilized: 140000,
     zombie: 60000,
