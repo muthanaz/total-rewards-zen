@@ -2,9 +2,10 @@
  * Zombie Spend Page (Recovery Workspace)
  * 
  * Action-oriented recovery workspace with:
+ * - Metric definitions strip
  * - Category breakdown table with drilldowns
  * - Root cause analysis
- * - 5 recovery playbooks
+ * - 5 recovery playbooks with real tracking
  * - Cross-page linking to Claims, Spend, Recommendations
  */
 
@@ -19,9 +20,10 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Ghost, TrendingDown, Target, DollarSign, AlertTriangle, ArrowRight,
-  Eye, Play, Clock, CheckCircle2, XCircle, Pause, CircleDot
+  Eye, Play, Clock, CheckCircle2, XCircle, Pause, CircleDot, Info
 } from 'lucide-react';
 import { 
   EmployerGlobalFiltersBar, 
@@ -32,7 +34,9 @@ import {
 } from '@/components/employer';
 import { ZombieCategoryDrawer } from '@/components/employer/ZombieCategoryDrawer';
 import { LaunchPlaybookModal } from '@/components/employer/LaunchPlaybookModal';
-import { useZombieSpendData, ROOT_CAUSE_DEFINITIONS, RecoveryPlaybook, PlaybookStatus } from '@/hooks/useZombieSpendData';
+import { ZombieMetricDefinitions } from '@/components/employer/ZombieMetricDefinitions';
+import { useZombieSpendData, ROOT_CAUSE_DEFINITIONS, RecoveryPlaybook, PlaybookStatus, CONFIDENCE_FACTORS } from '@/hooks/useZombieSpendData';
+import { usePlaybookRuns, PlaybookRunStatus } from '@/hooks/usePlaybookRuns';
 import { formatCurrencyAED, formatPercent, formatInteger, cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -45,11 +49,11 @@ const confidenceBadgeStyles = {
   low: 'bg-destructive/10 text-destructive border-destructive/30',
 };
 
-const statusConfig: Record<PlaybookStatus, { label: string; icon: typeof CircleDot; color: string }> = {
-  pending: { label: 'Pending', icon: CircleDot, color: 'text-muted-foreground' },
-  in_progress: { label: 'In Progress', icon: Play, color: 'text-blue-500' },
+const runStatusConfig: Record<PlaybookRunStatus, { label: string; icon: typeof CircleDot; color: string }> = {
+  draft: { label: 'Draft', icon: CircleDot, color: 'text-muted-foreground' },
+  active: { label: 'Active', icon: Play, color: 'text-blue-500' },
   completed: { label: 'Completed', icon: CheckCircle2, color: 'text-success' },
-  cancelled: { label: 'Cancelled', icon: XCircle, color: 'text-muted-foreground' },
+  paused: { label: 'Paused', icon: Pause, color: 'text-warning' },
 };
 
 // ============= MAIN COMPONENT =============
@@ -65,7 +69,6 @@ export default function ZombieSpendPage() {
     selectedCategory,
     drawerOpen,
     showHighConfidenceOnly,
-    playbookRuns,
     summaryMetrics,
     playbooks,
     rootCauseDefinitions,
@@ -73,9 +76,15 @@ export default function ZombieSpendPage() {
     openCategoryDrawer,
     closeCategoryDrawer,
     getRecommendedPlaybooks,
-    launchPlaybook,
-    updatePlaybookRunStatus,
   } = useZombieSpendData();
+  
+  // Use real playbook runs hook
+  const {
+    runs: playbookRuns,
+    isLoading: runsLoading,
+    launchPlaybook,
+    updateRunStatus,
+  } = usePlaybookRuns();
   
   const [launchModalOpen, setLaunchModalOpen] = useState(false);
   const [selectedPlaybook, setSelectedPlaybook] = useState<RecoveryPlaybook | null>(null);
@@ -101,6 +110,26 @@ export default function ZombieSpendPage() {
     setSelectedPlaybook(playbook);
     closeCategoryDrawer();
     setTimeout(() => setLaunchModalOpen(true), 200);
+  };
+  
+  const handleLaunchComplete = () => {
+    setActiveTab('runs');
+  };
+  
+  const handleLaunch = async (params: {
+    playbookId: string;
+    categoryId: string;
+    categoryName: string;
+    targetSegment?: string;
+    owner: string;
+    dueDate: string;
+    expectedImpactAED: number;
+    notes?: string;
+  }) => {
+    return launchPlaybook({
+      ...params,
+      playbookId: params.playbookId as any,
+    });
   };
   
   // Narrative insights
@@ -162,6 +191,17 @@ export default function ZombieSpendPage() {
               <Label htmlFor="high-confidence" className="text-sm">
                 Show only high-confidence data
               </Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Filters to High confidence categories only.</p>
+                  <p className="text-muted-foreground text-xs mt-1">
+                    Medium and Low confidence categories will be hidden.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
             </div>
             <DataConfidenceBadge metrics={coverageMetrics} />
           </div>
@@ -169,6 +209,9 @@ export default function ZombieSpendPage() {
         
         {/* Global Filters */}
         <EmployerGlobalFiltersBar />
+        
+        {/* Metric Definitions Strip */}
+        <ZombieMetricDefinitions />
         
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -232,8 +275,9 @@ export default function ZombieSpendPage() {
                   <p className="text-sm text-muted-foreground">Estimated Recoverable</p>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Weighted by confidence factor
+              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                <Info className="h-3 w-3" />
+                Weighted by data confidence (High 100%, Medium 70%, Low 40%)
               </p>
             </CardContent>
           </Card>
@@ -274,7 +318,7 @@ export default function ZombieSpendPage() {
                       />
                     </CardTitle>
                     <CardDescription>
-                      Click "Open" to view detailed root-cause analysis and recovery options
+                      Click "View details" to see root-cause analysis and recovery options
                     </CardDescription>
                   </div>
                   <Badge variant="secondary">
@@ -300,11 +344,15 @@ export default function ZombieSpendPage() {
                     <TableBody>
                       {categories.map((cat) => {
                         const RootCauseIcon = ROOT_CAUSE_DEFINITIONS[cat.primaryRootCause].icon;
+                        const isLowConfidence = cat.confidence === 'low';
                         
                         return (
                           <TableRow 
                             key={cat.id} 
-                            className="hover:bg-muted/30 cursor-pointer"
+                            className={cn(
+                              "hover:bg-muted/30 cursor-pointer",
+                              showHighConfidenceOnly && isLowConfidence && "opacity-50"
+                            )}
                             onClick={() => openCategoryDrawer(cat.id)}
                           >
                             <TableCell>
@@ -355,7 +403,7 @@ export default function ZombieSpendPage() {
                                 className="gap-1"
                               >
                                 <Eye className="h-3 w-3" />
-                                Open
+                                View details
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -488,45 +536,65 @@ export default function ZombieSpendPage() {
                       </TableHeader>
                       <TableBody>
                         {playbookRuns.map((run) => {
-                          const playbook = playbooks.find(p => p.id === run.playbookId);
-                          const StatusIcon = statusConfig[run.status].icon;
+                          const playbook = playbooks.find(p => p.id === run.playbookType);
+                          const StatusIcon = runStatusConfig[run.status].icon;
                           
                           return (
                             <TableRow key={run.id}>
                               <TableCell className="font-medium">
-                                {playbook?.title || run.playbookId}
+                                {playbook?.title || run.playbookType}
                               </TableCell>
-                              <TableCell>{run.categoryName}</TableCell>
+                              <TableCell>{run.category}</TableCell>
                               <TableCell>{run.owner}</TableCell>
                               <TableCell>{format(new Date(run.dueDate), 'MMM d, yyyy')}</TableCell>
                               <TableCell className="text-right text-success font-medium">
-                                {formatCurrencyAED(run.expectedImpactAED)}
+                                {formatCurrencyAED(run.expectedImpactAed)}
                               </TableCell>
                               <TableCell>
-                                <Badge variant="outline" className={statusConfig[run.status].color}>
+                                <Badge variant="outline" className={runStatusConfig[run.status].color}>
                                   <StatusIcon className="h-3 w-3 mr-1" />
-                                  {statusConfig[run.status].label}
+                                  {runStatusConfig[run.status].label}
                                 </Badge>
                               </TableCell>
                               <TableCell className="text-right">
-                                {run.status === 'pending' && (
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    onClick={() => updatePlaybookRunStatus(run.id, 'in_progress')}
-                                  >
-                                    Start
-                                  </Button>
-                                )}
-                                {run.status === 'in_progress' && (
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    onClick={() => updatePlaybookRunStatus(run.id, 'completed')}
-                                  >
-                                    Complete
-                                  </Button>
-                                )}
+                                <div className="flex items-center justify-end gap-1">
+                                  {run.status === 'draft' && (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      onClick={() => updateRunStatus(run.id, 'active')}
+                                    >
+                                      Start
+                                    </Button>
+                                  )}
+                                  {run.status === 'active' && (
+                                    <>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
+                                        onClick={() => updateRunStatus(run.id, 'paused')}
+                                      >
+                                        Pause
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
+                                        onClick={() => updateRunStatus(run.id, 'completed')}
+                                      >
+                                        Complete
+                                      </Button>
+                                    </>
+                                  )}
+                                  {run.status === 'paused' && (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      onClick={() => updateRunStatus(run.id, 'active')}
+                                    >
+                                      Resume
+                                    </Button>
+                                  )}
+                                </div>
                               </TableCell>
                             </TableRow>
                           );
@@ -556,7 +624,8 @@ export default function ZombieSpendPage() {
           playbook={selectedPlaybook}
           category={selectedCategory}
           allCategories={allCategories}
-          onLaunch={launchPlaybook}
+          onLaunch={handleLaunch}
+          onLaunchComplete={handleLaunchComplete}
         />
       </div>
     </PageConfidenceGate>

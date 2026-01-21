@@ -37,6 +37,7 @@ export { ZombieSpendCandidates, detectZombieCandidates } from './ZombieSpendCand
 export { ForecastWidget } from './ForecastWidget';
 export { ZombieCategoryDrawer } from './ZombieCategoryDrawer';
 export { LaunchPlaybookModal } from './LaunchPlaybookModal';
+export { ZombieMetricDefinitions } from './ZombieMetricDefinitions';
 
 // Segment components
 export { SegmentDimensionCard } from './SegmentDimensionCard';
