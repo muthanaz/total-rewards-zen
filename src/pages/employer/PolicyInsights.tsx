@@ -47,7 +47,7 @@ const clarityData = {
   overallScore: 68,
   target: 85,
   lastRefreshed: new Date(Date.now() - 1000 * 60 * 30),
-  confidence: 'estimated' as const,
+  confidence: 'estimated' as 'measured' | 'estimated' | 'proxy',
   dataCompleteness: 79,
   drivers: [
     { 
