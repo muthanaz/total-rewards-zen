@@ -18,7 +18,6 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { ChartWrapper, CHART_EXPLANATIONS, AnimatedDonutChart, AnimatedLineChart } from '@/components/charts';
 import { NarrativeInsights, generateUtilizationInsight, generateSpendInsight, generateZombieInsight, generateSatisfactionInsight, NarrativeInsight } from './NarrativeInsights';
 import { DataQualityBadge, DataConfidenceIndicator } from './DataQualityBadge';
@@ -36,6 +35,8 @@ import {
 import { cn, formatCurrencyAED, formatPercent } from '@/lib/utils';
 import { EmployerGlobalFiltersBar } from './EmployerGlobalFiltersBar';
 import { DemoTip, DEMO_TIPS } from '@/components/demo';
+import { MetricTooltip, ConfidenceBadge, MetricDefinitionsDrawer } from '@/components/shared';
+import { computeCostPerEmployee, computeUtilizationRate, computeROI } from '@/lib/metrics';
 
 const priorityColors = {
   critical: {
@@ -204,10 +205,7 @@ export function ExecutiveDashboard() {
               <div className="p-2.5 rounded-xl bg-chart-2/10">
                 <Users className="w-5 h-5 text-chart-2" />
               </div>
-              <InfoTooltip 
-                formula="Total benefits cost / Active employees" 
-                dataSource="Payroll + Benefits" 
-              />
+              <MetricTooltip metricKey="costPerEmployee" />
             </div>
             <p className="text-2xl lg:text-3xl font-bold tracking-tight">{formatK(metrics.costPerEmployee)}</p>
             <p className="text-sm text-muted-foreground mt-1">Cost per Employee</p>

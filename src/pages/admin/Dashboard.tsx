@@ -23,7 +23,8 @@ import { ChartWrapper, CHART_EXPLANATIONS, AnimatedLineChart, AnimatedBarChart, 
 import { VendorPerformanceTab } from '@/components/admin/VendorPerformanceTab';
 import { DataQualityDashboard } from '@/components/admin/DataQualityDashboard';
 import { AdminActionCenter } from '@/components/admin/AdminActionCenter';
-import { PageLayout, MetricCard, MetricGrid, SectionCard } from '@/components/shared';
+import { PageLayout, MetricCard, MetricGrid, SectionCard, MetricTooltip, ConfidenceBadge, MetricDefinitionsDrawer } from '@/components/shared';
+import { METRIC_DEFINITIONS } from '@/lib/metrics';
 
 const platformMetrics = [
   { label: 'Total Organizations', labelAr: 'إجمالي المنظمات', value: '47', change: 12, icon: Building2 },
