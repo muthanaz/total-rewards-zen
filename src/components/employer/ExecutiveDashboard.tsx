@@ -109,35 +109,31 @@ export function ExecutiveDashboard() {
     <div className="space-y-6">
       {/* Demo Tip */}
       <DemoTip {...DEMO_TIPS.employerDashboard} variant="highlight" />
+      
+      {/* Hero Header with Health Badge */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">
             Total Rewards Overview
           </h1>
-          <div className="flex items-center gap-3 mt-1">
-            <p className="text-muted-foreground">Strategic C&B performance • FY 2024</p>
-            <DataQualityBadge 
-              confidence={metrics.dataConfidence}
-              lastUpdated={metrics.lastUpdated}
-              dataSources={metrics.dataSources}
-              sampleSize={metrics.employeeCount}
-            />
-          </div>
+          <p className="text-muted-foreground mt-1">Strategic C&B performance • FY 2024</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <DataConfidenceBadge metrics={coverageMetrics} />
           <Badge variant="outline" className={cn(
-            "gap-1.5",
+            "gap-1.5 px-3 py-1.5",
             metrics.utilizationRate >= metrics.targetUtilization 
-              ? "bg-success/10 text-success border-success/20" 
-              : "bg-warning/10 text-warning border-warning/20"
+              ? "bg-success/10 text-success border-success/30" 
+              : "bg-warning/10 text-warning border-warning/30"
           )}>
             {metrics.utilizationRate >= metrics.targetUtilization ? (
-              <CheckCircle2 className="w-3.5 h-3.5" />
+              <CheckCircle2 className="w-4 h-4" />
             ) : (
-              <AlertTriangle className="w-3.5 h-3.5" />
+              <AlertTriangle className="w-4 h-4" />
             )}
-            Program Health: {metrics.utilizationRate >= metrics.targetUtilization ? 'On Track' : 'Needs Attention'}
+            <span className="font-medium">
+              {metrics.utilizationRate >= metrics.targetUtilization ? 'Program On Track' : 'Needs Attention'}
+            </span>
           </Badge>
         </div>
       </div>

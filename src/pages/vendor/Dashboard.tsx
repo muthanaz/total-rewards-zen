@@ -206,17 +206,30 @@ export default function VendorDashboard() {
     );
   }
 
+  // Calculate additional metrics for hero display
+  const conversionHealth = (metrics?.redemptionRate || 0) >= 40 ? 'excellent' : 
+                           (metrics?.redemptionRate || 0) >= 25 ? 'good' : 'attention';
+
   return (
     <PageLayout
-      title={t('Dashboard', 'لوحة التحكم')}
-      description={t(`Track your performance, redemptions, and payouts.`, `تتبع أداءك واستردادك ومدفوعاتك.`)}
+      title={t('Vendor Dashboard', 'لوحة تحكم البائع')}
+      description={t(`Welcome, ${vendor?.company_name || 'Vendor'}! Track your offers, performance, and earnings.`, `مرحباً، ${vendor?.company_name || 'البائع'}! تتبع عروضك وأدائك وأرباحك.`)}
       icon={LayoutDashboard}
-      iconClassName="text-primary"
+      iconClassName="from-accent to-accent/80"
+      badge={hasData ? {
+        label: conversionHealth === 'excellent' ? t('Healthy', 'صحي') : 
+               conversionHealth === 'good' ? t('Good', 'جيد') : 
+               t('Needs Attention', 'يحتاج اهتمام'),
+        variant: conversionHealth === 'excellent' ? 'success' : 
+                 conversionHealth === 'good' ? 'default' : 'warning',
+        icon: conversionHealth === 'excellent' ? CheckCircle : 
+              conversionHealth === 'good' ? TrendingUp : AlertTriangle,
+      } : undefined}
       actions={
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => navigate('/vendor/analytics')}>
             <BarChart3 className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
-            {t('View Analytics', 'عرض التحليلات')}
+            {t('Analytics', 'التحليلات')}
           </Button>
           <Button onClick={() => navigate('/vendor/offers/new')}>
             <Plus className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
@@ -225,57 +238,109 @@ export default function VendorDashboard() {
         </div>
       }
     >
-      {/* KPI Metrics Grid */}
+      {/* Hero KPI Metrics Grid - Premium 2x3 layout */}
       {isLoading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-          {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-28" />)}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-32" />)}
         </div>
       ) : (
-        <MetricGrid columns={3}>
-          <MetricCard
-            title={t('Active Offers', 'العروض النشطة')}
-            value={formatInteger(metrics?.activeOffers || 0)}
-            icon={Tag}
-            iconClassName="bg-success/10 text-success"
-            tooltip={{ notes: t('Offers currently visible in the Employee Marketplace', 'العروض المرئية حاليًا في سوق الموظفين') }}
-          />
-          <MetricCard
-            title={t('Pending Offers', 'عروض قيد الانتظار')}
-            value={formatInteger(metrics?.pendingOffers || 0)}
-            icon={Clock}
-            iconClassName="bg-warning/10 text-warning"
-            tooltip={{ notes: t('Offers awaiting admin approval', 'العروض في انتظار موافقة الإدارة') }}
-          />
-          <MetricCard
-            title={t('Activations (30d)', 'التفعيلات (30 يوم)')}
-            value={formatInteger(metrics?.activations30d || 0)}
-            icon={Users}
-            iconClassName="bg-primary/10 text-primary"
-            tooltip={{ formula: t('Count of employees who activated your offers in last 30 days', 'عدد الموظفين الذين فعّلوا عروضك في آخر 30 يومًا') }}
-          />
-          <MetricCard
-            title={t('Redemption Rate', 'معدل الاسترداد')}
-            value={metrics?.activations30d ? formatPercent(metrics?.redemptionRate || 0) : '—'}
-            icon={TrendingUp}
-            iconClassName="bg-accent/10 text-accent"
-            tooltip={{ formula: t('Redemptions ÷ Activations × 100', 'الاستردادات ÷ التفعيلات × 100') }}
-          />
-          <MetricCard
-            title={t('Earnings (30d)', 'الأرباح (30 يوم)')}
-            value={formatCurrencyAED(metrics?.earnings30d || 0)}
-            icon={CircleDollarSign}
-            iconClassName="bg-success/10 text-success"
-            tooltip={{ notes: t('Commission earned from redemptions in last 30 days', 'العمولة المكتسبة من الاستردادات في آخر 30 يومًا') }}
-          />
-          <MetricCard
-            title={t('Pending Payout', 'المدفوعات المعلقة')}
-            value={formatCurrencyAED(metrics?.pendingPayout || 0)}
-            icon={Wallet}
-            iconClassName="bg-warning/10 text-warning"
-            tooltip={{ notes: t('Unsettled commission amount', 'مبلغ العمولة غير المسددة') }}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Active Offers - Primary metric */}
+          <Card className="border-success/30 bg-gradient-to-br from-card to-success/5">
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between mb-3">
+                <div className="p-2.5 rounded-xl bg-success/10">
+                  <Tag className="w-5 h-5 text-success" />
+                </div>
+                <Badge variant="outline" className="bg-success/10 text-success border-success/30 text-xs">Live</Badge>
+              </div>
+              <p className="text-3xl font-bold tracking-tight">{formatInteger(metrics?.activeOffers || 0)}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t('Active Offers', 'العروض النشطة')}</p>
+            </CardContent>
+          </Card>
+
+          {/* Pending Offers */}
+          <Card className={cn("border-warning/30", (metrics?.pendingOffers || 0) > 0 && "bg-gradient-to-br from-card to-warning/5")}>
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between mb-3">
+                <div className="p-2.5 rounded-xl bg-warning/10">
+                  <Clock className="w-5 h-5 text-warning" />
+                </div>
+                {(metrics?.pendingOffers || 0) > 0 && (
+                  <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30 text-xs">Pending</Badge>
+                )}
+              </div>
+              <p className="text-3xl font-bold tracking-tight">{formatInteger(metrics?.pendingOffers || 0)}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t('Pending Approval', 'قيد الموافقة')}</p>
+            </CardContent>
+          </Card>
+
+          {/* Activations */}
+          <Card className="border-primary/30 bg-gradient-to-br from-card to-primary/5">
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between mb-3">
+                <div className="p-2.5 rounded-xl bg-primary/10">
+                  <Users className="w-5 h-5 text-primary" />
+                </div>
+                <span className="text-xs text-muted-foreground">30d</span>
+              </div>
+              <p className="text-3xl font-bold tracking-tight">{formatInteger(metrics?.activations30d || 0)}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t('Activations', 'التفعيلات')}</p>
+            </CardContent>
+          </Card>
+
+          {/* Redemption Rate */}
+          <Card className="border-accent/30 bg-gradient-to-br from-card to-accent/5">
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between mb-3">
+                <div className="p-2.5 rounded-xl bg-accent/10">
+                  <Target className="w-5 h-5 text-accent" />
+                </div>
+                <Badge variant="outline" className={cn(
+                  "text-xs",
+                  (metrics?.redemptionRate || 0) >= 40 ? "bg-success/10 text-success border-success/30" :
+                  (metrics?.redemptionRate || 0) >= 25 ? "bg-accent/10 text-accent border-accent/30" :
+                  "bg-warning/10 text-warning border-warning/30"
+                )}>
+                  {(metrics?.redemptionRate || 0) >= 40 ? 'High' : (metrics?.redemptionRate || 0) >= 25 ? 'Good' : 'Low'}
+                </Badge>
+              </div>
+              <p className="text-3xl font-bold tracking-tight">{metrics?.activations30d ? formatPercent(metrics?.redemptionRate || 0) : '—'}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t('Conversion Rate', 'معدل التحويل')}</p>
+            </CardContent>
+          </Card>
+
+          {/* Earnings */}
+          <Card className="border-success/30 bg-gradient-to-br from-card to-success/5">
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between mb-3">
+                <div className="p-2.5 rounded-xl bg-success/10">
+                  <CircleDollarSign className="w-5 h-5 text-success" />
+                </div>
+                <span className="text-xs text-muted-foreground">30d</span>
+              </div>
+              <p className="text-3xl font-bold tracking-tight text-success">{formatCurrencyAED(metrics?.earnings30d || 0)}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t('Earnings', 'الأرباح')}</p>
+            </CardContent>
+          </Card>
+
+          {/* Pending Payout - Clickable */}
+          <Card 
+            className="border-accent/30 bg-gradient-to-br from-card to-accent/5 cursor-pointer hover:shadow-md transition-all"
             onClick={() => navigate('/vendor/earnings')}
-          />
-        </MetricGrid>
+          >
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between mb-3">
+                <div className="p-2.5 rounded-xl bg-accent/10">
+                  <Wallet className="w-5 h-5 text-accent" />
+                </div>
+                <ArrowRight className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <p className="text-3xl font-bold tracking-tight">{formatCurrencyAED(metrics?.pendingPayout || 0)}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t('Pending Payout', 'مدفوعات معلقة')}</p>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Pending Offers Alert */}

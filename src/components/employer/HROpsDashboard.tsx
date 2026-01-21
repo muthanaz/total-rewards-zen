@@ -107,25 +107,27 @@ export function HROpsDashboard() {
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
     <div className="space-y-6">
-      {/* HR Ops Header */}
+      {/* Hero Header with SLA Badge */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">
             HR Operations Dashboard
           </h1>
-          <div className="flex items-center gap-3 mt-1">
-            <p className="text-muted-foreground flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-            </p>
-            <DataQualityBadge confidence="high" lastUpdated={new Date().toISOString()} showDetails={false} />
-          </div>
+          <p className="text-muted-foreground mt-1 flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+          </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <DataConfidenceBadge metrics={coverageMetrics} />
-          <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-            SLA Compliance: {claimMetrics?.slaCompliance || 94}%
+          <Badge variant="outline" className={cn(
+            "gap-1.5 px-3 py-1.5",
+            (claimMetrics?.slaCompliance || 94) >= 90 
+              ? "bg-success/10 text-success border-success/30" 
+              : "bg-warning/10 text-warning border-warning/30"
+          )}>
+            <CheckCircle2 className="w-4 h-4" />
+            <span className="font-medium">SLA: {claimMetrics?.slaCompliance || 94}%</span>
           </Badge>
         </div>
       </div>
