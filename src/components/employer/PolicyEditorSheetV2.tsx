@@ -39,6 +39,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { PolicyLogicEditor } from './PolicyLogicEditor';
+import { useAuditLog } from '@/hooks/useAuditLog';
 import {
   PolicyContent,
   PolicyLogic,
@@ -76,6 +77,7 @@ export function PolicyEditorSheetV2({
 
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { logEvent } = useAuditLog();
 
   // Fetch policy
   const { data: policy } = useQuery({
@@ -212,6 +214,18 @@ export function PolicyEditorSheetV2({
       }
 
       queryClient.invalidateQueries({ queryKey: ['policy_version_edit'] });
+      
+      // Audit log for save draft
+      await logEvent({
+        action: 'POLICY_SAVE_DRAFT',
+        resourceType: 'policy',
+        resourceId: policyId,
+        details: {
+          version_id: versionId,
+          transaction_model: logic.transaction_model,
+        },
+      });
+      
       toast.success('Draft saved');
     } catch (error) {
       console.error('Save error:', error);
@@ -264,6 +278,20 @@ export function PolicyEditorSheetV2({
 
       queryClient.invalidateQueries({ queryKey: ['policies_management'] });
       queryClient.invalidateQueries({ queryKey: ['policies'] });
+      
+      // Audit log for publish
+      await logEvent({
+        action: 'POLICY_PUBLISH',
+        resourceType: 'policy',
+        resourceId: policyId,
+        details: {
+          version_id: versionId,
+          effective_from: effectiveFrom,
+          transaction_model: logic.transaction_model,
+          organization_id: organizationId,
+        },
+      });
+      
       toast.success('Policy published!', {
         description: 'Employees can now see this policy.',
       });

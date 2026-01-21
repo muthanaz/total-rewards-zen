@@ -44,6 +44,7 @@ import { LIFE_AREA_LABELS } from '@/lib/constants';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAuditLog } from '@/hooks/useAuditLog';
 
 interface CreatePolicyModalProps {
   open: boolean;
@@ -69,6 +70,7 @@ export function CreatePolicyModal({
 
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { logEvent } = useAuditLog();
 
   // Fetch available benefits for the dropdown
   const { data: benefits = [] } = useQuery({
@@ -154,6 +156,21 @@ export function CreatePolicyModal({
       queryClient.invalidateQueries({ queryKey: ['policies_v2'] });
       queryClient.invalidateQueries({ queryKey: ['policies'] });
       queryClient.invalidateQueries({ queryKey: ['organization_policies'] });
+      queryClient.invalidateQueries({ queryKey: ['policies_management'] });
+
+      // Audit log
+      await logEvent({
+        action: 'POLICY_CREATE',
+        resourceType: 'policy',
+        resourceId: policy.id,
+        details: { 
+          title: policy.title, 
+          category: lifeArea,
+          transaction_model: transactionModel,
+          organization_id: organizationId,
+          version_id: version.id,
+        },
+      });
 
       toast.success('Policy created', {
         description: `${policy.title} has been created as Draft v1.`,
