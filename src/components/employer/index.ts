@@ -103,3 +103,7 @@ export { ClaimAuditLog } from './ClaimAuditLog';
 // Policy Lifecycle components
 export { PolicyLifecycleBadge, PolicyLifecycleFlow } from './PolicyLifecycleBadge';
 export type { PolicyLifecycleStatus } from './PolicyLifecycleBadge';
+
+// Claims Bulk Actions & SLA
+export { ClaimsBulkActionsBar } from './ClaimsBulkActionsBar';
+export { SLARulesModal } from './SLARulesModal';

@@ -47,6 +47,7 @@ import {
   BookOpen,
   MoreVertical,
   RefreshCw,
+  Settings,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
@@ -54,6 +55,8 @@ import { EmployerGlobalFiltersBar } from '@/components/employer';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useEmployerPermissions } from '@/hooks/useEmployerPermissions';
 import { ClaimReviewSheet } from '@/components/employer/ClaimReviewSheet';
+import { ClaimsBulkActionsBar } from '@/components/employer/ClaimsBulkActionsBar';
+import { SLARulesModal } from '@/components/employer/SLARulesModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -165,6 +168,7 @@ export function ClaimsOpsView() {
   const [selectedForBulk, setSelectedForBulk] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [bulkAssignOpen, setBulkAssignOpen] = useState(false);
+  const [slaRulesOpen, setSlaRulesOpen] = useState(false);
 
   // Fetch organization ID from profile
   const { data: profileData } = useQuery({
@@ -493,27 +497,61 @@ export function ClaimsOpsView() {
     const sla = getSlaInfo(request);
     if (!sla) return <span className="text-xs text-muted-foreground">-</span>;
 
+    const breachReason = 
+      (sla.isOverdue && request.hasMissingDocs ? 'Pending documentation' : 
+       sla.isOverdue ? 'Processing delay' : undefined);
+
     if (sla.isOverdue) {
       return (
-        <Badge className="bg-destructive text-destructive-foreground border-0 gap-1">
-          <AlertCircle className="w-3 h-3" />
-          {Math.abs(sla.hoursRemaining)}h overdue
-        </Badge>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="space-y-1">
+              <Badge className="bg-destructive text-destructive-foreground border-0 gap-1">
+                <AlertCircle className="w-3 h-3" />
+                {Math.abs(sla.hoursRemaining)}h overdue
+              </Badge>
+              {breachReason && (
+                <p className="text-[10px] text-destructive/80 truncate max-w-[120px]">{breachReason}</p>
+              )}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs">
+            <div className="space-y-1">
+              <p className="font-medium">SLA Breached</p>
+              <p className="text-xs">Due: {format(new Date(request.sla_due_at!), 'MMM d, h:mm a')}</p>
+              {breachReason && <p className="text-xs text-muted-foreground">Reason: {breachReason}</p>}
+            </div>
+          </TooltipContent>
+        </Tooltip>
       );
     }
     if (sla.isUrgent) {
       return (
-        <Badge className="bg-warning text-warning-foreground border-0 gap-1">
-          <Timer className="w-3 h-3" />
-          {sla.hoursRemaining}h left
-        </Badge>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge className="bg-warning text-warning-foreground border-0 gap-1">
+              <Timer className="w-3 h-3" />
+              {sla.hoursRemaining}h left
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p className="text-xs">Due: {format(new Date(request.sla_due_at!), 'MMM d, h:mm a')}</p>
+          </TooltipContent>
+        </Tooltip>
       );
     }
     return (
-      <Badge variant="outline" className="text-success border-success/30 gap-1">
-        <CheckCircle className="w-3 h-3" />
-        {sla.daysRemaining}d left
-      </Badge>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge variant="outline" className="text-success border-success/30 gap-1">
+            <CheckCircle className="w-3 h-3" />
+            {sla.daysRemaining}d left
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          <p className="text-xs">Due: {format(new Date(request.sla_due_at!), 'MMM d, h:mm a')}</p>
+        </TooltipContent>
+      </Tooltip>
     );
   };
 
@@ -656,6 +694,20 @@ export function ClaimsOpsView() {
                     Your preference is saved for future visits.
                   </p>
                 </TooltipContent>
+              </Tooltip>
+              <Separator orientation="vertical" className="h-5 mx-1" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 w-7 p-0"
+                    onClick={() => setSlaRulesOpen(true)}
+                  >
+                    <Settings className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Configure SLA Rules</TooltipContent>
               </Tooltip>
             </div>
           </div>
@@ -818,51 +870,15 @@ export function ClaimsOpsView() {
         </Card>
 
         {/* Bulk Actions Bar */}
-        {selectedForBulk.length > 0 && (
-          <Card className="border-primary/30 bg-primary/5 sticky top-4 z-40">
-            <CardContent className="py-3">
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    checked={selectedForBulk.length === filteredRequests.length}
-                    onCheckedChange={selectAllVisible}
-                  />
-                  <span className="font-medium">{selectedForBulk.length} selected</span>
-                  <Button variant="ghost" size="sm" onClick={() => setSelectedForBulk([])}>
-                    Clear
-                  </Button>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <PermissionGate permission="can_process_claims">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="gap-2 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10" 
-                      onClick={handleBulkApprove}
-                    >
-                      <CheckCircle2 className="w-4 h-4" />
-                      Approve
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="gap-2 text-red-600 border-red-500/30 hover:bg-red-500/10" 
-                      onClick={handleBulkReject}
-                    >
-                      <XCircleIcon className="w-4 h-4" />
-                      Reject
-                    </Button>
-                  </PermissionGate>
-                  <Separator orientation="vertical" className="h-6 mx-1" />
-                  <Button variant="outline" size="sm" className="gap-2" onClick={handleExportCSV}>
-                    <Download className="w-4 h-4" />
-                    Export
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <ClaimsBulkActionsBar
+          selectedIds={selectedForBulk}
+          onClearSelection={() => setSelectedForBulk([])}
+          onSelectAll={selectAllVisible}
+          totalCount={filteredRequests.length}
+          onExport={handleExportCSV}
+          onRefresh={refetch}
+          teamMembers={mockEmployerUsers}
+        />
 
         {/* Queue Table */}
         <Card>
@@ -1079,6 +1095,18 @@ export function ClaimsOpsView() {
               description: 'The queue has been refreshed.',
             });
             refetch();
+          }}
+        />
+
+        {/* SLA Rules Modal */}
+        <SLARulesModal
+          open={slaRulesOpen}
+          onOpenChange={setSlaRulesOpen}
+          onSave={(rules) => {
+            toast({
+              title: 'SLA Rules Updated',
+              description: 'Your SLA configuration has been saved.',
+            });
           }}
         />
       </div>
