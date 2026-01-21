@@ -71,3 +71,10 @@ export { MarketplaceSegmentDrawer } from './MarketplaceSegmentDrawer';
 export type { SegmentData } from './MarketplaceSegmentDrawer';
 export { MarketplaceOpportunityInsights } from './MarketplaceOpportunityInsights';
 export { MarketplaceVendorPerformance } from './MarketplaceVendorPerformance';
+
+// Integration management components
+export { IntegrationConnectionDrawer } from './IntegrationConnectionDrawer';
+export { SyncHistoryDrawer } from './SyncHistoryDrawer';
+export type { SyncRecord } from './SyncHistoryDrawer';
+export { CSVImportPreview, IMPORT_TEMPLATES } from './CSVImportPreview';
+export type { ImportTemplate, CSVPreviewData } from './CSVImportPreview';
