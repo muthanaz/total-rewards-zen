@@ -61,6 +61,7 @@ const navigationGroups: NavGroup[] = [
     items: [
       { label: 'Organizations', labelAr: 'المنظمات', path: '/admin/organizations', icon: Building2 },
       { label: 'Users & Roles', labelAr: 'المستخدمون والأدوار', path: '/admin/users', icon: Users },
+      { label: 'Plans & Invoices', labelAr: 'الخطط والفواتير', path: '/admin/billing', icon: CreditCard },
     ],
   },
   {
@@ -89,31 +90,20 @@ const navigationGroups: NavGroup[] = [
       { label: 'Alerts Center', labelAr: 'مركز التنبيهات', path: '/admin/alerts', icon: AlertTriangle, badge: 3 },
     ],
   },
-  {
-    title: 'Security & Compliance',
-    titleAr: 'الأمان والامتثال',
-    items: [
-      { label: 'Audit Log', labelAr: 'سجل التدقيق', path: '/admin/audit-log', icon: FileText },
-      { label: 'Security Settings', labelAr: 'إعدادات الأمان', path: '/admin/security', icon: ShieldCheck },
-      { label: 'Sessions', labelAr: 'الجلسات', path: '/admin/sessions', icon: Users },
-    ],
-  },
-  {
-    title: 'Configuration',
-    titleAr: 'التكوين',
-    items: [
-      { label: 'UI Configuration', labelAr: 'تكوين الواجهة', path: '/admin/ui-config', icon: Sliders },
-      { label: 'Feature Flags', labelAr: 'علامات الميزات', path: '/admin/feature-flags', icon: ToggleLeft },
-    ],
-  },
-  {
-    title: 'Billing',
-    titleAr: 'الفوترة',
-    items: [
-      { label: 'Plans & Invoices', labelAr: 'الخطط والفواتير', path: '/admin/billing', icon: CreditCard },
-    ],
-  },
 ];
+
+// System group is collapsed by default
+const systemGroup: NavGroup = {
+  title: 'System',
+  titleAr: 'النظام',
+  items: [
+    { label: 'Audit Log', labelAr: 'سجل التدقيق', path: '/admin/audit-log', icon: FileText },
+    { label: 'Security Settings', labelAr: 'إعدادات الأمان', path: '/admin/security', icon: ShieldCheck },
+    { label: 'Sessions', labelAr: 'الجلسات', path: '/admin/sessions', icon: Users },
+    { label: 'UI Configuration', labelAr: 'تكوين الواجهة', path: '/admin/ui-config', icon: Sliders },
+    { label: 'Feature Flags', labelAr: 'علامات الميزات', path: '/admin/feature-flags', icon: ToggleLeft },
+  ],
+};
 
 export function AdminSidebar() {
   const location = useLocation();
@@ -121,7 +111,11 @@ export function AdminSidebar() {
   const { signOut } = useAuth();
   const { language, direction } = useLanguage();
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Primary groups are expanded by default, System group is collapsed
   const [expandedGroups, setExpandedGroups] = useState<string[]>(navigationGroups.map(g => g.title));
+  
+  // Combine all groups for rendering
+  const allGroups = [...navigationGroups, systemGroup];
   const isRTL = direction === 'rtl';
 
   const handleSignOut = async () => {
@@ -180,7 +174,7 @@ export function AdminSidebar() {
         "flex-1 overflow-y-auto py-4 px-3",
         isRTL && "text-right"
       )}>
-        {navigationGroups.map((group) => (
+        {allGroups.map((group) => (
           <div key={group.title} className="mb-3">
             <button
               onClick={() => toggleGroup(group.title)}
