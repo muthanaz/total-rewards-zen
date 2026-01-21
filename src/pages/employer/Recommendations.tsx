@@ -17,6 +17,7 @@ import { ActionFilters } from '@/components/employer/ActionFilters';
 import { useEmployerActions, type ActionItem, type Status, type Priority, type ActionType, type SourceType, type Confidence } from '@/hooks/useEmployerActions';
 import { toast } from 'sonner';
 import { format, formatDistanceToNow } from 'date-fns';
+import { MetricEvidenceTrigger, createMetricEvidenceData } from '@/components/shared';
 
 export default function RecommendationsPage() {
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
@@ -131,23 +132,33 @@ export default function RecommendationsPage() {
           <div className="flex items-start gap-3">
             <Target className="h-8 w-8 text-accent shrink-0 mt-0.5" />
             <div>
-              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-display font-bold text-foreground">Benefits Action Plan</h1>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge variant="outline" className="text-xs cursor-help">
-                        79% Estimated
-                        <Info className="h-3 w-3 ml-1" />
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      <p className="text-xs">
-                        Impact estimates are weighted by data completeness: High confidence (100%), Medium (70%), Low (40%).
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <MetricEvidenceTrigger
+                  data={createMetricEvidenceData('action_plan_confidence', 'Action Plan Confidence', {
+                    definition: 'Weighted confidence score based on data completeness of underlying metrics. High confidence actions contribute 100%, Medium 70%, Low 40%.',
+                    currentValue: 79,
+                    formattedValue: '79%',
+                    target: 90,
+                    formattedTarget: '90%',
+                    deltaToTarget: -11,
+                    unit: 'percent',
+                    confidence: 'estimated',
+                    isEstimated: true,
+                    estimationReason: 'Some action impacts are derived from partial data coverage.',
+                    keyDrivers: [
+                      { name: 'High confidence actions', impact: 45, description: '12 actions with full data' },
+                      { name: 'Medium confidence actions', impact: 25, description: '8 actions with partial data' },
+                      { name: 'Low confidence actions', impact: -10, description: '3 actions need more data' },
+                    ],
+                  })}
+                  onCreateAction={() => setCreateModalOpen(true)}
+                >
+                  <Badge variant="outline" className="text-xs cursor-help bg-warning/10 text-warning border-warning/30">
+                    79% Estimated
+                    <Info className="h-3 w-3 ml-1" />
+                  </Badge>
+                </MetricEvidenceTrigger>
               </div>
               <p className="text-muted-foreground text-sm">Track and measure recommendations with full confidence transparency</p>
             </div>
@@ -261,34 +272,45 @@ export default function RecommendationsPage() {
           
           <Card className="bg-green-500/5 border-green-500/20">
             <CardContent className="pt-4">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-3 cursor-help">
-                      <DollarSign className="h-5 w-5 text-green-500" />
-                      <div>
-                        <div className="flex items-center gap-1">
-                          <p className="text-xl font-bold text-green-600">
-                            {hasLowConfidenceImpact 
-                              ? `${formatCurrencyAED(lowConfImpactMin, { abbreviate: true })}–${formatCurrencyAED(lowConfImpactMax, { abbreviate: true })}`
-                              : formatCurrencyAED(metrics.totalImpact, { abbreviate: true })
-                            }
-                          </p>
-                          {hasLowConfidenceImpact && (
-                            <Badge variant="outline" className="text-[10px] text-amber-600 h-4">~</Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground">Expected Impact</p>
-                      </div>
+              <MetricEvidenceTrigger
+                data={createMetricEvidenceData('expected_impact', 'Expected Impact', {
+                  definition: 'Total estimated cost savings or value from completing all active actions. Range shown when low-confidence estimates are included.',
+                  currentValue: metrics.totalImpact,
+                  formattedValue: hasLowConfidenceImpact 
+                    ? `${formatCurrencyAED(lowConfImpactMin, { abbreviate: true })}–${formatCurrencyAED(lowConfImpactMax, { abbreviate: true })}`
+                    : formatCurrencyAED(metrics.totalImpact, { abbreviate: true }),
+                  unit: 'currency',
+                  confidence: hasLowConfidenceImpact ? 'estimated' : 'measured',
+                  isEstimated: hasLowConfidenceImpact,
+                  estimationReason: hasLowConfidenceImpact 
+                    ? `${Math.round((metrics.lowConfidenceImpact / metrics.totalImpact) * 100)}% of impact comes from low-confidence estimates`
+                    : undefined,
+                  keyDrivers: [
+                    { name: 'Policy improvements', impact: 40, description: 'AED 180K from policy fixes' },
+                    { name: 'Process optimization', impact: 35, description: 'AED 150K from process changes' },
+                    { name: 'Vendor negotiations', impact: 25, description: 'AED 100K from vendor deals' },
+                  ],
+                })}
+                onCreateAction={() => setCreateModalOpen(true)}
+              >
+                <div className="flex items-center gap-3 cursor-help">
+                  <DollarSign className="h-5 w-5 text-green-500" />
+                  <div>
+                    <div className="flex items-center gap-1">
+                      <p className="text-xl font-bold text-green-600">
+                        {hasLowConfidenceImpact 
+                          ? `${formatCurrencyAED(lowConfImpactMin, { abbreviate: true })}–${formatCurrencyAED(lowConfImpactMax, { abbreviate: true })}`
+                          : formatCurrencyAED(metrics.totalImpact, { abbreviate: true })
+                        }
+                      </p>
+                      {hasLowConfidenceImpact && (
+                        <Badge variant="outline" className="text-[10px] text-warning h-4">Estimated</Badge>
+                      )}
                     </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs">
-                      Range shown due to {Math.round((metrics.lowConfidenceImpact / metrics.totalImpact) * 100)}% of impact from low-confidence estimates
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                    <p className="text-xs text-muted-foreground">Expected Impact</p>
+                  </div>
+                </div>
+              </MetricEvidenceTrigger>
             </CardContent>
           </Card>
         </div>

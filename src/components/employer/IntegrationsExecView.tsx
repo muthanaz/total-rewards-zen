@@ -30,6 +30,7 @@ import { useDataCoverageMetrics } from '@/components/employer';
 import { useDataConfidenceIssues, type DataConfidenceIssue, type IssueOwner } from '@/hooks/useDataConfidenceIssues';
 import { IssuesCenter } from './IssuesCenter';
 import { IssueResolveModal } from './IssueResolveModal';
+import { MetricEvidenceTrigger, createMetricEvidenceData } from '@/components/shared';
 
 const dataSources = [
   { name: 'HRIS (SAP)', status: 'connected', lastSync: '2 hours ago', coverage: 95 },
@@ -113,23 +114,44 @@ export function IntegrationsExecView() {
         <CardContent className="pt-6">
           <div className="flex flex-col lg:flex-row lg:items-center gap-6">
             <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="w-24 h-24 rounded-full border-8 border-primary/20 flex items-center justify-center">
-                  <div className="text-center">
-                    <p className={cn("text-2xl font-bold", getScoreColor(domainScores.overall))}>
-                      {domainScores.overall}%
-                    </p>
-                    <p className="text-xs text-muted-foreground">Overall</p>
+              <MetricEvidenceTrigger
+                data={createMetricEvidenceData('overall_confidence', 'Overall Confidence', {
+                  definition: 'Composite score measuring the reliability of your analytics data across all domains (Employees, Entitlements, Policies, Claims).',
+                  currentValue: domainScores.overall,
+                  formattedValue: `${domainScores.overall}%`,
+                  target: 90,
+                  formattedTarget: '90%',
+                  deltaToTarget: domainScores.overall - 90,
+                  unit: 'percent',
+                  confidence: domainScores.overall >= 85 ? 'measured' : domainScores.overall >= 70 ? 'estimated' : 'proxy',
+                  isEstimated: domainScores.overall < 85,
+                  estimationReason: `Based on ${dataSources.length} connected data sources with varying coverage levels.`,
+                  keyDrivers: [
+                    { name: 'Employees', impact: domainScores.employees >= 80 ? 10 : -5, description: `${domainScores.employees}% coverage` },
+                    { name: 'Entitlements', impact: domainScores.entitlements >= 80 ? 10 : -5, description: `${domainScores.entitlements}% coverage` },
+                    { name: 'Policies', impact: domainScores.policies >= 80 ? 10 : -5, description: `${domainScores.policies}% coverage` },
+                    { name: 'Claims', impact: domainScores.claims >= 80 ? 10 : -5, description: `${domainScores.claims}% coverage` },
+                  ],
+                })}
+              >
+                <div className="relative cursor-pointer">
+                  <div className="w-24 h-24 rounded-full border-8 border-primary/20 flex items-center justify-center">
+                    <div className="text-center">
+                      <p className={cn("text-2xl font-bold", getScoreColor(domainScores.overall))}>
+                        {domainScores.overall}%
+                      </p>
+                      <p className="text-xs text-muted-foreground">Overall</p>
+                    </div>
                   </div>
+                  <Shield className="absolute -top-1 -right-1 w-6 h-6 text-primary" />
+                  {lastScoreChange && (
+                    <div className="absolute -bottom-2 -right-2 flex items-center gap-0.5 bg-success/20 text-success text-xs font-medium px-1.5 py-0.5 rounded-full animate-in fade-in zoom-in">
+                      <ArrowUp className="h-3 w-3" />
+                      +{lastScoreChange.change}%
+                    </div>
+                  )}
                 </div>
-                <Shield className="absolute -top-1 -right-1 w-6 h-6 text-primary" />
-                {lastScoreChange && (
-                  <div className="absolute -bottom-2 -right-2 flex items-center gap-0.5 bg-success/20 text-success text-xs font-medium px-1.5 py-0.5 rounded-full animate-in fade-in zoom-in">
-                    <ArrowUp className="h-3 w-3" />
-                    +{lastScoreChange.change}%
-                  </div>
-                )}
-              </div>
+              </MetricEvidenceTrigger>
             </div>
             <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
