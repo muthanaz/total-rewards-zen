@@ -126,3 +126,7 @@ export type {
   MetricEvidencePrefill,
 } from './UnifiedActionModal';
 export { ActionPlanCard } from './ActionPlanCard';
+
+// Claims Ops components
+export { ClaimsOpsKPIStrip } from './ClaimsOpsKPIStrip';
+export { ClaimsTypeChip } from './ClaimsTypeChip';

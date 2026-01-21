@@ -1,3 +1,13 @@
+/**
+ * Claims & Approvals Console - Ops View
+ * 
+ * Hero screen for HR operations with:
+ * - KPI strip with optional SLA metrics
+ * - Request vs Claim type chips
+ * - Conditional SLA display based on org settings
+ * - Full audit logging for all actions
+ */
+
 import { useState, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,19 +58,27 @@ import {
   MoreVertical,
   RefreshCw,
   Settings,
+  ClipboardList,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { EmployerGlobalFiltersBar } from '@/components/employer';
 import { PermissionGate } from '@/components/shared/PermissionGate';
+import { PageLayout } from '@/components/shared/PageLayout';
+import { DataConfidenceBadge } from '@/components/employer/DataConfidenceBadge';
 import { useEmployerPermissions } from '@/hooks/useEmployerPermissions';
 import { ClaimReviewSheet } from '@/components/employer/ClaimReviewSheet';
 import { ClaimsBulkActionsBar } from '@/components/employer/ClaimsBulkActionsBar';
 import { SLARulesModal } from '@/components/employer/SLARulesModal';
+import { ClaimsOpsKPIStrip } from '@/components/employer/ClaimsOpsKPIStrip';
+import { ClaimsTypeChip } from '@/components/employer/ClaimsTypeChip';
+import { SuggestedActionsPanel } from '@/components/employer/SuggestedActionsPanel';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useOrganizationRequests, RequestWithDetails, useUpdateRequestStatus } from '@/hooks/useSharedRequests';
+import { useOrgSettings } from '@/hooks/useOrgSettings';
+import { useAuditLog } from '@/hooks/useAuditLog';
 import { REQUEST_STATUSES } from '@/lib/crossPortalContract';
 import { cn, formatCurrencyAED, formatDate, formatDateTime, formatRelativeTime } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -141,14 +159,21 @@ function getValueBand(amount?: number | null): ValueBand {
   return 'premium';
 }
 
-// Queue Tab definitions
+// Queue Tab definitions - SLA Risk only shown if SLA enabled
 type QueueTab = 'all' | 'pending' | 'in_review' | 'sla_risk' | 'missing_docs' | 'high_value';
 
-const QUEUE_TABS: { value: QueueTab; label: string; icon: React.ReactNode }[] = [
+interface QueueTabDef {
+  value: QueueTab;
+  label: string;
+  icon: React.ReactNode;
+  slaRequired?: boolean;
+}
+
+const QUEUE_TABS: QueueTabDef[] = [
   { value: 'all', label: 'All', icon: <Inbox className="w-4 h-4" /> },
   { value: 'pending', label: 'Pending', icon: <Clock className="w-4 h-4" /> },
   { value: 'in_review', label: 'In Review', icon: <Hourglass className="w-4 h-4" /> },
-  { value: 'sla_risk', label: 'SLA Risk', icon: <Flame className="w-4 h-4" /> },
+  { value: 'sla_risk', label: 'SLA Risk', icon: <Flame className="w-4 h-4" />, slaRequired: true },
   { value: 'missing_docs', label: 'Missing Docs', icon: <FileQuestion className="w-4 h-4" /> },
   { value: 'high_value', label: 'High Value', icon: <TrendingUp className="w-4 h-4" /> },
 ];
@@ -202,6 +227,7 @@ export function ClaimsOpsView() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const updateStatus = useUpdateRequestStatus();
+  const { logEvent } = useAuditLog();
 
   // URL-persisted state
   const activeTab = (searchParams.get('tab') as QueueTab) || 'pending';
@@ -244,6 +270,10 @@ export function ClaimsOpsView() {
     enabled: !!user?.id,
   });
   const organizationId = profileData?.organization_id || null;
+
+  // Fetch org settings to check SLA enablement
+  const { data: orgSettingsData } = useOrgSettings(organizationId);
+  const slaEnabled = orgSettingsData?.settings?.sla_enabled ?? true;
 
   // Fetch requests from Supabase
   const { data: requests = [], isLoading, error, refetch } = useOrganizationRequests(organizationId);
@@ -394,7 +424,7 @@ export function ClaimsOpsView() {
     high_value: requests.filter(r => r.amount && r.amount >= HIGH_VALUE_THRESHOLD).length,
   }), [requests, getSlaInfo]);
 
-  // === ROW ACTIONS ===
+  // === ROW ACTIONS WITH AUDIT LOGGING ===
   const handleRowApprove = async (id: string) => {
     try {
       await updateStatus.mutateAsync({
@@ -402,15 +432,24 @@ export function ClaimsOpsView() {
         newStatus: REQUEST_STATUSES.APPROVED,
         reviewerNotes: 'Approved',
       });
+      
+      // Audit log
+      await logEvent({
+        action: 'REQUEST_APPROVE',
+        resourceType: 'request',
+        resourceId: id,
+        details: { org_id: organizationId, status_to: 'approved' },
+      });
+      
       toast({
-        title: 'Claim Approved',
-        description: 'The claim has been approved and the employee will be notified.',
+        title: 'Request Approved',
+        description: 'The request has been approved and the employee will be notified.',
       });
       refetch();
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to approve claim.',
+        description: 'Failed to approve request.',
         variant: 'destructive',
       });
     }
@@ -423,8 +462,17 @@ export function ClaimsOpsView() {
         newStatus: REQUEST_STATUSES.REJECTED,
         reviewerNotes: `Rejected: ${reason}`,
       });
+      
+      // Audit log
+      await logEvent({
+        action: 'REQUEST_REJECT',
+        resourceType: 'request',
+        resourceId: id,
+        details: { org_id: organizationId, reason, status_to: 'rejected' },
+      });
+      
       toast({
-        title: 'Claim Rejected',
+        title: 'Request Rejected',
         description: `Rejected: ${reason}`,
         variant: 'destructive',
       });
@@ -432,7 +480,7 @@ export function ClaimsOpsView() {
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to reject claim.',
+        description: 'Failed to reject request.',
         variant: 'destructive',
       });
     }
@@ -445,6 +493,15 @@ export function ClaimsOpsView() {
         newStatus: REQUEST_STATUSES.IN_REVIEW,
         reviewerNotes: 'Additional documentation requested',
       });
+      
+      // Audit log
+      await logEvent({
+        action: 'REQUEST_REQUEST_DOCS',
+        resourceType: 'request',
+        resourceId: id,
+        details: { org_id: organizationId, status_to: 'in_review' },
+      });
+      
       toast({
         title: 'Documents Requested',
         description: 'Document request notification sent to employee.',
@@ -720,65 +777,85 @@ export function ClaimsOpsView() {
     );
   }
 
+  // Filter queue tabs based on SLA enablement
+  const visibleQueueTabs = useMemo(() => {
+    return QUEUE_TABS.filter(tab => !tab.slaRequired || slaEnabled);
+  }, [slaEnabled]);
+
   return (
     <TooltipProvider>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-display font-bold text-foreground">Claims & Approvals Console</h1>
-            <p className="text-muted-foreground">Process employee requests efficiently with SLA tracking</p>
-          </div>
+      <PageLayout
+        title="Claims & Approvals Console"
+        description={slaEnabled 
+          ? "Process employee requests efficiently with SLA tracking" 
+          : "Process employee requests and approvals"
+        }
+        icon={ClipboardList}
+        confidenceBadge={
+          <DataConfidenceBadge 
+            metrics={{
+              employeeCoverage: 95,
+              entitlementCoverage: 90,
+              policyCoverage: 85,
+              claimsCoverage: 92,
+            }} 
+          />
+        }
+        actions={
           <div className="flex items-center gap-3">
             <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
               <RefreshCw className="w-4 h-4" />
               Refresh
             </Button>
-            <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-lg">
-              <Switch
-                id="sla-sort"
-                checked={sortBySlaRisk}
-                onCheckedChange={handleSlaSortToggle}
-              />
-              <Label htmlFor="sla-sort" className="text-sm cursor-pointer font-medium">
-                SLA Risk First
-              </Label>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <p className="text-xs">
-                    When enabled, requests are sorted by SLA urgency—breached and due-soon items appear first. 
-                    Your preference is saved for future visits.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-              <Separator orientation="vertical" className="h-5 mx-1" />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-7 w-7 p-0"
-                    onClick={() => setSlaRulesOpen(true)}
-                  >
-                    <Settings className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Configure SLA Rules</TooltipContent>
-              </Tooltip>
-            </div>
+            {/* SLA controls only when enabled */}
+            {slaEnabled && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-lg">
+                <Switch
+                  id="sla-sort"
+                  checked={sortBySlaRisk}
+                  onCheckedChange={handleSlaSortToggle}
+                />
+                <Label htmlFor="sla-sort" className="text-sm cursor-pointer font-medium">
+                  SLA Risk First
+                </Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs">
+                    <p className="text-xs">
+                      When enabled, requests are sorted by SLA urgency—breached and due-soon items appear first. 
+                      Your preference is saved for future visits.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+                <Separator orientation="vertical" className="h-5 mx-1" />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-7 w-7 p-0"
+                      onClick={() => setSlaRulesOpen(true)}
+                    >
+                      <Settings className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Configure SLA Rules</TooltipContent>
+                </Tooltip>
+              </div>
+            )}
           </div>
-        </div>
-
-        {/* Global Filters */}
-        <EmployerGlobalFiltersBar compact />
+        }
+        filters={<EmployerGlobalFiltersBar compact />}
+      >
+        {/* KPI Strip - Today's Ops */}
+        <ClaimsOpsKPIStrip requests={requests} slaEnabled={slaEnabled} />
 
         {/* Queue Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => updateParam('tab', v)} className="w-full">
           <TabsList className="w-full justify-start h-auto p-1 flex-wrap bg-muted/50">
-            {QUEUE_TABS.map((tab) => (
+            {visibleQueueTabs.map((tab) => (
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
@@ -791,7 +868,7 @@ export function ClaimsOpsView() {
                   className={cn(
                     'ml-1 min-w-[20px] h-5 text-xs',
                     activeTab === tab.value && 'bg-primary/20 text-primary',
-                    tab.value === 'sla_risk' && queueCounts.sla_risk > 0 && 'bg-red-500/20 text-red-600'
+                    tab.value === 'sla_risk' && queueCounts.sla_risk > 0 && 'bg-destructive/20 text-destructive'
                   )}
                 >
                   {queueCounts[tab.value]}
@@ -1009,7 +1086,7 @@ export function ClaimsOpsView() {
                           <div className="max-w-[200px]">
                             <p className="text-sm font-medium truncate">{request.subject}</p>
                             <div className="flex items-center gap-1.5 mt-0.5">
-                              <Badge variant="outline" className="text-xs">{request.request_type}</Badge>
+                              <ClaimsTypeChip requestType={request.request_type} size="sm" />
                               <span className="text-xs text-muted-foreground">{request.category}</span>
                             </div>
                           </div>
@@ -1149,7 +1226,7 @@ export function ClaimsOpsView() {
             });
           }}
         />
-      </div>
+      </PageLayout>
     </TooltipProvider>
   );
 }
