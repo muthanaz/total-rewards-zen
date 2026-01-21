@@ -526,7 +526,7 @@ export function ClaimReviewSheet({
                 </Card>
               )}
 
-              {/* Quick Actions */}
+              {/* Quick Actions - Focus Decision Tab for detailed forms */}
               {canProcess && (
                 <PermissionGate 
                   permission="can_process_claims"
@@ -540,7 +540,7 @@ export function ClaimReviewSheet({
                   <div className="flex flex-wrap gap-2">
                     <Button 
                       size="sm" 
-                      onClick={handleApprove}
+                      onClick={() => setActiveTab('decision')}
                       disabled={isProcessing}
                       className="gap-1"
                     >
@@ -570,6 +570,7 @@ export function ClaimReviewSheet({
                     <Button 
                       size="sm" 
                       variant="ghost"
+                      onClick={() => setAssignDialogOpen(true)}
                       disabled={isProcessing}
                       className="gap-1"
                     >
@@ -579,6 +580,7 @@ export function ClaimReviewSheet({
                     <Button 
                       size="sm" 
                       variant="ghost"
+                      onClick={() => setEscalateDialogOpen(true)}
                       disabled={isProcessing}
                       className="gap-1"
                     >
@@ -1189,18 +1191,20 @@ export function ClaimReviewSheet({
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                          <Select value={rejectionReason} onValueChange={setRejectionReason}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select rejection reason" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {REJECTION_REASONS.map((reason) => (
-                                <SelectItem key={reason.value} value={reason.value}>
-                                  {reason.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div>
+                            <Select value={rejectionReason} onValueChange={setRejectionReason}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select rejection reason" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {REJECTION_REASONS.map((reason) => (
+                                  <SelectItem key={reason.value} value={reason.value}>
+                                    {reason.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
                           <Textarea
                             placeholder="Add rejection notes for the employee..."
                             value={reviewNotes}
@@ -1232,6 +1236,80 @@ export function ClaimReviewSheet({
             </Tabs>
           </div>
         </ScrollArea>
+
+        {/* Assign Dialog */}
+        <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Assign Claim</DialogTitle>
+              <DialogDescription>
+                Assign this claim to a team member for processing.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label className="text-sm font-medium">Assign to</Label>
+                <Select value={selectedAssignee} onValueChange={setSelectedAssignee}>
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue placeholder="Select team member" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {HR_TEAM_MEMBERS.map((member) => (
+                      <SelectItem key={member.id} value={member.id}>
+                        {member.name} ({member.role})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAssignDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAssign} disabled={!selectedAssignee || isProcessing}>
+                Assign
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Escalate Dialog */}
+        <Dialog open={escalateDialogOpen} onOpenChange={setEscalateDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Escalate Claim</DialogTitle>
+              <DialogDescription>
+                Mark this claim as urgent and escalate for priority handling.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label className="text-sm font-medium">Escalation Reason</Label>
+                <Textarea
+                  className="mt-1.5"
+                  placeholder="Describe why this claim needs escalation..."
+                  value={escalationReason}
+                  onChange={(e) => setEscalationReason(e.target.value)}
+                  rows={3}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEscalateDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleEscalate} 
+                disabled={!escalationReason || isProcessing}
+              >
+                <Flag className="w-4 h-4 mr-2" />
+                Escalate
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </SheetContent>
     </Sheet>
   );
