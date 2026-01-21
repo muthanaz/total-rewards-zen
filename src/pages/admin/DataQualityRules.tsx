@@ -26,7 +26,18 @@ import { cn } from '@/lib/utils';
 import { useAdminAuditLog } from '@/hooks/useAdminAuditLog';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
+import { 
+  SEVERITY_CONFIG as SHARED_SEVERITY_CONFIG, 
+  ALERT_STATUS_CONFIG,
+  NORTH_STAR_ORG_NAMES,
+  type Severity,
+  type ViolationStatus 
+} from '@/lib/admin/constants';
+import { ADMIN_I18N } from '@/lib/admin/i18n';
+import { formatTimeRelative } from '@/lib/admin/formatting';
+import { SeverityBadge, AlertStatusBadge } from '@/components/admin/badges';
 
+// Use shared configs
 const SEVERITY_CONFIG = {
   critical: { label: 'Critical', labelAr: 'حرج', color: 'bg-destructive/10 text-destructive border-destructive/30' },
   high: { label: 'High', labelAr: 'عالي', color: 'bg-warning/10 text-warning border-warning/30' },
@@ -35,10 +46,10 @@ const SEVERITY_CONFIG = {
 };
 
 const STATUS_CONFIG = {
-  open: { label: 'Open', color: 'bg-destructive/10 text-destructive border-destructive/30' },
-  acknowledged: { label: 'Acknowledged', color: 'bg-warning/10 text-warning border-warning/30' },
-  snoozed: { label: 'Snoozed', color: 'bg-muted text-muted-foreground border-border' },
-  resolved: { label: 'Resolved', color: 'bg-success/10 text-success border-success/30' },
+  open: { label: 'Open', labelAr: 'مفتوح', color: 'bg-destructive/10 text-destructive border-destructive/30' },
+  acknowledged: { label: 'Acknowledged', labelAr: 'مقر به', color: 'bg-warning/10 text-warning border-warning/30' },
+  snoozed: { label: 'Snoozed', labelAr: 'مؤجل', color: 'bg-muted text-muted-foreground border-border' },
+  resolved: { label: 'Resolved', labelAr: 'محلول', color: 'bg-success/10 text-success border-success/30' },
 };
 
 const ENTITY_TYPES = [

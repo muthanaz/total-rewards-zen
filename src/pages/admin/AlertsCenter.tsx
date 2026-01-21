@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PageLayout, MetricCard, MetricGrid } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,28 +29,30 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { 
+  SEVERITY_CONFIG as SHARED_SEVERITY_CONFIG, 
+  ALERT_STATUS_CONFIG,
+  NORTH_STAR_ORG_NAMES,
+  ERROR_PATTERNS,
+  type Severity,
+  type AlertStatus 
+} from '@/lib/admin/constants';
+import { ADMIN_I18N } from '@/lib/admin/i18n';
+import { formatTimeRelative } from '@/lib/admin/formatting';
+import { SeverityBadge, AlertStatusBadge, TimeBadge } from '@/components/admin/badges';
+import { AdminErrorDisplay } from '@/components/admin/AdminErrorDisplay';
 
-const SEVERITY_CONFIG = {
-  critical: { label: 'Critical', labelAr: 'حرج', color: 'bg-destructive text-destructive-foreground', textColor: 'text-destructive', icon: XCircle, borderColor: 'border-l-destructive' },
-  high: { label: 'High', labelAr: 'عالي', color: 'bg-warning text-warning-foreground', textColor: 'text-warning', icon: AlertTriangle, borderColor: 'border-l-warning' },
-  medium: { label: 'Medium', labelAr: 'متوسط', color: 'bg-primary text-primary-foreground', textColor: 'text-primary', icon: AlertCircle, borderColor: 'border-l-primary' },
-  low: { label: 'Low', labelAr: 'منخفض', color: 'bg-muted text-muted-foreground', textColor: 'text-muted-foreground', icon: Bell, borderColor: 'border-l-muted-foreground' },
-};
+const SEVERITY_CONFIG = SHARED_SEVERITY_CONFIG;
+const STATUS_CONFIG = ALERT_STATUS_CONFIG;
 
-const STATUS_CONFIG = {
-  open: { label: 'Open', labelAr: 'مفتوح', color: 'bg-destructive/10 text-destructive border-destructive/30' },
-  investigating: { label: 'Investigating', labelAr: 'قيد التحقيق', color: 'bg-warning/10 text-warning border-warning/30' },
-  snoozed: { label: 'Snoozed', labelAr: 'مؤجل', color: 'bg-muted text-muted-foreground border-border' },
-  resolved: { label: 'Resolved', labelAr: 'محلول', color: 'bg-success/10 text-success border-success/30' },
-};
-
+// Alert types with Arabic glossary terms
 const ALERT_TYPES = {
   sync_failure: { label: 'Sync Failure', labelAr: 'فشل المزامنة', icon: Server, link: '/admin/sync-monitor', linkLabel: 'View Sync Monitor' },
   data_quality: { label: 'Data Quality', labelAr: 'جودة البيانات', icon: Database, link: '/admin/data-quality-rules', linkLabel: 'View Data Quality Rules' },
   security: { label: 'Security', labelAr: 'الأمان', icon: Shield, link: '/admin/security', linkLabel: 'View Security Logs' },
-  moderation_sla: { label: 'Moderation SLA', labelAr: 'مراجعة SLA', icon: Clock, link: '/admin/moderation', linkLabel: 'View Moderation Queue' },
+  moderation_sla: { label: 'Moderation SLA', labelAr: 'اتفاقية مستوى الخدمة', icon: Clock, link: '/admin/moderation', linkLabel: 'View Moderation Queue' },
   spike: { label: 'Abnormal Spike', labelAr: 'ارتفاع غير طبيعي', icon: TrendingUp, link: '/admin/dashboard', linkLabel: 'View Dashboard' },
-  vendor_kyb: { label: 'Vendor KYB', labelAr: 'بائع KYB', icon: FileWarning, link: '/admin/vendors', linkLabel: 'View Vendor Details' },
+  vendor_kyb: { label: 'Vendor KYB', labelAr: 'اعرف نشاطك التجاري', icon: FileWarning, link: '/admin/vendors', linkLabel: 'View Vendor Details' },
 };
 
 const RECOMMENDED_ACTIONS: Record<string, Array<{ action: string; icon: typeof RefreshCw }>> = {

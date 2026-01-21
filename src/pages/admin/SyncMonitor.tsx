@@ -25,14 +25,19 @@ import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useAdminAuditLog } from '@/hooks/useAdminAuditLog';
 import { Link } from 'react-router-dom';
+import { 
+  RUN_STATUS_CONFIG, 
+  SEVERITY_CONFIG, 
+  NORTH_STAR_ORG_NAMES,
+  type RunStatus,
+  type Severity 
+} from '@/lib/admin/constants';
+import { ADMIN_I18N } from '@/lib/admin/i18n';
+import { formatNumberCompact, formatTimeRelative, formatNumberFull } from '@/lib/admin/formatting';
+import { RunStatusBadge, SeverityBadge, TimeBadge } from '@/components/admin/badges';
 
-const STATUS_CONFIG = {
-  success: { label: 'Success', labelAr: 'نجاح', color: 'bg-success/10 text-success border-success/30', icon: CheckCircle },
-  running: { label: 'Running', labelAr: 'قيد التشغيل', color: 'bg-blue-500/10 text-blue-600 border-blue-500/30', icon: RefreshCw },
-  failed: { label: 'Failed', labelAr: 'فشل', color: 'bg-destructive/10 text-destructive border-destructive/30', icon: XCircle },
-  partial: { label: 'Partial', labelAr: 'جزئي', color: 'bg-warning/10 text-warning border-warning/30', icon: AlertTriangle },
-  pending: { label: 'Pending', labelAr: 'معلق', color: 'bg-muted text-muted-foreground border-border', icon: Clock },
-};
+// Use shared status config
+const STATUS_CONFIG = RUN_STATUS_CONFIG;
 
 const SAMPLE_RUNS = [
   { 
