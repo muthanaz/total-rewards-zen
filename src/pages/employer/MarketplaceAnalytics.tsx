@@ -195,7 +195,7 @@ export default function MarketplaceAnalyticsPage() {
       </div>
       
       {/* Low Confidence Warning */}
-      {coverageMetrics.overallCoverage < 70 && (
+      {((coverageMetrics.employeeCoverage + coverageMetrics.entitlementCoverage + coverageMetrics.policyCoverage + coverageMetrics.claimsCoverage) / 4) < 70 && (
         <Card className="border-warning/50 bg-warning/5">
           <CardContent className="py-3">
             <div className="flex items-center gap-3">
@@ -626,7 +626,8 @@ export default function MarketplaceAnalyticsPage() {
     />
     <ConfidenceDetailsDrawer 
       open={confidenceDrawerOpen} 
-      onOpenChange={setConfidenceDrawerOpen} 
+      onOpenChange={setConfidenceDrawerOpen}
+      metrics={coverageMetrics}
     />
     </PageConfidenceGate>
   );
