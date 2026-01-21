@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   FileText, 
   Plus, 
@@ -28,6 +29,8 @@ import {
   Copy,
   MoreHorizontal,
   Trash2,
+  ShieldCheck,
+  BookOpen,
 } from 'lucide-react';
 import { 
   DropdownMenu, 
@@ -36,8 +39,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { EmployerGlobalFiltersBar } from '@/components/employer';
+import { EmployerGlobalFiltersBar, DataConfidenceBadge } from '@/components/employer';
 import { PermissionGate } from '@/components/shared/PermissionGate';
+import { PageLayout } from '@/components/shared/PageLayout';
 import { useEmployerPermissions } from '@/hooks/useEmployerPermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -54,6 +58,7 @@ import { LifeAreaChip, getLifeAreaLabel } from '@/components/shared/EnumChip';
 import { toast } from 'sonner';
 import { PolicyLogic } from '@/lib/policyEngine';
 import { useAuditLog } from '@/hooks/useAuditLog';
+import { useOrgSettings } from '@/hooks/useOrgSettings';
 
 interface PolicyRow {
   id: string;
@@ -115,7 +120,10 @@ export function PolicyManagementView() {
 
   const organizationId = profile?.organization_id;
 
-  // Fetch policies with their versions
+  // Fetch org settings for admin-managed mode
+  const { data: orgSettingsData } = useOrgSettings(organizationId);
+  const policyManagementMode = orgSettingsData?.settings?.policy_management_mode || 'admin_led';
+  const isAdminManaged = policyManagementMode === 'admin_led';
   const { data: policies = [], isLoading } = useQuery({
     queryKey: ['policies_management', organizationId],
     queryFn: async (): Promise<PolicyRow[]> => {
@@ -323,33 +331,60 @@ export function PolicyManagementView() {
   }, [filteredPolicies, draftCount, publishedCount]);
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">Policy Management</h1>
-          <p className="text-muted-foreground">Create, edit, and manage organization benefit policies</p>
-        </div>
-        <PermissionGate 
-          permission="can_manage_policies"
-          fallback={
-            <Badge variant="outline" className="gap-1 text-muted-foreground">
-              <Lock className="w-3 h-3" /> View Only
-            </Badge>
-          }
-        >
-          <Button className="gap-2" onClick={() => setCreateModalOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Create New Policy
-          </Button>
-        </PermissionGate>
-      </div>
-
-      {/* Global Filters */}
-      <EmployerGlobalFiltersBar compact />
-
-      {/* Key Insights */}
-      {insights.length > 0 && <PolicyInsightsStrip insights={insights} />}
+    <TooltipProvider>
+      <PageLayout
+        title="Policy Management"
+        description="Create, edit, and manage organization benefit policies"
+        icon={BookOpen}
+        confidenceBadge={
+          <DataConfidenceBadge 
+            metrics={{
+              employeeCoverage: 100,
+              entitlementCoverage: 100,
+              policyCoverage: publishedCount > 0 ? 100 : 30,
+              claimsCoverage: 100,
+            }} 
+          />
+        }
+        actions={
+          <div className="flex items-center gap-3">
+            {/* Admin-managed indicator */}
+            {isAdminManaged && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="gap-1 text-muted-foreground">
+                    <ShieldCheck className="w-3 h-3" />
+                    Admin Managed
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <p className="text-xs">
+                    Policies are configured by your platform administrator. 
+                    You can view policies and request changes.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            
+            <PermissionGate 
+              permission="can_manage_policies"
+              fallback={
+                <Badge variant="outline" className="gap-1 text-muted-foreground">
+                  <Lock className="w-3 h-3" /> View Only
+                </Badge>
+              }
+            >
+              <Button className="gap-2" onClick={() => setCreateModalOpen(true)}>
+                <Plus className="w-4 h-4" />
+                Create New Policy
+              </Button>
+            </PermissionGate>
+          </div>
+        }
+        filters={<EmployerGlobalFiltersBar compact />}
+      >
+        {/* Key Insights */}
+        {insights.length > 0 && <PolicyInsightsStrip insights={insights} />}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -674,6 +709,7 @@ export function PolicyManagementView() {
           onOpenChange={setEditorOpen}
         />
       )}
-    </div>
+      </PageLayout>
+    </TooltipProvider>
   );
 }
