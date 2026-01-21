@@ -44,7 +44,7 @@ const RESOLUTION_OPTIONS: {
   description: string;
   icon: React.ComponentType<{ className?: string }>;
   action?: string;
-  actionLink?: string;
+  getActionLink?: (issueId: string) => string;
 }[] = [
   {
     type: 'integration',
@@ -52,7 +52,7 @@ const RESOLUTION_OPTIONS: {
     description: 'Link a data source or API to automatically sync data',
     icon: Link2,
     action: 'Go to Integrations',
-    actionLink: '/employer/integrations?view=ops',
+    getActionLink: (issueId) => `/employer/integrations?view=ops&resolve_issue=${issueId}`,
   },
   {
     type: 'data_source',
@@ -60,7 +60,7 @@ const RESOLUTION_OPTIONS: {
     description: 'Import or configure a new data source manually',
     icon: Database,
     action: 'Import Data',
-    actionLink: '/employer/integrations?view=ops&tab=import',
+    getActionLink: () => '/employer/integrations?view=ops&tab=import',
   },
   {
     type: 'quality_rule',
@@ -166,14 +166,14 @@ export function IssueResolveModal({
                         <p className="text-xs text-muted-foreground mt-1">
                           {option.description}
                         </p>
-                        {option.action && option.actionLink && isSelected && (
+                        {option.action && option.getActionLink && isSelected && (
                           <Button
                             variant="link"
                             size="sm"
                             className="h-auto p-0 mt-2 text-xs"
                             asChild
                           >
-                            <Link to={option.actionLink}>
+                            <Link to={option.getActionLink(issue.id)}>
                               {option.action}
                               <ArrowRight className="h-3 w-3 ml-1" />
                             </Link>
