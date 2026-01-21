@@ -169,12 +169,12 @@ export function LaunchPlaybookModal({
               
               <div className="space-y-2">
                 <Label htmlFor="segment">Target Segment (optional)</Label>
-                <Select value={targetSegment} onValueChange={setTargetSegment}>
+                <Select value={targetSegment || 'all'} onValueChange={(val) => setTargetSegment(val === 'all' ? '' : val)}>
                   <SelectTrigger>
                     <SelectValue placeholder="All employees" />
                   </SelectTrigger>
                   <SelectContent className="bg-card border z-50">
-                    <SelectItem value="">All employees</SelectItem>
+                    <SelectItem value="all">All employees</SelectItem>
                     <SelectItem value="dept:Engineering">Engineering</SelectItem>
                     <SelectItem value="dept:Sales">Sales</SelectItem>
                     <SelectItem value="dept:Operations">Operations</SelectItem>
