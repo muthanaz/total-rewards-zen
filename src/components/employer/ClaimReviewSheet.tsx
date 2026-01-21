@@ -81,10 +81,11 @@ import {
   useSharedRequest, 
   useRequestTimeline,
 } from '@/hooks/useSharedRequests';
-import { useCurrentPolicyVersion, useRequiredDocuments } from '@/hooks/useSharedPolicies';
+import { useCurrentPolicyVersion } from '@/hooks/useSharedPolicies';
 import { useClaimEntitlementCheck, useClaimValidation, useBenefitByCategory } from '@/hooks/useClaimEntitlements';
-import { useClaimDocs, useMarkDocReceived, getRequiredDocsForCategory } from '@/hooks/useClaimDocs';
+import { useClaimDocs, useMarkDocReceived } from '@/hooks/useClaimDocs';
 import { useClaimNotes, useAddClaimNote } from '@/hooks/useClaimNotes';
+import { useClaimDocumentStatus } from '@/hooks/useClaimDocumentStatus';
 import { useClaimActions } from '@/hooks/useClaimActions';
 import { 
   getStatusBadgeStyle, 
@@ -178,8 +179,8 @@ export function ClaimReviewSheet({
   // Validate claim
   const validation = useClaimValidation(entitlementCheck, request?.amount || null);
   
-  // Fetch required documents for this benefit
-  const { data: requiredDocs } = useRequiredDocuments(matchingBenefit?.id || null);
+  // Unified document status from shared hook
+  const documentStatus = useClaimDocumentStatus(requestId, request?.category || null);
   
   // Fetch current policy version
   const { data: currentPolicy } = useCurrentPolicyVersion(matchingBenefit?.id || null, organizationId);
@@ -929,43 +930,88 @@ export function ClaimReviewSheet({
                   </CardContent>
                 </Card>
 
-                {/* Required Documents Checklist */}
+                {/* Required Documents Checklist - Uses unified hook */}
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <CheckCircle className="w-4 h-4" />
                       Required Documents Checklist
+                      {documentStatus.counts.missing > 0 && (
+                        <Badge className="bg-amber-500/10 text-amber-600 border-0 text-xs ml-2">
+                          {documentStatus.counts.missing} missing
+                        </Badge>
+                      )}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {requiredDocs && requiredDocs.length > 0 ? (
-                      <div className="space-y-2">
-                        {requiredDocs.map((doc) => (
-                          <div 
-                            key={doc.id}
-                            className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-                                <Circle className="w-3 h-3 text-muted-foreground" />
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium">{doc.document_name}</p>
-                                {doc.description && (
-                                  <p className="text-xs text-muted-foreground">{doc.description}</p>
-                                )}
-                              </div>
-                            </div>
-                            <Badge variant={doc.is_required ? 'default' : 'outline'} className="text-xs">
-                              {doc.is_required ? 'Required' : 'Optional'}
-                            </Badge>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
+                    {documentStatus.isLoading ? (
+                      <p className="text-sm text-muted-foreground">Loading document requirements...</p>
+                    ) : documentStatus.noDocsRequired ? (
                       <p className="text-sm text-muted-foreground">
                         No specific documents required for this benefit category.
                       </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {documentStatus.requiredDocs.map((doc) => {
+                          const isProvided = documentStatus.providedDocs.some(
+                            p => p.docType.toLowerCase() === doc.docType.toLowerCase() && 
+                                 (p.status === 'provided' || p.status === 'pending')
+                          );
+                          const isMissing = documentStatus.missingDocs.some(
+                            m => m.id === doc.id
+                          );
+                          
+                          return (
+                            <div 
+                              key={doc.id}
+                              className={cn(
+                                "flex items-center justify-between p-3 rounded-lg",
+                                isProvided ? "bg-success/5 border border-success/20" :
+                                isMissing && doc.isRequired ? "bg-amber-500/5 border border-amber-500/20" :
+                                "bg-muted/30"
+                              )}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={cn(
+                                  "w-6 h-6 rounded-full flex items-center justify-center",
+                                  isProvided ? "bg-success/20" :
+                                  isMissing && doc.isRequired ? "bg-amber-500/20" :
+                                  "bg-muted"
+                                )}>
+                                  {isProvided ? (
+                                    <Check className="w-3 h-3 text-success" />
+                                  ) : isMissing && doc.isRequired ? (
+                                    <AlertCircle className="w-3 h-3 text-amber-600" />
+                                  ) : (
+                                    <Circle className="w-3 h-3 text-muted-foreground" />
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium">{doc.docName}</p>
+                                  {doc.description && (
+                                    <p className="text-xs text-muted-foreground">{doc.description}</p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {isProvided && (
+                                  <Badge variant="outline" className="text-xs text-success border-success/30">
+                                    Provided
+                                  </Badge>
+                                )}
+                                {isMissing && doc.isRequired && (
+                                  <Badge className="bg-amber-500/10 text-amber-600 border-0 text-xs">
+                                    Missing
+                                  </Badge>
+                                )}
+                                <Badge variant={doc.isRequired ? 'default' : 'outline'} className="text-xs">
+                                  {doc.isRequired ? 'Required' : 'Optional'}
+                                </Badge>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     )}
                   </CardContent>
                 </Card>
