@@ -1598,6 +1598,7 @@ export type Database = {
       }
       policies: {
         Row: {
+          auto_close_on_approval: boolean | null
           benefit_key: string | null
           benefit_type: string | null
           category: string
@@ -1612,6 +1613,7 @@ export type Database = {
           owner_user_id: string | null
           policy_ref: string
           required_docs: Json | null
+          settlement_required: boolean | null
           sla_rules: Json | null
           status: string
           summary: string | null
@@ -1621,6 +1623,7 @@ export type Database = {
           version: string
         }
         Insert: {
+          auto_close_on_approval?: boolean | null
           benefit_key?: string | null
           benefit_type?: string | null
           category: string
@@ -1635,6 +1638,7 @@ export type Database = {
           owner_user_id?: string | null
           policy_ref: string
           required_docs?: Json | null
+          settlement_required?: boolean | null
           sla_rules?: Json | null
           status?: string
           summary?: string | null
@@ -1644,6 +1648,7 @@ export type Database = {
           version?: string
         }
         Update: {
+          auto_close_on_approval?: boolean | null
           benefit_key?: string | null
           benefit_type?: string | null
           category?: string
@@ -1658,6 +1663,7 @@ export type Database = {
           owner_user_id?: string | null
           policy_ref?: string
           required_docs?: Json | null
+          settlement_required?: boolean | null
           sla_rules?: Json | null
           status?: string
           summary?: string | null
@@ -2187,6 +2193,7 @@ export type Database = {
       requests: {
         Row: {
           amount: number | null
+          approved_amount: number | null
           assigned_owner_name: string | null
           assigned_to: string | null
           assigned_to_user_id: string | null
@@ -2197,6 +2204,7 @@ export type Database = {
           department: string | null
           description: string | null
           employee_code: string | null
+          employee_context_json: Json | null
           escalated_at: string | null
           escalation_reason: string | null
           grade: string | null
@@ -2205,8 +2213,12 @@ export type Database = {
           location: string | null
           missing_docs: Json | null
           organization_id: string | null
+          paid_amount: number | null
+          paid_at: string | null
+          parent_request_id: string | null
           policy_id: string | null
           policy_ref: string | null
+          policy_version_id: string | null
           priority: string | null
           request_type: Database["public"]["Enums"]["request_type"]
           required_docs: Json | null
@@ -2219,11 +2231,15 @@ export type Database = {
           status: Database["public"]["Enums"]["request_status"] | null
           subject: string
           submitted_at: string | null
+          transaction_type:
+            | Database["public"]["Enums"]["transaction_type"]
+            | null
           user_id: string
           value_band: string | null
         }
         Insert: {
           amount?: number | null
+          approved_amount?: number | null
           assigned_owner_name?: string | null
           assigned_to?: string | null
           assigned_to_user_id?: string | null
@@ -2234,6 +2250,7 @@ export type Database = {
           department?: string | null
           description?: string | null
           employee_code?: string | null
+          employee_context_json?: Json | null
           escalated_at?: string | null
           escalation_reason?: string | null
           grade?: string | null
@@ -2242,8 +2259,12 @@ export type Database = {
           location?: string | null
           missing_docs?: Json | null
           organization_id?: string | null
+          paid_amount?: number | null
+          paid_at?: string | null
+          parent_request_id?: string | null
           policy_id?: string | null
           policy_ref?: string | null
+          policy_version_id?: string | null
           priority?: string | null
           request_type: Database["public"]["Enums"]["request_type"]
           required_docs?: Json | null
@@ -2256,11 +2277,15 @@ export type Database = {
           status?: Database["public"]["Enums"]["request_status"] | null
           subject: string
           submitted_at?: string | null
+          transaction_type?:
+            | Database["public"]["Enums"]["transaction_type"]
+            | null
           user_id: string
           value_band?: string | null
         }
         Update: {
           amount?: number | null
+          approved_amount?: number | null
           assigned_owner_name?: string | null
           assigned_to?: string | null
           assigned_to_user_id?: string | null
@@ -2271,6 +2296,7 @@ export type Database = {
           department?: string | null
           description?: string | null
           employee_code?: string | null
+          employee_context_json?: Json | null
           escalated_at?: string | null
           escalation_reason?: string | null
           grade?: string | null
@@ -2279,8 +2305,12 @@ export type Database = {
           location?: string | null
           missing_docs?: Json | null
           organization_id?: string | null
+          paid_amount?: number | null
+          paid_at?: string | null
+          parent_request_id?: string | null
           policy_id?: string | null
           policy_ref?: string | null
+          policy_version_id?: string | null
           priority?: string | null
           request_type?: Database["public"]["Enums"]["request_type"]
           required_docs?: Json | null
@@ -2293,6 +2323,9 @@ export type Database = {
           status?: Database["public"]["Enums"]["request_status"] | null
           subject?: string
           submitted_at?: string | null
+          transaction_type?:
+            | Database["public"]["Enums"]["transaction_type"]
+            | null
           user_id?: string
           value_band?: string | null
         }
@@ -2302,6 +2335,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_parent_request_id_fkey"
+            columns: ["parent_request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
             referencedColumns: ["id"]
           },
           {
@@ -2835,11 +2875,14 @@ export type Database = {
         | "draft"
         | "submitted"
         | "in_review"
+        | "info_requested"
         | "paid"
         | "closed"
+        | "cancelled"
         | "pending_employee"
         | "escalated"
       request_type: "claim" | "request" | "question"
+      transaction_type: "request" | "claim" | "settlement"
       user_role: "employee" | "employer" | "admin" | "vendor"
     }
     CompositeTypes: {
@@ -2992,12 +3035,15 @@ export const Constants = {
         "draft",
         "submitted",
         "in_review",
+        "info_requested",
         "paid",
         "closed",
+        "cancelled",
         "pending_employee",
         "escalated",
       ],
       request_type: ["claim", "request", "question"],
+      transaction_type: ["request", "claim", "settlement"],
       user_role: ["employee", "employer", "admin", "vendor"],
     },
   },
