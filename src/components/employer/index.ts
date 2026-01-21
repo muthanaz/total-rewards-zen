@@ -53,3 +53,11 @@ export { SegmentInsightsDrawer } from './SegmentInsightsDrawer';
 export { SegmentCharts } from './SegmentCharts';
 export { RiskFlagsModal } from './RiskFlagsModal';
 export { SegmentComparePanel } from './SegmentComparePanel';
+
+// Policy Insights components
+export { PolicyHotspotDrawer } from './PolicyHotspotDrawer';
+export type { ConfusingArea } from './PolicyHotspotDrawer';
+export { PolicyQuestionRow } from './PolicyQuestionRow';
+export type { PolicyQuestion } from './PolicyQuestionRow';
+export { PolicyFixCard } from './PolicyFixCard';
+export type { PolicyFix } from './PolicyFixCard';
