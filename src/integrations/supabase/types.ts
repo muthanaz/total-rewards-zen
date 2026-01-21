@@ -1598,6 +1598,7 @@ export type Database = {
       }
       policies: {
         Row: {
+          benefit_key: string | null
           benefit_type: string | null
           category: string
           coverage_rules: Json | null
@@ -1620,6 +1621,7 @@ export type Database = {
           version: string
         }
         Insert: {
+          benefit_key?: string | null
           benefit_type?: string | null
           category: string
           coverage_rules?: Json | null
@@ -1642,6 +1644,7 @@ export type Database = {
           version?: string
         }
         Update: {
+          benefit_key?: string | null
           benefit_type?: string | null
           category?: string
           coverage_rules?: Json | null

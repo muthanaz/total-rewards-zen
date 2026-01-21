@@ -104,6 +104,12 @@ export { ClaimAuditLog } from './ClaimAuditLog';
 export { PolicyLifecycleBadge, PolicyLifecycleFlow } from './PolicyLifecycleBadge';
 export type { PolicyLifecycleStatus } from './PolicyLifecycleBadge';
 
+// Policy Engine components
+export { CreatePolicyModal } from './CreatePolicyModal';
+export { PolicyLogicEditor } from './PolicyLogicEditor';
+export { PolicyEditorSheetV2 } from './PolicyEditorSheetV2';
+export { PolicyManagementView } from './PolicyManagementView';
+
 // Claims Bulk Actions & SLA
 export { ClaimsBulkActionsBar } from './ClaimsBulkActionsBar';
 export { SLARulesModal } from './SLARulesModal';
