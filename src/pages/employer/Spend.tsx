@@ -543,9 +543,9 @@ export default function SpendPage() {
             </div>
             <p className="text-xs text-muted-foreground mt-2">
               {totals.entitled > totals.budget ? (
-                <span className="text-amber-600">Over-entitled by {formatCurrencyAED(totals.entitled - totals.budget)}</span>
+                <span className="text-warning">Over-entitled by {formatCurrencyAED(totals.entitled - totals.budget)}</span>
               ) : (
-                <span className="text-emerald-600">Within budget</span>
+                <span className="text-success">Within budget</span>
               )}
             </p>
           </CardContent>
@@ -566,7 +566,7 @@ export default function SpendPage() {
               </div>
               <BarChart3 className="h-8 w-8 text-accent/20" />
             </div>
-            <div className="flex items-center gap-1 mt-2 text-xs text-emerald-600">
+            <div className="flex items-center gap-1 mt-2 text-xs text-success">
               <TrendingUp className="h-3 w-3" />
               <span>8.2% vs last year</span>
             </div>

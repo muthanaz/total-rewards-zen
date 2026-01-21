@@ -580,7 +580,7 @@ export function ClaimsOpsView() {
 
     if (sla.isOverdue) {
       return (
-        <Badge className="bg-red-500 text-white border-0 gap-1">
+        <Badge className="bg-destructive text-destructive-foreground border-0 gap-1">
           <AlertCircle className="w-3 h-3" />
           Breached
         </Badge>
@@ -588,14 +588,14 @@ export function ClaimsOpsView() {
     }
     if (sla.isUrgent) {
       return (
-        <Badge className="bg-amber-500 text-white border-0 gap-1">
+        <Badge className="bg-warning text-warning-foreground border-0 gap-1">
           <Timer className="w-3 h-3" />
           Due &lt;24h
         </Badge>
       );
     }
     return (
-      <Badge variant="outline" className="text-emerald-600 border-emerald-500/30 gap-1">
+      <Badge variant="outline" className="text-success border-success/30 gap-1">
         <CheckCircle className="w-3 h-3" />
         On track
       </Badge>
@@ -604,13 +604,13 @@ export function ClaimsOpsView() {
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      pending: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
-      submitted: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
-      in_review: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
-      approved: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
-      rejected: 'bg-red-500/10 text-red-600 border-red-500/20',
-      paid: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
-      closed: 'bg-slate-500/10 text-slate-600 border-slate-500/20',
+      pending: 'bg-warning/10 text-warning border-warning/20',
+      submitted: 'bg-warning/10 text-warning border-warning/20',
+      in_review: 'bg-primary/10 text-primary border-primary/20',
+      approved: 'bg-success/10 text-success border-success/20',
+      rejected: 'bg-destructive/10 text-destructive border-destructive/20',
+      paid: 'bg-success/10 text-success border-success/20',
+      closed: 'bg-muted text-muted-foreground border-muted',
     };
     const labels: Record<string, string> = {
       pending: 'Pending',
@@ -626,10 +626,10 @@ export function ClaimsOpsView() {
 
   const getPriorityBadge = (priority: string) => {
     const styles: Record<string, string> = {
-      urgent: 'bg-red-500/10 text-red-600 border-red-500/20',
-      high: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
-      normal: 'bg-slate-500/10 text-slate-600 border-slate-500/20',
-      low: 'bg-slate-500/10 text-slate-500 border-slate-500/20',
+      urgent: 'bg-destructive/10 text-destructive border-destructive/20',
+      high: 'bg-warning/10 text-warning border-warning/20',
+      normal: 'bg-muted text-muted-foreground border-muted',
+      low: 'bg-muted text-muted-foreground/70 border-muted',
     };
     return <Badge className={cn('text-xs', styles[priority])}>{priority}</Badge>;
   };

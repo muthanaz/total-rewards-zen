@@ -104,13 +104,13 @@ export function IntegrationsOpsView() {
   const getStatusBadge = (status: DataSource['status']) => {
     switch (status) {
       case 'connected':
-        return <Badge className="bg-emerald-500/10 text-emerald-600 border-0"><CheckCircle className="w-3 h-3 mr-1" />Connected</Badge>;
+        return <Badge className="bg-success/10 text-success border-0"><CheckCircle className="w-3 h-3 mr-1" />Connected</Badge>;
       case 'disconnected':
         return <Badge className="bg-muted text-muted-foreground"><Unlink className="w-3 h-3 mr-1" />Disconnected</Badge>;
       case 'warning':
-        return <Badge className="bg-amber-500/10 text-amber-600 border-0"><AlertTriangle className="w-3 h-3 mr-1" />Needs Attention</Badge>;
+        return <Badge className="bg-warning/10 text-warning border-0"><AlertTriangle className="w-3 h-3 mr-1" />Needs Attention</Badge>;
       case 'syncing':
-        return <Badge className="bg-blue-500/10 text-blue-600 border-0"><RefreshCw className="w-3 h-3 mr-1 animate-spin" />Syncing</Badge>;
+        return <Badge className="bg-primary/10 text-primary border-0"><RefreshCw className="w-3 h-3 mr-1 animate-spin" />Syncing</Badge>;
       default:
         return null;
     }
@@ -173,9 +173,9 @@ export function IntegrationsOpsView() {
         <Card className="card-elevated">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <CheckCircle className="h-8 w-8 text-emerald-500" />
+              <CheckCircle className="h-8 w-8 text-success" />
               <div>
-                <p className="text-2xl font-bold text-emerald-600">{dataSources.filter(d => d.status === 'connected').length}</p>
+                <p className="text-2xl font-bold text-success">{dataSources.filter(d => d.status === 'connected').length}</p>
                 <p className="text-sm text-muted-foreground">Active Connections</p>
               </div>
             </div>
@@ -184,9 +184,9 @@ export function IntegrationsOpsView() {
         <Card className="card-elevated">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <AlertTriangle className="h-8 w-8 text-amber-500" />
+              <AlertTriangle className="h-8 w-8 text-warning" />
               <div>
-                <p className="text-2xl font-bold text-amber-600">{dataSources.filter(d => d.status === 'warning').length}</p>
+                <p className="text-2xl font-bold text-warning">{dataSources.filter(d => d.status === 'warning').length}</p>
                 <p className="text-sm text-muted-foreground">Need Attention</p>
               </div>
             </div>
