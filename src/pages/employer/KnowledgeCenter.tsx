@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import {
   BookOpen,
   Search,
@@ -67,6 +68,9 @@ interface MetricDefinition {
     target: number | string;
     excellent: number | string;
   };
+  usedIn?: { page: string; path: string }[];
+  dataOwner?: string;
+  lastUpdated?: string;
 }
 
 // ============================================================================
@@ -110,6 +114,12 @@ const METRIC_DEFINITIONS: MetricDefinition[] = [
     },
     relatedMetrics: ['zombie-spend', 'claims-volume', 'cost-per-employee'],
     benchmarks: { low: 50, target: 75, excellent: 90 },
+    usedIn: [
+      { page: 'Spend & Utilization', path: '/employer/spend' },
+      { page: 'Executive Dashboard', path: '/employer' },
+    ],
+    dataOwner: 'HR Operations',
+    lastUpdated: 'Jan 15, 2024',
   },
   {
     id: 'zombie-spend',
@@ -146,6 +156,12 @@ const METRIC_DEFINITIONS: MetricDefinition[] = [
       ],
     },
     relatedMetrics: ['utilization-rate', 'cost-per-employee', 'budget-variance'],
+    usedIn: [
+      { page: 'Zombie Spend', path: '/employer/zombie' },
+      { page: 'Executive Dashboard', path: '/employer' },
+    ],
+    dataOwner: 'Finance',
+    lastUpdated: 'Jan 12, 2024',
   },
   {
     id: 'cost-per-employee',
@@ -182,7 +198,13 @@ const METRIC_DEFINITIONS: MetricDefinition[] = [
       ],
     },
     relatedMetrics: ['utilization-rate', 'budget-variance', 'total-investment'],
-    benchmarks: { low: 35000, target: 48000, excellent: 60000 },
+    benchmarks: { low: 'AED 35,000', target: 'AED 48,000', excellent: 'AED 60,000' },
+    usedIn: [
+      { page: 'Spend & Utilization', path: '/employer/spend' },
+      { page: 'Employee Segments', path: '/employer/segments' },
+    ],
+    dataOwner: 'Finance',
+    lastUpdated: 'Jan 10, 2024',
   },
   {
     id: 'sla-compliance',
@@ -219,7 +241,13 @@ const METRIC_DEFINITIONS: MetricDefinition[] = [
       ],
     },
     relatedMetrics: ['avg-processing-time', 'claims-volume', 'rejection-rate'],
-    benchmarks: { low: 85, target: 95, excellent: 99 },
+    benchmarks: { low: '< 85%', target: '95%', excellent: '≥ 99%' },
+    usedIn: [
+      { page: 'Claims & Approvals', path: '/employer/claims' },
+      { page: 'HR Ops Dashboard', path: '/employer' },
+    ],
+    dataOwner: 'HR Operations',
+    lastUpdated: 'Jan 18, 2024',
   },
   {
     id: 'avg-processing-time',
@@ -256,7 +284,13 @@ const METRIC_DEFINITIONS: MetricDefinition[] = [
       ],
     },
     relatedMetrics: ['sla-compliance', 'claims-volume', 'rejection-rate'],
-    benchmarks: { low: '5+ days', target: '2-3 days', excellent: '< 2 days' },
+    benchmarks: { low: '> 5 days', target: '2-3 days', excellent: '< 2 days' },
+    usedIn: [
+      { page: 'Claims & Approvals', path: '/employer/claims' },
+      { page: 'HR Ops Dashboard', path: '/employer' },
+    ],
+    dataOwner: 'HR Operations',
+    lastUpdated: 'Jan 18, 2024',
   },
   {
     id: 'rejection-rate',
@@ -293,7 +327,13 @@ const METRIC_DEFINITIONS: MetricDefinition[] = [
       ],
     },
     relatedMetrics: ['missing-docs-rate', 'policy-clarity-score', 'utilization-rate'],
-    benchmarks: { low: 15, target: 8, excellent: 3 },
+    benchmarks: { low: '> 15%', target: '5-8%', excellent: '< 3%' },
+    usedIn: [
+      { page: 'Claims & Approvals', path: '/employer/claims' },
+      { page: 'Policy Insights', path: '/employer/policy-insights' },
+    ],
+    dataOwner: 'HR Operations',
+    lastUpdated: 'Jan 16, 2024',
   },
   {
     id: 'missing-docs-rate',
@@ -330,6 +370,12 @@ const METRIC_DEFINITIONS: MetricDefinition[] = [
       ],
     },
     relatedMetrics: ['rejection-rate', 'avg-processing-time', 'policy-clarity-score'],
+    usedIn: [
+      { page: 'Claims & Approvals', path: '/employer/claims' },
+      { page: 'Policy Insights', path: '/employer/policy-insights' },
+    ],
+    dataOwner: 'HR Operations',
+    lastUpdated: 'Jan 14, 2024',
   },
   {
     id: 'employee-satisfaction',
@@ -366,7 +412,13 @@ const METRIC_DEFINITIONS: MetricDefinition[] = [
       ],
     },
     relatedMetrics: ['utilization-rate', 'sla-compliance', 'rejection-rate'],
-    benchmarks: { low: 3.0, target: 4.0, excellent: 4.5 },
+    benchmarks: { low: '< 3.0', target: '4.0', excellent: '≥ 4.5' },
+    usedIn: [
+      { page: 'Executive Dashboard', path: '/employer' },
+      { page: 'Recommendations', path: '/employer/recommendations' },
+    ],
+    dataOwner: 'HR Operations',
+    lastUpdated: 'Jan 8, 2024',
   },
   {
     id: 'budget-variance',
@@ -403,6 +455,11 @@ const METRIC_DEFINITIONS: MetricDefinition[] = [
       ],
     },
     relatedMetrics: ['cost-per-employee', 'zombie-spend', 'utilization-rate'],
+    usedIn: [
+      { page: 'Spend & Utilization', path: '/employer/spend' },
+    ],
+    dataOwner: 'Finance',
+    lastUpdated: 'Jan 5, 2024',
   },
   {
     id: 'claims-volume',
@@ -438,6 +495,12 @@ const METRIC_DEFINITIONS: MetricDefinition[] = [
       ],
     },
     relatedMetrics: ['avg-processing-time', 'sla-compliance', 'rejection-rate'],
+    usedIn: [
+      { page: 'Claims & Approvals', path: '/employer/claims' },
+      { page: 'HR Ops Dashboard', path: '/employer' },
+    ],
+    dataOwner: 'HR Operations',
+    lastUpdated: 'Jan 18, 2024',
   },
 ];
 
@@ -613,6 +676,44 @@ function MetricCard({ metric, isExpanded, onToggle }: MetricCardProps) {
                 </div>
               </div>
             </div>
+
+            {/* Used In / Ownership */}
+            {(metric.usedIn || metric.dataOwner) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+                {metric.usedIn && metric.usedIn.length > 0 && (
+                  <div>
+                    <h4 className="font-medium flex items-center gap-2 mb-2 text-sm">
+                      <ExternalLink className="h-4 w-4 text-primary" />
+                      Used In
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {metric.usedIn.map((usage, idx) => (
+                        <Link key={idx} to={usage.path}>
+                          <Badge variant="outline" className="cursor-pointer hover:bg-primary/10">
+                            {usage.page}
+                            <ArrowRight className="h-3 w-3 ml-1" />
+                          </Badge>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="space-y-2">
+                  {metric.dataOwner && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-muted-foreground">Owner:</span>
+                      <Badge variant="secondary">{metric.dataOwner}</Badge>
+                    </div>
+                  )}
+                  {metric.lastUpdated && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      Last updated: {metric.lastUpdated}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Related Metrics */}
             {metric.relatedMetrics.length > 0 && (

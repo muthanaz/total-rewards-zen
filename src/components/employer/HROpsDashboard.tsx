@@ -19,13 +19,16 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChartContainer, ProgressBarList } from '@/components/charts';
-import { DataQualityBadge } from './DataQualityBadge';
 import { DataConfidenceBadge, useDataCoverageMetrics } from './DataConfidenceBadge';
 import { PageConfidenceGate } from './PageConfidenceGate';
 import { TrendIndicatorCompact } from './TrendComparison';
 import { TodaysFocusPanel } from './TodaysFocusPanel';
 import { WorkloadByOwnerTable } from './WorkloadByOwnerTable';
-import { ActionableTasksList, TaskType } from './ActionableTasksList';
+import { ActionableTasksList } from './ActionableTasksList';
+import type { TaskType } from './ActionableTasksList';
+import { TodaysPrioritiesStrip } from './TodaysPrioritiesStrip';
+import { SuggestedActionsPanel } from './SuggestedActionsPanel';
+import { TaskDetailDrawer } from './TaskDetailDrawer';
 import { useClaimMetrics, useClaimsByCategory, useRecentActivity } from '@/hooks/useEmployerDashboard';
 import { cn } from '@/lib/utils';
 import { EmployerGlobalFiltersBar } from './EmployerGlobalFiltersBar';
@@ -54,12 +57,12 @@ const mockWorkloads = [
 ];
 
 // Mock upcoming tasks
-const mockTasks: { id: string; title: string; date: string; type: TaskType; link?: string; priority?: 'low' | 'normal' | 'high' }[] = [
-  { id: '1', title: 'Q1 Benefits Review Meeting', date: 'Tomorrow, 10:00 AM', type: 'meeting', link: '/employer/recommendations', priority: 'high' },
-  { id: '2', title: 'Policy Update: L&D Eligible Courses', date: 'Jan 25', type: 'policy', link: '/employer/policies' },
-  { id: '3', title: 'Monthly Utilization Report', date: 'Jan 31', type: 'report', link: '/employer/spend' },
-  { id: '4', title: 'Vendor Contract Renewal', date: 'Feb 1', type: 'contract', link: '/employer/integrations?tab=ops' },
-  { id: '5', title: 'Employee Satisfaction Survey Close', date: 'Feb 5', type: 'deadline', priority: 'high' },
+const mockTasks: { id: string; title: string; date: string; type: TaskType; link?: string; priority?: 'low' | 'normal' | 'high'; description?: string }[] = [
+  { id: '1', title: 'Q1 Benefits Review Meeting', date: 'Tomorrow, 10:00 AM', type: 'meeting', link: '/employer/recommendations', priority: 'high', description: 'Review Q1 benefits spend and utilization trends with leadership team.' },
+  { id: '2', title: 'Policy Update: L&D Eligible Courses', date: 'Jan 25', type: 'policy', link: '/employer/policies', description: 'Update eligible courses list and coverage limits for 2024.' },
+  { id: '3', title: 'Monthly Utilization Report', date: 'Jan 31', type: 'report', link: '/employer/spend', description: 'Generate and distribute monthly benefits utilization report.' },
+  { id: '4', title: 'Vendor Contract Renewal', date: 'Feb 1', type: 'contract', link: '/employer/integrations?tab=ops', description: 'Renew annual contract with insurance provider.' },
+  { id: '5', title: 'Employee Satisfaction Survey Close', date: 'Feb 5', type: 'deadline', priority: 'high', description: 'Final reminder to employees for benefits satisfaction survey.' },
 ];
 
 const mockOwners = [
@@ -68,15 +71,51 @@ const mockOwners = [
   { id: '3', name: 'Fatima Al-Maktoum' },
 ];
 
+// Priority counts (derived from mock/real data)
+const mockPriorityCounts = {
+  slaAtRisk: 3,
+  missingDocs: 4,
+  highValue: 2,
+  policyUpdates: 2,
+};
+
 export function HROpsDashboard() {
   const navigate = useNavigate();
   const { data: claimMetrics, isLoading } = useClaimMetrics();
   const { data: claimsByCategory } = useClaimsByCategory();
   const { data: recentActivity } = useRecentActivity();
   const coverageMetrics = useDataCoverageMetrics();
+  
+  // Task detail drawer state
+  const [selectedTask, setSelectedTask] = useState<{
+    id: string;
+    title: string;
+    date: string;
+    type: TaskType;
+    link?: string;
+    priority?: 'low' | 'normal' | 'high';
+    description?: string;
+  } | null>(null);
+  const [taskDrawerOpen, setTaskDrawerOpen] = useState(false);
 
   // Calculate focus items from real data (using mock for now)
   const focusItems = useMemo(() => mockFocusItems, []);
+  
+  // Priority counts for strip
+  const priorityCounts = useMemo(() => ({
+    slaAtRisk: claimMetrics?.urgent || mockPriorityCounts.slaAtRisk,
+    missingDocs: mockPriorityCounts.missingDocs,
+    highValue: mockPriorityCounts.highValue,
+    policyUpdates: claimMetrics?.policyUpdatesDue || mockPriorityCounts.policyUpdates,
+  }), [claimMetrics]);
+
+  const handleTaskClick = (task: typeof mockTasks[0]) => {
+    setSelectedTask({
+      ...task,
+      description: task.description,
+    });
+    setTaskDrawerOpen(true);
+  };
 
   const pendingActions = [
     {
@@ -170,6 +209,14 @@ export function HROpsDashboard() {
 
       {/* Global Filters */}
       <EmployerGlobalFiltersBar compact />
+
+      {/* Today's Priorities Strip */}
+      <TodaysPrioritiesStrip 
+        slaAtRisk={priorityCounts.slaAtRisk}
+        missingDocs={priorityCounts.missingDocs}
+        highValue={priorityCounts.highValue}
+        policyUpdates={priorityCounts.policyUpdates}
+      />
 
       {/* Action Items */}
       <TooltipProvider>
@@ -316,8 +363,12 @@ export function HROpsDashboard() {
           onAssign={(taskId, ownerId) => console.log('Assigned', taskId, ownerId)}
           onSetDueDate={(taskId, date) => console.log('Due date set', taskId, date)}
           onComplete={(taskId) => console.log('Completed', taskId)}
+          onTaskClick={handleTaskClick}
         />
       </div>
+
+      {/* Suggested Actions Panel */}
+      <SuggestedActionsPanel />
 
       {/* Quick Actions */}
       <Card className="border-primary/20 bg-gradient-to-r from-card to-primary/5">
@@ -335,6 +386,21 @@ export function HROpsDashboard() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Task Detail Drawer */}
+      <TaskDetailDrawer
+        task={selectedTask}
+        open={taskDrawerOpen}
+        onOpenChange={setTaskDrawerOpen}
+        owners={mockOwners}
+        onAssign={(taskId, ownerId) => console.log('Assigned', taskId, ownerId)}
+        onSetDueDate={(taskId, date) => console.log('Due date set', taskId, date)}
+        onComplete={(taskId) => {
+          console.log('Completed', taskId);
+          setTaskDrawerOpen(false);
+        }}
+        onAddNote={(taskId, note) => console.log('Note added', taskId, note)}
+      />
     </div>
     </PageConfidenceGate>
   );
