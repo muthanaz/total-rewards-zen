@@ -36,11 +36,13 @@ export const REQUEST_STATUSES = {
   SUBMITTED: 'submitted' as RequestStatus,
   PENDING_EMPLOYEE: 'pending_employee' as RequestStatus,
   IN_REVIEW: 'in_review' as RequestStatus,
+  INFO_REQUESTED: 'info_requested' as RequestStatus,
   ESCALATED: 'escalated' as RequestStatus,
   APPROVED: 'approved' as RequestStatus,
   REJECTED: 'rejected' as RequestStatus,
   PAID: 'paid' as RequestStatus,
   CLOSED: 'closed' as RequestStatus,
+  CANCELLED: 'cancelled' as RequestStatus,
 } as const;
 
 /**
@@ -48,23 +50,24 @@ export const REQUEST_STATUSES = {
  */
 export const WORKFLOW_STAGES = [
   { key: 'submitted', label: 'Submitted', statuses: ['pending', 'submitted'] },
-  { key: 'pending_employee', label: 'Pending Employee', statuses: ['pending_employee'] },
+  { key: 'pending_employee', label: 'Pending Employee', statuses: ['pending_employee', 'info_requested'] },
   { key: 'in_review', label: 'In Review', statuses: ['in_review'] },
   { key: 'escalated', label: 'Escalated', statuses: ['escalated'] },
   { key: 'approved', label: 'Approved', statuses: ['approved'] },
   { key: 'rejected', label: 'Rejected', statuses: ['rejected'] },
   { key: 'paid', label: 'Paid/Closed', statuses: ['paid', 'closed'] },
+  { key: 'cancelled', label: 'Cancelled', statuses: ['cancelled'] },
 ] as const;
 
 /**
  * Status groups for filtering
  */
 export const STATUS_GROUPS = {
-  ACTIVE: [REQUEST_STATUSES.PENDING, REQUEST_STATUSES.SUBMITTED, REQUEST_STATUSES.PENDING_EMPLOYEE, REQUEST_STATUSES.IN_REVIEW, REQUEST_STATUSES.ESCALATED] as RequestStatus[],
+  ACTIVE: [REQUEST_STATUSES.PENDING, REQUEST_STATUSES.SUBMITTED, REQUEST_STATUSES.PENDING_EMPLOYEE, REQUEST_STATUSES.INFO_REQUESTED, REQUEST_STATUSES.IN_REVIEW, REQUEST_STATUSES.ESCALATED] as RequestStatus[],
   PENDING_ACTION: [REQUEST_STATUSES.PENDING, REQUEST_STATUSES.SUBMITTED, REQUEST_STATUSES.IN_REVIEW, REQUEST_STATUSES.ESCALATED] as RequestStatus[],
-  WAITING_EMPLOYEE: [REQUEST_STATUSES.PENDING_EMPLOYEE] as RequestStatus[],
+  WAITING_EMPLOYEE: [REQUEST_STATUSES.PENDING_EMPLOYEE, REQUEST_STATUSES.INFO_REQUESTED] as RequestStatus[],
   COMPLETED: [REQUEST_STATUSES.APPROVED, REQUEST_STATUSES.PAID, REQUEST_STATUSES.CLOSED] as RequestStatus[],
-  TERMINAL: [REQUEST_STATUSES.APPROVED, REQUEST_STATUSES.REJECTED, REQUEST_STATUSES.PAID, REQUEST_STATUSES.CLOSED] as RequestStatus[],
+  TERMINAL: [REQUEST_STATUSES.APPROVED, REQUEST_STATUSES.REJECTED, REQUEST_STATUSES.PAID, REQUEST_STATUSES.CLOSED, REQUEST_STATUSES.CANCELLED] as RequestStatus[],
 } as const;
 
 /**
@@ -96,12 +99,14 @@ export function getStatusDisplayLabel(status: RequestStatus | string | null): st
     case 'pending': return 'Pending';
     case 'submitted': return 'Submitted';
     case 'pending_employee': return 'Pending Employee';
+    case 'info_requested': return 'Info Requested';
     case 'in_review': return 'In Review';
     case 'escalated': return 'Escalated';
     case 'approved': return 'Approved';
     case 'rejected': return 'Rejected';
     case 'paid': return 'Paid';
     case 'closed': return 'Closed';
+    case 'cancelled': return 'Cancelled';
     default: return 'Unknown';
   }
 }
@@ -120,6 +125,7 @@ export function getStatusBadgeStyle(status: RequestStatus | string | null): {
     case 'submitted':
       return { variant: 'secondary', className: 'bg-amber-500/10 text-amber-600 border-amber-500/20' };
     case 'pending_employee':
+    case 'info_requested':
       return { variant: 'secondary', className: 'bg-purple-500/10 text-purple-600 border-purple-500/20' };
     case 'in_review':
       return { variant: 'secondary', className: 'bg-blue-500/10 text-blue-600 border-blue-500/20' };
@@ -132,6 +138,8 @@ export function getStatusBadgeStyle(status: RequestStatus | string | null): {
       return { variant: 'destructive', className: 'bg-red-500/10 text-red-600 border-red-500/20' };
     case 'closed':
       return { variant: 'secondary', className: 'bg-slate-500/10 text-slate-600 border-slate-500/20' };
+    case 'cancelled':
+      return { variant: 'outline', className: 'bg-slate-500/10 text-slate-500 border-slate-500/20' };
     default:
       return { variant: 'outline', className: '' };
   }

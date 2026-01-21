@@ -88,6 +88,7 @@ import { useClaimNotes, useAddClaimNote } from '@/hooks/useClaimNotes';
 import { useClaimDocumentStatus } from '@/hooks/useClaimDocumentStatus';
 import { useClaimActions } from '@/hooks/useClaimActions';
 import { ClaimCaseSummary } from '@/components/employer/ClaimCaseSummary';
+import { PolicyCheckBanner } from '@/components/employer/PolicyCheckBanner';
 import { 
   getStatusBadgeStyle, 
   getStatusDisplayLabel,
@@ -96,6 +97,10 @@ import {
   REQUEST_STATUSES,
   isProcessableStatus,
 } from '@/lib/crossPortalContract';
+import { 
+  getDisplayLabel,
+  type PolicyValidationResult,
+} from '@/lib/policyIntegration';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -465,11 +470,15 @@ export function ClaimReviewSheet({
                 )}
               </div>
 
-              {/* Quick Info Row */}
+              {/* Quick Info Row - Use policy-driven transaction label */}
               <div className="flex flex-wrap gap-2">
                 <Badge variant="outline" className="gap-1">
                   <FileText className="w-3 h-3" />
-                  {request?.request_type || 'claim'}
+                  {/* Display label based on transaction_type or policy model */}
+                  {getDisplayLabel(
+                    (request as any)?.policy?.transaction_model || null,
+                    (request as any)?.transaction_type || null
+                  ) || request?.request_type || 'Claim'}
                 </Badge>
                 <Badge variant="outline" className="gap-1">
                   {request?.category || 'General'}
@@ -1183,15 +1192,35 @@ export function ClaimReviewSheet({
                     </Card>
                   ) : (
                     <>
+                      {/* Policy Check Banner - Gate approvals */}
+                      <PolicyCheckBanner
+                        validation={null} // TODO: Wire to full policy validation
+                        policyRef={request?.policy_ref || undefined}
+                        className="mb-4"
+                      />
+
                       {/* Approve Section */}
                       <Card className="border-emerald-500/30">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm flex items-center gap-2 text-emerald-600">
                             <CheckCircle className="w-4 h-4" />
-                            Approve Claim
+                            Approve {getDisplayLabel(
+                              (request as any)?.policy?.transaction_model || null,
+                              (request as any)?.transaction_type || null
+                            )}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
+                          {/* Show blocking warning if validation fails */}
+                          {validation.blockers.length > 0 && (
+                            <Alert className="border-red-500/30 bg-red-500/10">
+                              <XCircle className="w-4 h-4 text-red-600" />
+                              <AlertTitle className="text-red-600">Cannot Approve</AlertTitle>
+                              <AlertDescription className="text-sm text-red-600">
+                                {validation.blockers[0]?.message || 'Policy checks failed'}
+                              </AlertDescription>
+                            </Alert>
+                          )}
                           <Textarea
                             placeholder="Add approval notes (optional, visible to employee)..."
                             value={reviewNotes}
@@ -1208,10 +1237,13 @@ export function ClaimReviewSheet({
                           <Button 
                             className="w-full gap-2" 
                             onClick={handleApprove}
-                            disabled={isProcessing}
+                            disabled={isProcessing || validation.blockers.length > 0}
                           >
                             <CheckCircle className="w-4 h-4" />
-                            Approve & Notify Employee
+                            {validation.blockers.length > 0 
+                              ? 'Cannot Approve (Policy Check Failed)' 
+                              : 'Approve & Notify Employee'
+                            }
                           </Button>
                         </CardContent>
                       </Card>
@@ -1248,7 +1280,10 @@ export function ClaimReviewSheet({
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm flex items-center gap-2 text-red-600">
                             <XCircle className="w-4 h-4" />
-                            Reject Claim
+                            Reject {getDisplayLabel(
+                              (request as any)?.policy?.transaction_model || null,
+                              (request as any)?.transaction_type || null
+                            )}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">

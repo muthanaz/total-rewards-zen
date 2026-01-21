@@ -105,6 +105,7 @@ export { PolicyLifecycleBadge, PolicyLifecycleFlow } from './PolicyLifecycleBadg
 export type { PolicyLifecycleStatus } from './PolicyLifecycleBadge';
 
 // Policy Engine components
+export { PolicyCheckBanner, PolicyCheckInline } from './PolicyCheckBanner';
 export { CreatePolicyModal } from './CreatePolicyModal';
 export { PolicyLogicEditor } from './PolicyLogicEditor';
 export { PolicyEditorSheetV2 } from './PolicyEditorSheetV2';
