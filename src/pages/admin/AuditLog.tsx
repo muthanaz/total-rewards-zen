@@ -42,7 +42,7 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { cn } from '@/lib/utils';
+import { cn, formatRelativeTime, formatDate, formatDateTime } from '@/lib/utils';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { MetricCard, MetricGrid } from '@/components/shared';
 
@@ -237,17 +237,13 @@ export default function AuditLogPage() {
     approvals: logs.filter(l => l.action === 'APPROVE').length,
   };
 
-  const formatTimeAgo = (date: string) => {
-    const now = new Date();
-    const past = new Date(date);
-    const diffMs = now.getTime() - past.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
+  // Use centralized formatting utilities for consistent Western digits
+  const getTimeDisplay = (date: string) => {
+    return formatRelativeTime(date, { language: language as 'en' | 'ar' });
+  };
 
-    if (diffMins < 60) return t(`${diffMins}m ago`, `منذ ${diffMins} دقيقة`);
-    if (diffHours < 24) return t(`${diffHours}h ago`, `منذ ${diffHours} ساعة`);
-    return t(`${diffDays}d ago`, `منذ ${diffDays} يوم`);
+  const getAbsoluteTime = (date: string) => {
+    return formatDateTime(date);
   };
 
   return (
@@ -403,9 +399,9 @@ export default function AuditLogPage() {
                   return (
                     <TableRow key={log.id}>
                       <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2" title={getAbsoluteTime(log.created_at)}>
                           <Calendar className="w-3.5 h-3.5" />
-                          {formatTimeAgo(log.created_at)}
+                          {getTimeDisplay(log.created_at)}
                         </div>
                       </TableCell>
                       <TableCell>

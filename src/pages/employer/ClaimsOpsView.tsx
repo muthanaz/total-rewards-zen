@@ -59,7 +59,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useOrganizationRequests, RequestWithDetails, useUpdateRequestStatus } from '@/hooks/useSharedRequests';
 import { REQUEST_STATUSES } from '@/lib/crossPortalContract';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED, formatDate, formatDateTime, formatRelativeTime } from '@/lib/utils';
 import { format } from 'date-fns';
 
 // Value band helpers

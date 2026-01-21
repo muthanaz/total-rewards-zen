@@ -5,6 +5,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// =============================================================================
+// BNFT FORMATTING SPEC v1.0
+// =============================================================================
+// RULES:
+// - All numeric values use Western digits (0-9), never Arabic-Indic (٠-٩)
+// - Currency: "AED 1,234" or "AED 12.5K" / "AED 1.25M" for compact
+// - Percent: "81.5%" (1 decimal default)
+// - Dates: "21 Jan 2026" format consistently across all portals
+// - Empty/Null: Show "—" dash, not "0" unless 0 is meaningful
+// - Ranges: "AED 2,000–3,500" (en-dash)
+// - Tables: Right-align numeric columns
+// =============================================================================
+
 // ============= WESTERN DIGITS ENFORCEMENT =============
 
 /**
@@ -34,11 +47,26 @@ function safeLocaleFormat(
   value: number,
   options?: Intl.NumberFormatOptions
 ): string {
-  // Always use 'en-US' to guarantee Western digits
   return new Intl.NumberFormat('en-US', options).format(value);
 }
 
-// ============= FORMATTING UTILITIES =============
+// ============= NULL/EMPTY HANDLING =============
+
+/**
+ * Format nullable values - returns "—" for null/undefined
+ * Only use explicit 0 when 0 is a meaningful value
+ */
+export function formatNullable<T>(
+  value: T | null | undefined,
+  formatter: (val: T) => string,
+  placeholder: string = '—'
+): string {
+  if (value === null || value === undefined) return placeholder;
+  if (typeof value === 'number' && isNaN(value)) return placeholder;
+  return formatter(value);
+}
+
+// ============= CURRENCY FORMATTING =============
 
 export interface CurrencyFormatOptions {
   abbreviate?: boolean;       // Use K/M abbreviations (default: true for values >= 10,000)
@@ -99,6 +127,24 @@ export function formatCurrencyAED(
 }
 
 /**
+ * Format a currency range with en-dash
+ * e.g., "AED 2,000–3,500"
+ */
+export function formatRangeAED(
+  min: number | null | undefined,
+  max: number | null | undefined,
+  options: CurrencyFormatOptions = {}
+): string {
+  const minStr = formatCurrencyAED(min, { ...options, abbreviate: false });
+  const maxVal = max !== null && max !== undefined ? formatCurrencyAED(max, { ...options, abbreviate: false, showCurrency: false }) : null;
+  
+  if (!maxVal) return minStr;
+  return `${minStr}–${maxVal}`;
+}
+
+// ============= PERCENTAGE FORMATTING =============
+
+/**
  * Format a number as a percentage with consistent decimal places.
  * ALWAYS outputs Western digits (0-9).
  * @param value - The percentage value (e.g., 81.834)
@@ -113,6 +159,8 @@ export function formatPercent(
   }
   return `${value.toFixed(decimals)}%`;
 }
+
+// ============= NUMBER FORMATTING =============
 
 /**
  * Format a number as an integer with thousands separators.
@@ -141,36 +189,156 @@ export function formatNumber(
 }
 
 /**
- * Format a date to always use Western digits.
- * @param date - Date object or string
- * @param options - Intl.DateTimeFormatOptions
+ * Format decimal number with specified precision
  */
-export function formatDateWestern(
-  date: Date | string | null | undefined,
-  options: Intl.DateTimeFormatOptions = { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric' 
-  }
+export function formatDecimal(
+  value: number | null | undefined,
+  decimals: number = 2
 ): string {
-  if (!date) return '';
+  if (value === null || value === undefined || isNaN(value)) {
+    return '0';
+  }
+  return value.toFixed(decimals);
+}
+
+// ============= DATE FORMATTING =============
+// Standard format: "21 Jan 2026" - consistent across all portals
+// ALWAYS uses Western digits even in Arabic UI
+
+const MONTH_NAMES_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/**
+ * Format a date to standard display format: "21 Jan 2026"
+ * ALWAYS uses Western digits (0-9), even in Arabic UI.
+ */
+export function formatDate(
+  date: Date | string | null | undefined
+): string {
+  if (!date) return '—';
   const d = typeof date === 'string' ? new Date(date) : date;
-  if (isNaN(d.getTime())) return '';
-  // Use 'en-US' to ensure Western digits
-  return new Intl.DateTimeFormat('en-US', options).format(d);
+  if (isNaN(d.getTime())) return '—';
+  
+  const day = d.getDate();
+  const month = MONTH_NAMES_EN[d.getMonth()];
+  const year = d.getFullYear();
+  
+  return `${day} ${month} ${year}`;
 }
 
 /**
- * Format a date with time, always using Western digits.
+ * Format a date with time: "21 Jan 2026, 14:30"
+ * ALWAYS uses Western digits.
  */
-export function formatDateTimeWestern(
+export function formatDateTime(
   date: Date | string | null | undefined
 ): string {
-  return formatDateWestern(date, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  if (!date) return '—';
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return '—';
+  
+  const dateStr = formatDate(d);
+  const hours = d.getHours().toString().padStart(2, '0');
+  const minutes = d.getMinutes().toString().padStart(2, '0');
+  
+  return `${dateStr}, ${hours}:${minutes}`;
+}
+
+/**
+ * Format relative time: "2h ago", "3d ago", "Just now"
+ * ALWAYS uses Western digits.
+ */
+export function formatRelativeTime(
+  date: Date | string | null | undefined,
+  options: { language?: 'en' | 'ar' } = {}
+): string {
+  if (!date) return '—';
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return '—';
+  
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  
+  const isAr = options.language === 'ar';
+  
+  if (diffMins < 1) return isAr ? 'الآن' : 'Just now';
+  if (diffMins < 60) return isAr ? `${diffMins} دقيقة` : `${diffMins}m ago`;
+  if (diffHours < 24) return isAr ? `${diffHours} ساعة` : `${diffHours}h ago`;
+  if (diffDays === 1) return isAr ? 'أمس' : 'Yesterday';
+  if (diffDays < 7) return isAr ? `${diffDays} أيام` : `${diffDays}d ago`;
+  
+  return formatDate(d);
+}
+
+/**
+ * Format time only: "14:30"
+ * ALWAYS uses Western digits.
+ */
+export function formatTime(
+  date: Date | string | null | undefined
+): string {
+  if (!date) return '—';
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return '—';
+  
+  const hours = d.getHours().toString().padStart(2, '0');
+  const minutes = d.getMinutes().toString().padStart(2, '0');
+  
+  return `${hours}:${minutes}`;
+}
+
+/**
+ * Format ISO date: "2026-01-21"
+ * ALWAYS uses Western digits.
+ */
+export function formatDateISO(
+  date: Date | string | null | undefined
+): string {
+  if (!date) return '—';
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return '—';
+  
+  const year = d.getFullYear();
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  const day = d.getDate().toString().padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+}
+
+// ============= CHART FORMATTERS =============
+// Use these in Recharts tickFormatter, tooltip formatters, etc.
+
+/**
+ * Format value for chart tick display (compact)
+ */
+export function formatChartTick(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${Math.round(value / 1_000)}K`;
+  return String(Math.round(value));
+}
+
+/**
+ * Format value for chart tooltip (full format)
+ */
+export function formatChartTooltip(
+  value: number,
+  type: 'currency' | 'number' | 'percent' = 'number'
+): string {
+  switch (type) {
+    case 'currency':
+      return formatCurrencyAED(value, { abbreviate: false });
+    case 'percent':
+      return formatPercent(value);
+    default:
+      return formatInteger(value);
+  }
+}
+
+/**
+ * Format value for chart labels (compact currency)
+ */
+export function formatChartLabel(value: number): string {
+  return formatCurrencyAED(value, { abbreviate: true });
 }
