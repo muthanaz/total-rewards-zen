@@ -85,6 +85,10 @@ export { TodaysFocusPanel } from './TodaysFocusPanel';
 export { WorkloadByOwnerTable } from './WorkloadByOwnerTable';
 export { ActionableTasksList } from './ActionableTasksList';
 export type { TaskType } from './ActionableTasksList';
+export { TodaysPrioritiesStrip } from './TodaysPrioritiesStrip';
+export { SuggestedActionsPanel } from './SuggestedActionsPanel';
+export { TaskDetailDrawer } from './TaskDetailDrawer';
+export type { TaskDetail, TaskDetailType } from './TaskDetailDrawer';
 
 // Claims Review components
 export { DecisionRationaleCard } from './DecisionRationaleCard';

@@ -50,6 +50,7 @@ interface NavItem {
 
 /**
  * HR Operations Navigation - Tactical, day-to-day tasks
+ * ONLY: Ops Dashboard, Claims & Approvals, Policies, Knowledge Hub, Integrations & Data
  */
 const opsNavigationGroups: NavGroup[] = [
   // 1) Overview
@@ -74,7 +75,7 @@ const opsNavigationGroups: NavGroup[] = [
     label: 'Policies & Knowledge',
     items: [
       { label: 'Policies', path: '/employer/policies', icon: FileText },
-      { label: 'Knowledge Center', path: '/employer/knowledge', icon: BookOpen },
+      { label: 'Knowledge Hub', path: '/employer/knowledge', icon: BookOpen },
     ],
   },
   // 4) Data & Settings
@@ -89,6 +90,9 @@ const opsNavigationGroups: NavGroup[] = [
 
 /**
  * Executive Navigation - Strategic, high-level insights
+ * ONLY: Executive Dashboard, Spend & Utilization, Zombie Spend, Employee Segments,
+ * Recommendations, Policy Insights, Marketplace Analytics (feature-flagged)
+ * NO separate Data Confidence page - shown as badge + drawer across pages
  */
 const execNavigationGroups: NavGroup[] = [
   // 1) Overview
@@ -125,21 +129,13 @@ const execNavigationGroups: NavGroup[] = [
       { label: 'Policy Insights', path: '/employer/policy-insights', icon: TrendingUp },
     ],
   },
-  // 5) Marketplace (Phase 2 - feature-flagged)
+  // 5) Marketplace (Phase 2 - feature-flagged, exec read-only)
   {
     id: 'marketplace',
     label: 'Marketplace',
     featureFlag: 'marketplaceEnabled',
     items: [
       { label: 'Marketplace Analytics', path: '/employer/marketplace', icon: ShoppingBag },
-    ],
-  },
-  // 6) Data & Settings
-  {
-    id: 'settings',
-    label: 'Data & Settings',
-    items: [
-      { label: 'Data Confidence', path: '/employer/integrations', icon: Shield },
     ],
   },
 ];

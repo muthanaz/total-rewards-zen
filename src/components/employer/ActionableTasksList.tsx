@@ -47,6 +47,7 @@ interface Task {
   owner?: string;
   link?: string;
   priority?: 'low' | 'normal' | 'high';
+  description?: string;
 }
 
 interface ActionableTasksListProps {
@@ -55,6 +56,7 @@ interface ActionableTasksListProps {
   onAssign?: (taskId: string, ownerId: string) => void;
   onSetDueDate?: (taskId: string, date: Date) => void;
   onComplete?: (taskId: string) => void;
+  onTaskClick?: (task: Task) => void;
 }
 
 const typeConfig: Record<TaskType, { icon: typeof Users; bgColor: string; textColor: string }> = {
@@ -72,6 +74,7 @@ export function ActionableTasksList({
   onAssign,
   onSetDueDate,
   onComplete,
+  onTaskClick,
 }: ActionableTasksListProps) {
   const [openPopover, setOpenPopover] = useState<string | null>(null);
 
@@ -103,7 +106,11 @@ export function ActionableTasksList({
           return (
             <div
               key={task.id}
-              className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/30 group transition-colors"
+              className={cn(
+                "flex items-center gap-3 p-3 rounded-lg hover:bg-muted/30 group transition-colors",
+                onTaskClick && "cursor-pointer"
+              )}
+              onClick={() => onTaskClick?.(task)}
             >
               <div className={cn("p-1.5 rounded-lg shrink-0", config.bgColor)}>
                 <Icon className={cn("w-3.5 h-3.5", config.textColor)} />
