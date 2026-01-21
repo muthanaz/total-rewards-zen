@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PageLayout, MetricCard, MetricGrid } from '@/components/shared';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import { useAdminAuditLog } from '@/hooks/useAdminAuditLog';
+import { useAuth } from '@/contexts/AuthContext';
 
 const SEVERITY_CONFIG = {
   critical: { label: 'Critical', labelAr: 'حرج', color: 'bg-destructive/10 text-destructive border-destructive/30' },
@@ -35,7 +37,7 @@ const FIELD_CATEGORIES = {
   location: { label: 'Location', icon: Database, fields: ['work_location', 'home_location'] },
 };
 
-const SAMPLE_RULES = [
+const DEFAULT_RULES = [
   { id: '1', field: 'employee_id', name: 'Employee ID Required', severity: 'critical', enabled: true, orgs: 'all', violations: 12, description: 'Every employee must have a unique employee ID for HRIS sync' },
   { id: '2', field: 'grade', name: 'Grade Assignment', severity: 'critical', enabled: true, orgs: 'all', violations: 45, description: 'Grade is required for benefit eligibility determination' },
   { id: '3', field: 'department', name: 'Department Classification', severity: 'high', enabled: true, orgs: 'all', violations: 23, description: 'Department is used for cost center allocation and reporting' },
@@ -51,24 +53,94 @@ const SAMPLE_VIOLATIONS = [
   { id: '4', employee: 'Lisa Chen', org: 'Acme Corp', field: 'department', rule: 'Department Classification', created_at: '2025-01-17', source: 'CSV Import' },
 ];
 
+interface DataQualityRule {
+  id: string;
+  field: string;
+  name: string;
+  severity: string;
+  enabled: boolean;
+  orgs: string | string[];
+  violations: number;
+  description: string;
+}
+
+interface OrgSettings {
+  data_quality_rules?: DataQualityRule[];
+  [key: string]: unknown;
+}
+
 export default function AdminDataQualityRules() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
+  const queryClient = useQueryClient();
+  const { createAuditLog } = useAdminAuditLog();
+  const { user } = useAuth();
 
-  const [rules, setRules] = useState(SAMPLE_RULES);
+  const [rules, setRules] = useState<DataQualityRule[]>(DEFAULT_RULES);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRule, setSelectedRule] = useState<typeof SAMPLE_RULES[0] | null>(null);
+  const [selectedRule, setSelectedRule] = useState<DataQualityRule | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('rules');
 
-  // Fetch organizations
+  // Fetch organizations and load rules from first org's settings (platform-wide)
   const { data: organizations } = useQuery({
     queryKey: ['orgs-for-rules'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('organizations').select('id, name');
+      const { data, error } = await supabase.from('organizations').select('id, name, settings');
       if (error) throw error;
       return data || [];
+    },
+  });
+
+  // Load rules from platform settings (stored in first org or dedicated platform settings)
+  useEffect(() => {
+    if (organizations && organizations.length > 0) {
+      const firstOrg = organizations[0];
+      const settings = (firstOrg.settings || {}) as OrgSettings;
+      if (settings.data_quality_rules && Array.isArray(settings.data_quality_rules)) {
+        setRules(settings.data_quality_rules);
+      }
+    }
+  }, [organizations]);
+
+  // P0 FIX: Mutation to persist rule changes to DB
+  const updateRulesMutation = useMutation({
+    mutationFn: async (updatedRules: DataQualityRule[]) => {
+      if (!organizations || organizations.length === 0) {
+        throw new Error('No organization found');
+      }
+      
+      const targetOrg = organizations[0];
+      const currentSettings = (targetOrg.settings || {}) as OrgSettings;
+      
+      // Convert rules to JSON-compatible format
+      const rulesForStorage = updatedRules.map(rule => ({
+        id: rule.id,
+        field: rule.field,
+        name: rule.name,
+        severity: rule.severity,
+        enabled: rule.enabled,
+        orgs: rule.orgs,
+        violations: rule.violations,
+        description: rule.description,
+      }));
+      
+      const newSettings = {
+        ...currentSettings,
+        data_quality_rules: rulesForStorage,
+      };
+
+      const { error } = await supabase
+        .from('organizations')
+        .update({ settings: newSettings })
+        .eq('id', targetOrg.id);
+
+      if (error) throw error;
+      return updatedRules;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orgs-for-rules'] });
     },
   });
 
@@ -87,22 +159,75 @@ export default function AdminDataQualityRules() {
     { title: t('Compliance Rate', 'معدل الامتثال'), value: `${Math.max(0, 100 - Math.round((totalViolations / 1000) * 100))}%`, icon: CheckCircle },
   ];
 
-  const handleToggleRule = (ruleId: string) => {
-    setRules(prev => prev.map(r => 
+  // P0 FIX: Toggle rule with DB persistence + audit log
+  const handleToggleRule = async (ruleId: string) => {
+    const rule = rules.find(r => r.id === ruleId);
+    if (!rule) return;
+
+    const updatedRules = rules.map(r => 
       r.id === ruleId ? { ...r, enabled: !r.enabled } : r
-    ));
-    toast.success(t('Rule updated', 'تم تحديث القاعدة'));
+    );
+    
+    setRules(updatedRules);
+    
+    try {
+      await updateRulesMutation.mutateAsync(updatedRules);
+      
+      // P1 FIX: Write audit log
+      await createAuditLog({
+        action: 'SETTINGS_UPDATE',
+        entityType: 'settings',
+        entityId: ruleId,
+        metadata: {
+          setting_type: 'data_quality_rule',
+          rule_name: rule.name,
+          field: rule.field,
+          previous_enabled: rule.enabled,
+          new_enabled: !rule.enabled,
+        },
+      });
+      
+      toast.success(t('Rule updated', 'تم تحديث القاعدة'));
+    } catch (error) {
+      // Revert on error
+      setRules(rules);
+      toast.error(t('Failed to update rule', 'فشل في تحديث القاعدة'));
+    }
   };
 
-  const handleEditRule = (rule: typeof SAMPLE_RULES[0]) => {
+  const handleEditRule = (rule: DataQualityRule) => {
     setSelectedRule(rule);
     setSheetOpen(true);
   };
 
-  const handleSaveRule = () => {
-    toast.success(t('Rule saved successfully', 'تم حفظ القاعدة بنجاح'));
-    setSheetOpen(false);
-    setSelectedRule(null);
+  const handleSaveRule = async () => {
+    if (!selectedRule) return;
+    
+    const updatedRules = rules.map(r => 
+      r.id === selectedRule.id ? selectedRule : r
+    );
+    
+    try {
+      await updateRulesMutation.mutateAsync(updatedRules);
+      setRules(updatedRules);
+      
+      await createAuditLog({
+        action: 'SETTINGS_UPDATE',
+        entityType: 'settings',
+        entityId: selectedRule.id,
+        metadata: {
+          setting_type: 'data_quality_rule',
+          rule_name: selectedRule.name,
+          action: 'edit',
+        },
+      });
+      
+      toast.success(t('Rule saved successfully', 'تم حفظ القاعدة بنجاح'));
+      setSheetOpen(false);
+      setSelectedRule(null);
+    } catch (error) {
+      toast.error(t('Failed to save rule', 'فشل في حفظ القاعدة'));
+    }
   };
 
   return (
