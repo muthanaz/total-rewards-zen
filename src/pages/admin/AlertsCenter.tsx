@@ -288,6 +288,14 @@ export default function AdminAlertsCenter() {
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [resolutionNote, setResolutionNote] = useState('');
 
+  // Auto-select first open alert on mount
+  useState(() => {
+    const firstOpen = SAMPLE_ALERTS.find(a => a.status === 'open');
+    if (firstOpen) {
+      setSelectedAlert(firstOpen);
+    }
+  });
+
   const filteredAlerts = alerts.filter(a => {
     const matchesStatus = statusFilter === 'all' || a.status === statusFilter;
     const matchesSeverity = severityFilter === 'all' || a.severity === severityFilter;

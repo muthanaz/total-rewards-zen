@@ -12,8 +12,25 @@ import {
   Globe,
   Settings,
   X,
+  Eye,
+  DollarSign,
+  Database,
+  FileText,
+  Activity,
+  CreditCard,
+  Shield,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  Link2,
+  History,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -62,6 +79,12 @@ interface Organization {
   created_at: string;
   updated_at: string;
   member_count?: number;
+  status?: 'active' | 'suspended' | 'trial';
+  plan?: string;
+  mrr?: number;
+  employee_count?: number;
+  data_sources?: number;
+  last_activity?: string;
 }
 
 interface UserProfile {
@@ -72,6 +95,12 @@ interface UserProfile {
   last_name: string | null;
   organization_id: string | null;
 }
+
+const STATUS_CONFIG = {
+  active: { label: 'Active', labelAr: 'نشط', color: 'bg-success/10 text-success border-success/30' },
+  suspended: { label: 'Suspended', labelAr: 'معلق', color: 'bg-destructive/10 text-destructive border-destructive/30' },
+  trial: { label: 'Trial', labelAr: 'تجريبي', color: 'bg-warning/10 text-warning border-warning/30' },
+};
 
 export default function OrganizationsPage() {
   const navigate = useNavigate();
@@ -89,6 +118,8 @@ export default function OrganizationsPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assignUserDialogOpen, setAssignUserDialogOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsTab, setDetailsTab] = useState('overview');
   
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
   const [formData, setFormData] = useState({ name: '', domain: '' });
@@ -124,9 +155,19 @@ export default function OrganizationsPage() {
         }
       });
 
-      const orgsWithCounts = orgs?.map(org => ({
-        ...org,
+      const orgsWithCounts: Organization[] = orgs?.map(org => ({
+        id: org.id,
+        name: org.name,
+        domain: org.domain,
+        created_at: org.created_at,
+        updated_at: org.updated_at || org.created_at,
         member_count: memberCounts[org.id] || 0,
+        status: (org.status as 'active' | 'suspended' | 'trial') || 'active',
+        plan: 'Professional',
+        mrr: 7500,
+        employee_count: memberCounts[org.id] || 0,
+        data_sources: Math.floor(Math.random() * 4) + 1,
+        last_activity: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
       })) || [];
 
       setOrganizations(orgsWithCounts);
@@ -437,72 +478,100 @@ export default function OrganizationsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('Name', 'الاسم')}</TableHead>
-                  <TableHead>{t('Domain', 'النطاق')}</TableHead>
+                  <TableHead>{t('Status', 'الحالة')}</TableHead>
+                  <TableHead>{t('Plan', 'الخطة')}</TableHead>
+                  <TableHead>{t('MRR', 'الإيرادات الشهرية')}</TableHead>
                   <TableHead>{t('Members', 'الأعضاء')}</TableHead>
-                  <TableHead>{t('Created', 'تاريخ الإنشاء')}</TableHead>
+                  <TableHead>{t('Data Sources', 'مصادر البيانات')}</TableHead>
+                  <TableHead>{t('Last Activity', 'آخر نشاط')}</TableHead>
                   <TableHead className="text-right">{t('Actions', 'الإجراءات')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOrgs.map((org) => (
-                  <TableRow key={org.id}>
-                    <TableCell className="font-medium">
-                      <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                        <Building2 className="w-4 h-4 text-muted-foreground" />
-                        {org.name}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {org.domain ? (
-                        <Badge variant="outline" className="gap-1">
-                          <Globe className="w-3 h-3" />
-                          {org.domain}
+                {filteredOrgs.map((org) => {
+                  const statusConfig = STATUS_CONFIG[org.status || 'active'];
+                  return (
+                    <TableRow 
+                      key={org.id} 
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => { setSelectedOrg(org); setDetailsOpen(true); setDetailsTab('overview'); }}
+                    >
+                      <TableCell className="font-medium">
+                        <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
+                          <Building2 className="w-4 h-4 text-muted-foreground" />
+                          <div>
+                            <p>{org.name}</p>
+                            {org.domain && (
+                              <p className="text-xs text-muted-foreground">{org.domain}</p>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={statusConfig.color}>
+                          {isRTL ? statusConfig.labelAr : statusConfig.label}
                         </Badge>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="gap-1">
-                        <Users className="w-3 h-3" />
-                        {org.member_count || 0}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(org.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => navigate(`/admin/organizations/${org.id}/settings`)}>
-                            <Settings className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
-                            {t('Settings', 'الإعدادات')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => openAssignUserDialog(org)}>
-                            <Users className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
-                            {t('Assign User', 'تعيين مستخدم')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => openEditDialog(org)}>
-                            <Edit2 className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
-                            {t('Edit', 'تعديل')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => openDeleteDialog(org)}
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
-                            {t('Delete', 'حذف')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{org.plan || 'Professional'}</Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        AED {(org.mrr || 7500).toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="gap-1">
+                          <Users className="w-3 h-3" />
+                          {org.member_count || 0}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="gap-1">
+                          <Database className="w-3 h-3" />
+                          {org.data_sources || 0}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {org.last_activity 
+                          ? new Date(org.last_activity).toLocaleDateString()
+                          : new Date(org.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedOrg(org); setDetailsOpen(true); }}>
+                              <Eye className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                              {t('View Details', 'عرض التفاصيل')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/admin/organizations/${org.id}/settings`); }}>
+                              <Settings className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                              {t('Settings', 'الإعدادات')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openAssignUserDialog(org); }}>
+                              <Users className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                              {t('Assign User', 'تعيين مستخدم')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openEditDialog(org); }}>
+                              <Edit2 className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                              {t('Edit', 'تعديل')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={(e) => { e.stopPropagation(); openDeleteDialog(org); }}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                              {t('Delete', 'حذف')}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
@@ -713,6 +782,254 @@ export default function OrganizationsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Organization Details Drawer */}
+      <Sheet open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <SheetContent className="sm:max-w-2xl">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5" />
+              {selectedOrg?.name}
+            </SheetTitle>
+            <SheetDescription>{selectedOrg?.domain || t('No domain', 'لا يوجد نطاق')}</SheetDescription>
+          </SheetHeader>
+          
+          {selectedOrg && (
+            <div className="mt-4">
+              <Tabs value={detailsTab} onValueChange={setDetailsTab}>
+                <TabsList className="grid grid-cols-6 w-full">
+                  <TabsTrigger value="overview">{t('Overview', 'نظرة عامة')}</TabsTrigger>
+                  <TabsTrigger value="members">{t('Members', 'الأعضاء')}</TabsTrigger>
+                  <TabsTrigger value="integrations">{t('Integrations', 'التكاملات')}</TabsTrigger>
+                  <TabsTrigger value="policies">{t('Policies', 'السياسات')}</TabsTrigger>
+                  <TabsTrigger value="billing">{t('Billing', 'الفوترة')}</TabsTrigger>
+                  <TabsTrigger value="audit">{t('Audit', 'السجل')}</TabsTrigger>
+                </TabsList>
+
+                <ScrollArea className="h-[calc(100vh-220px)] mt-4">
+                  <TabsContent value="overview" className="space-y-4 pr-4 mt-0">
+                    {/* Status Badge */}
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={STATUS_CONFIG[selectedOrg.status || 'active'].color}>
+                        {STATUS_CONFIG[selectedOrg.status || 'active'].label}
+                      </Badge>
+                      <Badge variant="secondary">{selectedOrg.plan || 'Professional'}</Badge>
+                    </div>
+
+                    {/* Key Metrics */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <Card>
+                        <CardContent className="pt-4">
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">{t('MRR', 'الإيرادات الشهرية')}</span>
+                          </div>
+                          <p className="text-2xl font-bold mt-1">AED {(selectedOrg.mrr || 7500).toLocaleString()}</p>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="pt-4">
+                          <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">{t('Members', 'الأعضاء')}</span>
+                          </div>
+                          <p className="text-2xl font-bold mt-1">{selectedOrg.member_count || 0}</p>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="pt-4">
+                          <div className="flex items-center gap-2">
+                            <Database className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">{t('Data Sources', 'مصادر البيانات')}</span>
+                          </div>
+                          <p className="text-2xl font-bold mt-1">{selectedOrg.data_sources || 0}</p>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="pt-4">
+                          <div className="flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">{t('Last Activity', 'آخر نشاط')}</span>
+                          </div>
+                          <p className="text-lg font-medium mt-1">
+                            {selectedOrg.last_activity 
+                              ? new Date(selectedOrg.last_activity).toLocaleDateString()
+                              : '—'}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Details */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">{t('Organization Details', 'تفاصيل المنظمة')}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">{t('Created', 'تاريخ الإنشاء')}</span>
+                          <span className="text-sm font-medium">{new Date(selectedOrg.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">{t('Domain', 'النطاق')}</span>
+                          <span className="text-sm font-medium">{selectedOrg.domain || '—'}</span>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">{t('Plan', 'الخطة')}</span>
+                          <Badge variant="secondary">{selectedOrg.plan || 'Professional'}</Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="members" className="space-y-4 pr-4 mt-0">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-medium">{t('Organization Members', 'أعضاء المنظمة')}</h4>
+                      <Button size="sm" onClick={() => { setDetailsOpen(false); openAssignUserDialog(selectedOrg); }}>
+                        <Plus className="w-4 h-4 me-1" />
+                        {t('Add Member', 'إضافة عضو')}
+                      </Button>
+                    </div>
+                    {getOrgMembers(selectedOrg.id).length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p>{t('No members yet', 'لا يوجد أعضاء بعد')}</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {getOrgMembers(selectedOrg.id).map((user) => (
+                          <div key={user.id} className="flex items-center justify-between p-3 rounded-lg border">
+                            <div>
+                              <p className="font-medium">
+                                {user.first_name || user.last_name 
+                                  ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
+                                  : t('Unnamed', 'بدون اسم')}
+                              </p>
+                              <p className="text-sm text-muted-foreground">{user.email}</p>
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={() => handleRemoveUserFromOrg(user.user_id)}>
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="integrations" className="space-y-4 pr-4 mt-0">
+                    <h4 className="font-medium">{t('Connected Data Sources', 'مصادر البيانات المتصلة')}</h4>
+                    <div className="space-y-2">
+                      {[
+                        { name: 'SAP SuccessFactors', status: 'connected', lastSync: '15 min ago' },
+                        { name: 'Oracle HCM', status: 'connected', lastSync: '2 hours ago' },
+                      ].slice(0, selectedOrg.data_sources || 2).map((source, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 rounded-lg border">
+                          <div className="flex items-center gap-3">
+                            <Database className="w-4 h-4 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium">{source.name}</p>
+                              <p className="text-xs text-muted-foreground">{t('Last sync:', 'آخر مزامنة:')} {source.lastSync}</p>
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="bg-success/10 text-success">
+                            <CheckCircle className="w-3 h-3 me-1" />
+                            {t('Connected', 'متصل')}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="policies" className="space-y-4 pr-4 mt-0">
+                    <h4 className="font-medium">{t('Applicable Policies', 'السياسات المطبقة')}</h4>
+                    <div className="space-y-2">
+                      {[
+                        { name: 'Medical Benefits Policy', version: 'v2.1', status: 'published' },
+                        { name: 'Annual Leave Policy', version: 'v3.0', status: 'published' },
+                        { name: 'Code of Conduct', version: 'v4.0', status: 'published' },
+                      ].map((policy, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 rounded-lg border">
+                          <div className="flex items-center gap-3">
+                            <FileText className="w-4 h-4 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium">{policy.name}</p>
+                              <p className="text-xs text-muted-foreground">{policy.version}</p>
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="bg-success/10 text-success">
+                            {policy.status}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="billing" className="space-y-4 pr-4 mt-0">
+                    <h4 className="font-medium">{t('Billing Information', 'معلومات الفوترة')}</h4>
+                    <Card>
+                      <CardContent className="pt-4 space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">{t('Current Plan', 'الخطة الحالية')}</span>
+                          <Badge variant="secondary">{selectedOrg.plan || 'Professional'}</Badge>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">{t('Monthly Amount', 'المبلغ الشهري')}</span>
+                          <span className="font-bold">AED {(selectedOrg.mrr || 7500).toLocaleString()}</span>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">{t('Payment Status', 'حالة الدفع')}</span>
+                          <Badge variant="outline" className="bg-success/10 text-success">
+                            <CheckCircle className="w-3 h-3 me-1" />
+                            {t('Paid', 'مدفوع')}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <h5 className="font-medium text-sm mt-4">{t('Recent Invoices', 'الفواتير الأخيرة')}</h5>
+                    <div className="space-y-2">
+                      {[
+                        { id: 'INV-2025-001', date: '2025-01-15', amount: selectedOrg.mrr || 7500, status: 'paid' },
+                        { id: 'INV-2024-012', date: '2024-12-15', amount: selectedOrg.mrr || 7500, status: 'paid' },
+                      ].map((inv, i) => (
+                        <div key={i} className="flex items-center justify-between p-2 rounded border text-sm">
+                          <span className="font-mono">{inv.id}</span>
+                          <span className="text-muted-foreground">{inv.date}</span>
+                          <span className="font-medium">AED {inv.amount.toLocaleString()}</span>
+                          <Badge variant="outline" className="bg-success/10 text-success text-xs">{inv.status}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="audit" className="space-y-4 pr-4 mt-0">
+                    <h4 className="font-medium">{t('Audit Log', 'سجل التدقيق')}</h4>
+                    <div className="space-y-3">
+                      {[
+                        { action: 'User assigned', actor: 'Admin', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2) },
+                        { action: 'Integration connected', actor: 'System', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24) },
+                        { action: 'Organization updated', actor: 'Admin', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3) },
+                        { action: 'Organization created', actor: 'Admin', timestamp: new Date(selectedOrg.created_at) },
+                      ].map((log, i) => (
+                        <div key={i} className="flex items-center gap-3 p-2 rounded border">
+                          <div className="w-2 h-2 rounded-full bg-primary" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{log.action}</p>
+                            <p className="text-xs text-muted-foreground">{log.actor} • {log.timestamp.toLocaleString()}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                </ScrollArea>
+              </Tabs>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
