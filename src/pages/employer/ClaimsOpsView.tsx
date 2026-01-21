@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,24 +20,18 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { 
-  ClipboardCheck, 
   Clock, 
   CheckCircle, 
   XCircle, 
   Search, 
   Filter, 
   Eye, 
-  AlertTriangle,
   Timer,
   UserCheck,
-  Lock,
   Download,
   UserPlus,
-  FileText,
-  ArrowUpDown,
   CalendarIcon,
   X,
-  ChevronDown,
   DollarSign,
   AlertCircle,
   Inbox,
@@ -44,18 +39,14 @@ import {
   Flame,
   FileQuestion,
   TrendingUp,
-  Flag,
   CheckCircle2,
   XCircle as XCircleIcon,
   Mail,
-  MoreHorizontal,
   Info,
   ArrowUp,
   BookOpen,
-  Zap,
-  Send,
   MoreVertical,
-  User,
+  RefreshCw,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
@@ -65,34 +56,11 @@ import { useEmployerPermissions } from '@/hooks/useEmployerPermissions';
 import { ClaimReviewSheet } from '@/components/employer/ClaimReviewSheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useOrganizationRequests, RequestWithDetails, useUpdateRequestStatus } from '@/hooks/useSharedRequests';
+import { REQUEST_STATUSES } from '@/lib/crossPortalContract';
 import { cn } from '@/lib/utils';
-import { format, differenceInDays, differenceInHours, formatDistanceToNow } from 'date-fns';
-
-// Types
-interface QueueRequest {
-  id: string;
-  employeeName: string;
-  employeeId: string;
-  userId: string;
-  type: 'claim' | 'request' | 'question';
-  category: string;
-  subject: string;
-  description: string;
-  amount?: number;
-  status: 'pending' | 'submitted' | 'in_review' | 'approved' | 'rejected' | 'paid' | 'closed';
-  priority: 'low' | 'normal' | 'high' | 'urgent';
-  createdAt: string;
-  slaDeadline: string;
-  lastStatusChangeAt: string;
-  assignedTo?: string;
-  assignedToName?: string;
-  hasMissingDocs: boolean;
-  missingDocsList?: string[];
-  riskLevel: 'low' | 'medium' | 'high';
-  policyReference?: string;
-  policyVersion?: number;
-}
+import { format } from 'date-fns';
 
 // Value band helpers
 type ValueBand = 'low' | 'standard' | 'high' | 'premium';
@@ -103,7 +71,7 @@ const VALUE_BANDS: Record<ValueBand, { min: number; max: number; label: string; 
   premium: { min: 5000, max: Infinity, label: 'Premium', color: 'text-red-600' },
 };
 
-function getValueBand(amount?: number): ValueBand {
+function getValueBand(amount?: number | null): ValueBand {
   if (!amount) return 'low';
   if (amount < 500) return 'low';
   if (amount < 2000) return 'standard';
@@ -134,6 +102,7 @@ const CATEGORIES = [
   'Learning & Development',
   'Wellbeing',
   'Schooling',
+  'Education Allowance',
   'Leave',
   'Per Diem',
   'Other',
@@ -141,9 +110,8 @@ const CATEGORIES = [
 
 const PRIORITIES = [
   { value: 'all', label: 'All Priorities' },
-  { value: 'urgent', label: 'Urgent' },
   { value: 'high', label: 'High' },
-  { value: 'normal', label: 'Normal' },
+  { value: 'medium', label: 'Medium' },
   { value: 'low', label: 'Low' },
 ];
 
@@ -156,160 +124,10 @@ const REJECTION_REASONS = [
   { value: 'policy_violation', label: 'Policy Violation' },
 ];
 
-// Mock data with enhanced fields
-const mockRequests: QueueRequest[] = [
-  {
-    id: '1',
-    employeeName: 'Ahmed Al-Rashid',
-    employeeId: 'EMP001',
-    userId: 'user-1',
-    type: 'claim',
-    category: 'Health Insurance',
-    subject: 'Dental Claim Reimbursement',
-    description: 'Dental cleaning and checkup at Dr. Smile Clinic on Jan 5, 2024. Receipt attached.',
-    amount: 450,
-    status: 'pending',
-    priority: 'normal',
-    createdAt: '2024-01-08T10:30:00',
-    slaDeadline: '2024-01-11T10:30:00',
-    lastStatusChangeAt: '2024-01-08T10:30:00',
-    hasMissingDocs: false,
-    riskLevel: 'low',
-    policyReference: 'HEALTH-2024-v3',
-    policyVersion: 3,
-  },
-  {
-    id: '2',
-    employeeName: 'Sarah Johnson',
-    employeeId: 'EMP015',
-    userId: 'user-2',
-    type: 'request',
-    category: 'Learning & Development',
-    subject: 'Course Approval - AWS Certification',
-    description: 'Requesting approval for AWS Solutions Architect certification course at AED 2,500.',
-    amount: 2500,
-    status: 'pending',
-    priority: 'high',
-    createdAt: '2024-01-07T14:15:00',
-    slaDeadline: '2024-01-10T14:15:00',
-    lastStatusChangeAt: '2024-01-07T14:15:00',
-    assignedTo: 'user-manager-1',
-    assignedToName: 'L&D Manager',
-    hasMissingDocs: true,
-    missingDocsList: ['Course syllabus', 'Manager approval'],
-    riskLevel: 'medium',
-    policyReference: 'L&D-2024-v2',
-    policyVersion: 2,
-  },
-  {
-    id: '3',
-    employeeName: 'Mohammed Hassan',
-    employeeId: 'EMP023',
-    userId: 'user-3',
-    type: 'claim',
-    category: 'Transport',
-    subject: 'Fuel Reimbursement - December',
-    description: 'Monthly fuel expenses for December 2023. Total: AED 800.',
-    amount: 800,
-    status: 'approved',
-    priority: 'normal',
-    createdAt: '2024-01-02T09:00:00',
-    slaDeadline: '2024-01-05T09:00:00',
-    lastStatusChangeAt: '2024-01-03T11:30:00',
-    hasMissingDocs: false,
-    riskLevel: 'low',
-    policyReference: 'TRANSPORT-2024-v1',
-    policyVersion: 1,
-  },
-  {
-    id: '4',
-    employeeName: 'Lisa Chen',
-    employeeId: 'EMP042',
-    userId: 'user-4',
-    type: 'question',
-    category: 'Housing',
-    subject: 'Housing Allowance Top-up Query',
-    description: 'Can I use savings from other benefits to top up housing allowance? My rent exceeds the allowance by AED 2,000/month.',
-    status: 'in_review',
-    priority: 'urgent',
-    createdAt: '2024-01-06T16:45:00',
-    slaDeadline: '2024-01-09T16:45:00',
-    lastStatusChangeAt: '2024-01-07T09:00:00',
-    assignedTo: 'user-hr-1',
-    assignedToName: 'HR Manager',
-    hasMissingDocs: false,
-    riskLevel: 'high',
-    policyReference: 'HOUSING-2024-v2',
-    policyVersion: 2,
-  },
-  {
-    id: '5',
-    employeeName: 'Omar Khalil',
-    employeeId: 'EMP008',
-    userId: 'user-5',
-    type: 'claim',
-    category: 'Wellbeing',
-    subject: 'Gym Membership Reimbursement',
-    description: 'Annual gym membership at Fitness First - Dubai Marina. Receipt attached.',
-    amount: 3600,
-    status: 'rejected',
-    priority: 'normal',
-    createdAt: '2024-01-04T12:00:00',
-    slaDeadline: '2024-01-07T12:00:00',
-    lastStatusChangeAt: '2024-01-05T10:00:00',
-    hasMissingDocs: false,
-    riskLevel: 'medium',
-    policyReference: 'WELLBEING-2024-v1',
-    policyVersion: 1,
-  },
-  {
-    id: '6',
-    employeeName: 'Fatima Al-Zahra',
-    employeeId: 'EMP056',
-    userId: 'user-6',
-    type: 'claim',
-    category: 'Schooling',
-    subject: 'School Tuition Fee - Term 2',
-    description: 'Tuition fee for GEMS Wellington Academy, Term 2 2024.',
-    amount: 12000,
-    status: 'pending',
-    priority: 'high',
-    createdAt: '2024-01-09T08:00:00',
-    slaDeadline: '2024-01-12T08:00:00',
-    lastStatusChangeAt: '2024-01-09T08:00:00',
-    hasMissingDocs: true,
-    missingDocsList: ['Fee invoice', 'School enrollment confirmation'],
-    riskLevel: 'medium',
-    policyReference: 'SCHOOL-2024-v2',
-    policyVersion: 2,
-  },
-  {
-    id: '7',
-    employeeName: 'John Smith',
-    employeeId: 'EMP033',
-    userId: 'user-7',
-    type: 'claim',
-    category: 'Health Insurance',
-    subject: 'Emergency Medical Treatment',
-    description: 'Emergency treatment at American Hospital Dubai.',
-    amount: 8500,
-    status: 'pending',
-    priority: 'urgent',
-    createdAt: '2024-01-10T06:00:00',
-    slaDeadline: '2024-01-11T06:00:00',
-    lastStatusChangeAt: '2024-01-10T06:00:00',
-    hasMissingDocs: false,
-    riskLevel: 'high',
-    policyReference: 'HEALTH-2024-v3',
-    policyVersion: 3,
-  },
-];
-
-// Mock employer users for assignment
+// Mock employer users for assignment (TODO: fetch from DB)
 const mockEmployerUsers = [
   { id: 'user-hr-1', name: 'HR Manager' },
   { id: 'user-hr-2', name: 'HR Specialist' },
-  { id: 'user-manager-1', name: 'L&D Manager' },
   { id: 'user-finance-1', name: 'Finance Lead' },
   { id: 'current-user', name: 'Me' },
 ];
@@ -320,6 +138,8 @@ export function ClaimsOpsView() {
   const { hasPermission } = useEmployerPermissions();
   const canProcessClaims = hasPermission('can_process_claims');
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const updateStatus = useUpdateRequestStatus();
 
   // URL-persisted state
   const activeTab = (searchParams.get('tab') as QueueTab) || 'pending';
@@ -341,19 +161,10 @@ export function ClaimsOpsView() {
   const sortBySlaRisk = localSlaSort;
 
   // Local state
-  const [requests, setRequests] = useState<QueueRequest[]>(mockRequests);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [selectedForBulk, setSelectedForBulk] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [bulkAssignOpen, setBulkAssignOpen] = useState(false);
-  const [bulkPriorityOpen, setBulkPriorityOpen] = useState(false);
-
-  // Handle SLA sort toggle with persistence
-  const handleSlaSortToggle = (checked: boolean) => {
-    setLocalSlaSort(checked);
-    localStorage.setItem('employer_claims_sla_sort', checked ? 'true' : 'false');
-    updateParam('slaSort', checked ? 'true' : null);
-  };
 
   // Fetch organization ID from profile
   const { data: profileData } = useQuery({
@@ -371,6 +182,16 @@ export function ClaimsOpsView() {
   });
   const organizationId = profileData?.organization_id || null;
 
+  // Fetch requests from Supabase
+  const { data: requests = [], isLoading, error, refetch } = useOrganizationRequests(organizationId);
+
+  // Handle SLA sort toggle with persistence
+  const handleSlaSortToggle = (checked: boolean) => {
+    setLocalSlaSort(checked);
+    localStorage.setItem('employer_claims_sla_sort', checked ? 'true' : 'false');
+    updateParam('slaSort', checked ? 'true' : null);
+  };
+
   // Update URL params helper
   const updateParam = useCallback((key: string, value: string | null) => {
     setSearchParams(prev => {
@@ -385,12 +206,15 @@ export function ClaimsOpsView() {
   }, [setSearchParams]);
 
   // SLA calculation helper
-  const getSlaInfo = useCallback((deadline: string, status: string) => {
-    if (['approved', 'rejected', 'paid', 'closed'].includes(status)) return null;
+  const getSlaInfo = useCallback((request: RequestWithDetails) => {
+    if (!request.sla_due_at) return null;
+    if (['approved', 'rejected', 'paid', 'closed'].includes(request.status || '')) return null;
+    
     const now = new Date();
-    const sla = new Date(deadline);
+    const sla = new Date(request.sla_due_at);
     const hoursRemaining = (sla.getTime() - now.getTime()) / (1000 * 60 * 60);
     const daysRemaining = hoursRemaining / 24;
+    
     return {
       hoursRemaining: Math.round(hoursRemaining),
       daysRemaining: Math.round(daysRemaining * 10) / 10,
@@ -398,11 +222,6 @@ export function ClaimsOpsView() {
       isUrgent: hoursRemaining > 0 && hoursRemaining < 24,
       isOnTrack: hoursRemaining >= 24,
     };
-  }, []);
-
-  // Days in queue calculation
-  const getDaysInQueue = useCallback((createdAt: string) => {
-    return differenceInDays(new Date(), new Date(createdAt));
   }, []);
 
   // Filter and sort requests
@@ -419,7 +238,7 @@ export function ClaimsOpsView() {
         break;
       case 'sla_risk':
         result = result.filter(r => {
-          const sla = getSlaInfo(r.slaDeadline, r.status);
+          const sla = getSlaInfo(r);
           return sla && (sla.isOverdue || sla.isUrgent);
         });
         break;
@@ -435,10 +254,10 @@ export function ClaimsOpsView() {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter(r =>
-        r.employeeName.toLowerCase().includes(q) ||
-        r.subject.toLowerCase().includes(q) ||
-        r.category.toLowerCase().includes(q) ||
-        r.employeeId.toLowerCase().includes(q)
+        (r.employeeName?.toLowerCase().includes(q)) ||
+        (r.subject?.toLowerCase().includes(q)) ||
+        (r.category?.toLowerCase().includes(q)) ||
+        (r.employeeCode?.toLowerCase().includes(q))
       );
     }
 
@@ -452,9 +271,9 @@ export function ClaimsOpsView() {
 
     if (assignedFilter !== 'all') {
       if (assignedFilter === 'unassigned') {
-        result = result.filter(r => !r.assignedTo);
+        result = result.filter(r => !r.assigned_to);
       } else {
-        result = result.filter(r => r.assignedTo === assignedFilter);
+        result = result.filter(r => r.assigned_to === assignedFilter);
       }
     }
 
@@ -471,25 +290,29 @@ export function ClaimsOpsView() {
     }
 
     if (dateFrom) {
-      result = result.filter(r => new Date(r.createdAt) >= new Date(dateFrom));
+      result = result.filter(r => r.created_at && new Date(r.created_at) >= new Date(dateFrom));
     }
 
     if (dateTo) {
-      result = result.filter(r => new Date(r.createdAt) <= new Date(dateTo));
+      result = result.filter(r => r.created_at && new Date(r.created_at) <= new Date(dateTo));
     }
 
     // Sorting
     if (sortBySlaRisk) {
       result.sort((a, b) => {
-        const slaA = getSlaInfo(a.slaDeadline, a.status);
-        const slaB = getSlaInfo(b.slaDeadline, b.status);
+        const slaA = getSlaInfo(a);
+        const slaB = getSlaInfo(b);
         if (!slaA && !slaB) return 0;
         if (!slaA) return 1;
         if (!slaB) return -1;
         return slaA.hoursRemaining - slaB.hoursRemaining;
       });
     } else {
-      result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      result.sort((a, b) => {
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return dateB - dateA;
+      });
     }
 
     return result;
@@ -501,7 +324,7 @@ export function ClaimsOpsView() {
     pending: requests.filter(r => r.status === 'pending' || r.status === 'submitted').length,
     in_review: requests.filter(r => r.status === 'in_review').length,
     sla_risk: requests.filter(r => {
-      const sla = getSlaInfo(r.slaDeadline, r.status);
+      const sla = getSlaInfo(r);
       return sla && (sla.isOverdue || sla.isUrgent);
     }).length,
     missing_docs: requests.filter(r => r.hasMissingDocs).length,
@@ -509,176 +332,129 @@ export function ClaimsOpsView() {
   }), [requests, getSlaInfo]);
 
   // === ROW ACTIONS ===
-  const handleRowApprove = (id: string) => {
-    setRequests(prev => prev.map(req =>
-      req.id === id ? { ...req, status: 'approved' as const, lastStatusChangeAt: new Date().toISOString() } : req
-    ));
-    toast({
-      title: 'Claim Approved',
-      description: 'The claim has been approved and the employee will be notified.',
-    });
+  const handleRowApprove = async (id: string) => {
+    try {
+      await updateStatus.mutateAsync({
+        requestId: id,
+        newStatus: REQUEST_STATUSES.APPROVED,
+        reviewerNotes: 'Approved',
+      });
+      toast({
+        title: 'Claim Approved',
+        description: 'The claim has been approved and the employee will be notified.',
+      });
+      refetch();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to approve claim.',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleRowReject = (id: string, reason: string) => {
-    setRequests(prev => prev.map(req =>
-      req.id === id ? { ...req, status: 'rejected' as const, lastStatusChangeAt: new Date().toISOString() } : req
-    ));
-    toast({
-      title: 'Claim Rejected',
-      description: `Rejected: ${reason}`,
-      variant: 'destructive',
-    });
+  const handleRowReject = async (id: string, reason: string) => {
+    try {
+      await updateStatus.mutateAsync({
+        requestId: id,
+        newStatus: REQUEST_STATUSES.REJECTED,
+        reviewerNotes: `Rejected: ${reason}`,
+      });
+      toast({
+        title: 'Claim Rejected',
+        description: `Rejected: ${reason}`,
+        variant: 'destructive',
+      });
+      refetch();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to reject claim.',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleRowRequestDocs = (id: string) => {
-    setRequests(prev => prev.map(req =>
-      req.id === id ? { ...req, hasMissingDocs: true, status: 'in_review' as const } : req
-    ));
-    toast({
-      title: 'Documents Requested',
-      description: 'Document request notification sent to employee.',
-    });
-  };
-
-  const handleRowAssign = (id: string, assigneeId: string) => {
-    const assignee = mockEmployerUsers.find(u => u.id === assigneeId);
-    setRequests(prev => prev.map(req =>
-      req.id === id ? { ...req, assignedTo: assigneeId, assignedToName: assignee?.name } : req
-    ));
-    toast({
-      title: 'Request Assigned',
-      description: `Assigned to ${assignee?.name}.`,
-    });
-  };
-
-  const handleRowEscalate = (id: string) => {
-    setRequests(prev => prev.map(req =>
-      req.id === id ? { ...req, priority: 'urgent' as const } : req
-    ));
-    toast({
-      title: 'Request Escalated',
-      description: 'Priority set to Urgent and management notified.',
-    });
+  const handleRowRequestDocs = async (id: string) => {
+    try {
+      await updateStatus.mutateAsync({
+        requestId: id,
+        newStatus: REQUEST_STATUSES.IN_REVIEW,
+        reviewerNotes: 'Additional documentation requested',
+      });
+      toast({
+        title: 'Documents Requested',
+        description: 'Document request notification sent to employee.',
+      });
+      refetch();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to request documents.',
+        variant: 'destructive',
+      });
+    }
   };
 
   // === BULK ACTIONS ===
-  const handleBulkAssign = (assigneeId: string) => {
-    const assignee = mockEmployerUsers.find(u => u.id === assigneeId);
-    setRequests(prev => prev.map(req =>
-      selectedForBulk.includes(req.id)
-        ? { ...req, assignedTo: assigneeId, assignedToName: assignee?.name }
-        : req
-    ));
-    toast({
-      title: 'Requests Assigned',
-      description: `${selectedForBulk.length} requests assigned to ${assignee?.name}.`,
-    });
-    setSelectedForBulk([]);
-    setBulkAssignOpen(false);
-  };
-
-  const handleBulkAssignToMe = () => {
-    handleBulkAssign('current-user');
-  };
-
-  const handleBulkStatusChange = (newStatus: QueueRequest['status']) => {
-    setRequests(prev => prev.map(req =>
-      selectedForBulk.includes(req.id)
-        ? { ...req, status: newStatus, lastStatusChangeAt: new Date().toISOString() }
-        : req
-    ));
-    toast({
-      title: 'Status Updated',
-      description: `${selectedForBulk.length} requests updated to ${newStatus}.`,
-    });
-    setSelectedForBulk([]);
-  };
-
-  const handleBulkRequestDocs = () => {
-    setRequests(prev => prev.map(req =>
-      selectedForBulk.includes(req.id)
-        ? { ...req, hasMissingDocs: true }
-        : req
-    ));
-    toast({
-      title: 'Document Requests Sent',
-      description: `Document request notifications sent for ${selectedForBulk.length} claims.`,
-    });
-    setSelectedForBulk([]);
-  };
-
-  const handleBulkEscalate = () => {
-    setRequests(prev => prev.map(req =>
-      selectedForBulk.includes(req.id)
-        ? { ...req, priority: 'urgent' as const }
-        : req
-    ));
-    toast({
-      title: 'Requests Escalated',
-      description: `${selectedForBulk.length} requests escalated to urgent priority.`,
-    });
-    setSelectedForBulk([]);
-  };
-
-  const handleBulkPriorityChange = (newPriority: QueueRequest['priority']) => {
-    setRequests(prev => prev.map(req =>
-      selectedForBulk.includes(req.id)
-        ? { ...req, priority: newPriority }
-        : req
-    ));
-    toast({
-      title: 'Priority Updated',
-      description: `${selectedForBulk.length} requests set to ${newPriority} priority.`,
-    });
-    setSelectedForBulk([]);
-    setBulkPriorityOpen(false);
-  };
-
-  const handleBulkApprove = () => {
-    setRequests(prev => prev.map(req =>
-      selectedForBulk.includes(req.id) && ['pending', 'submitted', 'in_review'].includes(req.status)
-        ? { ...req, status: 'approved' as const, lastStatusChangeAt: new Date().toISOString() }
-        : req
-    ));
+  const handleBulkApprove = async () => {
+    for (const id of selectedForBulk) {
+      const req = requests.find(r => r.id === id);
+      if (req && ['pending', 'submitted', 'in_review'].includes(req.status || '')) {
+        await updateStatus.mutateAsync({
+          requestId: id,
+          newStatus: REQUEST_STATUSES.APPROVED,
+          reviewerNotes: 'Bulk approved',
+        });
+      }
+    }
     toast({
       title: 'Claims Approved',
       description: `${selectedForBulk.length} claims have been approved.`,
     });
     setSelectedForBulk([]);
+    refetch();
   };
 
-  const handleBulkReject = () => {
-    setRequests(prev => prev.map(req =>
-      selectedForBulk.includes(req.id) && ['pending', 'submitted', 'in_review'].includes(req.status)
-        ? { ...req, status: 'rejected' as const, lastStatusChangeAt: new Date().toISOString() }
-        : req
-    ));
+  const handleBulkReject = async () => {
+    for (const id of selectedForBulk) {
+      const req = requests.find(r => r.id === id);
+      if (req && ['pending', 'submitted', 'in_review'].includes(req.status || '')) {
+        await updateStatus.mutateAsync({
+          requestId: id,
+          newStatus: REQUEST_STATUSES.REJECTED,
+          reviewerNotes: 'Bulk rejected',
+        });
+      }
+    }
     toast({
       title: 'Claims Rejected',
       description: `${selectedForBulk.length} claims have been rejected.`,
       variant: 'destructive',
     });
     setSelectedForBulk([]);
+    refetch();
   };
 
   const handleExportCSV = () => {
-    const headers = ['ID', 'Employee', 'Type', 'Category', 'Subject', 'Amount', 'Value Band', 'Status', 'Priority', 'Days in Queue', 'SLA Due', 'Policy Ref', 'Assigned To'];
+    const headers = ['ID', 'Employee', 'Employee Code', 'Type', 'Category', 'Subject', 'Amount', 'Currency', 'Value Band', 'Status', 'Priority', 'Days in Queue', 'SLA Due', 'Policy Ref'];
     const rows = filteredRequests.map(r => {
-      const sla = getSlaInfo(r.slaDeadline, r.status);
+      const sla = getSlaInfo(r);
       return [
         r.id,
-        r.employeeName,
-        r.type,
+        r.employeeName || 'Unknown',
+        r.employeeCode || '-',
+        r.request_type,
         r.category,
         r.subject,
         r.amount || '',
+        r.currency || 'AED',
         VALUE_BANDS[getValueBand(r.amount)].label,
         r.status,
         r.priority,
-        getDaysInQueue(r.createdAt),
+        r.daysInQueue || 0,
         sla ? `${sla.hoursRemaining}h` : 'N/A',
-        r.policyReference || '',
-        r.assignedToName || 'Unassigned',
+        r.policy_ref || '',
       ];
     });
     
@@ -713,8 +489,8 @@ export function ClaimsOpsView() {
   };
 
   // Badge renderers
-  const getSlaTriageBadge = (request: QueueRequest) => {
-    const sla = getSlaInfo(request.slaDeadline, request.status);
+  const getSlaTriageBadge = (request: RequestWithDetails) => {
+    const sla = getSlaInfo(request);
     if (!sla) return <span className="text-xs text-muted-foreground">-</span>;
 
     if (sla.isOverdue) {
@@ -741,7 +517,7 @@ export function ClaimsOpsView() {
     );
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | null) => {
     const styles: Record<string, string> = {
       pending: 'bg-warning/10 text-warning border-warning/20',
       submitted: 'bg-warning/10 text-warning border-warning/20',
@@ -760,20 +536,19 @@ export function ClaimsOpsView() {
       paid: 'Paid',
       closed: 'Closed',
     };
-    return <Badge className={styles[status] || ''}>{labels[status] || status}</Badge>;
+    return <Badge className={styles[status || ''] || ''}>{labels[status || ''] || status}</Badge>;
   };
 
-  const getPriorityBadge = (priority: string) => {
+  const getPriorityBadge = (priority: string | null) => {
     const styles: Record<string, string> = {
-      urgent: 'bg-destructive/10 text-destructive border-destructive/20',
       high: 'bg-warning/10 text-warning border-warning/20',
-      normal: 'bg-muted text-muted-foreground border-muted',
+      medium: 'bg-muted text-muted-foreground border-muted',
       low: 'bg-muted text-muted-foreground/70 border-muted',
     };
-    return <Badge className={cn('text-xs', styles[priority])}>{priority}</Badge>;
+    return <Badge className={cn('text-xs', styles[priority || ''])}>{priority}</Badge>;
   };
 
-  const getValueBandBadge = (amount?: number) => {
+  const getValueBandBadge = (amount?: number | null) => {
     const band = getValueBand(amount);
     const config = VALUE_BANDS[band];
     return (
@@ -803,7 +578,50 @@ export function ClaimsOpsView() {
     });
   };
 
-  const canProcess = (status: string) => ['pending', 'submitted', 'in_review'].includes(status);
+  const canProcess = (status: string | null) => ['pending', 'submitted', 'in_review'].includes(status || '');
+
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <TooltipProvider>
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-display font-bold text-foreground">Claims & Approvals Console</h1>
+              <p className="text-muted-foreground">Process employee requests efficiently with SLA tracking</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <Skeleton key={i} className="h-10 w-24" />
+            ))}
+          </div>
+          <Card>
+            <CardContent className="pt-6 space-y-4">
+              {[1, 2, 3, 4, 5].map(i => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      </TooltipProvider>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 space-y-4">
+        <AlertCircle className="w-12 h-12 text-destructive" />
+        <h2 className="text-lg font-medium">Failed to load claims</h2>
+        <p className="text-muted-foreground text-sm">There was an error loading the claims queue.</p>
+        <Button onClick={() => refetch()} className="gap-2">
+          <RefreshCw className="w-4 h-4" />
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <TooltipProvider>
@@ -815,6 +633,10 @@ export function ClaimsOpsView() {
             <p className="text-muted-foreground">Process employee requests efficiently with SLA tracking</p>
           </div>
           <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </Button>
             <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-lg">
               <Switch
                 id="sla-sort"
@@ -934,19 +756,6 @@ export function ClaimsOpsView() {
                       </SelectContent>
                     </Select>
 
-                    <Select value={assignedFilter} onValueChange={(v) => updateParam('assigned', v)}>
-                      <SelectTrigger className="w-40">
-                        <SelectValue placeholder="Assigned To" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Assignees</SelectItem>
-                        <SelectItem value="unassigned">Unassigned</SelectItem>
-                        {mockEmployerUsers.map((u) => (
-                          <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
                     <div className="flex items-center gap-2">
                       <DollarSign className="w-4 h-4 text-muted-foreground" />
                       <Input
@@ -1025,60 +834,6 @@ export function ClaimsOpsView() {
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <PermissionGate permission="can_process_claims">
-                    {/* Assign to me */}
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="gap-2"
-                      onClick={handleBulkAssignToMe}
-                    >
-                      <UserCheck className="w-4 h-4" />
-                      Assign to me
-                    </Button>
-
-                    {/* Assign Owner */}
-                    <Popover open={bulkAssignOpen} onOpenChange={setBulkAssignOpen}>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" size="sm" className="gap-2">
-                          <UserPlus className="w-4 h-4" />
-                          Assign
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-48 p-2">
-                        <p className="text-xs font-medium text-muted-foreground mb-2 px-2">Assign to:</p>
-                        {mockEmployerUsers.map((u) => (
-                          <Button
-                            key={u.id}
-                            variant="ghost"
-                            className="w-full justify-start"
-                            onClick={() => handleBulkAssign(u.id)}
-                          >
-                            {u.name}
-                          </Button>
-                        ))}
-                      </PopoverContent>
-                    </Popover>
-
-                    {/* Request Docs */}
-                    <Button variant="outline" size="sm" className="gap-2" onClick={handleBulkRequestDocs}>
-                      <Mail className="w-4 h-4" />
-                      Request Docs
-                    </Button>
-
-                    {/* Escalate */}
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="gap-2 text-amber-600 border-amber-500/30 hover:bg-amber-500/10"
-                      onClick={handleBulkEscalate}
-                    >
-                      <ArrowUp className="w-4 h-4" />
-                      Escalate
-                    </Button>
-
-                    <Separator orientation="vertical" className="h-6 mx-1" />
-
-                    {/* Quick Actions: Approve / Reject */}
                     <Button 
                       variant="outline" 
                       size="sm" 
@@ -1088,7 +843,6 @@ export function ClaimsOpsView() {
                       <CheckCircle2 className="w-4 h-4" />
                       Approve
                     </Button>
-
                     <Button 
                       variant="outline" 
                       size="sm" 
@@ -1099,9 +853,7 @@ export function ClaimsOpsView() {
                       Reject
                     </Button>
                   </PermissionGate>
-
                   <Separator orientation="vertical" className="h-6 mx-1" />
-
                   <Button variant="outline" size="sm" className="gap-2" onClick={handleExportCSV}>
                     <Download className="w-4 h-4" />
                     Export
@@ -1149,13 +901,14 @@ export function ClaimsOpsView() {
                     <th className="text-left py-3 px-3 font-medium">Missing Docs</th>
                     <th className="text-left py-3 px-3 font-medium">Policy Ref</th>
                     <th className="text-left py-3 px-3 font-medium">Status</th>
-                    <th className="text-left py-3 px-3 font-medium">Assigned</th>
                     <th className="text-right py-3 px-3 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredRequests.map((request) => {
-                    const daysInQueue = getDaysInQueue(request.createdAt);
+                    const daysInQueue = request.daysInQueue || 0;
+                    const missingDocs = Array.isArray(request.missing_docs) ? request.missing_docs : [];
+                    
                     return (
                       <tr
                         key={request.id}
@@ -1173,15 +926,15 @@ export function ClaimsOpsView() {
                         </td>
                         <td className="py-3 px-3">
                           <div>
-                            <p className="font-medium text-sm">{request.employeeName}</p>
-                            <p className="text-xs text-muted-foreground">{request.employeeId}</p>
+                            <p className="font-medium text-sm">{request.employeeName || 'Unknown Employee'}</p>
+                            <p className="text-xs text-muted-foreground">{request.employeeCode || request.user_id.slice(0, 8)}</p>
                           </div>
                         </td>
                         <td className="py-3 px-3">
                           <div className="max-w-[200px]">
                             <p className="text-sm font-medium truncate">{request.subject}</p>
                             <div className="flex items-center gap-1.5 mt-0.5">
-                              <Badge variant="outline" className="text-xs">{request.type}</Badge>
+                              <Badge variant="outline" className="text-xs">{request.request_type}</Badge>
                               <span className="text-xs text-muted-foreground">{request.category}</span>
                             </div>
                           </div>
@@ -1192,7 +945,7 @@ export function ClaimsOpsView() {
                               'font-mono text-sm',
                               request.amount >= HIGH_VALUE_THRESHOLD && 'text-amber-600 font-medium'
                             )}>
-                              AED {request.amount.toLocaleString()}
+                              {request.currency || 'AED'} {request.amount.toLocaleString()}
                             </span>
                           ) : (
                             <span className="text-muted-foreground">-</span>
@@ -1217,14 +970,14 @@ export function ClaimsOpsView() {
                               <TooltipTrigger asChild>
                                 <Badge className="bg-amber-500/10 text-amber-600 border-0 text-xs gap-1 cursor-help">
                                   <FileQuestion className="w-3 h-3" />
-                                  {request.missingDocsList?.length || 1} missing
+                                  {missingDocs.length || 1} missing
                                 </Badge>
                               </TooltipTrigger>
                               <TooltipContent side="top" className="max-w-xs">
                                 <p className="font-medium text-xs mb-1">Missing Documents:</p>
                                 <ul className="text-xs space-y-0.5">
-                                  {request.missingDocsList?.map((doc, idx) => (
-                                    <li key={idx}>• {doc}</li>
+                                  {missingDocs.map((doc, idx) => (
+                                    <li key={idx}>• {String(doc)}</li>
                                   )) || <li>• Documentation pending</li>}
                                 </ul>
                               </TooltipContent>
@@ -1237,33 +990,18 @@ export function ClaimsOpsView() {
                           )}
                         </td>
                         <td className="py-3 px-3">
-                          {request.policyReference ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge variant="outline" className="text-xs gap-1 cursor-help">
-                                  <BookOpen className="w-3 h-3" />
-                                  v{request.policyVersion}
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent side="top">
-                                <p className="text-xs">{request.policyReference}</p>
-                              </TooltipContent>
-                            </Tooltip>
+                          {request.policy_ref ? (
+                            <Badge variant="outline" className="text-xs gap-1">
+                              <BookOpen className="w-3 h-3" />
+                              {request.policy_ref}
+                            </Badge>
                           ) : (
                             <span className="text-xs text-muted-foreground">-</span>
                           )}
                         </td>
                         <td className="py-3 px-3">{getStatusBadge(request.status)}</td>
-                        <td className="py-3 px-3">
-                          {request.assignedToName ? (
-                            <span className="text-sm">{request.assignedToName}</span>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">Unassigned</span>
-                          )}
-                        </td>
                         <td className="py-3 px-3 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1">
-                            {/* Quick view button */}
                             <Button
                               variant="ghost"
                               size="sm"
@@ -1273,7 +1011,6 @@ export function ClaimsOpsView() {
                               <Eye className="h-4 w-4" />
                             </Button>
                             
-                            {/* Row actions dropdown */}
                             {canProcess(request.status) && (
                               <PermissionGate permission="can_process_claims">
                                 <DropdownMenu>
@@ -1298,22 +1035,6 @@ export function ClaimsOpsView() {
                                       Request Docs
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem 
-                                      className="gap-2"
-                                      onClick={() => handleRowAssign(request.id, 'current-user')}
-                                    >
-                                      <UserCheck className="w-4 h-4" />
-                                      Assign to me
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem 
-                                      className="text-amber-600 gap-2"
-                                      onClick={() => handleRowEscalate(request.id)}
-                                    >
-                                      <ArrowUp className="w-4 h-4" />
-                                      Escalate
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    {/* Reject with reason sub-options */}
                                     {REJECTION_REASONS.map(reason => (
                                       <DropdownMenuItem 
                                         key={reason.value}
@@ -1357,6 +1078,7 @@ export function ClaimsOpsView() {
               title: 'Request Updated',
               description: 'The queue has been refreshed.',
             });
+            refetch();
           }}
         />
       </div>

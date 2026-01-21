@@ -19,14 +19,46 @@ import { Database } from '@/integrations/supabase/types';
 
 type RequestRow = Database['public']['Tables']['requests']['Row'];
 type RequestEventRow = Database['public']['Tables']['request_events']['Row'];
+type Json = Database['public']['Tables']['requests']['Row']['missing_docs'];
 
-export interface RequestWithDetails extends RequestRow {
+export interface RequestWithDetails {
+  // Core fields from requests table
+  id: string;
+  user_id: string;
+  organization_id: string | null;
+  request_type: Database['public']['Enums']['request_type'];
+  category: string;
+  subject: string;
+  description: string | null;
+  amount: number | null;
+  status: Database['public']['Enums']['request_status'] | null;
+  priority: string | null;
+  assigned_to: string | null;
+  sla_due_at: string | null;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  reviewer_notes: string | null;
+  last_status_change_at: string | null;
+  created_at: string | null;
+  // Extended fields
+  submitted_at?: string | null;
+  sla_hours?: number | null;
+  required_docs?: Json;
+  missing_docs?: Json;
+  employee_code?: string | null;
+  policy_ref?: string | null;
+  currency?: string | null;
+  // Computed fields
   employeeName?: string;
   employeeEmail?: string;
   employeeDepartment?: string;
+  employeeCode?: string;
+  employeeGrade?: string;
   events?: RequestEventRow[];
   slaStatus?: ReturnType<typeof calculateSLA>;
   displayStatus: string;
+  hasMissingDocs?: boolean;
+  daysInQueue?: number;
 }
 
 interface UseSharedRequestsOptions {
@@ -91,21 +123,41 @@ export function useSharedRequests(options: UseSharedRequestsOptions = {}) {
       const userIds = [...new Set((requests || []).map(r => r.user_id))];
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('user_id, first_name, last_name, email, department')
+        .select('user_id, first_name, last_name, email, department, grade')
         .in('user_id', userIds);
       
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
       
       // Transform data with computed fields
+      const now = new Date();
       return (requests || []).map((request): RequestWithDetails => {
         const profile = profileMap.get(request.user_id);
+        const reqAny = request as any;
+        const submittedDate = reqAny.submitted_at || request.created_at;
+        const daysInQueue = submittedDate 
+          ? Math.floor((now.getTime() - new Date(submittedDate).getTime()) / (1000 * 60 * 60 * 24))
+          : 0;
+        
+        // Check for missing docs - handle Json type
+        const missingDocs = request.missing_docs;
+        const hasMissingDocs = Array.isArray(missingDocs) && missingDocs.length > 0;
+        
         return {
           ...request,
-          employeeName: profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : undefined,
+          submitted_at: reqAny.submitted_at,
+          sla_hours: reqAny.sla_hours,
+          policy_ref: reqAny.policy_ref,
+          employeeName: profile 
+            ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || undefined
+            : undefined,
           employeeEmail: profile?.email || undefined,
           employeeDepartment: profile?.department || undefined,
+          employeeGrade: profile?.grade || undefined,
+          employeeCode: request.employee_code || undefined,
           slaStatus: calculateSLA(request.sla_due_at, request.status),
           displayStatus: getStatusDisplayLabel(request.status),
+          hasMissingDocs,
+          daysInQueue,
         };
       });
     },
@@ -133,7 +185,7 @@ export function useSharedRequest(requestId: string | null) {
       // Get profile
       const { data: profile } = await supabase
         .from('profiles')
-        .select('first_name, last_name, email, department')
+        .select('first_name, last_name, email, department, grade')
         .eq('user_id', request.user_id)
         .single();
       
@@ -144,17 +196,37 @@ export function useSharedRequest(requestId: string | null) {
         .eq('request_id', requestId)
         .order('created_at', { ascending: true });
       
+      const reqAny = request as any;
+      const missingDocs = request.missing_docs;
+      const hasMissingDocs = Array.isArray(missingDocs) && missingDocs.length > 0;
+      const submittedDate = reqAny.submitted_at || request.created_at;
+      const now = new Date();
+      const daysInQueue = submittedDate 
+        ? Math.floor((now.getTime() - new Date(submittedDate).getTime()) / (1000 * 60 * 60 * 24))
+        : 0;
+      
       return {
         ...request,
-        employeeName: profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : undefined,
+        submitted_at: reqAny.submitted_at,
+        sla_hours: reqAny.sla_hours,
+        policy_ref: reqAny.policy_ref,
+        employeeName: profile 
+          ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || undefined
+          : undefined,
         employeeEmail: profile?.email || undefined,
         employeeDepartment: profile?.department || undefined,
+        employeeGrade: profile?.grade || undefined,
+        employeeCode: request.employee_code || undefined,
         events: events || [],
         slaStatus: calculateSLA(request.sla_due_at, request.status),
         displayStatus: getStatusDisplayLabel(request.status),
+        hasMissingDocs,
+        daysInQueue,
       };
     },
     enabled: !!requestId,
+    retry: 2,
+    staleTime: 30000,
   });
 }
 
