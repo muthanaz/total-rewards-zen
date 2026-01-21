@@ -64,6 +64,65 @@ import { useOrganizationRequests, RequestWithDetails, useUpdateRequestStatus } f
 import { REQUEST_STATUSES } from '@/lib/crossPortalContract';
 import { cn, formatCurrencyAED, formatDate, formatDateTime, formatRelativeTime } from '@/lib/utils';
 import { format } from 'date-fns';
+import { useRequiredDocsForCategory } from '@/hooks/useClaimDocumentStatus';
+
+// Missing Docs Badge component - uses unified hook
+function MissingDocsBadge({ 
+  category, 
+  missingDocsFromDb 
+}: { 
+  category: string; 
+  missingDocsFromDb?: unknown;
+}) {
+  const { data: requiredDocs = [], isLoading } = useRequiredDocsForCategory(category);
+  
+  // Filter to required only
+  const requiredOnly = requiredDocs.filter(d => d.isRequired);
+  const noDocsRequired = requiredOnly.length === 0;
+  
+  // Use DB value if available, otherwise assume all required docs are missing
+  const missingCount = Array.isArray(missingDocsFromDb) 
+    ? missingDocsFromDb.length 
+    : requiredOnly.length;
+  
+  const hasMissingDocs = !noDocsRequired && missingCount > 0;
+  
+  if (isLoading) {
+    return <span className="text-xs text-muted-foreground">...</span>;
+  }
+  
+  if (noDocsRequired) {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+  
+  if (!hasMissingDocs) {
+    return (
+      <span className="text-xs text-success flex items-center gap-1">
+        <CheckCircle className="w-3 h-3" />
+        Complete
+      </span>
+    );
+  }
+  
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Badge className="bg-amber-500/10 text-amber-600 border-0 text-xs gap-1 cursor-help">
+          <FileQuestion className="w-3 h-3" />
+          {missingCount} missing
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs">
+        <p className="font-medium text-xs mb-1">Missing Documents:</p>
+        <ul className="text-xs space-y-0.5">
+          {requiredOnly.map((doc) => (
+            <li key={doc.id}>• {doc.docName}</li>
+          ))}
+        </ul>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 // Value band helpers
 type ValueBand = 'low' | 'standard' | 'high' | 'premium';
@@ -924,7 +983,6 @@ export function ClaimsOpsView() {
                 <tbody>
                   {filteredRequests.map((request) => {
                     const daysInQueue = request.daysInQueue || 0;
-                    const missingDocs = Array.isArray(request.missing_docs) ? request.missing_docs : [];
                     
                     return (
                       <tr
@@ -982,29 +1040,10 @@ export function ClaimsOpsView() {
                         </td>
                         <td className="py-3 px-3">{getSlaTriageBadge(request)}</td>
                         <td className="py-3 px-3">
-                          {request.hasMissingDocs ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Badge className="bg-amber-500/10 text-amber-600 border-0 text-xs gap-1 cursor-help">
-                                  <FileQuestion className="w-3 h-3" />
-                                  {missingDocs.length || 1} missing
-                                </Badge>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="max-w-xs">
-                                <p className="font-medium text-xs mb-1">Missing Documents:</p>
-                                <ul className="text-xs space-y-0.5">
-                                  {missingDocs.map((doc, idx) => (
-                                    <li key={idx}>• {String(doc)}</li>
-                                  )) || <li>• Documentation pending</li>}
-                                </ul>
-                              </TooltipContent>
-                            </Tooltip>
-                          ) : (
-                            <span className="text-xs text-success flex items-center gap-1">
-                              <CheckCircle className="w-3 h-3" />
-                              Complete
-                            </span>
-                          )}
+                          <MissingDocsBadge 
+                            category={request.category} 
+                            missingDocsFromDb={request.missing_docs}
+                          />
                         </td>
                         <td className="py-3 px-3">
                           {request.policy_ref ? (
