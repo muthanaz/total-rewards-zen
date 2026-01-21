@@ -1499,6 +1499,125 @@ export type Database = {
         }
         Relationships: []
       }
+      policies: {
+        Row: {
+          category: string
+          coverage_rules: Json | null
+          created_at: string
+          effective_from: string
+          effective_to: string | null
+          eligibility_rules: Json | null
+          id: string
+          organization_id: string | null
+          policy_ref: string
+          required_docs: Json | null
+          sla_rules: Json | null
+          status: string
+          summary: string | null
+          title: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          category: string
+          coverage_rules?: Json | null
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          eligibility_rules?: Json | null
+          id?: string
+          organization_id?: string | null
+          policy_ref: string
+          required_docs?: Json | null
+          sla_rules?: Json | null
+          status?: string
+          summary?: string | null
+          title: string
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          category?: string
+          coverage_rules?: Json | null
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          eligibility_rules?: Json | null
+          id?: string
+          organization_id?: string | null
+          policy_ref?: string
+          required_docs?: Json | null
+          sla_rules?: Json | null
+          status?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policies_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      policy_articles: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_faq: boolean | null
+          organization_id: string | null
+          policy_id: string | null
+          sort_order: number | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_faq?: boolean | null
+          organization_id?: string | null
+          policy_id?: string | null
+          sort_order?: number | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_faq?: boolean | null
+          organization_id?: string | null
+          policy_id?: string | null
+          sort_order?: number | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_articles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policy_articles_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1725,6 +1844,7 @@ export type Database = {
           last_status_change_at: string | null
           missing_docs: Json | null
           organization_id: string | null
+          policy_id: string | null
           policy_ref: string | null
           priority: string | null
           request_type: Database["public"]["Enums"]["request_type"]
@@ -1755,6 +1875,7 @@ export type Database = {
           last_status_change_at?: string | null
           missing_docs?: Json | null
           organization_id?: string | null
+          policy_id?: string | null
           policy_ref?: string | null
           priority?: string | null
           request_type: Database["public"]["Enums"]["request_type"]
@@ -1785,6 +1906,7 @@ export type Database = {
           last_status_change_at?: string | null
           missing_docs?: Json | null
           organization_id?: string | null
+          policy_id?: string | null
           policy_ref?: string | null
           priority?: string | null
           request_type?: Database["public"]["Enums"]["request_type"]
@@ -1806,6 +1928,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
             referencedColumns: ["id"]
           },
         ]
