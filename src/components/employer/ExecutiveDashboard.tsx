@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -35,8 +36,8 @@ import {
 import { cn, formatCurrencyAED, formatPercent } from '@/lib/utils';
 import { EmployerGlobalFiltersBar } from './EmployerGlobalFiltersBar';
 import { DemoTip, DEMO_TIPS } from '@/components/demo';
-import { MetricTooltip, ConfidenceBadge, MetricDefinitionsDrawer } from '@/components/shared';
-import { computeCostPerEmployee, computeUtilizationRate, computeROI } from '@/lib/metrics';
+import { MetricTooltip, ConfidenceBadge, MetricDefinitionsDrawer, KPIDrilldownSheet, KPIMetricData } from '@/components/shared';
+import { computeCostPerEmployee, computeUtilizationRate, computeROI, METRIC_DEFINITIONS } from '@/lib/metrics';
 
 const priorityColors = {
   critical: {
@@ -63,6 +64,9 @@ const priorityColors = {
 
 export function ExecutiveDashboard() {
   const [period, setPeriod] = useState<PeriodType>('YTD');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [drilldownMetric, setDrilldownMetric] = useState<KPIMetricData | null>(null);
+  const [isDrilldownOpen, setIsDrilldownOpen] = useState(false);
   
   // Fetch real data
   const { data: metrics, isLoading: metricsLoading } = useExecutiveMetrics();
@@ -71,6 +75,100 @@ export function ExecutiveDashboard() {
   const { data: priorities } = useStrategicPriorities(metrics);
   const coverageMetrics = useDataCoverageMetrics();
   const { data: spendAllocation } = useSpendAllocation();
+
+  // KPI definitions for drilldown
+  const kpiMetrics = useMemo<Record<string, KPIMetricData>>(() => {
+    if (!metrics) return {};
+    return {
+      totalInvestment: {
+        key: 'totalInvestment',
+        name: 'Total Investment',
+        value: metrics.totalInvestment,
+        formattedValue: formatCurrencyAED(metrics.totalInvestment),
+        unit: 'currency',
+        trend: { value: 8, higherIsBetter: true, period: 'vs last year' },
+        icon: DollarSign,
+        formula: 'SUM(org_budgets.annual_budget) for current fiscal year',
+        dataSource: 'org_budgets table',
+      },
+      costPerEmployee: {
+        key: 'costPerEmployee',
+        name: 'Cost per Employee',
+        value: metrics.costPerEmployee,
+        formattedValue: formatCurrencyAED(metrics.costPerEmployee),
+        unit: 'currency',
+        trend: { value: -3.2, higherIsBetter: false, period: 'vs industry' },
+        icon: Users,
+        formula: METRIC_DEFINITIONS.costPerEmployee.formula,
+        dataSource: METRIC_DEFINITIONS.costPerEmployee.dataSource,
+      },
+      roi: {
+        key: 'roi',
+        name: 'Benefits ROI',
+        value: metrics.roi,
+        formattedValue: `${metrics.roi}x`,
+        unit: 'number',
+        trend: { value: 14.3, higherIsBetter: true, period: 'vs last year' },
+        icon: TrendingUp,
+        formula: METRIC_DEFINITIONS.roi?.formula || 'Benefits Value / Total Investment',
+        dataSource: 'Calculated from utilization and satisfaction data',
+      },
+      esatScore: {
+        key: 'esatScore',
+        name: 'Employee Satisfaction',
+        value: metrics.esatScore,
+        formattedValue: `${metrics.esatScore}%`,
+        unit: 'percent',
+        trend: { value: metrics.esatTrend, higherIsBetter: true, period: 'MoM' },
+        icon: Heart,
+        formula: METRIC_DEFINITIONS.satisfactionScore?.formula || 'Weighted average of satisfaction ratings',
+        dataSource: 'employee_satisfaction_ratings table',
+      },
+      retentionRate: {
+        key: 'retentionRate',
+        name: 'Retention Rate',
+        value: metrics.retentionRate,
+        formattedValue: `${metrics.retentionRate}%`,
+        unit: 'percent',
+        trend: { value: metrics.retentionRate - metrics.retentionBenchmark, higherIsBetter: true, period: 'vs market' },
+        icon: Target,
+        formula: METRIC_DEFINITIONS.retentionRate?.formula || '(Retained Employees / Start Period Employees) × 100',
+        dataSource: 'profiles table (employment_date)',
+      },
+    };
+  }, [metrics]);
+
+  // Handle deep linking for drilldowns
+  useEffect(() => {
+    const drilldownKey = searchParams.get('drilldown');
+    if (drilldownKey && kpiMetrics[drilldownKey] && !isDrilldownOpen) {
+      setDrilldownMetric(kpiMetrics[drilldownKey]);
+      setIsDrilldownOpen(true);
+    }
+  }, [searchParams, kpiMetrics, isDrilldownOpen]);
+
+  const openDrilldown = (metricKey: string) => {
+    const metric = kpiMetrics[metricKey];
+    if (metric) {
+      setDrilldownMetric(metric);
+      setIsDrilldownOpen(true);
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        next.set('drilldown', metricKey);
+        return next;
+      });
+    }
+  };
+
+  const closeDrilldown = () => {
+    setIsDrilldownOpen(false);
+    setDrilldownMetric(null);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.delete('drilldown');
+      return next;
+    });
+  };
 
   // Use centralized formatting utilities
   const formatCurrency = (value: number) => formatCurrencyAED(value);
@@ -178,7 +276,10 @@ export function ExecutiveDashboard() {
       {/* Strategic KPIs - C-Suite Focus with Enhanced Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Total Investment */}
-        <Card className="border-border/50 bg-gradient-to-br from-card to-primary/5">
+        <Card 
+          className="border-border/50 bg-gradient-to-br from-card to-primary/5 cursor-pointer hover:shadow-md hover:border-accent/30 transition-all"
+          onClick={() => openDrilldown('totalInvestment')}
+        >
           <CardContent className="p-5">
             <div className="flex items-start justify-between mb-3">
               <div className="p-2.5 rounded-xl bg-primary/10">
@@ -199,7 +300,10 @@ export function ExecutiveDashboard() {
         </Card>
 
         {/* Cost per Employee with Dual Benchmark */}
-        <Card className="border-border/50 bg-gradient-to-br from-card to-chart-2/5">
+        <Card 
+          className="border-border/50 bg-gradient-to-br from-card to-chart-2/5 cursor-pointer hover:shadow-md hover:border-accent/30 transition-all"
+          onClick={() => openDrilldown('costPerEmployee')}
+        >
           <CardContent className="p-5">
             <div className="flex items-start justify-between mb-3">
               <div className="p-2.5 rounded-xl bg-chart-2/10">
@@ -226,7 +330,10 @@ export function ExecutiveDashboard() {
         </Card>
 
         {/* ROI */}
-        <Card className="border-border/50 bg-gradient-to-br from-card to-success/5">
+        <Card 
+          className="border-border/50 bg-gradient-to-br from-card to-success/5 cursor-pointer hover:shadow-md hover:border-accent/30 transition-all"
+          onClick={() => openDrilldown('roi')}
+        >
           <CardContent className="p-5">
             <div className="flex items-start justify-between mb-3">
               <div className="p-2.5 rounded-xl bg-success/10">
@@ -245,8 +352,11 @@ export function ExecutiveDashboard() {
           </CardContent>
         </Card>
 
-        {/* ESAT Score - NEW */}
-        <Card className="border-border/50 bg-gradient-to-br from-card to-chart-5/5">
+        {/* ESAT Score */}
+        <Card 
+          className="border-border/50 bg-gradient-to-br from-card to-chart-5/5 cursor-pointer hover:shadow-md hover:border-accent/30 transition-all"
+          onClick={() => openDrilldown('esatScore')}
+        >
           <CardContent className="p-5">
             <div className="flex items-start justify-between mb-3">
               <div className="p-2.5 rounded-xl bg-chart-5/10">
@@ -269,7 +379,10 @@ export function ExecutiveDashboard() {
         </Card>
 
         {/* Retention with Turnover */}
-        <Card className="border-border/50 bg-gradient-to-br from-card to-chart-3/5">
+        <Card 
+          className="border-border/50 bg-gradient-to-br from-card to-chart-3/5 cursor-pointer hover:shadow-md hover:border-accent/30 transition-all"
+          onClick={() => openDrilldown('retentionRate')}
+        >
           <CardContent className="p-5">
             <div className="flex items-start justify-between mb-3">
               <div className="p-2.5 rounded-xl bg-chart-3/10">
@@ -473,6 +586,19 @@ export function ExecutiveDashboard() {
           </div>
         </CardContent>
       </Card>
+      {/* KPI Drilldown Sheet */}
+      <KPIDrilldownSheet
+        open={isDrilldownOpen}
+        onOpenChange={(open) => {
+          if (!open) closeDrilldown();
+        }}
+        metric={drilldownMetric}
+        relatedLinks={[
+          { label: 'View Spend Analysis', href: '/employer/spend' },
+          { label: 'View Recommendations', href: '/employer/recommendations' },
+          { label: 'View Segments', href: '/employer/segments' },
+        ]}
+      />
     </div>
     </PageConfidenceGate>
   );

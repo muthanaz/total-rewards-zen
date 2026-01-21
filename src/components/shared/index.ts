@@ -17,6 +17,8 @@ export { MetricDefinitionsDrawer } from './MetricDefinitionsDrawer';
 
 // Drill Down / Detail Views
 export { DrillDownSheet, DrillDownSummaryGrid } from './DrillDownSheet';
+export { KPIDrilldownSheet, useKPIDrilldown } from './KPIDrilldownSheet';
+export type { KPIMetricData } from './KPIDrilldownSheet';
 
 // Data Quality & Confidence
 export { ConfidenceGate } from './ConfidenceGate';
