@@ -35,3 +35,9 @@ export type { NarrativeInsight } from './NarrativeInsights';
 // Zombie Spend and Forecast components
 export { ZombieSpendCandidates, detectZombieCandidates } from './ZombieSpendCandidates';
 export { ForecastWidget } from './ForecastWidget';
+
+// Segment components
+export { SegmentDimensionCard } from './SegmentDimensionCard';
+export { SegmentDrilldownTable } from './SegmentDrilldownTable';
+export { SegmentInsightsDrawer } from './SegmentInsightsDrawer';
+export { SegmentCharts } from './SegmentCharts';
