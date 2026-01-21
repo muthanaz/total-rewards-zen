@@ -1,186 +1,37 @@
-import { useMemo, useState } from "react";
+/**
+ * Employee Claims & Requests Page
+ * 
+ * Main page for employees to view and create claims, requests, and questions.
+ * Integrates with Supabase for data persistence.
+ */
+
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  CheckCircle2,
-  Clock,
-  FileText,
-  HelpCircle,
   Plus,
   Receipt,
-  Send,
-  AlertTriangle,
+  FileText,
+  HelpCircle,
   ArrowRight,
-  Paperclip,
   Plane,
 } from "lucide-react";
-import { useRequests } from "@/hooks/useSupabaseData";
 import PerDiemWidget from "@/components/employee/PerDiemWidget";
-import {
-  getStatusDisplayLabel,
-  getStatusBadgeStyle,
-  REQUEST_STATUSES,
-  type RequestStatus,
-} from "@/lib/crossPortalContract";
+import { EmployeeRequestsList } from "@/components/employee/EmployeeRequestsList";
+import { EmployeeCreateRequestSheet } from "@/components/employee/EmployeeCreateRequestSheet";
+import { useEmployeeRequestCounts } from "@/hooks/useEmployeeRequests";
 
-type LocalRequestType = "claim" | "request" | "question";
+type RequestType = 'claim' | 'request' | 'question';
 
-type Category =
-  | "Housing"
-  | "Schooling"
-  | "Health Insurance"
-  | "Transport"
-  | "Wellbeing"
-  | "Learning & Development"
-  | "Leave"
-  | "Financial"
-  | "Per Diem"
-  | "Other";
-
-type Priority = "Low" | "Normal" | "High";
-
-type RequestItem = {
-  id: string;
-  type: LocalRequestType;
-  category: Category;
-  title: string;
-  description: string;
-  amount?: number;
-  currency?: "AED";
-  status: RequestStatus; // Now uses DB enum type
-  priority: Priority;
-  createdAt: string;
-  updatedAt: string;
-  attachmentsCount?: number;
-  nextAction?: string;
-  benefitHint?: string;
-  slaDays?: number;
-  lastMessage?: { by: "You" | "HR"; text: string; at: string };
-};
-
-// ---- Demo fallback (used if Supabase has no rows) ----
-const demoItems: RequestItem[] = [
-  {
-    id: "REQ-1042",
-    type: "claim",
-    category: "Transport",
-    title: "Fuel reimbursement (Dec)",
-    description: "Monthly fuel reimbursement as per policy. Receipts attached.",
-    amount: 420,
-    currency: "AED",
-    status: "in_review",
-    priority: "Normal",
-    createdAt: "2026-01-05",
-    updatedAt: "2026-01-08",
-    attachmentsCount: 3,
-    nextAction: "HR reviewing receipts",
-    benefitHint: "Transport Allowance — Reimbursement",
-    slaDays: 5,
-    lastMessage: { by: "HR", text: "Received. Reviewing receipts and date range.", at: "2026-01-08" },
-  },
-  {
-    id: "REQ-1038",
-    type: "request",
-    category: "Housing",
-    title: "Housing advance request",
-    description: "Requesting salary advance to cover annual rent; repay over 10 months.",
-    amount: 85000,
-    currency: "AED",
-    status: "pending", // Maps to "Missing Docs" display label  
-    priority: "High",
-    createdAt: "2026-01-02",
-    updatedAt: "2026-01-06",
-    attachmentsCount: 1,
-    nextAction: "Upload tenancy contract & repayment consent",
-    benefitHint: "Housing Support — Advance / Deduction plan",
-    slaDays: 7,
-    lastMessage: { by: "HR", text: "Please upload tenancy contract and repayment consent form.", at: "2026-01-06" },
-  },
-  {
-    id: "REQ-1031",
-    type: "question",
-    category: "Schooling",
-    title: "Eligibility: nursery fees",
-    description: "Does the schooling benefit cover nursery fees for age 3?",
-    status: "submitted",
-    priority: "Normal",
-    createdAt: "2025-12-18",
-    updatedAt: "2025-12-18",
-    attachmentsCount: 0,
-    nextAction: "Awaiting HR response",
-    benefitHint: "Schooling Benefit — Eligibility",
-    slaDays: 3,
-    lastMessage: { by: "You", text: "Sharing child's DOB and nursery invoice example if needed.", at: "2025-12-18" },
-  },
-  {
-    id: "REQ-1019",
-    type: "claim",
-    category: "Wellbeing",
-    title: "Gym membership reimbursement",
-    description: "Monthly gym reimbursement under wellbeing program.",
-    amount: 250,
-    currency: "AED",
-    status: "paid",
-    priority: "Low",
-    createdAt: "2025-12-01",
-    updatedAt: "2025-12-10",
-    attachmentsCount: 2,
-    nextAction: "Completed",
-    benefitHint: "Wellbeing — Gym reimbursement",
-    slaDays: 5,
-    lastMessage: { by: "HR", text: "Approved and sent to payroll for payout.", at: "2025-12-09" },
-  },
-];
-
-const categories: Category[] = [
-  "Housing",
-  "Schooling",
-  "Health Insurance",
-  "Transport",
-  "Wellbeing",
-  "Learning & Development",
-  "Leave",
-  "Financial",
-  "Per Diem",
-  "Other",
-];
-
-const requestTypeCopy: Record<LocalRequestType, { title: string; desc: string; icon: any }> = {
-  claim: { title: "Submit a Claim", desc: "Reimbursement for eligible expenses (attach receipts/invoices).", icon: Receipt },
-  request: { title: "Make a Request", desc: "Approvals/changes (e.g., allowance advance, benefit change, exceptions).", icon: FileText },
-  question: { title: "Ask a Question", desc: "Clarify policy/eligibility with a tracked answer trail.", icon: HelpCircle },
-};
-
-type BenefitShortcut = {
+interface BenefitShortcut {
   key: string;
   label: string;
-  category: Category;
-  suggestedType: LocalRequestType;
+  category: string;
+  suggestedType: RequestType;
   suggestedTitle: string;
   suggestedDescription: string;
-};
+}
 
 const benefitShortcuts: BenefitShortcut[] = [
   {
@@ -194,7 +45,7 @@ const benefitShortcuts: BenefitShortcut[] = [
   {
     key: "schooling-claim",
     label: "Schooling — Tuition reimbursement",
-    category: "Schooling",
+    category: "Education Allowance",
     suggestedType: "claim",
     suggestedTitle: "School tuition reimbursement",
     suggestedDescription: "Claiming reimbursement for eligible tuition fees as per schooling policy. Please see invoice and proof of payment attached.",
@@ -233,232 +84,38 @@ const benefitShortcuts: BenefitShortcut[] = [
   },
 ];
 
-function formatMoney(amount?: number, currency: "AED" = "AED") {
-  if (amount === undefined || amount === null || Number.isNaN(amount)) return "—";
-  const n = Math.round(amount * 100) / 100;
-  return `${currency} ${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-}
-
-// Use crossPortalContract for status styling - single source of truth
-function statusTone(status: RequestStatus | string) {
-  const style = getStatusBadgeStyle(status);
-  return style.className;
-}
-
-function StatusIcon({ status }: { status: RequestStatus | string }) {
-  if (status === "approved" || status === "paid") return <CheckCircle2 className="w-4 h-4" />;
-  if (status === "pending") return <AlertTriangle className="w-4 h-4" />;
-  return <Clock className="w-4 h-4" />;
-}
-
-function statusProgress(status: RequestStatus | string) {
-  switch (status) {
-    case "draft": return 15;
-    case "submitted": return 35;
-    case "in_review": return 55;
-    case "pending": return 55;
-    case "approved": return 80;
-    case "paid": return 100;
-    case "rejected": return 100;
-    case "closed": return 100;
-    default: return 35;
-  }
-}
-
-function toISODate(d: any) {
-  if (!d) return "";
-  const dt = typeof d === "string" ? new Date(d) : d;
-  if (Number.isNaN(dt.getTime())) return "";
-  const yyyy = dt.getFullYear();
-  const mm = String(dt.getMonth() + 1).padStart(2, "0");
-  const dd = String(dt.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-// Map your Supabase `requests` rows (unknown columns) into RequestItem safely.
-function mapDbRequestToUI(r: any): RequestItem {
-  // Try common column names without breaking if schema differs
-  const created = toISODate(r.created_at ?? r.createdAt) || "—";
-  const updated = toISODate(r.updated_at ?? r.updatedAt ?? r.created_at) || created;
-
-  const type: LocalRequestType =
-    (r.type as LocalRequestType) ?? (r.request_type as LocalRequestType) ?? "request";
-
-  const category: Category =
-    (r.category as Category) ?? (r.benefit_category as Category) ?? "Other";
-
-  // Status comes directly from DB enum now
-  const status: RequestStatus =
-    (r.status as RequestStatus) ?? "submitted";
-
-  const priority: Priority =
-    (r.priority as Priority) ?? "Normal";
-
-  return {
-    id: r.reference ?? r.id ?? `REQ-${Math.floor(Math.random() * 9999)}`,
-    type,
-    category,
-    title: r.subject ?? r.title ?? "Request",
-    description: r.description ?? r.details ?? "—",
-    amount: r.amount ?? r.requested_amount ?? undefined,
-    currency: "AED",
-    status,
-    priority,
-    createdAt: created,
-    updatedAt: updated,
-    attachmentsCount: r.attachments_count ?? 0,
-    nextAction: r.next_action ?? "Awaiting review",
-    benefitHint: r.benefit_hint ?? r.policy_ref ?? undefined,
-    slaDays: r.sla_days ?? (type === "question" ? 3 : type === "claim" ? 5 : 7),
-  };
-}
+const requestTypeCopy: Record<RequestType, { title: string; desc: string; icon: any }> = {
+  claim: { title: "Submit a Claim", desc: "Reimbursement for eligible expenses (attach receipts/invoices).", icon: Receipt },
+  request: { title: "Make a Request", desc: "Approvals/changes (e.g., allowance advance, benefit change, exceptions).", icon: FileText },
+  question: { title: "Ask a Question", desc: "Clarify policy/eligibility with a tracked answer trail.", icon: HelpCircle },
+};
 
 export default function Requests() {
-  const { data: dbRequests, isLoading } = useRequests();
-
-  // If Supabase has data, use it. Otherwise, show the demo list.
-  const supabaseItems: RequestItem[] = useMemo(() => {
-    const rows = Array.isArray(dbRequests) ? dbRequests : [];
-    return rows.map(mapDbRequestToUI);
-  }, [dbRequests]);
-
-  const [localItems, setLocalItems] = useState<RequestItem[]>(demoItems);
-
-  const items: RequestItem[] = supabaseItems.length > 0 ? supabaseItems : localItems;
-
-  const [tab, setTab] = useState<LocalRequestType | "all">("all");
-  const [filters, setFilters] = useState<{
-    q: string;
-    category: Category | "all";
-    status: RequestStatus | "all";
-    sort: "newest" | "oldest" | "amount_desc" | "amount_asc";
-  }>({ q: "", category: "all", status: "all", sort: "newest" });
-
+  const counts = useEmployeeRequestCounts();
+  
   const [createOpen, setCreateOpen] = useState(false);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [activeItem, setActiveItem] = useState<RequestItem | null>(null);
-
-  const [createType, setCreateType] = useState<LocalRequestType>("claim");
-  const [form, setForm] = useState<{
-    category: Category;
-    title: string;
-    description: string;
-    amount?: string;
-    priority: Priority;
-    attachmentsCount: number;
-    benefitHint: string;
-  }>({
-    category: "Other",
-    title: "",
-    description: "",
-    amount: "",
-    priority: "Normal",
-    attachmentsCount: 0,
-    benefitHint: "",
-  });
-
-  const filtered = useMemo(() => {
-    const q = filters.q.trim().toLowerCase();
-    let list = items.slice();
-
-    if (tab !== "all") list = list.filter((i) => i.type === tab);
-    if (filters.category !== "all") list = list.filter((i) => i.category === filters.category);
-    if (filters.status !== "all") list = list.filter((i) => i.status === filters.status);
-
-    if (q) {
-      list = list.filter((i) => {
-        return (
-          i.id.toLowerCase().includes(q) ||
-          i.title.toLowerCase().includes(q) ||
-          i.description.toLowerCase().includes(q) ||
-          i.category.toLowerCase().includes(q) ||
-          (i.benefitHint ?? "").toLowerCase().includes(q)
-        );
-      });
-    }
-
-    list.sort((a, b) => {
-      const da = new Date(a.createdAt).getTime();
-      const db = new Date(b.createdAt).getTime();
-      const aa = a.amount ?? -1;
-      const bb = b.amount ?? -1;
-
-      switch (filters.sort) {
-        case "oldest": return da - db;
-        case "amount_desc": return bb - aa;
-        case "amount_asc": return aa - bb;
-        case "newest":
-        default: return db - da;
-      }
-    });
-
-    return list;
-  }, [items, tab, filters]);
-
-  const counts = useMemo(() => {
-    const byType = { claim: 0, request: 0, question: 0 };
-    for (const i of items) byType[i.type] += 1;
-    return { byType };
-  }, [items]);
-
-  const openCreate = (type: LocalRequestType) => {
+  const [createType, setCreateType] = useState<RequestType>('claim');
+  const [createCategory, setCreateCategory] = useState('');
+  const [createTitle, setCreateTitle] = useState('');
+  const [createDescription, setCreateDescription] = useState('');
+  
+  const openCreate = (type: RequestType) => {
     setCreateType(type);
-    setForm({
-      category: "Other",
-      title: "",
-      description: "",
-      amount: "",
-      priority: "Normal",
-      attachmentsCount: 0,
-      benefitHint: "",
-    });
+    setCreateCategory('');
+    setCreateTitle('');
+    setCreateDescription('');
     setCreateOpen(true);
   };
-
-  const applyShortcut = (s: BenefitShortcut) => {
-    setCreateType(s.suggestedType);
-    setForm((p) => ({
-      ...p,
-      category: s.category,
-      title: s.suggestedTitle,
-      description: s.suggestedDescription,
-      priority: s.suggestedType === "request" ? "High" : "Normal",
-      benefitHint: s.label,
-    }));
+  
+  const applyShortcut = (shortcut: BenefitShortcut) => {
+    setCreateType(shortcut.suggestedType);
+    setCreateCategory(shortcut.category);
+    setCreateTitle(shortcut.suggestedTitle);
+    setCreateDescription(shortcut.suggestedDescription);
     setCreateOpen(true);
   };
-
-  const submitLocal = (asDraft: boolean) => {
-    // NOTE: for now we only add locally unless you confirm your Supabase `requests` columns for insert.
-    const id = `REQ-${1000 + localItems.length + Math.floor(Math.random() * 50)}`;
-    const today = toISODate(new Date());
-
-    const amountNum =
-      createType === "question" ? undefined : form.amount?.trim() ? Number(form.amount) : undefined;
-
-    const newItem: RequestItem = {
-      id,
-      type: createType,
-      category: form.category,
-      title: form.title.trim() || requestTypeCopy[createType].title,
-      description: form.description.trim() || "—",
-      amount: amountNum,
-      currency: amountNum !== undefined ? "AED" : undefined,
-      status: asDraft ? "draft" : "submitted",
-      priority: form.priority,
-      createdAt: today,
-      updatedAt: today,
-      attachmentsCount: form.attachmentsCount,
-      nextAction: asDraft ? "Complete details & submit" : "Awaiting HR review",
-      benefitHint: form.benefitHint || undefined,
-      slaDays: createType === "question" ? 3 : createType === "claim" ? 5 : 7,
-    };
-
-    setLocalItems((prev) => [newItem, ...prev]);
-    setCreateOpen(false);
-  };
-
-  const QuickCard = ({ type }: { type: LocalRequestType }) => {
+  
+  const QuickCard = ({ type }: { type: RequestType }) => {
     const Icon = requestTypeCopy[type].icon;
     return (
       <Card className="hover:shadow-md transition-shadow">
@@ -481,14 +138,18 @@ export default function Requests() {
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">{counts.byType[type]}</span>
+            <span className="font-medium text-foreground">
+              {type === 'claim' ? counts.pending + counts.inReview : 
+               type === 'request' ? counts.pending : 
+               counts.total - counts.approved - counts.rejected}
+            </span>
             <span>active items</span>
           </div>
         </CardContent>
       </Card>
     );
   };
-
+  
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
@@ -496,9 +157,6 @@ export default function Requests() {
         <p className="text-muted-foreground">
           Benefits-first submissions with clear status, next actions, and SLA expectations.
         </p>
-        {isLoading && (
-          <div className="text-xs text-muted-foreground">Loading from database…</div>
-        )}
       </div>
 
       {/* Per Diem Section */}
@@ -523,10 +181,11 @@ export default function Requests() {
         </Card>
       </div>
 
+      {/* Benefit Shortcuts */}
       <Card className="border-dashed">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Start from a benefit (recommended)</CardTitle>
-          <CardDescription>Pick a scenario — we’ll prefill the correct wording and category.</CardDescription>
+          <CardDescription>Pick a scenario — we'll prefill the correct wording and category.</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {benefitShortcuts.map((s) => (
@@ -543,367 +202,25 @@ export default function Requests() {
         </CardContent>
       </Card>
 
+      {/* Quick Action Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <QuickCard type="claim" />
         <QuickCard type="request" />
         <QuickCard type="question" />
       </div>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">My items</CardTitle>
-          <CardDescription>Filter and track exactly what’s next.</CardDescription>
-        </CardHeader>
+      {/* Requests List */}
+      <EmployeeRequestsList />
 
-        <CardContent className="space-y-4">
-          <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
-            <TabsList className="w-full justify-start flex-wrap gap-2 h-auto">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="claim">Claims</TabsTrigger>
-              <TabsTrigger value="request">Requests</TabsTrigger>
-              <TabsTrigger value="question">Questions</TabsTrigger>
-            </TabsList>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 mt-4">
-              <div className="lg:col-span-4">
-                <Label>Search</Label>
-                <Input
-                  value={filters.q}
-                  onChange={(e) => setFilters((p) => ({ ...p, q: e.target.value }))}
-                  placeholder="Search by ID, title, benefit, category…"
-                />
-              </div>
-
-              <div className="lg:col-span-3">
-                <Label>Category</Label>
-                <Select value={filters.category} onValueChange={(v) => setFilters((p) => ({ ...p, category: v as any }))}>
-                  <SelectTrigger><SelectValue placeholder="All categories" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="lg:col-span-3">
-                <Label>Status</Label>
-                <Select value={filters.status} onValueChange={(v) => setFilters((p) => ({ ...p, status: v as RequestStatus | "all" }))}>
-                  <SelectTrigger><SelectValue placeholder="All statuses" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    {(["draft", "submitted", "pending", "in_review", "approved", "rejected", "paid", "closed"] as RequestStatus[]).map((s) => (
-                      <SelectItem key={s} value={s}>{getStatusDisplayLabel(s)}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="lg:col-span-2">
-                <Label>Sort</Label>
-                <Select value={filters.sort} onValueChange={(v) => setFilters((p) => ({ ...p, sort: v as any }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">Newest</SelectItem>
-                    <SelectItem value="oldest">Oldest</SelectItem>
-                    <SelectItem value="amount_desc">Amount (high → low)</SelectItem>
-                    <SelectItem value="amount_asc">Amount (low → high)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <TabsContent value={tab} className="mt-4">
-              {filtered.length === 0 ? (
-                <div className="text-sm text-muted-foreground py-10 text-center">No items match your filters.</div>
-              ) : (
-                <div className="space-y-3">
-                  {filtered.map((i) => (
-                    <Card key={i.id} className="hover:shadow-sm transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="flex flex-col lg:flex-row lg:items-start gap-3 lg:gap-6">
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="font-semibold">{i.title}</span>
-                                  <Badge variant="outline" className="text-xs">{i.id}</Badge>
-                                  <Badge variant="outline" className="text-xs">{i.category}</Badge>
-                                  <Badge variant="outline" className={`text-xs ${statusTone(i.status)}`}>
-                                    <span className="inline-flex items-center gap-1">
-                                      <StatusIcon status={i.status} />
-                                      {getStatusDisplayLabel(i.status)}
-                                    </span>
-                                  </Badge>
-                                  {i.priority === "High" && (
-                                    <Badge variant="outline" className="text-xs bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-300">
-                                      High priority
-                                    </Badge>
-                                  )}
-                                </div>
-
-                                {i.benefitHint && (
-                                  <div className="mt-1 text-xs text-muted-foreground">
-                                    Benefit context: <span className="font-medium text-foreground">{i.benefitHint}</span>
-                                  </div>
-                                )}
-
-                                <p className="text-sm text-muted-foreground mt-2 whitespace-pre-line">{i.description}</p>
-                              </div>
-
-                              <div className="text-right">
-                                <div className="text-sm font-semibold">{formatMoney(i.amount, "AED")}</div>
-                                <div className="text-xs text-muted-foreground">Type: {i.type}</div>
-                              </div>
-                            </div>
-
-                            <div className="mt-3">
-                              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                <span>Progress</span>
-                                <span>SLA: <span className="font-medium text-foreground">{i.slaDays ?? 5} business days</span></span>
-                              </div>
-                              <Progress value={statusProgress(i.status)} className="mt-2" />
-                            </div>
-
-                            <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                              <span>Created: {i.createdAt}</span>
-                              <span>•</span>
-                              <span>Updated: {i.updatedAt}</span>
-                              <span>•</span>
-                              <span className="inline-flex items-center gap-1">
-                                <Paperclip className="w-3.5 h-3.5" /> Attachments: {i.attachmentsCount ?? 0}
-                              </span>
-                            </div>
-
-                            {i.nextAction && (
-                              <div className="mt-2 text-sm">
-                                <span className="text-muted-foreground">Next action: </span>
-                                <span className="font-medium">{i.nextAction}</span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex lg:flex-col gap-2 lg:w-48">
-                            <Button
-                              variant="outline"
-                              className="w-full gap-2"
-                              onClick={() => { setActiveItem(i); setDetailOpen(true); }}
-                            >
-                              <FileText className="w-4 h-4" />
-                              View details
-                            </Button>
-                            <Button
-                              variant="secondary"
-                              className="w-full gap-2"
-                              onClick={() => { setActiveItem(i); setDetailOpen(true); }}
-                            >
-                              <Send className="w-4 h-4" />
-                              Add update
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-
-      {/* Create dialog */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-[760px]">
-          <DialogHeader>
-            <DialogTitle>{requestTypeCopy[createType].title}</DialogTitle>
-            <DialogDescription>{requestTypeCopy[createType].desc}</DialogDescription>
-          </DialogHeader>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <Label>Benefit context (optional but recommended)</Label>
-              <Input
-                value={form.benefitHint}
-                onChange={(e) => setForm((p) => ({ ...p, benefitHint: e.target.value }))}
-                placeholder="e.g., Housing allowance (advance & deduction), Schooling policy (tuition reimbursement)"
-              />
-            </div>
-
-            <div>
-              <Label>Category</Label>
-              <Select value={form.category} onValueChange={(v) => setForm((p) => ({ ...p, category: v as Category }))}>
-                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-                <SelectContent>
-                  {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Priority</Label>
-              <Select value={form.priority} onValueChange={(v) => setForm((p) => ({ ...p, priority: v as Priority }))}>
-                <SelectTrigger><SelectValue placeholder="Select priority" /></SelectTrigger>
-                <SelectContent>
-                  {(["Low", "Normal", "High"] as Priority[]).map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="md:col-span-2">
-              <Label>Title</Label>
-              <Input
-                value={form.title}
-                onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-                placeholder="Short clear title (e.g., School tuition reimbursement)"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <Label>Description</Label>
-              <Textarea
-                value={form.description}
-                onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-                placeholder="Add details so HR can process quickly (what happened, policy context, outcome needed)."
-                rows={4}
-              />
-            </div>
-
-            {createType !== "question" && (
-              <div>
-                <Label>Amount (AED)</Label>
-                <Input
-                  inputMode="decimal"
-                  value={form.amount}
-                  onChange={(e) => setForm((p) => ({ ...p, amount: e.target.value }))}
-                  placeholder="e.g., 1250"
-                />
-              </div>
-            )}
-
-            <div>
-              <Label>Attachments (count)</Label>
-              <Input
-                inputMode="numeric"
-                value={String(form.attachmentsCount)}
-                onChange={(e) =>
-                  setForm((p) => ({
-                    ...p,
-                    attachmentsCount: Math.max(0, Number(e.target.value || 0)),
-                  }))
-                }
-                placeholder="0"
-              />
-            </div>
-          </div>
-
-          <Separator className="my-2" />
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-            <Button variant="secondary" onClick={() => submitLocal(true)} className="gap-2">
-              <FileText className="w-4 h-4" />
-              Save draft
-            </Button>
-            <Button onClick={() => submitLocal(false)} className="gap-2">
-              <Send className="w-4 h-4" />
-              Submit
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Detail dialog */}
-      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="sm:max-w-[760px]">
-          <DialogHeader>
-            <DialogTitle>Request details</DialogTitle>
-            <DialogDescription>Status, context, and what’s next.</DialogDescription>
-          </DialogHeader>
-
-          {!activeItem ? (
-            <div className="text-sm text-muted-foreground">No item selected.</div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold">{activeItem.title}</span>
-                    <Badge variant="outline" className="text-xs">{activeItem.id}</Badge>
-                    <Badge variant="outline" className="text-xs">{activeItem.category}</Badge>
-                    <Badge variant="outline" className={`text-xs ${statusTone(activeItem.status)}`}>
-                      <span className="inline-flex items-center gap-1">
-                        <StatusIcon status={activeItem.status} />
-                        {activeItem.status}
-                      </span>
-                    </Badge>
-                  </div>
-                  {activeItem.benefitHint && (
-                    <div className="mt-1 text-xs text-muted-foreground">
-                      Benefit context: <span className="font-medium text-foreground">{activeItem.benefitHint}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="text-right">
-                  <div className="text-sm font-semibold">{formatMoney(activeItem.amount, "AED")}</div>
-                  <div className="text-xs text-muted-foreground">Priority: {activeItem.priority}</div>
-                </div>
-              </div>
-
-              <div className="text-sm text-muted-foreground whitespace-pre-line">
-                {activeItem.description}
-              </div>
-
-              <div className="rounded-lg border bg-card p-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">Progress</span>
-                  <span className="text-muted-foreground">SLA: {activeItem.slaDays ?? 5} business days</span>
-                </div>
-                <Progress value={statusProgress(activeItem.status)} className="mt-2" />
-                <div className="mt-2 text-xs text-muted-foreground flex flex-wrap gap-2">
-                  <span>Created: {activeItem.createdAt}</span>
-                  <span>•</span>
-                  <span>Updated: {activeItem.updatedAt}</span>
-                  <span>•</span>
-                  <span className="inline-flex items-center gap-1">
-                    <Paperclip className="w-3.5 h-3.5" /> Attachments: {activeItem.attachmentsCount ?? 0}
-                  </span>
-                </div>
-              </div>
-
-              <div className="rounded-lg border bg-muted/20 p-3">
-                <div className="text-sm font-medium">Add an update</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Next step: we’ll wire this to Supabase messages + file uploads.
-                </div>
-                <div className="mt-3">
-                  <Label>Message</Label>
-                  <Textarea placeholder="Add clarifications, confirm details, or upload missing docs…" rows={3} />
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <Button variant="outline" className="gap-2">
-                    <Paperclip className="w-4 h-4" />
-                    Attach files
-                  </Button>
-                  <Button className="gap-2">
-                    <Send className="w-4 h-4" />
-                    Send update
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDetailOpen(false)}>Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <div className="text-xs text-muted-foreground flex items-center gap-2">
-        <FileText className="w-4 h-4" />
-        Tip: Add benefit context + amount + dates + proof of payment to minimize HR back-and-forth.
-      </div>
+      {/* Create Request Sheet */}
+      <EmployeeCreateRequestSheet
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        initialType={createType}
+        initialCategory={createCategory}
+        initialTitle={createTitle}
+        initialDescription={createDescription}
+      />
     </div>
   );
 }
