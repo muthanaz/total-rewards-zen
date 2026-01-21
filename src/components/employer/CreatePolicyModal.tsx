@@ -3,11 +3,11 @@
  * 
  * Modal dialog for creating new policies with:
  * - Policy Name
+ * - Benefit Key (linked to benefits table)
  * - Life Area
  * - Benefit Type
  * - Transaction Model
- * - Effective Start Date (optional)
- * - Owner (optional)
+ * - Effective Dates
  */
 
 import { useState } from 'react';
@@ -29,21 +29,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, FileText, CalendarDays, User } from 'lucide-react';
-import { useCreatePolicy } from '@/hooks/usePolicyEngine';
+import { Loader2, FileText, CalendarDays } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import {
   BENEFIT_TYPE_OPTIONS,
   TRANSACTION_MODEL_OPTIONS,
   BenefitPolicyType,
   TransactionModel,
+  DEFAULT_POLICY_LOGIC,
+  DEFAULT_POLICY_CONTENT,
 } from '@/lib/policyEngine';
 import { LIFE_AREA_LABELS } from '@/lib/constants';
+import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface CreatePolicyModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   organizationId: string;
-  onCreated?: (policyId: string) => void;
+  onCreated?: (policyId: string, versionId: string) => void;
 }
 
 export function CreatePolicyModal({
@@ -53,44 +59,122 @@ export function CreatePolicyModal({
   onCreated,
 }: CreatePolicyModalProps) {
   const [name, setName] = useState('');
+  const [benefitKey, setBenefitKey] = useState('');
   const [lifeArea, setLifeArea] = useState('');
   const [benefitType, setBenefitType] = useState<BenefitPolicyType>('allowance');
   const [transactionModel, setTransactionModel] = useState<TransactionModel>('claim_only');
   const [effectiveFrom, setEffectiveFrom] = useState('');
-  const [ownerId, setOwnerId] = useState('');
+  const [effectiveTo, setEffectiveTo] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const createPolicy = useCreatePolicy();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Fetch available benefits for the dropdown
+  const { data: benefits = [] } = useQuery({
+    queryKey: ['benefits_list'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('benefits')
+        .select('id, name, life_area, benefit_type')
+        .eq('is_active', true)
+        .order('name');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const handleBenefitChange = (benefitId: string) => {
+    setBenefitKey(benefitId);
+    const benefit = benefits.find(b => b.id === benefitId);
+    if (benefit) {
+      setName(benefit.name + ' Policy');
+      setLifeArea(benefit.life_area || '');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!name.trim() || !lifeArea) {
+      toast.error('Please fill in required fields');
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
-      const result = await createPolicy.mutateAsync({
-        organizationId,
-        name: name.trim(),
-        lifeArea,
-        benefitType,
-        transactionModel,
-        effectiveFrom: effectiveFrom || undefined,
-        ownerId: ownerId || undefined,
+      // Generate policy_ref
+      const policyRef = `POL-${name.substring(0, 3).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+
+      // Create policy record
+      const { data: policy, error: policyError } = await supabase
+        .from('policies')
+        .insert({
+          organization_id: organizationId,
+          policy_ref: policyRef,
+          title: name.trim(),
+          category: lifeArea,
+          version: '1.0',
+          status: 'draft',
+          effective_from: effectiveFrom || new Date().toISOString().split('T')[0],
+          effective_to: effectiveTo || null,
+          benefit_type: benefitType,
+          transaction_model: transactionModel,
+          benefit_key: benefitKey || null,
+          is_active: true,
+        })
+        .select()
+        .single();
+
+      if (policyError) throw policyError;
+
+      // Create initial draft version
+      const { data: version, error: versionError } = await (supabase
+        .from('policy_versions' as any)
+        .insert({
+          policy_id: policy.id,
+          version_number: 1,
+          status: 'draft',
+          effective_from: effectiveFrom || null,
+          effective_to: effectiveTo || null,
+          created_by: user?.id,
+          content_json: DEFAULT_POLICY_CONTENT,
+          logic_json: {
+            ...DEFAULT_POLICY_LOGIC,
+            transaction_model: transactionModel,
+          },
+        } as any)
+        .select()
+        .single()) as any;
+
+      if (versionError) throw versionError;
+
+      // Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ['policies_v2'] });
+      queryClient.invalidateQueries({ queryKey: ['policies'] });
+      queryClient.invalidateQueries({ queryKey: ['organization_policies'] });
+
+      toast.success('Policy created', {
+        description: `${policy.title} has been created as Draft v1.`,
       });
 
       // Reset form
       setName('');
+      setBenefitKey('');
       setLifeArea('');
       setBenefitType('allowance');
       setTransactionModel('claim_only');
       setEffectiveFrom('');
-      setOwnerId('');
+      setEffectiveTo('');
 
       onOpenChange(false);
-      onCreated?.(result.policy.id);
+      onCreated?.(policy.id, version.id);
     } catch (error) {
       console.error('Failed to create policy:', error);
+      toast.error('Failed to create policy');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -117,6 +201,29 @@ export function CreatePolicyModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          {/* Benefit Key (optional, links to benefits table) */}
+          <div className="space-y-2">
+            <Label htmlFor="benefitKey">
+              Link to Benefit Category
+            </Label>
+            <Select value={benefitKey} onValueChange={handleBenefitChange}>
+              <SelectTrigger id="benefitKey">
+                <SelectValue placeholder="Select a benefit (optional)..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">— No linked benefit —</SelectItem>
+                {benefits.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Link to a benefit category for Claims integration
+            </p>
+          </div>
+
           {/* Policy Name */}
           <div className="space-y-2">
             <Label htmlFor="name">
@@ -150,53 +257,53 @@ export function CreatePolicyModal({
             </Select>
           </div>
 
-          {/* Benefit Type */}
-          <div className="space-y-2">
-            <Label htmlFor="benefitType">Benefit Type</Label>
-            <Select
-              value={benefitType}
-              onValueChange={(v) => setBenefitType(v as BenefitPolicyType)}
-            >
-              <SelectTrigger id="benefitType">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {BENEFIT_TYPE_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Benefit Type */}
+            <div className="space-y-2">
+              <Label htmlFor="benefitType">Benefit Type</Label>
+              <Select
+                value={benefitType}
+                onValueChange={(v) => setBenefitType(v as BenefitPolicyType)}
+              >
+                <SelectTrigger id="benefitType">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {BENEFIT_TYPE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Transaction Model */}
+            <div className="space-y-2">
+              <Label htmlFor="transactionModel">Transaction Model</Label>
+              <Select
+                value={transactionModel}
+                onValueChange={(v) => setTransactionModel(v as TransactionModel)}
+              >
+                <SelectTrigger id="transactionModel">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TRANSACTION_MODEL_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          {/* Transaction Model */}
-          <div className="space-y-2">
-            <Label htmlFor="transactionModel">Transaction Model</Label>
-            <Select
-              value={transactionModel}
-              onValueChange={(v) => setTransactionModel(v as TransactionModel)}
-            >
-              <SelectTrigger id="transactionModel">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TRANSACTION_MODEL_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    <div className="flex flex-col">
-                      <span>{opt.label}</span>
-                      <span className="text-xs text-muted-foreground">{opt.description}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              {TRANSACTION_MODEL_OPTIONS.find((o) => o.value === transactionModel)?.description}
-            </p>
-          </div>
+          <p className="text-xs text-muted-foreground px-1">
+            {TRANSACTION_MODEL_OPTIONS.find((o) => o.value === transactionModel)?.description}
+          </p>
 
-          {/* Optional Fields */}
+          {/* Effective Dates */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="effectiveFrom" className="flex items-center gap-1">
@@ -212,15 +319,15 @@ export function CreatePolicyModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="owner" className="flex items-center gap-1">
-                <User className="w-3 h-3" />
-                Owner (optional)
+              <Label htmlFor="effectiveTo" className="flex items-center gap-1">
+                <CalendarDays className="w-3 h-3" />
+                Effective To
               </Label>
               <Input
-                id="owner"
-                value={ownerId}
-                onChange={(e) => setOwnerId(e.target.value)}
-                placeholder="User ID or email"
+                id="effectiveTo"
+                type="date"
+                value={effectiveTo}
+                onChange={(e) => setEffectiveTo(e.target.value)}
               />
             </div>
           </div>
@@ -230,12 +337,12 @@ export function CreatePolicyModal({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={createPolicy.isPending}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={createPolicy.isPending || !name.trim() || !lifeArea}>
-              {createPolicy.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            <Button type="submit" disabled={isSubmitting || !name.trim() || !lifeArea}>
+              {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Create Policy
             </Button>
           </DialogFooter>
