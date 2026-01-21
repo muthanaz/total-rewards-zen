@@ -11,6 +11,9 @@ export { SectionCard, CompactSectionCard } from './SectionCard';
 
 // Metric Components
 export { MetricCard, MetricGrid, InlineStat } from './MetricCard';
+export { MetricTooltip } from './MetricTooltip';
+export { ConfidenceBadge, ConfidenceDot } from './ConfidenceBadge';
+export { MetricDefinitionsDrawer } from './MetricDefinitionsDrawer';
 
 // Drill Down / Detail Views
 export { DrillDownSheet, DrillDownSummaryGrid } from './DrillDownSheet';
