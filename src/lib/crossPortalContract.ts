@@ -21,12 +21,22 @@ export type RequestType = Database['public']['Enums']['request_type'];
 
 /**
  * Canonical request status values - must match database enum
+ * 
+ * WORKFLOW STAGES:
+ * 1. SUBMITTED / PENDING - Initial submission
+ * 2. PENDING_EMPLOYEE - Waiting for employee to provide docs/info
+ * 3. IN_REVIEW - Being reviewed by HR Ops
+ * 4. ESCALATED - Escalated to manager/executive for approval
+ * 5. APPROVED / REJECTED - Final decision
+ * 6. PAID / CLOSED - Fully processed
  */
 export const REQUEST_STATUSES = {
   DRAFT: 'draft' as RequestStatus,
   PENDING: 'pending' as RequestStatus,
   SUBMITTED: 'submitted' as RequestStatus,
+  PENDING_EMPLOYEE: 'pending_employee' as RequestStatus,
   IN_REVIEW: 'in_review' as RequestStatus,
+  ESCALATED: 'escalated' as RequestStatus,
   APPROVED: 'approved' as RequestStatus,
   REJECTED: 'rejected' as RequestStatus,
   PAID: 'paid' as RequestStatus,
@@ -34,12 +44,46 @@ export const REQUEST_STATUSES = {
 } as const;
 
 /**
+ * Workflow stage order for display
+ */
+export const WORKFLOW_STAGES = [
+  { key: 'submitted', label: 'Submitted', statuses: ['pending', 'submitted'] },
+  { key: 'pending_employee', label: 'Pending Employee', statuses: ['pending_employee'] },
+  { key: 'in_review', label: 'In Review', statuses: ['in_review'] },
+  { key: 'escalated', label: 'Escalated', statuses: ['escalated'] },
+  { key: 'approved', label: 'Approved', statuses: ['approved'] },
+  { key: 'rejected', label: 'Rejected', statuses: ['rejected'] },
+  { key: 'paid', label: 'Paid/Closed', statuses: ['paid', 'closed'] },
+] as const;
+
+/**
  * Status groups for filtering
  */
 export const STATUS_GROUPS = {
-  ACTIVE: [REQUEST_STATUSES.PENDING, REQUEST_STATUSES.SUBMITTED, REQUEST_STATUSES.IN_REVIEW] as RequestStatus[],
+  ACTIVE: [REQUEST_STATUSES.PENDING, REQUEST_STATUSES.SUBMITTED, REQUEST_STATUSES.PENDING_EMPLOYEE, REQUEST_STATUSES.IN_REVIEW, REQUEST_STATUSES.ESCALATED] as RequestStatus[],
+  PENDING_ACTION: [REQUEST_STATUSES.PENDING, REQUEST_STATUSES.SUBMITTED, REQUEST_STATUSES.IN_REVIEW, REQUEST_STATUSES.ESCALATED] as RequestStatus[],
+  WAITING_EMPLOYEE: [REQUEST_STATUSES.PENDING_EMPLOYEE] as RequestStatus[],
   COMPLETED: [REQUEST_STATUSES.APPROVED, REQUEST_STATUSES.PAID, REQUEST_STATUSES.CLOSED] as RequestStatus[],
   TERMINAL: [REQUEST_STATUSES.APPROVED, REQUEST_STATUSES.REJECTED, REQUEST_STATUSES.PAID, REQUEST_STATUSES.CLOSED] as RequestStatus[],
+} as const;
+
+/**
+ * Audit trail event types
+ */
+export const AUDIT_EVENT_TYPES = {
+  CREATED: 'created',
+  VIEWED: 'viewed',
+  ASSIGNED: 'assigned',
+  DOCS_REQUESTED: 'docs_requested',
+  DOCS_UPLOADED: 'docs_uploaded',
+  STATUS_CHANGED: 'status_changed',
+  APPROVED: 'approved',
+  REJECTED: 'rejected',
+  ESCALATED: 'escalated',
+  PAID: 'paid',
+  CLOSED: 'closed',
+  NOTE_ADDED: 'note_added',
+  BULK_ACTION: 'bulk_action',
 } as const;
 
 /**
@@ -51,7 +95,9 @@ export function getStatusDisplayLabel(status: RequestStatus | string | null): st
     case 'draft': return 'Draft';
     case 'pending': return 'Pending';
     case 'submitted': return 'Submitted';
+    case 'pending_employee': return 'Pending Employee';
     case 'in_review': return 'In Review';
+    case 'escalated': return 'Escalated';
     case 'approved': return 'Approved';
     case 'rejected': return 'Rejected';
     case 'paid': return 'Paid';
@@ -73,8 +119,12 @@ export function getStatusBadgeStyle(status: RequestStatus | string | null): {
     case 'pending':
     case 'submitted':
       return { variant: 'secondary', className: 'bg-amber-500/10 text-amber-600 border-amber-500/20' };
+    case 'pending_employee':
+      return { variant: 'secondary', className: 'bg-purple-500/10 text-purple-600 border-purple-500/20' };
     case 'in_review':
       return { variant: 'secondary', className: 'bg-blue-500/10 text-blue-600 border-blue-500/20' };
+    case 'escalated':
+      return { variant: 'secondary', className: 'bg-orange-500/10 text-orange-600 border-orange-500/20' };
     case 'approved':
     case 'paid':
       return { variant: 'secondary', className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' };
@@ -91,14 +141,14 @@ export function getStatusBadgeStyle(status: RequestStatus | string | null): {
  * Check if a status allows editing by the employee
  */
 export function isEditableStatus(status: RequestStatus | string | null): boolean {
-  return status === 'draft' || status === 'pending';
+  return status === 'draft' || status === 'pending' || status === 'pending_employee';
 }
 
 /**
  * Check if a status allows processing by the employer
  */
 export function isProcessableStatus(status: RequestStatus | string | null): boolean {
-  return status === 'pending' || status === 'submitted' || status === 'in_review';
+  return status === 'pending' || status === 'submitted' || status === 'in_review' || status === 'escalated';
 }
 
 // ============================================================================

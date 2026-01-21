@@ -87,6 +87,7 @@ import { useClaimDocs, useMarkDocReceived } from '@/hooks/useClaimDocs';
 import { useClaimNotes, useAddClaimNote } from '@/hooks/useClaimNotes';
 import { useClaimDocumentStatus } from '@/hooks/useClaimDocumentStatus';
 import { useClaimActions } from '@/hooks/useClaimActions';
+import { ClaimCaseSummary } from '@/components/employer/ClaimCaseSummary';
 import { 
   getStatusBadgeStyle, 
   getStatusDisplayLabel,
@@ -619,6 +620,20 @@ export function ClaimReviewSheet({
                   Decision
                 </TabsTrigger>
               </TabsList>
+
+              {/* Case Summary Block */}
+              <ClaimCaseSummary
+                claimId={request?.id || ''}
+                status={request?.status || null}
+                slaDueAt={request?.sla_due_at || null}
+                assignedTo={request?.assigned_to || null}
+                assignedToName={(request as any)?.assigned_owner_name || null}
+                policyRef={request?.policy_ref || null}
+                validation={validation}
+                documentStatus={documentStatus}
+                timeline={timeline}
+                className="mt-4"
+              />
 
               {/* Overview Tab */}
               <TabsContent value="overview" className="space-y-4 mt-4">

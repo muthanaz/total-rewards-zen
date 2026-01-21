@@ -2725,6 +2725,8 @@ export type Database = {
         | "in_review"
         | "paid"
         | "closed"
+        | "pending_employee"
+        | "escalated"
       request_type: "claim" | "request" | "question"
       user_role: "employee" | "employer" | "admin" | "vendor"
     }
@@ -2880,6 +2882,8 @@ export const Constants = {
         "in_review",
         "paid",
         "closed",
+        "pending_employee",
+        "escalated",
       ],
       request_type: ["claim", "request", "question"],
       user_role: ["employee", "employer", "admin", "vendor"],
