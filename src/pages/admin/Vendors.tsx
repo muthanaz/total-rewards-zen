@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PageLayout, MetricCard, MetricGrid } from '@/components/shared';
@@ -7,46 +7,116 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { 
   Store, Search, Plus, CheckCircle, XCircle, Clock, 
-  Ban, Star, Eye, FileCheck, Building2
+  Ban, Star, Eye, FileCheck, Building2, AlertTriangle
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { useAdminAuditLog } from '@/hooks/useAdminAuditLog';
+import { VendorDetailsDrawer, AddVendorModal, type VendorFormData } from '@/components/admin/governance';
+import type { VendorDisplay, KYBDocument, KYBStage } from '@/lib/governanceTypes';
+import { DEFAULT_KYB_DOCUMENTS, calculateKYBProgress } from '@/lib/governanceTypes';
 
 const STATUS_CONFIG = {
-  active: { label: 'Active', labelAr: 'نشط', color: 'bg-success/10 text-success border-success/30', icon: CheckCircle },
+  draft: { label: 'Draft', labelAr: 'مسودة', color: 'bg-muted text-muted-foreground', icon: Clock },
   pending: { label: 'Pending', labelAr: 'قيد الانتظار', color: 'bg-warning/10 text-warning border-warning/30', icon: Clock },
+  active: { label: 'Active', labelAr: 'نشط', color: 'bg-success/10 text-success border-success/30', icon: CheckCircle },
   suspended: { label: 'Suspended', labelAr: 'معلق', color: 'bg-destructive/10 text-destructive border-destructive/30', icon: Ban },
-  rejected: { label: 'Rejected', labelAr: 'مرفوض', color: 'bg-muted text-muted-foreground border-border', icon: XCircle },
+  rejected: { label: 'Rejected', labelAr: 'مرفوض', color: 'bg-muted text-muted-foreground', icon: XCircle },
 };
 
-const SAMPLE_VENDORS = [
-  { id: '1', company_name: 'HealthPlus Medical', status: 'active', categories: ['Health', 'Wellness'], rating: 4.8, total_offers: 12, total_transactions: 2450, commission_rate: 8, kyb_status: 'verified', created_at: '2024-01-15' },
-  { id: '2', company_name: 'EduFirst Academy', status: 'active', categories: ['Education'], rating: 4.6, total_offers: 8, total_transactions: 1890, commission_rate: 10, kyb_status: 'verified', created_at: '2024-02-20' },
-  { id: '3', company_name: 'FitLife Gym', status: 'pending', categories: ['Fitness', 'Wellness'], rating: 0, total_offers: 0, total_transactions: 0, commission_rate: 12, kyb_status: 'pending', created_at: '2025-01-10' },
-  { id: '4', company_name: 'TechGadgets Store', status: 'active', categories: ['Electronics', 'Lifestyle'], rating: 4.2, total_offers: 15, total_transactions: 3200, commission_rate: 6, kyb_status: 'verified', created_at: '2023-11-05' },
-  { id: '5', company_name: 'HomeStyle Furniture', status: 'suspended', categories: ['Home', 'Lifestyle'], rating: 3.1, total_offers: 5, total_transactions: 450, commission_rate: 7, kyb_status: 'verified', created_at: '2024-06-18' },
-  { id: '6', company_name: 'TravelWise Agency', status: 'pending', categories: ['Travel', 'Lifestyle'], rating: 0, total_offers: 0, total_transactions: 0, commission_rate: 9, kyb_status: 'in_review', created_at: '2025-01-18' },
-];
+const KYB_STAGE_CONFIG: Record<KYBStage, { label: string; color: string; order: number }> = {
+  docs_submitted: { label: 'Docs Submitted', color: 'bg-warning/10 text-warning', order: 1 },
+  verification_in_progress: { label: 'Verifying', color: 'bg-accent/10 text-accent-foreground', order: 2 },
+  contract_signed: { label: 'Contract Signed', color: 'bg-primary/10 text-primary', order: 3 },
+  banking_verified: { label: 'Banking OK', color: 'bg-success/10 text-success', order: 4 },
+  approved: { label: 'Approved', color: 'bg-success/10 text-success', order: 5 },
+};
 
-interface VendorDisplay {
-  id: string;
-  company_name: string;
-  status: string;
-  categories: string[];
-  rating: number;
-  total_offers: number;
-  total_transactions: number;
-  commission_rate: number;
-  kyb_status: string;
-  created_at: string;
-}
+// Sample vendors with full KYB data
+const SAMPLE_VENDORS: VendorDisplay[] = [
+  { 
+    id: '1', companyName: 'HealthPlus Medical', status: 'active', 
+    categories: ['Health', 'Wellness'], rating: 4.8, totalOffers: 12, activeOffers: 10,
+    totalRedemptions: 2450, complaintRate: 0.5, commissionRate: 8,
+    kybProgress: { 
+      stage: 'approved', completedSteps: 6, totalSteps: 6, missingItems: [],
+      documents: DEFAULT_KYB_DOCUMENTS.map(d => ({ ...d, status: 'verified' as const }))
+    },
+    createdAt: new Date('2024-01-15'),
+  },
+  { 
+    id: '2', companyName: 'EduFirst Academy', status: 'active', 
+    categories: ['Education'], rating: 4.6, totalOffers: 8, activeOffers: 6,
+    totalRedemptions: 1890, complaintRate: 1.2, commissionRate: 10,
+    kybProgress: { 
+      stage: 'approved', completedSteps: 6, totalSteps: 6, missingItems: [],
+      documents: DEFAULT_KYB_DOCUMENTS.map(d => ({ ...d, status: 'verified' as const }))
+    },
+    createdAt: new Date('2024-02-20'),
+  },
+  { 
+    id: '3', companyName: 'FitLife Gym', status: 'pending', 
+    categories: ['Fitness', 'Wellness'], rating: 0, totalOffers: 0, activeOffers: 0,
+    totalRedemptions: 0, complaintRate: 0, commissionRate: 12,
+    kybProgress: { 
+      stage: 'verification_in_progress', completedSteps: 3, totalSteps: 6, 
+      missingItems: ['Bank Account Details', 'VAT/TRN Certificate', 'Contract'],
+      documents: [
+        { ...DEFAULT_KYB_DOCUMENTS[0], status: 'verified' as const },
+        { ...DEFAULT_KYB_DOCUMENTS[1], status: 'verified' as const },
+        { ...DEFAULT_KYB_DOCUMENTS[2], status: 'pending' as const },
+        { ...DEFAULT_KYB_DOCUMENTS[3], status: 'verified' as const },
+        { ...DEFAULT_KYB_DOCUMENTS[4], status: 'missing' as const },
+        { ...DEFAULT_KYB_DOCUMENTS[5], status: 'pending' as const },
+      ]
+    },
+    createdAt: new Date('2025-01-10'),
+  },
+  { 
+    id: '4', companyName: 'TechGadgets Store', status: 'active', 
+    categories: ['Electronics', 'Lifestyle'], rating: 4.2, totalOffers: 15, activeOffers: 12,
+    totalRedemptions: 3200, complaintRate: 2.1, commissionRate: 6,
+    kybProgress: { 
+      stage: 'approved', completedSteps: 6, totalSteps: 6, missingItems: [],
+      documents: DEFAULT_KYB_DOCUMENTS.map(d => ({ ...d, status: 'verified' as const }))
+    },
+    createdAt: new Date('2023-11-05'),
+  },
+  { 
+    id: '5', companyName: 'HomeStyle Furniture', status: 'suspended', 
+    categories: ['Home', 'Lifestyle'], rating: 3.1, totalOffers: 5, activeOffers: 0,
+    totalRedemptions: 450, complaintRate: 8.5, commissionRate: 7,
+    kybProgress: { 
+      stage: 'approved', completedSteps: 6, totalSteps: 6, missingItems: [],
+      documents: DEFAULT_KYB_DOCUMENTS.map(d => ({ ...d, status: 'verified' as const }))
+    },
+    createdAt: new Date('2024-06-18'),
+  },
+  { 
+    id: '6', companyName: 'TravelWise Agency', status: 'pending', 
+    categories: ['Travel', 'Lifestyle'], rating: 0, totalOffers: 0, activeOffers: 0,
+    totalRedemptions: 0, complaintRate: 0, commissionRate: 9,
+    kybProgress: { 
+      stage: 'docs_submitted', completedSteps: 2, totalSteps: 6, 
+      missingItems: ['Owner/Signatory ID', 'Bank Account Details', 'VAT/TRN Certificate', 'Contact Information'],
+      documents: [
+        { ...DEFAULT_KYB_DOCUMENTS[0], status: 'verified' as const },
+        { ...DEFAULT_KYB_DOCUMENTS[1], status: 'missing' as const },
+        { ...DEFAULT_KYB_DOCUMENTS[2], status: 'missing' as const },
+        { ...DEFAULT_KYB_DOCUMENTS[3], status: 'verified' as const },
+        { ...DEFAULT_KYB_DOCUMENTS[4], status: 'missing' as const },
+        { ...DEFAULT_KYB_DOCUMENTS[5], status: 'missing' as const },
+      ]
+    },
+    createdAt: new Date('2025-01-18'),
+  },
+];
 
 export default function AdminVendors() {
   const { language, direction } = useLanguage();
@@ -57,11 +127,14 @@ export default function AdminVendors() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [kybFilter, setKybFilter] = useState('all');
   const [selectedVendor, setSelectedVendor] = useState<VendorDisplay | null>(null);
-  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+  const [addVendorOpen, setAddVendorOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Fetch real vendors from DB
-  const { data: dbVendors, isLoading } = useQuery({
+  const { data: dbVendors, isLoading, error } = useQuery({
     queryKey: ['admin-vendors'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -88,27 +161,43 @@ export default function AdminVendors() {
     },
   });
 
-  // Merge DB vendors with sample data for demo
-  const vendors: VendorDisplay[] = dbVendors?.length 
-    ? dbVendors.map(v => ({
+  // Merge DB vendors with sample data
+  const vendors: VendorDisplay[] = useMemo(() => {
+    if (dbVendors?.length) {
+      return dbVendors.map(v => ({
         id: v.id,
-        company_name: v.company_name,
-        status: (v as any).status || (v.is_active ? 'active' : 'pending'),
+        companyName: v.company_name,
+        status: ((v as any).status || (v.is_active ? 'active' : 'pending')) as any,
         categories: ['General'],
         rating: 4.5,
-        total_offers: 0,
-        total_transactions: v.total_transactions || 0,
-        commission_rate: v.commission_rate || 10,
-        kyb_status: 'verified',
-        created_at: v.created_at || '',
-      })) 
-    : SAMPLE_VENDORS;
+        totalOffers: 0,
+        activeOffers: 0,
+        totalRedemptions: v.total_transactions || 0,
+        complaintRate: 0,
+        commissionRate: v.commission_rate || 10,
+        kybProgress: { 
+          stage: 'approved' as KYBStage, 
+          completedSteps: 6, 
+          totalSteps: 6, 
+          missingItems: [],
+          documents: DEFAULT_KYB_DOCUMENTS.map(d => ({ ...d, status: 'verified' as const }))
+        },
+        createdAt: new Date(v.created_at || ''),
+      }));
+    }
+    return SAMPLE_VENDORS;
+  }, [dbVendors]);
 
-  const filteredVendors = vendors.filter(v => {
-    const matchesSearch = v.company_name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || v.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredVendors = useMemo(() => {
+    return vendors.filter(v => {
+      const matchesSearch = v.companyName.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || v.status === statusFilter;
+      const matchesKyb = kybFilter === 'all' || 
+        (kybFilter === 'complete' && v.kybProgress.completedSteps === v.kybProgress.totalSteps) ||
+        (kybFilter === 'incomplete' && v.kybProgress.completedSteps < v.kybProgress.totalSteps);
+      return matchesSearch && matchesStatus && matchesKyb;
+    });
+  }, [vendors, searchTerm, statusFilter, kybFilter]);
 
   const metrics = [
     { title: t('Total Vendors', 'إجمالي البائعين'), value: vendors.length, icon: Store },
@@ -117,42 +206,129 @@ export default function AdminVendors() {
     { title: t('Suspended', 'معلق'), value: vendors.filter(v => v.status === 'suspended').length, icon: Ban },
   ];
 
-  const handleApprove = async (vendor: VendorDisplay) => {
+  const handleApprove = async (vendor: VendorDisplay, notes?: string) => {
+    setIsProcessing(true);
     try {
       await updateVendorMutation.mutateAsync({ vendorId: vendor.id, status: 'active' });
       await createAuditLog({
         action: 'VENDOR_APPROVE',
         entityType: 'vendor',
         entityId: vendor.id,
-        metadata: { vendor_name: vendor.company_name, previous_status: vendor.status },
+        metadata: { vendor_name: vendor.companyName, previous_status: vendor.status, notes },
       });
-      toast.success(t(`Approved ${vendor.company_name}`, `تمت الموافقة على ${vendor.company_name}`));
-      setDetailSheetOpen(false);
+      toast.success(t(`Approved ${vendor.companyName}`, `تمت الموافقة على ${vendor.companyName}`));
+      setDetailDrawerOpen(false);
     } catch (error) {
       toast.error(t('Failed to approve vendor', 'فشل في الموافقة على البائع'));
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const handleSuspend = async (vendor: VendorDisplay) => {
+  const handleReject = async (vendor: VendorDisplay, reason: string) => {
+    setIsProcessing(true);
+    try {
+      await updateVendorMutation.mutateAsync({ vendorId: vendor.id, status: 'rejected' });
+      await createAuditLog({
+        action: 'VENDOR_REJECT',
+        entityType: 'vendor',
+        entityId: vendor.id,
+        metadata: { vendor_name: vendor.companyName, previous_status: vendor.status, reason },
+      });
+      toast.error(t(`Rejected ${vendor.companyName}`, `تم رفض ${vendor.companyName}`));
+      setDetailDrawerOpen(false);
+    } catch (error) {
+      toast.error(t('Failed to reject vendor', 'فشل في رفض البائع'));
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleSuspend = async (vendor: VendorDisplay, reason: string) => {
+    setIsProcessing(true);
     try {
       await updateVendorMutation.mutateAsync({ vendorId: vendor.id, status: 'suspended' });
       await createAuditLog({
         action: 'VENDOR_SUSPEND',
         entityType: 'vendor',
         entityId: vendor.id,
-        metadata: { vendor_name: vendor.company_name, previous_status: vendor.status },
+        metadata: { vendor_name: vendor.companyName, previous_status: vendor.status, reason },
       });
-      toast.warning(t(`Suspended ${vendor.company_name}`, `تم تعليق ${vendor.company_name}`));
-      setDetailSheetOpen(false);
+      toast.warning(t(`Suspended ${vendor.companyName}`, `تم تعليق ${vendor.companyName}`));
+      setDetailDrawerOpen(false);
     } catch (error) {
       toast.error(t('Failed to suspend vendor', 'فشل في تعليق البائع'));
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleRequestChanges = async (vendor: VendorDisplay, reason: string) => {
+    setIsProcessing(true);
+    try {
+      await createAuditLog({
+        action: 'SETTINGS_UPDATE',
+        entityType: 'vendor',
+        entityId: vendor.id,
+        metadata: { vendor_name: vendor.companyName, action: 'request_changes', reason },
+      });
+      toast.info(t(`Changes requested for ${vendor.companyName}`, `تم طلب تغييرات لـ ${vendor.companyName}`));
+      setDetailDrawerOpen(false);
+    } catch (error) {
+      toast.error(t('Failed to request changes', 'فشل في طلب التغييرات'));
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleAddVendor = async (data: VendorFormData) => {
+    setIsProcessing(true);
+    try {
+      const { error } = await supabase.from('vendors').insert([{
+        company_name: data.companyName,
+        contact_email: data.contactEmail,
+        contact_phone: data.contactPhone,
+        address: data.address,
+        commission_rate: data.commissionRate,
+        status: 'pending',
+        is_active: false,
+      }]);
+      if (error) throw error;
+      
+      await createAuditLog({
+        action: 'ORG_CREATE',
+        entityType: 'vendor',
+        entityId: 'new',
+        metadata: { vendor_name: data.companyName, categories: data.categories },
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['admin-vendors'] });
+      toast.success(t(`Created vendor: ${data.companyName}`, `تم إنشاء البائع: ${data.companyName}`));
+      setAddVendorOpen(false);
+    } catch (error) {
+      toast.error(t('Failed to create vendor', 'فشل في إنشاء البائع'));
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleViewDetails = (vendor: VendorDisplay) => {
     setSelectedVendor(vendor);
-    setDetailSheetOpen(true);
+    setDetailDrawerOpen(true);
   };
+
+  // Error state
+  if (error) {
+    return (
+      <PageLayout title={t('Vendor Management', 'إدارة البائعين')} icon={Store}>
+        <Card className="p-8 text-center">
+          <AlertTriangle className="w-12 h-12 mx-auto text-destructive mb-4" />
+          <p className="text-lg font-medium">{t('Failed to load vendors', 'فشل في تحميل البائعين')}</p>
+          <p className="text-muted-foreground">{t('Please try again later', 'يرجى المحاولة لاحقاً')}</p>
+        </Card>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout
@@ -185,7 +361,7 @@ export default function AdminVendors() {
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-36">
                   <SelectValue placeholder={t('Status', 'الحالة')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -195,7 +371,17 @@ export default function AdminVendors() {
                   <SelectItem value="suspended">{t('Suspended', 'معلق')}</SelectItem>
                 </SelectContent>
               </Select>
-              <Button size="sm">
+              <Select value={kybFilter} onValueChange={setKybFilter}>
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder={t('KYB', 'التحقق')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('All KYB', 'جميع التحقق')}</SelectItem>
+                  <SelectItem value="complete">{t('Complete', 'مكتمل')}</SelectItem>
+                  <SelectItem value="incomplete">{t('Incomplete', 'غير مكتمل')}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button size="sm" onClick={() => setAddVendorOpen(true)}>
                 <Plus className="w-4 h-4 me-2" />
                 {t('Add Vendor', 'إضافة بائع')}
               </Button>
@@ -207,13 +393,19 @@ export default function AdminVendors() {
             <div className="space-y-3">
               {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}
             </div>
+          ) : filteredVendors.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Store className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="font-medium">{t('No vendors found', 'لم يتم العثور على بائعين')}</p>
+              <p className="text-sm">{t('Try adjusting your filters', 'حاول تعديل الفلاتر')}</p>
+            </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('Vendor', 'البائع')}</TableHead>
                   <TableHead>{t('Status', 'الحالة')}</TableHead>
-                  <TableHead>{t('KYB', 'التحقق')}</TableHead>
+                  <TableHead>{t('KYB Progress', 'تقدم التحقق')}</TableHead>
                   <TableHead>{t('Categories', 'الفئات')}</TableHead>
                   <TableHead>{t('Rating', 'التقييم')}</TableHead>
                   <TableHead>{t('Offers', 'العروض')}</TableHead>
@@ -223,25 +415,35 @@ export default function AdminVendors() {
               </TableHeader>
               <TableBody>
                 {filteredVendors.map((vendor) => {
-                  const statusConfig = STATUS_CONFIG[vendor.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.pending;
+                  const statusConfig = STATUS_CONFIG[vendor.status] || STATUS_CONFIG.pending;
+                  const kybPercentage = vendor.kybProgress.totalSteps > 0 
+                    ? Math.round((vendor.kybProgress.completedSteps / vendor.kybProgress.totalSteps) * 100) 
+                    : 0;
+                  const stageConfig = KYB_STAGE_CONFIG[vendor.kybProgress.stage];
+                  
                   return (
-                    <TableRow key={vendor.id}>
-                      <TableCell className="font-medium">{vendor.company_name}</TableCell>
+                    <TableRow key={vendor.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleViewDetails(vendor)}>
+                      <TableCell className="font-medium">{vendor.companyName}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={statusConfig.color}>
                           <statusConfig.icon className="w-3 h-3 me-1" />
-                          {isRTL ? statusConfig.labelAr : statusConfig.label}
+                          {language === 'ar' ? statusConfig.labelAr : statusConfig.label}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={vendor.kyb_status === 'verified' ? 'default' : 'secondary'}>
-                          {vendor.kyb_status === 'verified' ? <FileCheck className="w-3 h-3 me-1" /> : <Clock className="w-3 h-3 me-1" />}
-                          {vendor.kyb_status}
-                        </Badge>
+                        <div className="w-32 space-y-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className={cn("px-1.5 py-0.5 rounded text-xs", stageConfig.color)}>
+                              {stageConfig.label}
+                            </span>
+                            <span className="font-medium">{kybPercentage}%</span>
+                          </div>
+                          <Progress value={kybPercentage} className="h-1.5" />
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1 flex-wrap">
-                          {vendor.categories?.slice(0, 2).map(c => (
+                          {vendor.categories.slice(0, 2).map(c => (
                             <Badge key={c} variant="secondary" className="text-xs">{c}</Badge>
                           ))}
                         </div>
@@ -250,14 +452,16 @@ export default function AdminVendors() {
                         {vendor.rating > 0 ? (
                           <span className="flex items-center gap-1">
                             <Star className="w-3 h-3 fill-warning text-warning" />
-                            {vendor.rating}
+                            {vendor.rating.toFixed(1)}
                           </span>
                         ) : '—'}
                       </TableCell>
-                      <TableCell>{vendor.total_offers || 0}</TableCell>
-                      <TableCell>{vendor.commission_rate}%</TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1">
+                        <span>{vendor.activeOffers}/{vendor.totalOffers}</span>
+                      </TableCell>
+                      <TableCell>{vendor.commissionRate}%</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                           <Button variant="ghost" size="icon" onClick={() => handleViewDetails(vendor)}>
                             <Eye className="w-4 h-4" />
                           </Button>
@@ -267,7 +471,7 @@ export default function AdminVendors() {
                             </Button>
                           )}
                           {vendor.status === 'active' && (
-                            <Button variant="ghost" size="icon" onClick={() => handleSuspend(vendor)} className="text-destructive hover:text-destructive">
+                            <Button variant="ghost" size="icon" onClick={() => handleSuspend(vendor, 'Quick suspend')} className="text-destructive hover:text-destructive">
                               <Ban className="w-4 h-4" />
                             </Button>
                           )}
@@ -282,51 +486,25 @@ export default function AdminVendors() {
         </CardContent>
       </Card>
 
-      {/* Vendor Detail Sheet */}
-      <Sheet open={detailSheetOpen} onOpenChange={setDetailSheetOpen}>
-        <SheetContent className="sm:max-w-lg">
-          <SheetHeader>
-            <SheetTitle>{selectedVendor?.company_name}</SheetTitle>
-            <SheetDescription>{t('Vendor details and performance', 'تفاصيل البائع والأداء')}</SheetDescription>
-          </SheetHeader>
-          {selectedVendor && (
-            <div className="mt-6 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="text-sm text-muted-foreground">{t('Total Transactions', 'إجمالي المعاملات')}</p>
-                  <p className="text-2xl font-bold">{selectedVendor.total_transactions?.toLocaleString() || 0}</p>
-                </div>
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="text-sm text-muted-foreground">{t('Commission Rate', 'نسبة العمولة')}</p>
-                  <p className="text-2xl font-bold">{selectedVendor.commission_rate}%</p>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <h4 className="font-medium">{t('Categories', 'الفئات')}</h4>
-                <div className="flex gap-2 flex-wrap">
-                  {selectedVendor.categories?.map(c => (
-                    <Badge key={c} variant="outline">{c}</Badge>
-                  ))}
-                </div>
-              </div>
-              <div className="flex gap-2">
-                {selectedVendor.status === 'pending' && (
-                  <Button className="flex-1" onClick={() => handleApprove(selectedVendor)}>
-                    <CheckCircle className="w-4 h-4 me-2" />
-                    {t('Approve Vendor', 'الموافقة على البائع')}
-                  </Button>
-                )}
-                {selectedVendor.status === 'active' && (
-                  <Button variant="destructive" className="flex-1" onClick={() => handleSuspend(selectedVendor)}>
-                    <Ban className="w-4 h-4 me-2" />
-                    {t('Suspend Vendor', 'تعليق البائع')}
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
+      {/* Vendor Details Drawer */}
+      <VendorDetailsDrawer
+        open={detailDrawerOpen}
+        onOpenChange={setDetailDrawerOpen}
+        vendor={selectedVendor}
+        onApprove={handleApprove}
+        onReject={handleReject}
+        onSuspend={handleSuspend}
+        onRequestChanges={handleRequestChanges}
+        isProcessing={isProcessing}
+      />
+
+      {/* Add Vendor Modal */}
+      <AddVendorModal
+        open={addVendorOpen}
+        onOpenChange={setAddVendorOpen}
+        onSubmit={handleAddVendor}
+        isSubmitting={isProcessing}
+      />
     </PageLayout>
   );
 }
