@@ -70,7 +70,7 @@ import { useEmployerPermissions } from '@/hooks/useEmployerPermissions';
 import { ClaimReviewSheet } from '@/components/employer/ClaimReviewSheet';
 import { ClaimsBulkActionsBar } from '@/components/employer/ClaimsBulkActionsBar';
 import { SLARulesModal } from '@/components/employer/SLARulesModal';
-import { ClaimsOpsKPIStrip } from '@/components/employer/ClaimsOpsKPIStrip';
+import { ClaimsQueueCounters } from '@/components/employer/ClaimsQueueCounters';
 import { ClaimsTypeChip } from '@/components/employer/ClaimsTypeChip';
 import { SuggestedActionsPanel } from '@/components/employer/SuggestedActionsPanel';
 import { useAuth } from '@/contexts/AuthContext';
@@ -174,8 +174,15 @@ const QUEUE_TABS: QueueTabDef[] = [
   { value: 'pending', label: 'Pending', icon: <Clock className="w-4 h-4" /> },
   { value: 'in_review', label: 'In Review', icon: <Hourglass className="w-4 h-4" /> },
   { value: 'sla_risk', label: 'SLA Risk', icon: <Flame className="w-4 h-4" />, slaRequired: true },
-  { value: 'missing_docs', label: 'Missing Docs', icon: <FileQuestion className="w-4 h-4" /> },
+  { value: 'missing_docs', label: 'Needs Info', icon: <FileQuestion className="w-4 h-4" /> },
   { value: 'high_value', label: 'High Value', icon: <TrendingUp className="w-4 h-4" /> },
+];
+
+// Type filter options
+const TYPE_FILTERS = [
+  { value: 'all', label: 'All Types' },
+  { value: 'request', label: 'Requests (Pre-approval)' },
+  { value: 'claim', label: 'Claims (Reimbursement)' },
 ];
 
 const HIGH_VALUE_THRESHOLD = 5000; // AED
@@ -233,6 +240,7 @@ export function ClaimsOpsView() {
   const activeTab = (searchParams.get('tab') as QueueTab) || 'pending';
   const searchQuery = searchParams.get('search') || '';
   const statusFilter = searchParams.get('status') || 'all';
+  const typeFilter = searchParams.get('type') || 'all'; // Request vs Claim
   const categoryFilter = searchParams.get('category') || 'All Categories';
   const assignedFilter = searchParams.get('assigned') || 'all';
   const priorityFilter = searchParams.get('priority') || 'all';
@@ -362,6 +370,11 @@ export function ClaimsOpsView() {
       result = result.filter(r => r.category === categoryFilter);
     }
 
+    // Type filter (Request vs Claim)
+    if (typeFilter !== 'all') {
+      result = result.filter(r => r.request_type === typeFilter);
+    }
+
     if (assignedFilter !== 'all') {
       if (assignedFilter === 'unassigned') {
         result = result.filter(r => !r.assigned_to);
@@ -409,7 +422,7 @@ export function ClaimsOpsView() {
     }
 
     return result;
-  }, [requests, activeTab, searchQuery, statusFilter, categoryFilter, assignedFilter, priorityFilter, minAmount, maxAmount, dateFrom, dateTo, sortBySlaRisk, getSlaInfo]);
+  }, [requests, activeTab, searchQuery, statusFilter, typeFilter, categoryFilter, assignedFilter, priorityFilter, minAmount, maxAmount, dateFrom, dateTo, sortBySlaRisk, getSlaInfo]);
 
   // Queue counts
   const queueCounts = useMemo(() => ({
@@ -714,6 +727,7 @@ export function ClaimsOpsView() {
 
   const activeFiltersCount = [
     statusFilter !== 'all',
+    typeFilter !== 'all',
     categoryFilter !== 'All Categories',
     assignedFilter !== 'all',
     priorityFilter !== 'all',
@@ -849,8 +863,16 @@ export function ClaimsOpsView() {
         }
         filters={<EmployerGlobalFiltersBar compact />}
       >
-        {/* KPI Strip - Today's Ops */}
-        <ClaimsOpsKPIStrip requests={requests} slaEnabled={slaEnabled} />
+        {/* Queue Counters - 3 key metrics */}
+        <ClaimsQueueCounters 
+          requests={requests} 
+          slaEnabled={slaEnabled}
+          onCounterClick={(filter) => {
+            if (filter === 'active') updateParam('tab', 'pending');
+            else if (filter === 'needs_info') updateParam('tab', 'missing_docs');
+            else if (filter === 'at_risk') updateParam('tab', 'sla_risk');
+          }}
+        />
 
         {/* Queue Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => updateParam('tab', v)} className="w-full">
@@ -893,6 +915,17 @@ export function ClaimsOpsView() {
                     className="pl-10"
                   />
                 </div>
+                {/* Type filter - Claims vs Requests */}
+                <Select value={typeFilter} onValueChange={(v) => updateParam('type', v)}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TYPE_FILTERS.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Select value={categoryFilter} onValueChange={(v) => updateParam('category', v)}>
                   <SelectTrigger className="w-44">
                     <SelectValue placeholder="Category" />
@@ -1046,14 +1079,15 @@ export function ClaimsOpsView() {
                       />
                     </th>
                     <th className="text-left py-3 px-3 font-medium">Employee</th>
-                    <th className="text-left py-3 px-3 font-medium">Request</th>
+                    <th className="text-left py-3 px-3 font-medium">Type / Category</th>
                     <th className="text-right py-3 px-3 font-medium">Amount</th>
-                    <th className="text-center py-3 px-2 font-medium">Value Band</th>
-                    <th className="text-center py-3 px-2 font-medium">Days in Queue</th>
-                    <th className="text-left py-3 px-3 font-medium">SLA Due In</th>
-                    <th className="text-left py-3 px-3 font-medium">Missing Docs</th>
-                    <th className="text-left py-3 px-3 font-medium">Policy Ref</th>
+                    <th className="text-center py-3 px-2 font-medium">Days</th>
+                    {slaEnabled && (
+                      <th className="text-left py-3 px-3 font-medium">SLA</th>
+                    )}
+                    <th className="text-left py-3 px-3 font-medium">Docs</th>
                     <th className="text-left py-3 px-3 font-medium">Status</th>
+                    <th className="text-left py-3 px-3 font-medium">Assigned</th>
                     <th className="text-right py-3 px-3 font-medium">Actions</th>
                   </tr>
                 </thead>
@@ -1083,12 +1117,12 @@ export function ClaimsOpsView() {
                           </div>
                         </td>
                         <td className="py-3 px-3">
-                          <div className="max-w-[200px]">
-                            <p className="text-sm font-medium truncate">{request.subject}</p>
-                            <div className="flex items-center gap-1.5 mt-0.5">
+                          <div className="max-w-[180px]">
+                            <div className="flex items-center gap-1.5 mb-0.5">
                               <ClaimsTypeChip requestType={request.request_type} size="sm" />
-                              <span className="text-xs text-muted-foreground">{request.category}</span>
+                              <span className="text-xs text-muted-foreground truncate">{request.category}</span>
                             </div>
+                            <p className="text-sm truncate" title={request.subject}>{request.subject}</p>
                           </div>
                         </td>
                         <td className="py-3 px-3 text-right">
@@ -1104,45 +1138,44 @@ export function ClaimsOpsView() {
                           )}
                         </td>
                         <td className="py-3 px-2 text-center">
-                          {getValueBandBadge(request.amount)}
-                        </td>
-                        <td className="py-3 px-2 text-center">
                           <span className={cn(
                             'text-sm font-medium',
-                            daysInQueue >= 5 && 'text-red-600',
-                            daysInQueue >= 3 && daysInQueue < 5 && 'text-amber-600'
+                            daysInQueue >= 5 && 'text-destructive',
+                            daysInQueue >= 3 && daysInQueue < 5 && 'text-warning'
                           )}>
                             {daysInQueue}d
                           </span>
                         </td>
-                        <td className="py-3 px-3">{getSlaTriageBadge(request)}</td>
+                        {slaEnabled && (
+                          <td className="py-3 px-3">{getSlaTriageBadge(request)}</td>
+                        )}
                         <td className="py-3 px-3">
                           <MissingDocsBadge 
                             category={request.category} 
                             missingDocsFromDb={request.missing_docs}
                           />
                         </td>
+                        <td className="py-3 px-3">{getStatusBadge(request.status)}</td>
                         <td className="py-3 px-3">
-                          {request.policy_ref ? (
+                          {request.assigned_to ? (
                             <Badge variant="outline" className="text-xs gap-1">
-                              <BookOpen className="w-3 h-3" />
-                              {request.policy_ref}
+                              <UserCheck className="w-3 h-3" />
+                              Assigned
                             </Badge>
                           ) : (
-                            <span className="text-xs text-muted-foreground">-</span>
+                            <span className="text-xs text-muted-foreground">Unassigned</span>
                           )}
                         </td>
-                        <td className="py-3 px-3">{getStatusBadge(request.status)}</td>
                         <td className="py-3 px-3 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1">
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => setSelectedRequestId(request.id)}
-                              className="h-8 w-8 p-0"
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
+                            
                             
                             {canProcess(request.status) && (
                               <PermissionGate permission="can_process_claims">

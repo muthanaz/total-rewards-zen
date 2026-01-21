@@ -130,6 +130,7 @@ export { ActionPlanCard } from './ActionPlanCard';
 // Claims Ops components
 export { ClaimsOpsKPIStrip } from './ClaimsOpsKPIStrip';
 export { ClaimsTypeChip } from './ClaimsTypeChip';
+export { ClaimsQueueCounters } from './ClaimsQueueCounters';
 
 // Spend & Utilization components
 export { SpendKPIGrid } from './SpendKPIGrid';
