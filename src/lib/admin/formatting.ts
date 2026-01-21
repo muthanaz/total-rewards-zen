@@ -6,16 +6,45 @@
  * - Currency: Always AED, compact (K/M) for cards, full for tables
  * - Numbers: Compact for cards, full with separators for tables
  * - Time: Relative for lists, absolute with tooltip showing timezone
- * - Western digits in both English and Arabic
+ * - ALWAYS Western digits (0-9) in both English and Arabic - NEVER Arabic-Indic digits
  */
 
-import { format, formatDistanceToNow, differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns';
+import { format, differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns';
+
+// ============= WESTERN DIGITS ENFORCEMENT =============
+
+/**
+ * Arabic-Indic to Western digit mapping
+ * ٠١٢٣٤٥٦٧٨٩ → 0123456789
+ */
+const ARABIC_INDIC_TO_WESTERN: Record<string, string> = {
+  '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
+  '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9',
+};
+
+/**
+ * Normalize any Arabic-Indic digits to Western digits.
+ * Defense-in-depth for any string that might contain non-Western numerals.
+ */
+export function ensureWesternDigits(value: string | number | null | undefined): string {
+  if (value === null || value === undefined) return '';
+  const str = String(value);
+  return str.replace(/[٠-٩]/g, (digit) => ARABIC_INDIC_TO_WESTERN[digit] || digit);
+}
+
+/**
+ * Safe locale format - always uses en-US to guarantee Western digits
+ */
+function safeToLocaleString(value: number, options?: Intl.NumberFormatOptions): string {
+  return new Intl.NumberFormat('en-US', options).format(value);
+}
 
 // ============= CURRENCY FORMATTING =============
 
 /**
  * Format currency for card display (compact)
  * e.g., AED 15K, AED 1.5M
+ * ALWAYS uses Western digits (0-9)
  */
 export function formatCurrencyCompact(value: number | null | undefined): string {
   if (value === null || value === undefined || isNaN(value)) {
@@ -35,19 +64,20 @@ export function formatCurrencyCompact(value: number | null | undefined): string 
     return `${sign}AED ${thousands >= 100 ? Math.round(thousands) : thousands.toFixed(1)}K`;
   }
 
-  return `${sign}AED ${absValue.toLocaleString('en-US')}`;
+  return `${sign}AED ${safeToLocaleString(absValue)}`;
 }
 
 /**
  * Format currency for table display (full)
  * e.g., AED 15,000.00
+ * ALWAYS uses Western digits (0-9)
  */
 export function formatCurrencyFull(value: number | null | undefined, decimals: number = 0): string {
   if (value === null || value === undefined || isNaN(value)) {
     return 'AED 0';
   }
 
-  return `AED ${value.toLocaleString('en-US', { 
+  return `AED ${safeToLocaleString(value, { 
     minimumFractionDigits: decimals, 
     maximumFractionDigits: decimals 
   })}`;
@@ -58,6 +88,7 @@ export function formatCurrencyFull(value: number | null | undefined, decimals: n
 /**
  * Format number for card display (compact)
  * e.g., 12.5K, 1.2M
+ * ALWAYS uses Western digits (0-9)
  */
 export function formatNumberCompact(value: number | null | undefined): string {
   if (value === null || value === undefined || isNaN(value)) {
@@ -77,24 +108,26 @@ export function formatNumberCompact(value: number | null | undefined): string {
     return `${sign}${thousands >= 100 ? Math.round(thousands) : thousands.toFixed(1)}K`;
   }
 
-  return `${sign}${Math.round(absValue).toLocaleString('en-US')}`;
+  return `${sign}${safeToLocaleString(Math.round(absValue))}`;
 }
 
 /**
  * Format number for table display (full with separators)
  * e.g., 12,450
+ * ALWAYS uses Western digits (0-9)
  */
 export function formatNumberFull(value: number | null | undefined): string {
   if (value === null || value === undefined || isNaN(value)) {
     return '0';
   }
 
-  return Math.round(value).toLocaleString('en-US');
+  return safeToLocaleString(Math.round(value));
 }
 
 /**
  * Format percentage
  * e.g., 85.5%
+ * ALWAYS uses Western digits (0-9)
  */
 export function formatPercentage(value: number | null | undefined, decimals: number = 1): string {
   if (value === null || value === undefined || isNaN(value)) {
@@ -109,10 +142,11 @@ export function formatPercentage(value: number | null | undefined, decimals: num
 /**
  * Format time for list display (relative)
  * e.g., "15 minutes ago", "2 hours ago", "Yesterday"
+ * ALWAYS uses Western digits (0-9)
  */
 export function formatTimeRelative(date: Date | string | null | undefined, language: 'en' | 'ar' = 'en'): string {
   if (!date) {
-    return language === 'ar' ? '—' : '—';
+    return '—';
   }
 
   const d = typeof date === 'string' ? new Date(date) : date;
@@ -121,13 +155,14 @@ export function formatTimeRelative(date: Date | string | null | undefined, langu
   const hours = differenceInHours(new Date(), d);
   const days = differenceInDays(new Date(), d);
 
+  // Always use Western digits - numbers stay as-is (0-9)
   if (minutes < 1) {
     return language === 'ar' ? 'الآن' : 'Just now';
   }
   
   if (minutes < 60) {
     return language === 'ar' 
-      ? `${minutes} دقيقة مضت`
+      ? `${minutes} دقيقة مضت`  // Western digit embedded in Arabic text
       : `${minutes}m ago`;
   }
   
@@ -147,12 +182,14 @@ export function formatTimeRelative(date: Date | string | null | undefined, langu
       : `${days}d ago`;
   }
 
+  // Use en-US format to ensure Western digits
   return format(d, 'MMM d, yyyy');
 }
 
 /**
  * Format time for display with absolute time
  * Returns: { display: "15m ago", absolute: "Jan 21, 2025, 10:30 AM UTC" }
+ * ALWAYS uses Western digits (0-9)
  */
 export function formatTimeWithTooltip(date: Date | string | null | undefined, language: 'en' | 'ar' = 'en'): {
   display: string;
@@ -173,6 +210,7 @@ export function formatTimeWithTooltip(date: Date | string | null | undefined, la
 /**
  * Format date only (no time)
  * e.g., "Jan 21, 2025"
+ * ALWAYS uses Western digits (0-9)
  */
 export function formatDate(date: Date | string | null | undefined): string {
   if (!date) {
@@ -186,6 +224,7 @@ export function formatDate(date: Date | string | null | undefined): string {
 /**
  * Format date for table display (ISO-like but readable)
  * e.g., "2025-01-21"
+ * ALWAYS uses Western digits (0-9)
  */
 export function formatDateISO(date: Date | string | null | undefined): string {
   if (!date) {
@@ -199,6 +238,7 @@ export function formatDateISO(date: Date | string | null | undefined): string {
 /**
  * Format duration in human-readable form
  * e.g., "4m 32s", "2h 15m"
+ * ALWAYS uses Western digits (0-9)
  */
 export function formatDuration(seconds: number | null | undefined): string {
   if (seconds === null || seconds === undefined || isNaN(seconds)) {
@@ -222,6 +262,7 @@ export function formatDuration(seconds: number | null | undefined): string {
 
 /**
  * Format duration from milliseconds
+ * ALWAYS uses Western digits (0-9)
  */
 export function formatDurationMs(ms: number | null | undefined): string {
   if (ms === null || ms === undefined || isNaN(ms)) {
@@ -235,6 +276,7 @@ export function formatDurationMs(ms: number | null | undefined): string {
 /**
  * Format record count for display
  * e.g., "12.5K records", "1,234 records"
+ * ALWAYS uses Western digits (0-9)
  */
 export function formatRecordCount(count: number | null | undefined, language: 'en' | 'ar' = 'en'): string {
   if (count === null || count === undefined || isNaN(count)) {
@@ -254,6 +296,7 @@ export function formatRecordCount(count: number | null | undefined, language: 'e
 
 /**
  * Format SLA status with color indicator
+ * ALWAYS uses Western digits (0-9)
  */
 export function formatSLAStatus(dueDate: Date | string | null | undefined): {
   text: string;
@@ -298,4 +341,31 @@ export function formatSLAStatus(dueDate: Date | string | null | undefined): {
     status: 'ok',
     color: 'text-success',
   };
+}
+
+// ============= CHART FORMATTERS =============
+
+/**
+ * Format value for chart tick/tooltip display
+ * ALWAYS uses Western digits (0-9)
+ */
+export function formatChartValue(value: number, type: 'currency' | 'number' | 'percent' = 'number'): string {
+  switch (type) {
+    case 'currency':
+      return formatCurrencyCompact(value);
+    case 'percent':
+      return formatPercentage(value);
+    default:
+      return formatNumberCompact(value);
+  }
+}
+
+/**
+ * Format chart axis tick
+ * ALWAYS uses Western digits (0-9)
+ */
+export function formatChartTick(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${Math.round(value / 1_000)}K`;
+  return String(Math.round(value));
 }
