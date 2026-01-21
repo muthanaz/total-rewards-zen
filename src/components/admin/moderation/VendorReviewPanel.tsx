@@ -76,7 +76,10 @@ export function VendorReviewPanel({
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
 
   const verifiedCount = documents.filter(d => d.status === 'verified').length;
-  const completeness = Math.round((verifiedCount / documents.length) * 100);
+  // Fix NaN% when documents array is empty or has no length
+  const completeness = documents.length > 0 
+    ? Math.round((verifiedCount / documents.length) * 100) 
+    : 0;
 
   const getStatusBadge = (status: KYBDocument['status']) => {
     const config = STATUS_CONFIG[status];
@@ -96,7 +99,9 @@ export function VendorReviewPanel({
           <CardTitle className={cn("text-sm flex items-center justify-between", isRTL && "flex-row-reverse")}>
             <span>{t('KYB Verification', 'التحقق من الأعمال')}</span>
             <Badge variant={completeness === 100 ? 'default' : 'secondary'}>
-              {completeness}% {t('Complete', 'مكتمل')}
+              {documents.length === 0 
+                ? t('Not started', 'لم يبدأ') 
+                : `${completeness}% ${t('Complete', 'مكتمل')}`}
             </Badge>
           </CardTitle>
         </CardHeader>

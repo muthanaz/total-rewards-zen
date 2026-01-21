@@ -511,7 +511,12 @@ export default function AdminSyncMonitor() {
                           <Button variant="ghost" size="icon" onClick={() => handleViewDetails(run)} title={t('View Details', 'عرض التفاصيل')}>
                             <Eye className="w-4 h-4" />
                           </Button>
-                          {(run.status === 'failed' || run.status === 'partial') && (
+                          {run.status === 'failed' && (
+                            <Button variant="ghost" size="icon" onClick={() => handleRetry(run)} title={t('Retry', 'إعادة')}>
+                              <RotateCcw className="w-4 h-4" />
+                            </Button>
+                          )}
+                          {run.status === 'partial' && (
                             <Button variant="ghost" size="icon" onClick={() => handleRetry(run)} title={t('Retry', 'إعادة')}>
                               <RotateCcw className="w-4 h-4" />
                             </Button>
@@ -522,9 +527,53 @@ export default function AdminSyncMonitor() {
                             </Button>
                           )}
                           {run.status === 'pending' && (
-                            <Button variant="ghost" size="icon" title={t('Run Now', 'تشغيل الآن')}>
+                            <Button variant="ghost" size="icon" onClick={() => handleRerunNow(run)} title={t('Run Now', 'تشغيل الآن')}>
                               <Play className="w-4 h-4" />
                             </Button>
+                          )}
+                          {(run.status === 'failed' || run.status === 'partial') && (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="ghost" size="icon" title={t('More Actions', 'المزيد')}>
+                                  <Filter className="w-4 h-4" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-36 p-1" align="end">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="w-full justify-start text-xs"
+                                  onClick={() => {
+                                    toast.success(t('Acknowledged', 'تم الإقرار'));
+                                  }}
+                                >
+                                  <CheckCircle className="w-3 h-3 me-2" />
+                                  {t('Acknowledge', 'إقرار')}
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="w-full justify-start text-xs"
+                                  onClick={() => {
+                                    toast.success(t('Snoozed for 24h', 'تم التأجيل 24 ساعة'));
+                                  }}
+                                >
+                                  <Clock className="w-3 h-3 me-2" />
+                                  {t('Snooze 24h', 'تأجيل 24 ساعة')}
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="w-full justify-start text-xs"
+                                  onClick={() => {
+                                    toast.info(t('Assign owner (mock)', 'تعيين مالك (تجريبي)'));
+                                  }}
+                                >
+                                  <Activity className="w-3 h-3 me-2" />
+                                  {t('Assign Owner', 'تعيين مالك')}
+                                </Button>
+                              </PopoverContent>
+                            </Popover>
                           )}
                         </div>
                       </TableCell>
@@ -633,6 +682,39 @@ export default function AdminSyncMonitor() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Recommended Actions - for failed/partial runs */}
+                {(selectedRun.status === 'failed' || selectedRun.status === 'partial') && (
+                  <Card className="border-warning/30 bg-warning/5">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm text-warning flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4" />
+                        {t('Recommended Action', 'الإجراء الموصى به')}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <p className="text-sm">
+                        {selectedRun.errorType === 'api_rate_limit' && t('Reduce sync frequency or implement request throttling.', 'قلل تكرار المزامنة أو نفذ تقييد الطلبات.')}
+                        {selectedRun.errorType === 'validation_errors' && t('Review field mapping and fix validation rules.', 'راجع تعيين الحقول وأصلح قواعد التحقق.')}
+                        {!selectedRun.errorType && t('Check connector credentials and network connectivity.', 'تحقق من بيانات الموصل والاتصال بالشبكة.')}
+                      </p>
+                      <div className="flex gap-2 flex-wrap">
+                        <Button size="sm" variant="outline" onClick={() => handleRetry(selectedRun)}>
+                          <RotateCcw className="w-3 h-3 me-1" />
+                          {t('Retry Now', 'إعادة الآن')}
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => toast.info(t('Opening runbook...', 'فتح دليل التشغيل...'))}
+                        >
+                          <ExternalLink className="w-3 h-3 me-1" />
+                          {t('View Runbook', 'عرض دليل التشغيل')}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Error List */}
                 {selectedRun.errorList && selectedRun.errorList.length > 0 && (
