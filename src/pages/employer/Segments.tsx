@@ -918,8 +918,8 @@ export default function SegmentsPage() {
             <Card className="card-elevated">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-emerald-500/10">
-                    <TrendingUp className="h-6 w-6 text-emerald-500" />
+                  <div className="p-2.5 rounded-xl bg-success/10">
+                    <TrendingUp className="h-6 w-6 text-success" />
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{formatPercent(78.4)}</p>
@@ -931,8 +931,8 @@ export default function SegmentsPage() {
             <Card className="card-elevated">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-amber-500/10">
-                    <AlertTriangle className="h-6 w-6 text-amber-500" />
+                  <div className="p-2.5 rounded-xl bg-warning/10">
+                    <AlertTriangle className="h-6 w-6 text-warning" />
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{formatCurrencyAED(245000)}</p>
@@ -944,8 +944,8 @@ export default function SegmentsPage() {
             <Card className="card-elevated">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-violet-500/10">
-                    <Lightbulb className="h-6 w-6 text-violet-500" />
+                  <div className="p-2.5 rounded-xl bg-accent/10">
+                    <Lightbulb className="h-6 w-6 text-accent" />
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{enhancedSegments.reduce((sum, s) => sum + s.recommendedActions.length, 0)}</p>

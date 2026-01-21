@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { isPolicyVersionActive } from '@/lib/crossPortalContract';
 import { Database } from '@/integrations/supabase/types';
+import { useAuditLog } from '@/hooks/useAuditLog';
 
 type PolicyVersionRow = Database['public']['Tables']['benefit_policy_versions']['Row'];
 type RequiredDocumentRow = Database['public']['Tables']['benefit_required_documents']['Row'];
@@ -134,6 +135,7 @@ export function useOrganizationPolicies(organizationId: string | null) {
 export function usePublishPolicyVersion() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { logEvent } = useAuditLog();
   
   return useMutation({
     mutationFn: async ({
@@ -192,13 +194,26 @@ export function usePublishPolicyVersion() {
         .single();
       
       if (error) throw error;
-      return data;
+      return { ...data, newVersion, benefitId, organizationId };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Invalidate all policy queries to ensure immediate consistency
       queryClient.invalidateQueries({ queryKey: ['current_policy_version'] });
       queryClient.invalidateQueries({ queryKey: ['organization_policies'] });
       queryClient.invalidateQueries({ queryKey: ['benefit_policies'] });
+      
+      // Write audit log for policy publish (P1 fix)
+      logEvent({
+        action: 'POLICY_PUBLISH',
+        resourceType: 'benefit',
+        resourceId: data.id,
+        details: {
+          benefit_id: data.benefitId,
+          organization_id: data.organizationId,
+          version: data.newVersion,
+          effective_from: data.effective_from,
+        },
+      });
     },
   });
 }
