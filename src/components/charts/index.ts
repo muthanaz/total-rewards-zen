@@ -11,6 +11,9 @@ export { AnimatedRadarChart } from './AnimatedRadarChart';
 export { StackedAreaChart } from './StackedAreaChart';
 export { ProgressBarList } from './ProgressBarList';
 
+// Waterfall chart
+export { WaterfallChart, CategoryWaterfallChart } from './WaterfallChart';
+
 // Chart utilities and colors
 export { 
   default as chartColors, 

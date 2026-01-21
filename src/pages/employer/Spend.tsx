@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useSearchParams } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
@@ -17,11 +18,14 @@ import {
   ChevronDown, 
   ChevronRight,
   ArrowRight,
-  Info,
+  
   Layers,
   Building2,
   Users,
-  Target
+  Target,
+  Ghost,
+  Zap,
+  MapPin,
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -41,8 +45,19 @@ import {
 } from 'recharts';
 import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
 import { calculateUtilization, calculateAggregateUtilization } from '@/lib/crossPortalContract';
-import { EmployerGlobalFiltersBar, DataConfidenceBadge, PageConfidenceGate, useDataCoverageMetrics, NarrativeInsights, NarrativeInsight } from '@/components/employer';
-import { DrillDownSheet, DrillDownSummaryGrid } from '@/components/shared';
+import { 
+  EmployerGlobalFiltersBar, 
+  DataConfidenceBadge, 
+  PageConfidenceGate, 
+  useDataCoverageMetrics, 
+  NarrativeInsights, 
+  NarrativeInsight,
+  ZombieSpendCandidates,
+  detectZombieCandidates,
+  ForecastWidget,
+} from '@/components/employer';
+import { DrillDownSheet, DrillDownSummaryGrid, KPIDrilldownSheet, KPIMetricData } from '@/components/shared';
+import { CategoryWaterfallChart } from '@/components/charts';
 import { toast } from 'sonner';
 import {
   Table,
@@ -107,12 +122,24 @@ const COLORS = {
 
 // Mock data - would come from hooks in production
 const spendByBenefitType = [
-  { id: 'housing', name: 'Housing', spend: 2400000, budget: 2800000, entitled: 2700000, employees: 85 },
-  { id: 'schooling', name: 'Schooling', spend: 1200000, budget: 1500000, entitled: 1400000, employees: 45 },
-  { id: 'health', name: 'Health', spend: 800000, budget: 900000, entitled: 850000, employees: 130 },
-  { id: 'transport', name: 'Transport', spend: 400000, budget: 500000, entitled: 480000, employees: 90 },
-  { id: 'learning', name: 'Learning', spend: 150000, budget: 300000, entitled: 280000, employees: 60 },
-  { id: 'wellbeing', name: 'Wellbeing', spend: 80000, budget: 150000, entitled: 140000, employees: 50 },
+  { id: 'housing', name: 'Housing', category: 'Cash Allowances', spend: 2400000, budget: 2800000, entitled: 2700000, employees: 85, faqViews: 25, claimVelocity: 8, awarenessScore: 85 },
+  { id: 'schooling', name: 'Schooling', category: 'Cash Allowances', spend: 1200000, budget: 1500000, entitled: 1400000, employees: 45, faqViews: 35, claimVelocity: 4, awarenessScore: 70 },
+  { id: 'health', name: 'Health', category: 'Insurance', spend: 800000, budget: 900000, entitled: 850000, employees: 130, faqViews: 40, claimVelocity: 6, awarenessScore: 75 },
+  { id: 'transport', name: 'Transport', category: 'Cash Allowances', spend: 400000, budget: 500000, entitled: 480000, employees: 90, faqViews: 20, claimVelocity: 5, awarenessScore: 60 },
+  { id: 'learning', name: 'Learning', category: 'Reimbursement', spend: 150000, budget: 300000, entitled: 280000, employees: 60, faqViews: 95, claimVelocity: 2, awarenessScore: 35 },
+  { id: 'wellbeing', name: 'Wellbeing', category: 'Reimbursement', spend: 80000, budget: 150000, entitled: 140000, employees: 50, faqViews: 78, claimVelocity: 1.5, awarenessScore: 30 },
+];
+
+// Monthly historical data for forecast
+const forecastHistoricalData = [
+  { month: 'Jan', entitled: 6150000, claimed: 450000, unused: 5700000 },
+  { month: 'Feb', entitled: 6150000, claimed: 480000, unused: 5270000 },
+  { month: 'Mar', entitled: 6150000, claimed: 520000, unused: 4750000 },
+  { month: 'Apr', entitled: 6150000, claimed: 490000, unused: 4260000 },
+  { month: 'May', entitled: 6150000, claimed: 510000, unused: 3750000 },
+  { month: 'Jun', entitled: 6150000, claimed: 530000, unused: 3220000 },
+  { month: 'Jul', entitled: 6150000, claimed: 545000, unused: 2675000 },
+  { month: 'Aug', entitled: 6150000, claimed: 520000, unused: 2155000 },
 ];
 
 const drilldownData = {
@@ -611,6 +638,74 @@ export default function SpendPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Waterfall, Zombie Candidates, and Forecast Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Waterfall Chart */}
+        <Card className="card-elevated lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              Spend Waterfall by Category
+              <InfoTooltip 
+                formula="Allocated → Entitled → Claimed → Unused per category" 
+                dataSource="org_budgets + benefit_entitlements + requests" 
+              />
+            </CardTitle>
+            <CardDescription>Click any category to drill down</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CategoryWaterfallChart
+              data={spendByBenefitType.map(b => ({
+                name: b.name,
+                allocated: b.budget,
+                entitled: b.entitled,
+                claimed: b.spend,
+                unused: b.entitled - b.spend,
+              }))}
+              height={300}
+              onCategoryClick={(category) => {
+                const benefit = spendByBenefitType.find(b => b.name === category);
+                if (benefit) setSelectedBenefit(benefit);
+              }}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Year-End Forecast */}
+        <ForecastWidget
+          historicalData={forecastHistoricalData}
+          totalEntitled={totals.entitled}
+          currentClaimed={totals.spend}
+          fiscalYearEnd="December 31"
+          onViewDetails={() => toast.info('Opening forecast breakdown...')}
+          onCreateAction={() => window.location.href = '/employer/recommendations?create=true&source=forecast'}
+        />
+      </div>
+
+      {/* Zombie Spend Candidates */}
+      <ZombieSpendCandidates
+        candidates={detectZombieCandidates(spendByBenefitType.map(b => ({
+          id: b.id,
+          name: b.name,
+          category: b.category,
+          allocated: b.budget,
+          entitled: b.entitled,
+          claimed: b.spend,
+          employees: b.employees,
+          faqViews: b.faqViews,
+          claimVelocity: b.claimVelocity,
+          awarenessScore: b.awarenessScore,
+        })))}
+        totalZombieSpend={overallUtilization.remaining}
+        yearEndProjection={overallUtilization.remaining * 1.15}
+        onViewDetails={(candidate) => toast.info(`Viewing ${candidate.benefit} details`)}
+        onCreateAction={(candidate) => {
+          window.location.href = `/employer/recommendations?create=true&benefit=${candidate.id}`;
+        }}
+        onDrilldown={(candidate, dimension, value) => {
+          toast.info(`Drilling down: ${candidate.benefit} → ${dimension} → ${value}`);
+        }}
+      />
 
       <Tabs defaultValue="benefit-type" className="space-y-4">
         <TabsList>
