@@ -417,7 +417,16 @@ export default function AdminDataQualityRules() {
                         <TableCell>
                           <div>
                             <p className="font-medium">{rule.name}</p>
-                            <p className="text-xs text-muted-foreground font-mono">{rule.condition}</p>
+                            <p className="text-xs text-muted-foreground mb-0.5">
+                              {rule.entity === 'employee' && rule.field === 'grade' && 'Check if employee grade field is populated'}
+                              {rule.entity === 'employee' && rule.field === 'salary' && 'Validate monthly salary is a positive value'}
+                              {rule.entity === 'employee' && rule.field === 'allowances' && 'Ensure housing allowance does not exceed grade cap'}
+                              {rule.entity === 'employee' && rule.field === 'employee_id' && 'Ensure no duplicate employee identifiers exist'}
+                              {rule.entity === 'claim' && 'Validate claim amount against policy limits'}
+                              {rule.entity === 'vendor' && 'Check vendor KYB documentation completeness'}
+                              {rule.entity === 'offer' && 'Validate offer has required terms and conditions'}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground/70 font-mono">{rule.condition}</p>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -483,7 +492,7 @@ export default function AdminDataQualityRules() {
                   <AlertTriangle className="w-5 h-5 text-warning" />
                   {t('Data Quality Violations', 'انتهاكات جودة البيانات')}
                 </CardTitle>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger className="w-36">
                       <SelectValue placeholder={t('Status', 'الحالة')} />
@@ -498,6 +507,32 @@ export default function AdminDataQualityRules() {
                   <Button variant="outline" onClick={handleExportViolations}>
                     <Download className="w-4 h-4 me-2" />
                     {t('Export', 'تصدير')}
+                  </Button>
+                  <Button variant="outline" onClick={() => {
+                    const selected = filteredViolations.filter(v => v.status === 'open').slice(0, 5);
+                    if (selected.length === 0) {
+                      toast.info(t('No open violations to assign', 'لا توجد انتهاكات مفتوحة للتعيين'));
+                      return;
+                    }
+                    selected.forEach(v => handleAssignOwner('HR Ops'));
+                    toast.success(t(`Assigned ${selected.length} violations`, `تم تعيين ${selected.length} انتهاكات`));
+                  }}>
+                    <UserPlus className="w-4 h-4 me-2" />
+                    {t('Bulk Assign', 'تعيين جماعي')}
+                  </Button>
+                  <Button variant="outline" onClick={() => {
+                    const openViolations = filteredViolations.filter(v => v.status === 'open');
+                    if (openViolations.length === 0) {
+                      toast.info(t('No violations to resolve', 'لا توجد انتهاكات للحل'));
+                      return;
+                    }
+                    setViolations(prev => prev.map(v => 
+                      openViolations.find(ov => ov.id === v.id) ? { ...v, status: 'resolved' } : v
+                    ));
+                    toast.success(t(`Resolved ${openViolations.length} violations`, `تم حل ${openViolations.length} انتهاكات`));
+                  }}>
+                    <CheckCircle className="w-4 h-4 me-2" />
+                    {t('Bulk Resolve', 'حل جماعي')}
                   </Button>
                 </div>
               </div>

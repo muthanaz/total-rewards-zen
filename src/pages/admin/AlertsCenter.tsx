@@ -729,6 +729,24 @@ export default function AdminAlertsCenter() {
                       </div>
                     </div>
 
+                    {/* Root Cause Section */}
+                    <div className="p-3 rounded-lg border bg-muted/30">
+                      <h5 className="text-sm font-medium mb-2 flex items-center gap-2">
+                        <Database className="w-4 h-4" /> Root Cause
+                      </h5>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedAlert.type === 'sync_failure' && 'API rate limit exceeded or connection timeout detected.'}
+                        {selectedAlert.type === 'data_quality' && 'Missing required field data from upstream source.'}
+                        {selectedAlert.type === 'security' && 'Multiple failed authentication attempts from suspicious IP.'}
+                        {selectedAlert.type === 'moderation_sla' && 'Insufficient moderator capacity or complex review items.'}
+                        {selectedAlert.type === 'spike' && 'Abnormal submission pattern detected - possible data entry error or fraud.'}
+                        {selectedAlert.type === 'vendor_kyb' && 'Vendor submitted incomplete or invalid documents.'}
+                        {!['sync_failure', 'data_quality', 'security', 'moderation_sla', 'spike', 'vendor_kyb'].includes(selectedAlert.type) && (
+                          <span className="italic">Root cause under investigation...</span>
+                        )}
+                      </p>
+                    </div>
+
                     <Separator />
 
                     {/* Action Buttons */}
