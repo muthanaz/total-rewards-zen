@@ -5,10 +5,12 @@
  * - Segment dimension cards (Grade, Department, Nationality, Life Stage, Work Arrangement, Joiner Cohort)
  * - Drilldown tables with charts
  * - Insights drawer with actions connecting to Recommendations + Zombie Spend
+ * - Compare segments mode
+ * - Actionable confidence badge
  */
 
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,7 +25,8 @@ import {
   AlertTriangle,
   ArrowLeft,
   Database,
-  Lightbulb
+  Lightbulb,
+  GitCompare
 } from 'lucide-react';
 import { 
   EmployerGlobalFiltersBar, 
@@ -35,6 +38,7 @@ import { SegmentDimensionCard } from '@/components/employer/SegmentDimensionCard
 import { SegmentDrilldownTable } from '@/components/employer/SegmentDrilldownTable';
 import { SegmentInsightsDrawer } from '@/components/employer/SegmentInsightsDrawer';
 import { SegmentCharts } from '@/components/employer/SegmentCharts';
+import { SegmentComparePanel } from '@/components/employer/SegmentComparePanel';
 import { useSegmentData, SegmentDimensionId } from '@/hooks/useSegmentData';
 import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -53,6 +57,7 @@ export default function SegmentsPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const coverageMetrics = useDataCoverageMetrics();
+  const [compareMode, setCompareMode] = useState(false);
   
   const {
     dimensions,
@@ -176,16 +181,39 @@ export default function SegmentsPage() {
         {/* Drilldown View */}
         {activeDimension ? (
           <div className="space-y-6">
-            {/* Back Button */}
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleBackToOverview}
-              className="gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to all segments
-            </Button>
+            {/* Back Button + Compare Toggle */}
+            <div className="flex items-center justify-between">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleBackToOverview}
+                className="gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to all segments
+              </Button>
+              
+              {activeDimension.values.length >= 2 && (
+                <Button
+                  variant={compareMode ? "secondary" : "outline"}
+                  size="sm"
+                  onClick={() => setCompareMode(!compareMode)}
+                  className="gap-2"
+                >
+                  <GitCompare className="h-4 w-4" />
+                  {compareMode ? 'Exit Compare' : 'Compare segments'}
+                </Button>
+              )}
+            </div>
+            
+            {/* Compare Panel */}
+            {compareMode && activeDimension && (
+              <SegmentComparePanel
+                values={activeDimension.values}
+                dimensionName={activeDimension.name}
+                onClose={() => setCompareMode(false)}
+              />
+            )}
             
             {/* Charts */}
             <SegmentCharts dimension={activeDimension} />
