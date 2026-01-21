@@ -15,6 +15,7 @@ import {
 import { useMarketplaceOffers, usePerkActivations } from '@/hooks/useSupabaseData';
 import { useActivateOffer } from '@/hooks/useActivateOffer';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { MARKETPLACE_CATEGORIES } from '@/lib/constants';
@@ -35,6 +36,7 @@ import { MarketplaceSavingsWidget, generateMockSavingsData } from '@/components/
 import { PersonalizedRecommendationsStrip } from '@/components/employee/PersonalizedRecommendationsStrip';
 import { OfferDetailSheet } from '@/components/employee/OfferDetailSheet';
 import { MarketplaceOfferMedia, MarketplaceOfferSkeleton } from '@/components/employee/MarketplaceOfferMedia';
+import { MarketplaceEmptyState } from '@/components/employee/MarketplaceEmptyState';
 import { 
   formatDiscountLabel, 
   getOfferMicrocopy, 
@@ -269,32 +271,7 @@ function MarketplaceContent() {
           iconClassName="from-accent to-accent/80 shadow-accent/25"
         />
         
-        <Card className="border-dashed">
-          <CardContent className="py-16 text-center">
-            <div className="mx-auto w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
-              <AlertCircle className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <h3 className="font-semibold text-lg mb-2">
-              {t('No Offers Available Yet', 'لا توجد عروض متاحة بعد')}
-            </h3>
-            <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6">
-              {t(
-                'Marketplace offers are enabled by your employer based on eligibility and benefit entitlements. Ask HR to enable the marketplace for your organization.',
-                'يتم تفعيل عروض السوق من قبل صاحب العمل بناءً على الأهلية واستحقاقات المزايا.'
-              )}
-            </p>
-            <div className="p-4 rounded-xl bg-muted/50 max-w-sm mx-auto text-sm text-left space-y-2">
-              <p className="font-medium">{t('How it works:', 'كيف يعمل:')}</p>
-              <ul className="text-muted-foreground space-y-1">
-                <li>• <span className="text-accent font-medium">{t('Employer-Sponsored', 'برعاية صاحب العمل')}</span> — {t('Exclusive discounts subsidized by your company', 'خصومات حصرية مدعومة من شركتك')}</li>
-                <li>• <span className="text-muted-foreground font-medium">{t('Public Offers', 'العروض العامة')}</span> — {t('Partner discounts available to all employees', 'خصومات الشركاء المتاحة لجميع الموظفين')}</li>
-              </ul>
-            </div>
-            <Button variant="outline" className="mt-6" asChild>
-              <a href="/employee/requests?type=question">{t('Ask HR about Marketplace', 'اسأل الموارد البشرية عن السوق')}</a>
-            </Button>
-          </CardContent>
-        </Card>
+        <MarketplaceEmptyState />
       </div>
     );
   }
