@@ -98,32 +98,59 @@ export default function AdminDashboard() {
     </div>
   );
 
+  // Calculate platform health
+  const platformHealth = {
+    organizations: parseInt(platformMetrics[0].value) >= 40 ? 'excellent' : 'good',
+    growth: Math.max(...platformMetrics.map(m => m.change)) >= 15 ? 'high' : 'moderate',
+  };
+
   return (
     <PageLayout
       title={t('Platform Command Center', 'مركز قيادة المنصة')}
-      description={t('Real-time analytics and market intelligence', 'التحليلات الفورية وذكاء السوق')}
+      description={t('Real-time platform analytics, governance, and market intelligence', 'تحليلات المنصة الفورية والحوكمة وذكاء السوق')}
       icon={Globe}
       iconClassName="from-primary to-primary/80"
+      badge={{
+        label: t('System Healthy', 'النظام سليم'),
+        variant: 'success',
+        icon: Activity,
+      }}
       actions={headerActions}
     >
-
-      {/* Platform Metrics */}
-      <MetricGrid columns={4}>
-        {platformMetrics.map((metric) => (
-          <MetricCard
-            key={metric.label}
-            title={language === 'ar' ? metric.labelAr : metric.label}
-            value={metric.value}
-            icon={metric.icon}
-            trend={{ value: metric.change, label: t('vs last month', 'مقارنة بالشهر الماضي') }}
-            variant="default"
-          />
-        ))}
-      </MetricGrid>
+      {/* Hero Platform Metrics - Premium Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {platformMetrics.map((metric, index) => {
+          const colors = [
+            { bg: 'from-card to-primary/5', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+            { bg: 'from-card to-accent/5', iconBg: 'bg-accent/10', iconColor: 'text-accent' },
+            { bg: 'from-card to-success/5', iconBg: 'bg-success/10', iconColor: 'text-success' },
+            { bg: 'from-card to-warning/5', iconBg: 'bg-warning/10', iconColor: 'text-warning' },
+          ];
+          const color = colors[index];
+          const Icon = metric.icon;
+          
+          return (
+            <Card key={metric.label} className={cn("border-border/40 bg-gradient-to-br", color.bg)}>
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between mb-4">
+                  <div className={cn("p-2.5 rounded-xl", color.iconBg)}>
+                    <Icon className={cn("w-5 h-5", color.iconColor)} />
+                  </div>
+                  <Badge variant="outline" className="bg-success/10 text-success border-success/30 text-xs">
+                    +{metric.change}%
+                  </Badge>
+                </div>
+                <p className="text-3xl font-bold tracking-tight">{metric.value}</p>
+                <p className="text-sm text-muted-foreground mt-1">{language === 'ar' ? metric.labelAr : metric.label}</p>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
       {/* Main Analytics Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="w-full justify-start flex-wrap">
+        <TabsList className="w-full justify-start flex-wrap bg-muted/50 p-1">
           <TabsTrigger value="overview">{t('Overview', 'نظرة عامة')}</TabsTrigger>
           <TabsTrigger value="benchmarks">{t('Benchmarks', 'المعايير')}</TabsTrigger>
           <TabsTrigger value="market">{t('Market Intelligence', 'ذكاء السوق')}</TabsTrigger>

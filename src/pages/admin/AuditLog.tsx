@@ -18,6 +18,7 @@ import {
   Plus,
   LogIn,
   LogOut,
+  Activity,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -253,12 +254,18 @@ export default function AuditLogPage() {
     <div className={cn("space-y-6", isRTL && "text-right")}>
       <PageHeader
         title={t('Audit Log', 'سجل التدقيق')}
-        description={t('Track all administrative actions and system changes', 'تتبع جميع الإجراءات الإدارية وتغييرات النظام')}
+        description={t('Complete audit trail of all administrative actions and system changes', 'سجل تدقيق كامل لجميع الإجراءات الإدارية وتغييرات النظام')}
         icon={FileText}
+        iconClassName="from-primary to-primary/80"
+        badge={{
+          label: t('Live Tracking', 'تتبع مباشر'),
+          variant: 'success',
+          icon: Activity,
+        }}
         actions={
           <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-            <Button variant="outline" size="sm" onClick={fetchLogs}>
-              <RefreshCw className="w-4 h-4 me-2" />
+            <Button variant="outline" size="sm" onClick={fetchLogs} disabled={loading}>
+              <RefreshCw className={cn("w-4 h-4 me-2", loading && "animate-spin")} />
               {t('Refresh', 'تحديث')}
             </Button>
             <Button size="sm" onClick={handleExport}>
@@ -269,32 +276,56 @@ export default function AuditLogPage() {
         }
       />
 
-      {/* Stats */}
-      <MetricGrid columns={4}>
-        <MetricCard
-          title={t('Total Events', 'إجمالي الأحداث')}
-          value={actionStats.total.toString()}
-          icon={FileText}
-        />
-        <MetricCard
-          title={t('Creates', 'الإنشاءات')}
-          value={actionStats.creates.toString()}
-          icon={Plus}
-          iconClassName="from-success to-success/80"
-        />
-        <MetricCard
-          title={t('Updates', 'التحديثات')}
-          value={actionStats.updates.toString()}
-          icon={Edit}
-          iconClassName="from-blue-500 to-blue-600"
-        />
-        <MetricCard
-          title={t('Approvals', 'الموافقات')}
-          value={actionStats.approvals.toString()}
-          icon={CheckCircle}
-          iconClassName="from-purple-500 to-purple-600"
-        />
-      </MetricGrid>
+      {/* Hero Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="border-primary/30 bg-gradient-to-br from-card to-primary/5">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2.5 rounded-xl bg-primary/10">
+                <FileText className="w-5 h-5 text-primary" />
+              </div>
+            </div>
+            <p className="text-3xl font-bold tracking-tight">{actionStats.total}</p>
+            <p className="text-sm text-muted-foreground mt-1">{t('Total Events', 'إجمالي الأحداث')}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-success/30 bg-gradient-to-br from-card to-success/5">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2.5 rounded-xl bg-success/10">
+                <Plus className="w-5 h-5 text-success" />
+              </div>
+            </div>
+            <p className="text-3xl font-bold tracking-tight text-success">{actionStats.creates}</p>
+            <p className="text-sm text-muted-foreground mt-1">{t('Creates', 'الإنشاءات')}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-info/30 bg-gradient-to-br from-card to-info/5">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2.5 rounded-xl bg-info/10">
+                <Edit className="w-5 h-5 text-info" />
+              </div>
+            </div>
+            <p className="text-3xl font-bold tracking-tight text-info">{actionStats.updates}</p>
+            <p className="text-sm text-muted-foreground mt-1">{t('Updates', 'التحديثات')}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-accent/30 bg-gradient-to-br from-card to-accent/5">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2.5 rounded-xl bg-accent/10">
+                <CheckCircle className="w-5 h-5 text-accent" />
+              </div>
+            </div>
+            <p className="text-3xl font-bold tracking-tight text-accent">{actionStats.approvals}</p>
+            <p className="text-sm text-muted-foreground mt-1">{t('Approvals', 'الموافقات')}</p>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Filters & Log Table */}
       <Card>
