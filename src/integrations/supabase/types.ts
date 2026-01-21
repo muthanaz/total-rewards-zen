@@ -2016,7 +2016,10 @@ export type Database = {
       request_events: {
         Row: {
           action: string | null
+          actor_name: string | null
+          actor_role: string | null
           actor_user_id: string
+          bulk_action_id: string | null
           created_at: string
           from_status: string | null
           id: string
@@ -2025,10 +2028,14 @@ export type Database = {
           notes_internal: string | null
           request_id: string
           to_status: string
+          visibility: string | null
         }
         Insert: {
           action?: string | null
+          actor_name?: string | null
+          actor_role?: string | null
           actor_user_id: string
+          bulk_action_id?: string | null
           created_at?: string
           from_status?: string | null
           id?: string
@@ -2037,10 +2044,14 @@ export type Database = {
           notes_internal?: string | null
           request_id: string
           to_status: string
+          visibility?: string | null
         }
         Update: {
           action?: string | null
+          actor_name?: string | null
+          actor_role?: string | null
           actor_user_id?: string
+          bulk_action_id?: string | null
           created_at?: string
           from_status?: string | null
           id?: string
@@ -2049,6 +2060,7 @@ export type Database = {
           notes_internal?: string | null
           request_id?: string
           to_status?: string
+          visibility?: string | null
         }
         Relationships: [
           {
@@ -2063,17 +2075,22 @@ export type Database = {
       requests: {
         Row: {
           amount: number | null
+          assigned_owner_name: string | null
           assigned_to: string | null
           assigned_to_user_id: string | null
           category: string
           created_at: string | null
           currency: string | null
+          decision_at: string | null
+          department: string | null
           description: string | null
           employee_code: string | null
           escalated_at: string | null
           escalation_reason: string | null
+          grade: string | null
           id: string
           last_status_change_at: string | null
+          location: string | null
           missing_docs: Json | null
           organization_id: string | null
           policy_id: string | null
@@ -2086,6 +2103,7 @@ export type Database = {
           reviewer_notes: string | null
           sla_due_at: string | null
           sla_hours: number | null
+          source_system: string | null
           status: Database["public"]["Enums"]["request_status"] | null
           subject: string
           submitted_at: string | null
@@ -2094,17 +2112,22 @@ export type Database = {
         }
         Insert: {
           amount?: number | null
+          assigned_owner_name?: string | null
           assigned_to?: string | null
           assigned_to_user_id?: string | null
           category: string
           created_at?: string | null
           currency?: string | null
+          decision_at?: string | null
+          department?: string | null
           description?: string | null
           employee_code?: string | null
           escalated_at?: string | null
           escalation_reason?: string | null
+          grade?: string | null
           id?: string
           last_status_change_at?: string | null
+          location?: string | null
           missing_docs?: Json | null
           organization_id?: string | null
           policy_id?: string | null
@@ -2117,6 +2140,7 @@ export type Database = {
           reviewer_notes?: string | null
           sla_due_at?: string | null
           sla_hours?: number | null
+          source_system?: string | null
           status?: Database["public"]["Enums"]["request_status"] | null
           subject: string
           submitted_at?: string | null
@@ -2125,17 +2149,22 @@ export type Database = {
         }
         Update: {
           amount?: number | null
+          assigned_owner_name?: string | null
           assigned_to?: string | null
           assigned_to_user_id?: string | null
           category?: string
           created_at?: string | null
           currency?: string | null
+          decision_at?: string | null
+          department?: string | null
           description?: string | null
           employee_code?: string | null
           escalated_at?: string | null
           escalation_reason?: string | null
+          grade?: string | null
           id?: string
           last_status_change_at?: string | null
+          location?: string | null
           missing_docs?: Json | null
           organization_id?: string | null
           policy_id?: string | null
@@ -2148,6 +2177,7 @@ export type Database = {
           reviewer_notes?: string | null
           sla_due_at?: string | null
           sla_hours?: number | null
+          source_system?: string | null
           status?: Database["public"]["Enums"]["request_status"] | null
           subject?: string
           submitted_at?: string | null
@@ -2248,6 +2278,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      sla_rules: {
+        Row: {
+          category: string
+          created_at: string
+          escalation_hours: number | null
+          id: string
+          organization_id: string | null
+          reminder_hours: number[] | null
+          sla_hours: number
+          updated_at: string
+          value_band: string
+          working_hours_only: boolean | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          escalation_hours?: number | null
+          id?: string
+          organization_id?: string | null
+          reminder_hours?: number[] | null
+          sla_hours?: number
+          updated_at?: string
+          value_band: string
+          working_hours_only?: boolean | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          escalation_hours?: number | null
+          id?: string
+          organization_id?: string | null
+          reminder_hours?: number[] | null
+          sla_hours?: number
+          updated_at?: string
+          value_band?: string
+          working_hours_only?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sla_rules_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ui_visibility_settings: {
         Row: {

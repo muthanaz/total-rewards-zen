@@ -878,6 +878,7 @@ export function ClaimsOpsView() {
           onExport={handleExportCSV}
           onRefresh={refetch}
           teamMembers={mockEmployerUsers}
+          claimsData={filteredRequests.map(r => ({ id: r.id, status: r.status, amount: r.amount }))}
         />
 
         {/* Queue Table */}
