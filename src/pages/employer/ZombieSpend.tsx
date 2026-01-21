@@ -1,15 +1,17 @@
 /**
- * Zombie Spend Page (Recovery Workspace)
+ * Optimization Opportunities Page (formerly "Zombie Spend")
  * 
- * Action-oriented recovery workspace with:
- * - Metric definitions strip
- * - Category breakdown table with drilldowns
- * - Root cause analysis
- * - 5 recovery playbooks with real tracking
- * - Cross-page linking to Claims, Spend, Recommendations
+ * Executive-grade analytics page following the standardized template:
+ * 1. Header + Confidence Badge
+ * 2. Key Insights (with deep links)
+ * 3. KPI Grid
+ * 4. Breakdown Charts + Tables
+ * 5. Benefits Action Plan
+ * 
+ * @module ZombieSpend
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,26 +24,32 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
-  Ghost, TrendingDown, Target, DollarSign, AlertTriangle, ArrowRight,
-  Eye, Play, Clock, CheckCircle2, XCircle, Pause, CircleDot, Info
+  Ghost, Target, AlertTriangle, ArrowRight,
+  Eye, Play, Clock, CheckCircle2, Pause, CircleDot, Info,
+  Download, Calendar, Lightbulb, TrendingUp,
 } from 'lucide-react';
 import { 
   EmployerGlobalFiltersBar, 
   DataConfidenceBadge, 
   PageConfidenceGate, 
   useDataCoverageMetrics,
-  NarrativeInsights
+  OptimizationKPIGrid,
+  OptimizationInsights,
+  generateOptimizationInsights,
+  BenefitsActionPlanSummary,
+  generateSampleActionPlan,
 } from '@/components/employer';
+import { PageLayout } from '@/components/shared';
 import { ZombieCategoryDrawer } from '@/components/employer/ZombieCategoryDrawer';
 import { LaunchPlaybookModal } from '@/components/employer/LaunchPlaybookModal';
 import { ZombieMetricDefinitions } from '@/components/employer/ZombieMetricDefinitions';
-import { useZombieSpendData, ROOT_CAUSE_DEFINITIONS, RecoveryPlaybook, PlaybookStatus, CONFIDENCE_FACTORS } from '@/hooks/useZombieSpendData';
+import { useZombieSpendData, ROOT_CAUSE_DEFINITIONS, RecoveryPlaybook, CONFIDENCE_FACTORS } from '@/hooks/useZombieSpendData';
 import { usePlaybookRuns, PlaybookRunStatus } from '@/hooks/usePlaybookRuns';
 import { formatCurrencyAED, formatPercent, formatInteger, cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
-// ============= CONFIDENCE BADGE STYLES =============
+// ============= STATUS CONFIG =============
 
 const confidenceBadgeStyles = {
   high: 'bg-success/10 text-success border-success/30',
@@ -51,7 +59,7 @@ const confidenceBadgeStyles = {
 
 const runStatusConfig: Record<PlaybookRunStatus, { label: string; icon: typeof CircleDot; color: string }> = {
   draft: { label: 'Draft', icon: CircleDot, color: 'text-muted-foreground' },
-  active: { label: 'Active', icon: Play, color: 'text-blue-500' },
+  active: { label: 'Active', icon: Play, color: 'text-info' },
   completed: { label: 'Completed', icon: CheckCircle2, color: 'text-success' },
   paused: { label: 'Paused', icon: Pause, color: 'text-warning' },
 };
@@ -71,17 +79,14 @@ export default function ZombieSpendPage() {
     showHighConfidenceOnly,
     summaryMetrics,
     playbooks,
-    rootCauseDefinitions,
     setShowHighConfidenceOnly,
     openCategoryDrawer,
     closeCategoryDrawer,
     getRecommendedPlaybooks,
   } = useZombieSpendData();
   
-  // Use real playbook runs hook
   const {
     runs: playbookRuns,
-    isLoading: runsLoading,
     launchPlaybook,
     updateRunStatus,
   } = usePlaybookRuns();
@@ -100,6 +105,44 @@ export default function ZombieSpendPage() {
       }
     }
   }, [searchParams, allCategories]);
+  
+  // Generate insights
+  const insights = useMemo(() => {
+    const topCategories = categories.slice(0, 5).map(c => ({
+      name: c.name,
+      unused: c.unusedEntitlement,
+      utilizationRate: c.utilizationRate,
+    }));
+    
+    const rootCauseCounts: Record<string, number> = {};
+    categories.forEach(c => {
+      const cause = ROOT_CAUSE_DEFINITIONS[c.primaryRootCause]?.label || c.primaryRootCause;
+      rootCauseCounts[cause] = (rootCauseCounts[cause] || 0) + 1;
+    });
+    const primaryRootCauses = Object.entries(rootCauseCounts)
+      .map(([cause, count]) => ({ cause, count }))
+      .sort((a, b) => b.count - a.count);
+    
+    return generateOptimizationInsights({
+      topCategories,
+      primaryRootCauses,
+      lowUtilizationSegments: [{ name: 'New Joiners', dimension: 'Tenure', utilization: 42 }],
+      processMetrics: { missingDocsRate: 22, avgApprovalDays: 4.5 },
+      yoyChange: -5,
+    });
+  }, [categories]);
+  
+  // Generate action plan items
+  const actionPlanItems = useMemo(() => {
+    const topCategory = categories[0];
+    if (!topCategory) return [];
+    
+    return generateSampleActionPlan({
+      topCategory: { name: topCategory.name, unused: topCategory.unusedEntitlement },
+      processFriction: { missingDocsRate: 22, pendingCount: 18 },
+      lowSegment: { name: 'New Joiners', dimension: 'Tenure' },
+    });
+  }, [categories]);
   
   const handleOpenPlaybook = (playbook: RecoveryPlaybook) => {
     setSelectedPlaybook(playbook);
@@ -131,57 +174,17 @@ export default function ZombieSpendPage() {
       playbookId: params.playbookId as any,
     });
   };
-  
-  // Narrative insights
-  const narrativeInsights = [
-    {
-      id: 'top-zombie',
-      change: `${categories[0]?.name || 'L&D'} has the highest unused entitlement`,
-      metricValue: formatCurrencyAED(categories[0]?.unusedEntitlement || 0),
-      impact: `${formatInteger(categories[0]?.eligibleHeadcount || 0)} employees eligible. Primary cause: ${ROOT_CAUSE_DEFINITIONS[categories[0]?.primaryRootCause || 'awareness'].label}.`,
-      action: 'Launch awareness campaign for this category',
-      actionPath: `/employer/zombie?category=${categories[0]?.id}`,
-      trend: 'down' as const,
-      trendIsPositive: false,
-      confidence: 'high' as const,
-    },
-    {
-      id: 'recovery-potential',
-      change: 'Estimated recoverable value based on confidence',
-      metricValue: formatCurrencyAED(summaryMetrics.estimatedRecoverable),
-      impact: `Recovery potential is weighted by data confidence. High confidence = 100%, Medium = 70%, Low = 40%.`,
-      action: 'Prioritize high-confidence categories first',
-      trend: 'up' as const,
-      trendIsPositive: true,
-      confidence: 'medium' as const,
-    },
-    {
-      id: 'process-friction',
-      change: 'Process friction detected in multiple categories',
-      impact: 'High missing docs rates and long processing times are causing drop-offs in claims submission.',
-      action: 'Review documentation requirements and SLA targets',
-      actionPath: '/employer/claims?view=ops&filter_status=missing_docs',
-      trend: 'down' as const,
-      trendIsPositive: false,
-      confidence: 'high' as const,
-    },
-  ];
-  
+
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <PageLayout
+        title="Optimization Opportunities"
+        description="Unrealized value ('zombie spend') and actionable next steps to recover it"
+        icon={Lightbulb}
+        iconClassName="bg-warning/10 text-warning"
+        confidenceBadge={<DataConfidenceBadge metrics={coverageMetrics} />}
+        actions={
           <div className="flex items-center gap-3">
-            <Ghost className="h-8 w-8 text-amber-500" />
-            <div>
-              <h1 className="text-2xl font-display font-bold text-foreground">Zombie Spend</h1>
-              <p className="text-muted-foreground">
-                Identify unused budget and convert it into employee value or cost savings
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <Switch 
                 id="high-confidence" 
@@ -189,7 +192,7 @@ export default function ZombieSpendPage() {
                 onCheckedChange={setShowHighConfidenceOnly}
               />
               <Label htmlFor="high-confidence" className="text-sm">
-                Show only high-confidence data
+                High confidence only
               </Label>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -197,104 +200,43 @@ export default function ZombieSpendPage() {
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Filters to High confidence categories only.</p>
-                  <p className="text-muted-foreground text-xs mt-1">
-                    Medium and Low confidence categories will be hidden.
-                  </p>
                 </TooltipContent>
               </Tooltip>
             </div>
-            <DataConfidenceBadge metrics={coverageMetrics} />
+            <Button variant="outline" size="sm">
+              <Calendar className="w-4 h-4 mr-2" />
+              YTD 2024
+            </Button>
+            <Button variant="outline" size="sm">
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </Button>
           </div>
-        </div>
+        }
+        filters={<EmployerGlobalFiltersBar />}
+      >
+        {/* 1. Key Insights */}
+        <OptimizationInsights insights={insights} isDemo={true} />
         
-        {/* Global Filters */}
-        <EmployerGlobalFiltersBar />
-        
-        {/* Metric Definitions Strip */}
-        <ZombieMetricDefinitions />
-        
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="card-elevated border-l-4 border-l-amber-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-amber-500/10">
-                  <Ghost className="h-6 w-6 text-amber-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-amber-600">
-                    {formatCurrencyAED(summaryMetrics.totalUnused)}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Unused Entitlement</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="card-elevated">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-warning/10">
-                  <TrendingDown className="h-6 w-6 text-warning" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-2xl font-bold">{formatPercent(summaryMetrics.unusedPercent)}</p>
-                  </div>
-                  <p className="text-sm text-muted-foreground">% Budget Unused</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="card-elevated">
-            <CardContent className="pt-6">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Top 3 Categories</p>
-                <div className="flex flex-wrap gap-1">
-                  {summaryMetrics.topCategories.map((cat, idx) => (
-                    <Badge key={idx} variant="secondary" className="text-xs">
-                      {cat}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="card-elevated border-l-4 border-l-success">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-success/10">
-                  <Target className="h-6 w-6 text-success" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-success">
-                    {formatCurrencyAED(summaryMetrics.estimatedRecoverable)}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Estimated Recoverable</p>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                <Info className="h-3 w-3" />
-                Weighted by data confidence (High 100%, Medium 70%, Low 40%)
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Narrative Insights */}
-        <NarrativeInsights
-          insights={narrativeInsights}
-          coverageMetrics={coverageMetrics}
-          title="Recovery Insights"
-          subtitle="AI-identified opportunities to recapture benefit value"
-          onCreateRecommendation={(insight) => {
-            navigate(`/employer/recommendations?create=true&source=${insight.id}`);
+        {/* 2. KPI Grid */}
+        <OptimizationKPIGrid
+          metrics={{
+            unrealizedValue: summaryMetrics.totalUnused,
+            unrealizedRate: summaryMetrics.unusedPercent,
+            estimatedRecoverable: summaryMetrics.estimatedRecoverable,
+            topCategories: summaryMetrics.topCategories,
+            missingDocsRate: 22,
+            medianApprovalDays: 4.5,
+            confidenceLevel: 'medium',
           }}
+          isDemo={true}
+          onKPIClick={(kpiId) => toast.info(`Opening ${kpiId} drilldown...`)}
         />
         
-        {/* Tabs */}
+        {/* 3. Metric Definitions (collapsible) */}
+        <ZombieMetricDefinitions />
+        
+        {/* 4. Breakdown Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="categories">Category Breakdown</TabsTrigger>
@@ -311,7 +253,7 @@ export default function ZombieSpendPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-lg flex items-center gap-2">
-                      Unused Entitlement by Category
+                      Unrealized Value by Category
                       <InfoTooltip 
                         formula="Entitled Value - Claimed Amount" 
                         dataSource="benefit_entitlements + requests" 
@@ -335,7 +277,7 @@ export default function ZombieSpendPage() {
                         <TableHead className="text-right">Allocated</TableHead>
                         <TableHead className="text-right">Entitled</TableHead>
                         <TableHead className="text-right">Claimed</TableHead>
-                        <TableHead className="text-right">Unused</TableHead>
+                        <TableHead className="text-right">Unrealized</TableHead>
                         <TableHead className="text-right">Utilization</TableHead>
                         <TableHead>Confidence</TableHead>
                         <TableHead className="text-right">Action</TableHead>
@@ -372,7 +314,7 @@ export default function ZombieSpendPage() {
                             <TableCell className="text-right">
                               {formatCurrencyAED(cat.claimedAmount, { abbreviate: true })}
                             </TableCell>
-                            <TableCell className="text-right font-medium text-amber-600">
+                            <TableCell className="text-right font-medium text-warning">
                               {formatCurrencyAED(cat.unusedEntitlement, { abbreviate: true })}
                             </TableCell>
                             <TableCell className="text-right">
@@ -608,7 +550,19 @@ export default function ZombieSpendPage() {
           </TabsContent>
         </Tabs>
         
-        {/* Category Drawer */}
+        {/* 5. Benefits Action Plan */}
+        <BenefitsActionPlanSummary
+          actions={actionPlanItems}
+          onCreateAction={() => navigate('/employer/recommendations?create=true')}
+          onUpdateStatus={(actionId, newStatus) => {
+            toast.info(`Demo: Action ${actionId} marked as ${newStatus}`);
+          }}
+          onSendToHROps={(action) => {
+            toast.info(`Demo: Sent "${action.title}" to HR Ops queue`);
+          }}
+        />
+        
+        {/* Drawers & Modals */}
         <ZombieCategoryDrawer
           open={drawerOpen}
           onOpenChange={closeCategoryDrawer}
@@ -617,7 +571,6 @@ export default function ZombieSpendPage() {
           onLaunchPlaybook={handleLaunchFromDrawer}
         />
         
-        {/* Launch Playbook Modal */}
         <LaunchPlaybookModal
           open={launchModalOpen}
           onOpenChange={setLaunchModalOpen}
@@ -627,7 +580,7 @@ export default function ZombieSpendPage() {
           onLaunch={handleLaunch}
           onLaunchComplete={handleLaunchComplete}
         />
-      </div>
+      </PageLayout>
     </PageConfidenceGate>
   );
 }

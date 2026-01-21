@@ -137,3 +137,10 @@ export { SpendInsights, generateSpendInsights } from './SpendInsights';
 export type { SpendInsight, SpendDataForInsights } from './SpendInsights';
 export { SpendRecommendedActions, generateSpendRecommendedActions } from './SpendRecommendedActions';
 export type { RecommendedAction } from './SpendRecommendedActions';
+
+// Optimization Opportunities components
+export { OptimizationKPIGrid } from './OptimizationKPIGrid';
+export { OptimizationInsights, generateOptimizationInsights } from './OptimizationInsights';
+export type { OptimizationInsight, OptimizationDataForInsights } from './OptimizationInsights';
+export { BenefitsActionPlanSummary, generateSampleActionPlan } from './BenefitsActionPlanSummary';
+export type { ActionPlanItem } from './BenefitsActionPlanSummary';
