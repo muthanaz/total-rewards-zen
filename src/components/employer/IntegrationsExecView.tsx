@@ -263,17 +263,68 @@ export function IntegrationsExecView() {
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mb-2">{issue.rootCause}</p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-auto p-0 text-xs text-primary font-medium hover:bg-transparent"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleResolveClick(issue);
-                    }}
-                  >
-                    → Resolve this issue
-                  </Button>
+                  {/* Context-aware resolve CTA */}
+                  {(() => {
+                    const rootCauseLower = issue.rootCause.toLowerCase();
+                    const isIntegrationIssue = rootCauseLower.includes('not connected') || rootCauseLower.includes('not integrated');
+                    const isSyncIssue = rootCauseLower.includes('stale') || rootCauseLower.includes('sync') || rootCauseLower.includes('intermittent');
+                    const isQualityIssue = rootCauseLower.includes('below') || rootCauseLower.includes('rate') || rootCauseLower.includes('sources');
+                    
+                    if (isIntegrationIssue) {
+                      return (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-0 text-xs text-primary font-medium hover:bg-transparent"
+                          asChild
+                        >
+                          <Link to={`/employer/integrations?view=ops&resolve_issue=${issue.id}`}>
+                            → Connect integration
+                          </Link>
+                        </Button>
+                      );
+                    } else if (isSyncIssue) {
+                      return (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-0 text-xs text-primary font-medium hover:bg-transparent"
+                          asChild
+                        >
+                          <Link to={`/employer/data-quality/sync?resolve_issue=${issue.id}`}>
+                            → Run sync
+                          </Link>
+                        </Button>
+                      );
+                    } else if (isQualityIssue) {
+                      return (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-0 text-xs text-primary font-medium hover:bg-transparent"
+                          asChild
+                        >
+                          <Link to={`/employer/data-quality/rules?resolve_issue=${issue.id}`}>
+                            → Fix data quality
+                          </Link>
+                        </Button>
+                      );
+                    } else {
+                      return (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-0 text-xs text-primary font-medium hover:bg-transparent"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleResolveClick(issue);
+                          }}
+                        >
+                          → Resolve this issue
+                        </Button>
+                      );
+                    }
+                  })()}
                 </div>
               ))}
 

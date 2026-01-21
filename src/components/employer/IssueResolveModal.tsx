@@ -45,6 +45,7 @@ const RESOLUTION_OPTIONS: {
   icon: React.ComponentType<{ className?: string }>;
   action?: string;
   getActionLink?: (issueId: string) => string;
+  rootCauseMatch?: string[]; // Matches issue.rootCause patterns
 }[] = [
   {
     type: 'integration',
@@ -53,20 +54,25 @@ const RESOLUTION_OPTIONS: {
     icon: Link2,
     action: 'Go to Integrations',
     getActionLink: (issueId) => `/employer/integrations?view=ops&resolve_issue=${issueId}`,
+    rootCauseMatch: ['not connected', 'not integrated', 'missing source'],
   },
   {
     type: 'data_source',
-    label: 'Add Data Source',
-    description: 'Import or configure a new data source manually',
+    label: 'Run Sync',
+    description: 'Trigger data synchronization to refresh stale data',
     icon: Database,
-    action: 'Import Data',
-    getActionLink: () => '/employer/integrations?view=ops&tab=import',
+    action: 'Go to Sync Monitor',
+    getActionLink: (issueId) => `/employer/data-quality/sync?resolve_issue=${issueId}`,
+    rootCauseMatch: ['stale', 'sync', 'intermittent', 'days ago'],
   },
   {
     type: 'quality_rule',
-    label: 'Improve Data Quality',
-    description: 'Define validation rules to ensure data accuracy',
+    label: 'Fix Data Quality',
+    description: 'Run validation rules to identify and fix data issues',
     icon: Shield,
+    action: 'Go to Data Quality Rules',
+    getActionLink: (issueId) => `/employer/data-quality/rules?resolve_issue=${issueId}`,
+    rootCauseMatch: ['quality', 'coverage', 'field', 'missing', 'incomplete', 'below'],
   },
   {
     type: 'accepted_risk',
