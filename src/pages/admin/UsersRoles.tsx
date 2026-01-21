@@ -67,9 +67,10 @@ interface UserWithRole {
   organization_id: string | null;
   organization_name?: string;
   role: string;
-  status: 'active' | 'inactive' | 'pending';
+  status: 'active' | 'inactive' | 'pending' | 'suspended';
   last_login?: string;
   created_at: string;
+  lifecycle_stage?: 'invited' | 'onboarding' | 'active' | 'offboarding' | 'deactivated';
 }
 
 const ROLE_CONFIG: Record<string, { label: string; labelAr: string; color: string; icon: React.ElementType }> = {
@@ -83,6 +84,15 @@ const STATUS_CONFIG: Record<string, { label: string; labelAr: string; color: str
   active: { label: 'Active', labelAr: 'نشط', color: 'bg-success/10 text-success border-success/30' },
   inactive: { label: 'Inactive', labelAr: 'غير نشط', color: 'bg-muted text-muted-foreground border-border' },
   pending: { label: 'Pending', labelAr: 'معلق', color: 'bg-warning/10 text-warning border-warning/30' },
+  suspended: { label: 'Suspended', labelAr: 'معلق', color: 'bg-destructive/10 text-destructive border-destructive/30' },
+};
+
+const LIFECYCLE_CONFIG: Record<string, { label: string; color: string }> = {
+  invited: { label: 'Invited', color: 'bg-blue-500/10 text-blue-600 border-blue-500/30' },
+  onboarding: { label: 'Onboarding', color: 'bg-amber-500/10 text-amber-600 border-amber-500/30' },
+  active: { label: 'Active', color: 'bg-success/10 text-success border-success/30' },
+  offboarding: { label: 'Offboarding', color: 'bg-warning/10 text-warning border-warning/30' },
+  deactivated: { label: 'Deactivated', color: 'bg-muted text-muted-foreground border-border' },
 };
 
 export default function UsersRolesPage() {
@@ -448,9 +458,9 @@ export default function UsersRolesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Invite User Dialog */}
+      {/* Invite User Dialog - with Org Selection */}
       <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{t('Invite New User', 'دعوة مستخدم جديد')}</DialogTitle>
             <DialogDescription>
@@ -459,8 +469,33 @@ export default function UsersRolesPage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>{t('Email Address', 'عنوان البريد الإلكتروني')}</Label>
+              <Label>{t('Email Address', 'عنوان البريد الإلكتروني')} *</Label>
               <Input type="email" placeholder="user@company.com" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t('First Name', 'الاسم الأول')}</Label>
+                <Input placeholder={t('John', 'أحمد')} />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('Last Name', 'اسم العائلة')}</Label>
+                <Input placeholder={t('Doe', 'محمد')} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>{t('Organization', 'المنظمة')} *</Label>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('Select organization...', 'اختر المنظمة...')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="org1">Acme Corp</SelectItem>
+                  <SelectItem value="org2">TechStart Inc</SelectItem>
+                  <SelectItem value="org3">GlobalBank</SelectItem>
+                  <SelectItem value="org4">RetailMax</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">{t('User must be assigned to an organization', 'يجب تعيين المستخدم لمنظمة')}</p>
             </div>
             <div className="space-y-2">
               <Label>{t('Role', 'الدور')}</Label>
@@ -473,6 +508,21 @@ export default function UsersRolesPage() {
                   <SelectItem value="employer">{t('Employer', 'صاحب العمل')}</SelectItem>
                   <SelectItem value="employee">{t('Employee', 'موظف')}</SelectItem>
                   <SelectItem value="vendor">{t('Vendor', 'بائع')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>{t('Permission Set', 'مجموعة الصلاحيات')}</Label>
+              <Select defaultValue="standard">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="standard">{t('Standard', 'قياسي')}</SelectItem>
+                  <SelectItem value="hr_ops">{t('HR Operations', 'عمليات الموارد البشرية')}</SelectItem>
+                  <SelectItem value="finance">{t('Finance', 'المالية')}</SelectItem>
+                  <SelectItem value="claims_processor">{t('Claims Processor', 'معالج المطالبات')}</SelectItem>
+                  <SelectItem value="read_only">{t('Read Only', 'قراءة فقط')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
