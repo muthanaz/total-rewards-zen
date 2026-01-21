@@ -1734,6 +1734,141 @@ export type Database = {
           },
         ]
       }
+      recovery_playbook_runs: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          due_date: string
+          expected_impact_aed: number | null
+          id: string
+          notes: string | null
+          organization_id: string
+          owner: string
+          playbook_type: string
+          segment: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by?: string | null
+          due_date: string
+          expected_impact_aed?: number | null
+          id?: string
+          notes?: string | null
+          organization_id: string
+          owner: string
+          playbook_type: string
+          segment?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          due_date?: string
+          expected_impact_aed?: number | null
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          owner?: string
+          playbook_type?: string
+          segment?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recovery_playbook_runs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recovery_run_outputs: {
+        Row: {
+          created_at: string
+          id: string
+          is_completed: boolean | null
+          link_or_text: string | null
+          output_type: string
+          run_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_completed?: boolean | null
+          link_or_text?: string | null
+          output_type: string
+          run_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_completed?: boolean | null
+          link_or_text?: string | null
+          output_type?: string
+          run_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recovery_run_outputs_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "recovery_playbook_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recovery_run_tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          due_date: string | null
+          id: string
+          run_id: string
+          status: string
+          task_name: string
+          task_order: number
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          run_id: string
+          status?: string
+          task_name: string
+          task_order?: number
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          run_id?: string
+          status?: string
+          task_name?: string
+          task_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recovery_run_tasks_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "recovery_playbook_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       request_attachments: {
         Row: {
           document_type: string | null

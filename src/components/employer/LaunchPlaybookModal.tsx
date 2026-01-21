@@ -2,9 +2,10 @@
  * Launch Playbook Modal
  * 
  * Modal for configuring and launching a recovery playbook.
+ * Enhanced with "What will be created" summary and better validation.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,10 +13,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Play, Target, DollarSign, Clock, Users } from 'lucide-react';
+import { Play, Target, DollarSign, Clock, CheckCircle2, ListTodo, FileOutput, Loader2 } from 'lucide-react';
 import { formatCurrencyAED } from '@/lib/utils';
-import { RecoveryPlaybook, ZombieCategory, PlaybookRun, CONFIDENCE_FACTORS } from '@/hooks/useZombieSpendData';
+import { RecoveryPlaybook, ZombieCategory, CONFIDENCE_FACTORS } from '@/hooks/useZombieSpendData';
 import { toast } from 'sonner';
 
 interface LaunchPlaybookModalProps {
@@ -24,7 +26,17 @@ interface LaunchPlaybookModalProps {
   playbook: RecoveryPlaybook | null;
   category: ZombieCategory | null;
   allCategories: ZombieCategory[];
-  onLaunch: (run: Omit<PlaybookRun, 'id' | 'createdAt' | 'status'>) => void;
+  onLaunch: (params: {
+    playbookId: string;
+    categoryId: string;
+    categoryName: string;
+    targetSegment?: string;
+    owner: string;
+    dueDate: string;
+    expectedImpactAED: number;
+    notes?: string;
+  }) => Promise<any>;
+  onLaunchComplete?: () => void;
 }
 
 const effortColors = {
@@ -40,12 +52,32 @@ export function LaunchPlaybookModal({
   category,
   allCategories,
   onLaunch,
+  onLaunchComplete,
 }: LaunchPlaybookModalProps) {
-  const [selectedCategoryId, setSelectedCategoryId] = useState(category?.id || '');
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [targetSegment, setTargetSegment] = useState('');
   const [owner, setOwner] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [notes, setNotes] = useState('');
+  const [isLaunching, setIsLaunching] = useState(false);
+  
+  // Pre-fill category when modal opens with a category selected
+  useEffect(() => {
+    if (open && category) {
+      setSelectedCategoryId(category.id);
+    }
+  }, [open, category]);
+  
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!open) {
+      setTargetSegment('');
+      setOwner('');
+      setDueDate('');
+      setNotes('');
+      setIsLaunching(false);
+    }
+  }, [open]);
   
   if (!playbook) return null;
   
@@ -54,42 +86,49 @@ export function LaunchPlaybookModal({
     ? Math.round(selectedCat.unusedEntitlement * (playbook.expectedImpactPercent / 100) * CONFIDENCE_FACTORS[selectedCat.confidence])
     : 0;
   
-  const handleLaunch = () => {
-    if (!selectedCategoryId || !owner || !dueDate) {
-      toast.error('Please fill in required fields');
+  const isFormValid = selectedCategoryId && owner && dueDate;
+  
+  const handleLaunch = async () => {
+    if (!isFormValid) {
+      toast.error('Please fill in required fields: Category, Owner, and Due Date');
       return;
     }
     
     const catName = allCategories.find(c => c.id === selectedCategoryId)?.name || '';
     
-    onLaunch({
-      playbookId: playbook.id,
-      categoryId: selectedCategoryId,
-      categoryName: catName,
-      targetSegment: targetSegment || undefined,
-      owner,
-      dueDate,
-      expectedImpactAED,
-      notes: notes || undefined,
-    });
+    setIsLaunching(true);
     
-    toast.success('Playbook launched!', {
-      description: `${playbook.title} started for ${catName}`,
-    });
-    
-    // Reset form
-    setTargetSegment('');
-    setOwner('');
-    setDueDate('');
-    setNotes('');
-    onOpenChange(false);
+    try {
+      await onLaunch({
+        playbookId: playbook.id,
+        categoryId: selectedCategoryId,
+        categoryName: catName,
+        targetSegment: targetSegment || undefined,
+        owner,
+        dueDate,
+        expectedImpactAED,
+        notes: notes || undefined,
+      });
+      
+      toast.success('Playbook launched!', {
+        description: `${playbook.title} started for ${catName}. View in Active Runs tab.`,
+      });
+      
+      onOpenChange(false);
+      onLaunchComplete?.();
+    } catch (err) {
+      console.error('Launch failed:', err);
+      toast.error('Failed to launch playbook');
+    } finally {
+      setIsLaunching(false);
+    }
   };
   
   const PlaybookIcon = playbook.icon;
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-lg bg-accent/10">
@@ -132,19 +171,6 @@ export function LaunchPlaybookModal({
             </CardContent>
           </Card>
           
-          {/* Playbook Steps Preview */}
-          <div className="p-3 rounded-lg bg-muted/30">
-            <p className="text-xs font-medium text-muted-foreground mb-2">PLAYBOOK STEPS</p>
-            <ol className="text-sm space-y-1 list-decimal list-inside">
-              {playbook.steps.slice(0, 3).map((step, idx) => (
-                <li key={idx} className="text-muted-foreground">{step}</li>
-              ))}
-              {playbook.steps.length > 3 && (
-                <li className="text-muted-foreground">...and {playbook.steps.length - 3} more</li>
-              )}
-            </ol>
-          </div>
-          
           {/* Form Fields */}
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -154,7 +180,7 @@ export function LaunchPlaybookModal({
                   value={selectedCategoryId} 
                   onValueChange={setSelectedCategoryId}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className={!selectedCategoryId ? 'border-destructive/50' : ''}>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent className="bg-card border z-50">
@@ -189,11 +215,12 @@ export function LaunchPlaybookModal({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="owner">Owner *</Label>
-                <Select value={owner} onValueChange={setOwner}>
-                  <SelectTrigger>
+                <Select value={owner || 'none'} onValueChange={(val) => setOwner(val === 'none' ? '' : val)}>
+                  <SelectTrigger className={!owner ? 'border-destructive/50' : ''}>
                     <SelectValue placeholder="Select owner" />
                   </SelectTrigger>
                   <SelectContent className="bg-card border z-50">
+                    <SelectItem value="none" disabled>Select owner</SelectItem>
                     <SelectItem value="HR Ops">HR Ops</SelectItem>
                     <SelectItem value="C&B Team">C&B Team</SelectItem>
                     <SelectItem value="Vendor Manager">Vendor Manager</SelectItem>
@@ -210,6 +237,7 @@ export function LaunchPlaybookModal({
                   type="date" 
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
+                  className={!dueDate ? 'border-destructive/50' : ''}
                 />
               </div>
             </div>
@@ -226,7 +254,42 @@ export function LaunchPlaybookModal({
             </div>
           </div>
           
-          {/* Outputs */}
+          <Separator />
+          
+          {/* What Will Be Created */}
+          <div className="p-3 rounded-lg bg-muted/30 space-y-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              What Will Be Created
+            </p>
+            
+            <div className="grid grid-cols-3 gap-3 text-sm">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-success" />
+                <div>
+                  <p className="font-medium">1 Run Record</p>
+                  <p className="text-xs text-muted-foreground">Trackable initiative</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <ListTodo className="h-4 w-4 text-blue-500" />
+                <div>
+                  <p className="font-medium">{playbook.steps.length} Tasks</p>
+                  <p className="text-xs text-muted-foreground">Action items</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <FileOutput className="h-4 w-4 text-purple-500" />
+                <div>
+                  <p className="font-medium">{playbook.outputs.length} Outputs</p>
+                  <p className="text-xs text-muted-foreground">Deliverables</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Outputs Preview */}
           <div className="p-3 rounded-lg bg-muted/30">
             <p className="text-xs font-medium text-muted-foreground mb-2">EXPECTED OUTPUTS</p>
             <div className="flex flex-wrap gap-1">
@@ -240,11 +303,19 @@ export function LaunchPlaybookModal({
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLaunching}>
             Cancel
           </Button>
-          <Button onClick={handleLaunch} className="gap-2">
-            <Play className="h-4 w-4" />
+          <Button 
+            onClick={handleLaunch} 
+            className="gap-2"
+            disabled={!isFormValid || isLaunching}
+          >
+            {isLaunching ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Play className="h-4 w-4" />
+            )}
             Launch Playbook
           </Button>
         </DialogFooter>
