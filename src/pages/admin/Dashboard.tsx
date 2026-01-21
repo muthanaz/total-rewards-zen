@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,6 @@ import {
   Building2, 
   DollarSign, 
   Target,
-  PieChart,
   Activity,
   Download,
   RefreshCw,
@@ -19,18 +19,158 @@ import {
 } from 'lucide-react';
 import { cn, formatCurrencyAED, formatInteger } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { ChartWrapper, CHART_EXPLANATIONS, AnimatedLineChart, AnimatedBarChart, AnimatedDonutChart } from '@/components/charts';
+import { AnimatedBarChart } from '@/components/charts';
 import { VendorPerformanceTab } from '@/components/admin/VendorPerformanceTab';
 import { DataQualityDashboard } from '@/components/admin/DataQualityDashboard';
 import { AdminActionCenter } from '@/components/admin/AdminActionCenter';
-import { PageLayout, MetricCard, MetricGrid, SectionCard, MetricTooltip, ConfidenceBadge, MetricDefinitionsDrawer } from '@/components/shared';
-import { METRIC_DEFINITIONS } from '@/lib/metrics';
+import { CommandCenterKPICard } from '@/components/admin/CommandCenterKPICard';
+import { InsightsActionsStrip } from '@/components/admin/InsightsActionsStrip';
+import { AnomaliesWidget } from '@/components/admin/AnomaliesWidget';
+import { TopBenefitsTable } from '@/components/admin/TopBenefitsTable';
+import { InteractiveGrowthChart } from '@/components/admin/InteractiveGrowthChart';
+import { InteractiveIndustryChart } from '@/components/admin/InteractiveIndustryChart';
+import { PageLayout } from '@/components/shared';
 
+// KPI data with sparklines and tooltips
 const platformMetrics = [
-  { label: 'Total Organizations', labelAr: 'إجمالي المنظمات', value: '47', change: 12, icon: Building2 },
-  { label: 'Active Employees', labelAr: 'الموظفون النشطون', value: '12,847', change: 8, icon: Users },
-  { label: 'Platform GMV', labelAr: 'إجمالي قيمة المنصة', value: 'AED 24.5M', change: 15, icon: DollarSign },
-  { label: 'Active Vendors', labelAr: 'الموردون النشطون', value: '156', change: 23, icon: Target },
+  { 
+    label: 'Total Organizations', 
+    labelAr: 'إجمالي المنظمات', 
+    value: '47',
+    previousValue: '42',
+    change: 12, 
+    icon: Building2,
+    sparklineData: [{ value: 38 }, { value: 40 }, { value: 41 }, { value: 42 }, { value: 44 }, { value: 47 }],
+    tooltip: {
+      definition: 'Total number of active organizations on the platform with at least one enrolled employee.',
+      formula: 'COUNT(organizations WHERE status = "active")',
+      source: 'Organizations Database',
+    },
+  },
+  { 
+    label: 'Active Employees', 
+    labelAr: 'الموظفون النشطون', 
+    value: '12,847',
+    previousValue: '11,895',
+    change: 8, 
+    icon: Users,
+    sparklineData: [{ value: 10500 }, { value: 11000 }, { value: 11400 }, { value: 11895 }, { value: 12300 }, { value: 12847 }],
+    tooltip: {
+      definition: 'Employees with verified accounts who accessed the platform in the last 90 days.',
+      formula: 'COUNT(employees WHERE last_active >= NOW() - 90d)',
+      source: 'User Activity Logs',
+    },
+  },
+  { 
+    label: 'Platform GMV', 
+    labelAr: 'إجمالي قيمة المنصة', 
+    value: 'AED 24.5M',
+    previousValue: 'AED 21.3M',
+    change: 15, 
+    icon: DollarSign,
+    sparklineData: [{ value: 18.2 }, { value: 19.5 }, { value: 20.1 }, { value: 21.3 }, { value: 22.8 }, { value: 24.5 }],
+    tooltip: {
+      definition: 'Gross Merchandise Value — total value of all benefits processed through the platform.',
+      formula: 'SUM(claims.amount) + SUM(allowances.value)',
+      source: 'Claims & Entitlements DB',
+    },
+  },
+  { 
+    label: 'Active Vendors', 
+    labelAr: 'الموردون النشطون', 
+    value: '156',
+    previousValue: '127',
+    change: 23, 
+    icon: Target,
+    sparklineData: [{ value: 98 }, { value: 112 }, { value: 120 }, { value: 127 }, { value: 142 }, { value: 156 }],
+    tooltip: {
+      definition: 'Vendors with approved profiles and at least one active offer in the marketplace.',
+      formula: 'COUNT(vendors WHERE status = "approved" AND offers_count > 0)',
+      source: 'Vendor Management DB',
+    },
+  },
+];
+
+// Growth chart data with all three series
+const monthlyGrowthData = [
+  { name: 'Jul', organizations: 32, employees: 8500, gmv: 15.2 },
+  { name: 'Aug', organizations: 35, employees: 9200, gmv: 17.1 },
+  { name: 'Sep', organizations: 38, employees: 10100, gmv: 19.3 },
+  { name: 'Oct', organizations: 42, employees: 11200, gmv: 21.5 },
+  { name: 'Nov', organizations: 45, employees: 12000, gmv: 23.2 },
+  { name: 'Dec', organizations: 47, employees: 12847, gmv: 24.5 },
+];
+
+// Industry breakdown with additional data
+const industryBreakdown = [
+  { name: 'Financial Services', value: 35, color: 'hsl(var(--success))', organizations: 16, employees: 4500 },
+  { name: 'Technology', value: 25, color: 'hsl(var(--accent))', organizations: 12, employees: 3200 },
+  { name: 'Healthcare', value: 18, color: 'hsl(var(--destructive))', organizations: 8, employees: 2300 },
+  { name: 'Retail', value: 12, color: 'hsl(var(--primary))', organizations: 6, employees: 1540 },
+  { name: 'Manufacturing', value: 10, color: 'hsl(var(--warning))', organizations: 5, employees: 1307 },
+];
+
+// Top benefits with trend data
+const topPerformingBenefits = [
+  { name: 'Housing Allowance', utilizationRate: 94, avgValue: 85000, trend: 5, claims: 12480 },
+  { name: 'Education Support', utilizationRate: 87, avgValue: 45000, trend: 12, claims: 8920 },
+  { name: 'Health Insurance', utilizationRate: 82, avgValue: 32000, trend: 3, claims: 15340 },
+  { name: 'Transport Allowance', utilizationRate: 78, avgValue: 18000, trend: -2, claims: 11200 },
+  { name: 'Wellness Programs', utilizationRate: 65, avgValue: 8000, trend: 18, claims: 6780 },
+];
+
+// Insights derived from metrics
+const keyInsights = [
+  { 
+    id: '1', 
+    text: 'Platform GMV grew 15% MoM — highest growth in 6 months, driven by housing claims surge.',
+    type: 'positive' as const,
+    metric: 'gmv',
+  },
+  { 
+    id: '2', 
+    text: 'Vendor approval queue has 12 pending applications older than 7 days — potential marketplace gap.',
+    type: 'warning' as const,
+    metric: 'vendors',
+  },
+  { 
+    id: '3', 
+    text: 'Technology sector shows 25% higher engagement than Financial Services despite smaller size.',
+    type: 'neutral' as const,
+    metric: 'industry',
+  },
+];
+
+// Recommended actions
+const recommendedActions = [
+  {
+    id: '1',
+    title: 'Clear Moderation Backlog',
+    description: '8 offers pending review > 48hrs',
+    priority: 'high' as const,
+    route: '/admin/offers',
+  },
+  {
+    id: '2',
+    title: 'Review Data Quality Alerts',
+    description: '3 orgs with sync failures this week',
+    priority: 'medium' as const,
+    route: '/admin/data-quality',
+  },
+  {
+    id: '3',
+    title: 'Onboard Pending Vendors',
+    description: '12 vendors awaiting approval',
+    priority: 'low' as const,
+    route: '/admin/vendors',
+  },
+];
+
+// Anomalies
+const detectedAnomalies = [
+  { id: '1', type: 'sync' as const, title: 'HRIS sync failed for 2 orgs', count: 2, severity: 'warning' as const, timestamp: '2h ago' },
+  { id: '2', type: 'auth' as const, title: 'Unusual login attempts detected', count: 15, severity: 'critical' as const, timestamp: '4h ago' },
+  { id: '3', type: 'claims' as const, title: 'Claims volume 40% above average', count: 1, severity: 'info' as const, timestamp: '1d ago' },
 ];
 
 const regionalBenchmarks = [
@@ -38,31 +178,6 @@ const regionalBenchmarks = [
   { region: 'Saudi Arabia', avgUtilization: 68, avgSpend: 165000, employees: 3200, organizations: 12 },
   { region: 'Qatar', avgUtilization: 75, avgSpend: 195000, employees: 850, organizations: 5 },
   { region: 'Kuwait', avgUtilization: 65, avgSpend: 155000, employees: 297, organizations: 2 },
-];
-
-const industryBreakdown = [
-  { name: 'Financial Services', value: 35, color: 'hsl(var(--success))' },
-  { name: 'Technology', value: 25, color: 'hsl(var(--accent))' },
-  { name: 'Healthcare', value: 18, color: 'hsl(var(--destructive))' },
-  { name: 'Retail', value: 12, color: 'hsl(var(--primary))' },
-  { name: 'Manufacturing', value: 10, color: 'hsl(var(--warning))' },
-];
-
-const monthlyGrowthChart = [
-  { name: 'Jul', value: 32, secondaryValue: 15.2 },
-  { name: 'Aug', value: 35, secondaryValue: 17.1 },
-  { name: 'Sep', value: 38, secondaryValue: 19.3 },
-  { name: 'Oct', value: 42, secondaryValue: 21.5 },
-  { name: 'Nov', value: 45, secondaryValue: 23.2 },
-  { name: 'Dec', value: 47, secondaryValue: 24.5 },
-];
-
-const topPerformingBenefits = [
-  { name: 'Housing Allowance', utilizationRate: 94, avgValue: 85000 },
-  { name: 'Education Support', utilizationRate: 87, avgValue: 45000 },
-  { name: 'Health Insurance', utilizationRate: 82, avgValue: 32000 },
-  { name: 'Transport Allowance', utilizationRate: 78, avgValue: 18000 },
-  { name: 'Wellness Programs', utilizationRate: 65, avgValue: 8000 },
 ];
 
 const highIntentUsers = [
@@ -75,6 +190,7 @@ const highIntentUsers = [
 export default function AdminDashboard() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
+  const [selectedIndustry, setSelectedIndustry] = useState<string | null>(null);
 
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
 
@@ -99,11 +215,14 @@ export default function AdminDashboard() {
     </div>
   );
 
-  // Calculate platform health
-  const platformHealth = {
-    organizations: parseInt(platformMetrics[0].value) >= 40 ? 'excellent' : 'good',
-    growth: Math.max(...platformMetrics.map(m => m.change)) >= 15 ? 'high' : 'moderate',
-  };
+  // Filter data based on selected industry
+  const filteredBenefits = selectedIndustry 
+    ? topPerformingBenefits.map(b => ({
+        ...b,
+        utilizationRate: Math.round(b.utilizationRate * (0.85 + Math.random() * 0.3)),
+        claims: Math.round(b.claims * (0.7 + Math.random() * 0.4)),
+      }))
+    : topPerformingBenefits;
 
   return (
     <PageLayout
@@ -118,36 +237,29 @@ export default function AdminDashboard() {
       }}
       actions={headerActions}
     >
-      {/* Hero Platform Metrics - Premium Grid */}
+      {/* Hero Platform Metrics - Enhanced KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {platformMetrics.map((metric, index) => {
-          const colors = [
-            { bg: 'from-card to-primary/5', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
-            { bg: 'from-card to-accent/5', iconBg: 'bg-accent/10', iconColor: 'text-accent' },
-            { bg: 'from-card to-success/5', iconBg: 'bg-success/10', iconColor: 'text-success' },
-            { bg: 'from-card to-warning/5', iconBg: 'bg-warning/10', iconColor: 'text-warning' },
-          ];
-          const color = colors[index];
-          const Icon = metric.icon;
-          
-          return (
-            <Card key={metric.label} className={cn("border-border/40 bg-gradient-to-br", color.bg)}>
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between mb-4">
-                  <div className={cn("p-2.5 rounded-xl", color.iconBg)}>
-                    <Icon className={cn("w-5 h-5", color.iconColor)} />
-                  </div>
-                  <Badge variant="outline" className="bg-success/10 text-success border-success/30 text-xs">
-                    +{metric.change}%
-                  </Badge>
-                </div>
-                <p className="text-3xl font-bold tracking-tight">{metric.value}</p>
-                <p className="text-sm text-muted-foreground mt-1">{language === 'ar' ? metric.labelAr : metric.label}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
+        {platformMetrics.map((metric, index) => (
+          <CommandCenterKPICard
+            key={metric.label}
+            label={metric.label}
+            labelAr={metric.labelAr}
+            value={metric.value}
+            previousValue={metric.previousValue}
+            change={metric.change}
+            icon={metric.icon}
+            sparklineData={metric.sparklineData}
+            tooltip={metric.tooltip}
+            colorIndex={index}
+          />
+        ))}
       </div>
+
+      {/* Insights & Actions Strip */}
+      <InsightsActionsStrip 
+        insights={keyInsights}
+        actions={recommendedActions}
+      />
 
       {/* Main Analytics Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
@@ -161,88 +273,50 @@ export default function AdminDashboard() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Growth Chart */}
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                  {t('Platform Growth', 'نمو المنصة')}
-                </CardTitle>
-                <CardDescription>
-                  {t('Monthly platform growth metrics', 'مقاييس نمو المنصة الشهرية')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AnimatedLineChart
-                  data={monthlyGrowthChart}
-                  showSecondary={true}
-                  primaryLabel={t('Organizations', 'المنظمات')}
-                  secondaryLabel={t('GMV (M)', 'القيمة (م)')}
-                  height={300}
-                />
-              </CardContent>
-            </Card>
+          {/* Industry filter indicator */}
+          {selectedIndustry && (
+            <div className={cn(
+              "flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20",
+              isRTL && "flex-row-reverse"
+            )}>
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                {t('Filtered', 'مُفلتر')}
+              </Badge>
+              <span className="text-sm">
+                {t('Showing data for', 'عرض البيانات لـ')} <strong>{selectedIndustry}</strong>
+              </span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="ms-auto h-7 text-xs"
+                onClick={() => setSelectedIndustry(null)}
+              >
+                {t('Clear Filter', 'مسح الفلتر')}
+              </Button>
+            </div>
+          )}
 
-            {/* Industry Distribution */}
-            <Card>
-              <CardHeader>
-                <CardTitle className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                  <PieChart className="w-5 h-5 text-primary" />
-                  {t('Industry Distribution', 'توزيع الصناعات')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <AnimatedDonutChart
-                  data={industryBreakdown}
-                  height={200}
-                  innerRadius={50}
-                  outerRadius={80}
-                />
-                <div className="mt-4 space-y-2">
-                  {industryBreakdown.map((item) => (
-                    <div key={item.name} className={cn("flex items-center justify-between text-sm", isRTL && "flex-row-reverse")}>
-                      <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                        <span>{item.name}</span>
-                      </div>
-                      <span className="font-medium">{item.value}%</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Interactive Growth Chart */}
+            <InteractiveGrowthChart data={monthlyGrowthData} />
+
+            {/* Interactive Industry Distribution */}
+            <InteractiveIndustryChart 
+              data={industryBreakdown}
+              selectedIndustry={selectedIndustry}
+              onIndustrySelect={setSelectedIndustry}
+            />
           </div>
 
-          {/* Top Benefits Performance */}
-          <Card>
-            <CardHeader>
-              <CardTitle className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                <Activity className="w-5 h-5 text-primary" />
-                {t('Top Performing Benefits (Platform-wide)', 'أفضل المزايا أداءً (على مستوى المنصة)')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {topPerformingBenefits.map((benefit) => (
-                  <div key={benefit.name} className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
-                    <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
-                      <div className={cn("flex items-center justify-between mb-1", isRTL && "flex-row-reverse")}>
-                        <span className="font-medium">{benefit.name}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {t('Avg Value:', 'متوسط القيمة:')} {formatCurrencyAED(benefit.avgValue)}
-                        </span>
-                      </div>
-                      <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                        <Progress value={benefit.utilizationRate} className="flex-1 h-2" />
-                        <span className="text-sm font-medium w-12 text-right">{benefit.utilizationRate}%</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Anomalies Widget + Top Benefits */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-1">
+              <AnomaliesWidget anomalies={detectedAnomalies} />
+            </div>
+            <div className="lg:col-span-3">
+              <TopBenefitsTable benefits={filteredBenefits} />
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="benchmarks" className="space-y-6">
