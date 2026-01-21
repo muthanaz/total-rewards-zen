@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, forwardRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { cn } from '@/lib/utils';
@@ -40,7 +40,7 @@ const sizeStyles = {
   large: { card: 'p-6', value: 'text-3xl lg:text-4xl', icon: 'p-3', iconSize: 'w-6 h-6' },
 };
 
-export function MetricCard({
+export const MetricCard = forwardRef<HTMLDivElement, MetricCardProps>(({
   title,
   value,
   icon: Icon,
@@ -54,7 +54,7 @@ export function MetricCard({
   className,
   variant = 'default',
   size = 'default',
-}: MetricCardProps) {
+}, ref) => {
   const sizes = sizeStyles[size];
   
   const getTrendColor = () => {
@@ -69,6 +69,7 @@ export function MetricCard({
 
   return (
     <Card 
+      ref={ref}
       className={cn(
         'border transition-all duration-200',
         variantStyles[variant],
@@ -134,7 +135,9 @@ export function MetricCard({
       </CardContent>
     </Card>
   );
-}
+});
+
+MetricCard.displayName = 'MetricCard';
 
 // Compact inline stat for use within cards
 interface InlineStatProps {
@@ -159,7 +162,7 @@ interface MetricGridProps {
   className?: string;
 }
 
-export function MetricGrid({ children, columns = 4, className }: MetricGridProps) {
+export const MetricGrid = forwardRef<HTMLDivElement, MetricGridProps>(({ children, columns = 4, className }, ref) => {
   const colClasses = {
     2: 'grid-cols-1 md:grid-cols-2',
     3: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
@@ -168,8 +171,10 @@ export function MetricGrid({ children, columns = 4, className }: MetricGridProps
   };
 
   return (
-    <div className={cn('grid gap-4', colClasses[columns], className)}>
+    <div ref={ref} className={cn('grid gap-4', colClasses[columns], className)}>
       {children}
     </div>
   );
-}
+});
+
+MetricGrid.displayName = 'MetricGrid';
