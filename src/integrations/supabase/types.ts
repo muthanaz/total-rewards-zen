@@ -588,51 +588,148 @@ export type Database = {
         }
         Relationships: []
       }
+      employer_action_activity: {
+        Row: {
+          action_id: string
+          actor_user_id: string | null
+          created_at: string
+          event_payload: Json | null
+          event_type: string
+          id: string
+        }
+        Insert: {
+          action_id: string
+          actor_user_id?: string | null
+          created_at?: string
+          event_payload?: Json | null
+          event_type: string
+          id?: string
+        }
+        Update: {
+          action_id?: string
+          actor_user_id?: string | null
+          created_at?: string
+          event_payload?: Json | null
+          event_type?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employer_action_activity_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "employer_actions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employer_action_comments: {
+        Row: {
+          action_id: string
+          author_user_id: string | null
+          comment_text: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          action_id: string
+          author_user_id?: string | null
+          comment_text: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          action_id?: string
+          author_user_id?: string | null
+          comment_text?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employer_action_comments_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "employer_actions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employer_actions: {
         Row: {
+          action_type: string | null
+          blockers: string[] | null
           completed_at: string | null
+          confidence_level: string | null
+          confidence_note: string | null
           created_at: string
+          created_by: string | null
+          data_completeness_pct: number | null
           description: string | null
           due_date: string | null
           expected_impact: Json | null
           id: string
+          linked_categories: string[] | null
+          linked_metrics: string[] | null
           metric_keys: string[] | null
           organization_id: string
           owner_user_id: string | null
           priority: string | null
           source_insight: string | null
+          source_ref_id: string | null
+          source_type: string | null
           status: string
           title: string
           updated_at: string
         }
         Insert: {
+          action_type?: string | null
+          blockers?: string[] | null
           completed_at?: string | null
+          confidence_level?: string | null
+          confidence_note?: string | null
           created_at?: string
+          created_by?: string | null
+          data_completeness_pct?: number | null
           description?: string | null
           due_date?: string | null
           expected_impact?: Json | null
           id?: string
+          linked_categories?: string[] | null
+          linked_metrics?: string[] | null
           metric_keys?: string[] | null
           organization_id: string
           owner_user_id?: string | null
           priority?: string | null
           source_insight?: string | null
+          source_ref_id?: string | null
+          source_type?: string | null
           status?: string
           title: string
           updated_at?: string
         }
         Update: {
+          action_type?: string | null
+          blockers?: string[] | null
           completed_at?: string | null
+          confidence_level?: string | null
+          confidence_note?: string | null
           created_at?: string
+          created_by?: string | null
+          data_completeness_pct?: number | null
           description?: string | null
           due_date?: string | null
           expected_impact?: Json | null
           id?: string
+          linked_categories?: string[] | null
+          linked_metrics?: string[] | null
           metric_keys?: string[] | null
           organization_id?: string
           owner_user_id?: string | null
           priority?: string | null
           source_insight?: string | null
+          source_ref_id?: string | null
+          source_type?: string | null
           status?: string
           title?: string
           updated_at?: string
