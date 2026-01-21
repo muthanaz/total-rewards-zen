@@ -4,6 +4,14 @@
  * Comprehensive right-side sheet for reviewing claims/requests.
  * Uses the Cross-Portal Consistency Contract to ensure data matches
  * what the employee sees.
+ * 
+ * Features:
+ * - Full claim details with attachments
+ * - Internal notes section
+ * - Audit trail / history
+ * - SLA timeline visualization
+ * - Recommended next action
+ * - Employee view preview
  */
 
 import { useState, useMemo } from 'react';
@@ -15,7 +23,7 @@ import {
   SheetDescription,
 } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -23,6 +31,7 @@ import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   AlertTriangle,
   CheckCircle,
@@ -45,6 +54,14 @@ import {
   X,
   Circle,
   Lock,
+  Lightbulb,
+  Eye,
+  Calendar,
+  TrendingUp,
+  ArrowRight,
+  Zap,
+  History,
+  StickyNote,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
@@ -67,6 +84,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { format, differenceInDays, differenceInHours } from 'date-fns';
 
 interface ClaimReviewSheetProps {
   requestId: string | null;
@@ -90,6 +108,12 @@ const PRIORITY_OPTIONS = [
   { value: 'normal', label: 'Standard', color: 'text-blue-600' },
   { value: 'high', label: 'High Priority', color: 'text-amber-600' },
   { value: 'urgent', label: 'Urgent', color: 'text-red-600' },
+];
+
+// Mock attachments for demo
+const MOCK_ATTACHMENTS = [
+  { id: '1', name: 'receipt.pdf', size: '245 KB', type: 'pdf', uploadedAt: '2024-01-08' },
+  { id: '2', name: 'invoice.jpg', size: '1.2 MB', type: 'image', uploadedAt: '2024-01-08' },
 ];
 
 export function ClaimReviewSheet({
@@ -149,6 +173,69 @@ export function ClaimReviewSheet({
     const days = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
     return days;
   }, [request]);
+
+  // Recommended next action logic
+  const recommendedAction = useMemo(() => {
+    if (!request) return null;
+    
+    // Check for blockers first
+    if (validation.blockers.length > 0) {
+      return {
+        action: 'reject',
+        reason: validation.blockers[0].message,
+        icon: XCircle,
+        color: 'text-red-600',
+        bgColor: 'bg-red-500/10',
+        borderColor: 'border-red-500/20',
+        label: 'Recommend: Reject',
+        description: 'This claim has blocking issues that prevent approval.',
+      };
+    }
+    
+    // Check for missing docs
+    if (validation.warnings.some(w => w.message.toLowerCase().includes('document'))) {
+      return {
+        action: 'request_docs',
+        reason: 'Documentation appears incomplete',
+        icon: FileText,
+        color: 'text-amber-600',
+        bgColor: 'bg-amber-500/10',
+        borderColor: 'border-amber-500/20',
+        label: 'Recommend: Request Documents',
+        description: 'Request additional documentation before proceeding.',
+      };
+    }
+    
+    // Check for warnings
+    if (validation.warnings.length > 0) {
+      return {
+        action: 'review',
+        reason: validation.warnings[0].message,
+        icon: AlertTriangle,
+        color: 'text-amber-600',
+        bgColor: 'bg-amber-500/10',
+        borderColor: 'border-amber-500/20',
+        label: 'Recommend: Manual Review',
+        description: 'Review the warnings before making a decision.',
+      };
+    }
+    
+    // If all checks pass
+    if (entitlementCheck?.hasEntitlement && validation.blockers.length === 0 && validation.warnings.length === 0) {
+      return {
+        action: 'approve',
+        reason: 'All eligibility checks passed',
+        icon: CheckCircle,
+        color: 'text-emerald-600',
+        bgColor: 'bg-emerald-500/10',
+        borderColor: 'border-emerald-500/20',
+        label: 'Recommend: Approve',
+        description: 'Claim meets all policy requirements and entitlement limits.',
+      };
+    }
+    
+    return null;
+  }, [request, validation, entitlementCheck]);
 
   const handleApprove = async () => {
     if (!request) return;
@@ -211,7 +298,6 @@ export function ClaimReviewSheet({
     if (!request || !reviewNotes) return;
     setIsProcessing(true);
     try {
-      // Update status to in_review
       await updateStatus.mutateAsync({
         requestId: request.id,
         newStatus: REQUEST_STATUSES.IN_REVIEW,
@@ -219,7 +305,6 @@ export function ClaimReviewSheet({
         internalNotes,
       });
       
-      // Also create an employee-visible event
       await supabase.from('request_events').insert({
         request_id: request.id,
         actor_user_id: user?.id || '',
@@ -316,10 +401,34 @@ export function ClaimReviewSheet({
                 {aging !== null && (
                   <Badge variant="outline" className="gap-1 text-muted-foreground">
                     <Clock className="w-3 h-3" />
-                    {aging}d old
+                    {aging}d in queue
                   </Badge>
                 )}
               </div>
+
+              {/* Recommended Action Card */}
+              {recommendedAction && canProcess && (
+                <Card className={cn('border', recommendedAction.borderColor, recommendedAction.bgColor)}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className={cn('p-2 rounded-lg', recommendedAction.bgColor)}>
+                        <recommendedAction.icon className={cn('w-5 h-5', recommendedAction.color)} />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <Lightbulb className="w-4 h-4 text-muted-foreground" />
+                          <span className={cn('font-medium text-sm', recommendedAction.color)}>
+                            {recommendedAction.label}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {recommendedAction.description}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Quick Actions */}
               {canProcess && (
@@ -378,7 +487,7 @@ export function ClaimReviewSheet({
                       className="gap-1"
                     >
                       <Flag className="w-4 h-4" />
-                      Priority
+                      Escalate
                     </Button>
                   </div>
                 </PermissionGate>
@@ -390,14 +499,75 @@ export function ClaimReviewSheet({
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="w-full justify-start">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="documents">Documents</TabsTrigger>
-                <TabsTrigger value="history">History</TabsTrigger>
-                <TabsTrigger value="decision">Decision</TabsTrigger>
+                <TabsTrigger value="overview" className="gap-1.5">
+                  <Info className="w-3.5 h-3.5" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="documents" className="gap-1.5">
+                  <Paperclip className="w-3.5 h-3.5" />
+                  Docs
+                </TabsTrigger>
+                <TabsTrigger value="notes" className="gap-1.5">
+                  <StickyNote className="w-3.5 h-3.5" />
+                  Notes
+                </TabsTrigger>
+                <TabsTrigger value="history" className="gap-1.5">
+                  <History className="w-3.5 h-3.5" />
+                  History
+                </TabsTrigger>
+                <TabsTrigger value="decision" className="gap-1.5">
+                  <Zap className="w-3.5 h-3.5" />
+                  Decision
+                </TabsTrigger>
               </TabsList>
 
               {/* Overview Tab */}
               <TabsContent value="overview" className="space-y-4 mt-4">
+                {/* SLA Timeline */}
+                {slaInfo && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Timer className="w-4 h-4 text-primary" />
+                        SLA Timeline
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Time Remaining</span>
+                          <span className={cn(
+                            'font-medium',
+                            slaInfo.isOverdue && 'text-red-600',
+                            slaInfo.isUrgent && !slaInfo.isOverdue && 'text-amber-600',
+                            !slaInfo.isOverdue && !slaInfo.isUrgent && 'text-emerald-600'
+                          )}>
+                            {slaInfo.isOverdue 
+                              ? `${Math.abs(slaInfo.hoursRemaining)}h overdue`
+                              : slaInfo.hoursRemaining < 24
+                                ? `${slaInfo.hoursRemaining}h`
+                                : `${Math.round(slaInfo.daysRemaining)} days`
+                            }
+                          </span>
+                        </div>
+                        <Progress 
+                          value={slaInfo.isOverdue ? 100 : Math.max(0, 100 - (slaInfo.hoursRemaining / 72 * 100))}
+                          className={cn(
+                            'h-2',
+                            slaInfo.isOverdue && '[&>div]:bg-red-500',
+                            slaInfo.isUrgent && !slaInfo.isOverdue && '[&>div]:bg-amber-500',
+                            !slaInfo.isOverdue && !slaInfo.isUrgent && '[&>div]:bg-emerald-500'
+                          )}
+                        />
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>Submitted: {request?.created_at ? format(new Date(request.created_at), 'MMM d, HH:mm') : '-'}</span>
+                          <span>Due: {request?.sla_due_at ? format(new Date(request.sla_due_at), 'MMM d, HH:mm') : '-'}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Entitlement & Eligibility Check - TRUST CRITICAL */}
                 <Card className={cn(
                   validation.warnings.length > 0 && 'border-amber-500/30',
@@ -441,6 +611,25 @@ export function ClaimReviewSheet({
                             </span>
                           </div>
                         </div>
+
+                        {/* This claim impact */}
+                        {request?.amount && (
+                          <div className="p-3 bg-muted/50 rounded-lg">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-muted-foreground">This claim amount</span>
+                              <span className="font-mono font-medium">AED {request.amount.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between items-center mt-1">
+                              <span className="text-sm text-muted-foreground">After approval</span>
+                              <span className={cn(
+                                'font-mono font-medium',
+                                entitlementCheck.remainingAmount - request.amount < 0 && 'text-red-600'
+                              )}>
+                                AED {(entitlementCheck.remainingAmount - request.amount).toLocaleString()} remaining
+                              </span>
+                            </div>
+                          </div>
+                        )}
 
                         {/* Additional Rules */}
                         <div className="grid grid-cols-2 gap-2 text-xs">
@@ -527,13 +716,40 @@ export function ClaimReviewSheet({
                       <div>
                         <span className="text-muted-foreground">Submitted</span>
                         <p className="font-medium">
-                          {request?.created_at ? new Date(request.created_at).toLocaleString() : '-'}
+                          {request?.created_at ? format(new Date(request.created_at), 'MMM d, yyyy HH:mm') : '-'}
                         </p>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Department</span>
                         <p className="font-medium">{request?.employeeDepartment || '-'}</p>
                       </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Employee View Preview */}
+                <Card className="border-dashed">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-muted-foreground" />
+                      Employee View Preview
+                    </CardTitle>
+                    <CardDescription>What the employee sees for this request</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="bg-muted/30 p-4 rounded-lg space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{request?.subject}</span>
+                        <Badge variant="outline">{getStatusDisplayLabel(request?.status)}</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Submitted {request?.created_at ? formatRelativeTime(request.created_at) : '-'}
+                      </p>
+                      {request?.amount && (
+                        <p className="text-sm">
+                          Amount: <span className="font-mono">AED {request.amount.toLocaleString()}</span>
+                        </p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -548,7 +764,7 @@ export function ClaimReviewSheet({
                           Policy Reference
                         </div>
                         <Badge variant="outline" className="text-xs">
-                          v{currentPolicy.version} • {new Date(currentPolicy.effective_from).toLocaleDateString()}
+                          v{currentPolicy.version} • {format(new Date(currentPolicy.effective_from), 'MMM d, yyyy')}
                         </Badge>
                       </CardTitle>
                     </CardHeader>
@@ -578,10 +794,48 @@ export function ClaimReviewSheet({
 
               {/* Documents Tab */}
               <TabsContent value="documents" className="space-y-4 mt-4">
+                {/* Uploaded Attachments */}
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Paperclip className="w-4 h-4" />
+                      Attachments
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {MOCK_ATTACHMENTS.length > 0 ? (
+                      <div className="space-y-2">
+                        {MOCK_ATTACHMENTS.map((file) => (
+                          <div 
+                            key={file.id}
+                            className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
+                                <FileText className="w-4 h-4 text-primary" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium">{file.name}</p>
+                                <p className="text-xs text-muted-foreground">{file.size} • {file.uploadedAt}</p>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="sm">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No attachments uploaded.</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Required Documents Checklist */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" />
                       Required Documents Checklist
                     </CardTitle>
                   </CardHeader>
@@ -594,7 +848,6 @@ export function ClaimReviewSheet({
                             className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
                           >
                             <div className="flex items-center gap-3">
-                              {/* Placeholder - in real app, would check request_attachments */}
                               <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
                                 <Circle className="w-3 h-3 text-muted-foreground" />
                               </div>
@@ -616,28 +869,61 @@ export function ClaimReviewSheet({
                         No specific documents required for this benefit category.
                       </p>
                     )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Internal Notes Tab */}
+              <TabsContent value="notes" className="space-y-4 mt-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <StickyNote className="w-4 h-4" />
+                      Internal Notes
+                    </CardTitle>
+                    <CardDescription>
+                      Notes visible only to HR team members
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Existing internal notes from timeline */}
+                    {timeline && timeline.filter(e => e.notes_internal).length > 0 ? (
+                      <div className="space-y-3">
+                        {timeline.filter(e => e.notes_internal).map((event) => (
+                          <div 
+                            key={event.id}
+                            className="p-3 bg-amber-500/5 border border-amber-500/20 rounded-lg"
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              <Lock className="w-3 h-3 text-amber-600" />
+                              <span className="text-xs font-medium text-amber-600">Internal Only</span>
+                              <span className="text-xs text-muted-foreground">
+                                {formatRelativeTime(event.created_at)}
+                              </span>
+                            </div>
+                            <p className="text-sm">{event.notes_internal}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No internal notes yet.</p>
+                    )}
 
                     <Separator />
 
-                    {/* Request Missing Documents */}
+                    {/* Add new internal note */}
                     <div className="space-y-2">
-                      <p className="text-sm font-medium">Request Missing Documents</p>
+                      <p className="text-sm font-medium">Add Internal Note</p>
                       <Textarea
-                        placeholder="Specify which documents are needed..."
-                        value={reviewNotes}
-                        onChange={(e) => setReviewNotes(e.target.value)}
-                        rows={2}
+                        placeholder="Add notes for HR team (not visible to employee)..."
+                        value={internalNotes}
+                        onChange={(e) => setInternalNotes(e.target.value)}
+                        rows={3}
                       />
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="gap-2"
-                        onClick={handleRequestInfo}
-                        disabled={!reviewNotes || isProcessing}
-                      >
-                        <Send className="w-3 h-3" />
-                        Send Document Request
-                      </Button>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Lock className="w-3 h-3" />
+                        This note will only be visible to HR team members
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -648,7 +934,7 @@ export function ClaimReviewSheet({
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
+                      <History className="w-4 h-4" />
                       Audit Trail
                     </CardTitle>
                   </CardHeader>
@@ -693,7 +979,9 @@ export function ClaimReviewSheet({
                                 )}
                                 {event.notes_internal && (
                                   <p className="text-sm bg-amber-500/10 p-2 rounded">
-                                    <span className="text-xs text-amber-600 block mb-1">Internal only:</span>
+                                    <span className="text-xs text-amber-600 block mb-1 flex items-center gap-1">
+                                      <Lock className="w-3 h-3" /> Internal only:
+                                    </span>
                                     {event.notes_internal}
                                   </p>
                                 )}
@@ -746,10 +1034,17 @@ export function ClaimReviewSheet({
                         </CardHeader>
                         <CardContent className="space-y-3">
                           <Textarea
-                            placeholder="Add approval notes (optional)..."
+                            placeholder="Add approval notes (optional, visible to employee)..."
                             value={reviewNotes}
                             onChange={(e) => setReviewNotes(e.target.value)}
                             rows={2}
+                          />
+                          <Textarea
+                            placeholder="Internal notes (optional, HR only)..."
+                            value={internalNotes}
+                            onChange={(e) => setInternalNotes(e.target.value)}
+                            rows={2}
+                            className="border-amber-500/30 bg-amber-500/5"
                           />
                           <Button 
                             className="w-full gap-2" 
@@ -758,6 +1053,33 @@ export function ClaimReviewSheet({
                           >
                             <CheckCircle className="w-4 h-4" />
                             Approve & Notify Employee
+                          </Button>
+                        </CardContent>
+                      </Card>
+
+                      {/* Request Documents */}
+                      <Card className="border-blue-500/30">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm flex items-center gap-2 text-blue-600">
+                            <Send className="w-4 h-4" />
+                            Request Documents / Information
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <Textarea
+                            placeholder="Specify what documents or information is needed..."
+                            value={reviewNotes}
+                            onChange={(e) => setReviewNotes(e.target.value)}
+                            rows={2}
+                          />
+                          <Button 
+                            variant="outline"
+                            className="w-full gap-2 border-blue-500/30 text-blue-600 hover:bg-blue-500/10" 
+                            onClick={handleRequestInfo}
+                            disabled={!reviewNotes || isProcessing}
+                          >
+                            <Send className="w-4 h-4" />
+                            Send Request to Employee
                           </Button>
                         </CardContent>
                       </Card>
@@ -789,6 +1111,13 @@ export function ClaimReviewSheet({
                             onChange={(e) => setReviewNotes(e.target.value)}
                             rows={2}
                           />
+                          <Textarea
+                            placeholder="Internal notes (optional, HR only)..."
+                            value={internalNotes}
+                            onChange={(e) => setInternalNotes(e.target.value)}
+                            rows={2}
+                            className="border-amber-500/30 bg-amber-500/5"
+                          />
                           <Button 
                             variant="destructive" 
                             className="w-full gap-2" 
@@ -797,40 +1126,6 @@ export function ClaimReviewSheet({
                           >
                             <XCircle className="w-4 h-4" />
                             Reject & Notify Employee
-                          </Button>
-                        </CardContent>
-                      </Card>
-
-                      {/* Request Info Section */}
-                      <Card className="border-blue-500/30">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm flex items-center gap-2 text-blue-600">
-                            <MessageSquare className="w-4 h-4" />
-                            Request More Information
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <Textarea
-                            placeholder="What information or documents do you need?"
-                            value={reviewNotes}
-                            onChange={(e) => setReviewNotes(e.target.value)}
-                            rows={2}
-                          />
-                          <Textarea
-                            placeholder="Internal notes (not visible to employee)..."
-                            value={internalNotes}
-                            onChange={(e) => setInternalNotes(e.target.value)}
-                            rows={2}
-                            className="bg-amber-500/5 border-amber-500/20"
-                          />
-                          <Button 
-                            variant="outline" 
-                            className="w-full gap-2 border-blue-500/30 text-blue-600 hover:bg-blue-500/10" 
-                            onClick={handleRequestInfo}
-                            disabled={!reviewNotes || isProcessing}
-                          >
-                            <Send className="w-4 h-4" />
-                            Send to Employee
                           </Button>
                         </CardContent>
                       </Card>
