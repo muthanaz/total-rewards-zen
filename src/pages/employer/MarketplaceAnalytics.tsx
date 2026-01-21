@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { ShoppingBag, TrendingUp, TrendingDown, Users, Star, Coffee, Dumbbell, ShoppingCart, Plane, BookOpen, Baby, Download, AlertTriangle, HelpCircle, Info } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, Area, AreaChart } from 'recharts';
 import { formatCurrencyAED, formatPercent, formatInteger, cn } from '@/lib/utils';
+import { MetricEvidenceTrigger, createMetricEvidenceData } from '@/components/shared';
 import { 
   EmployerGlobalFiltersBar, 
   DataConfidenceBadge, 
@@ -263,15 +264,30 @@ export default function MarketplaceAnalyticsPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="card-elevated">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl" style={{ backgroundColor: `${COLORS.violet}15` }}>
-                <ShoppingBag className="h-6 w-6" style={{ color: COLORS.violet }} />
+            <MetricEvidenceTrigger
+              data={createMetricEvidenceData('total_activations', 'Total Activations', {
+                definition: 'Total number of marketplace offer redemptions/uses across all employees.',
+                currentValue: totalActivations,
+                formattedValue: formatInteger(totalActivations),
+                unit: 'number',
+                confidence: 'measured',
+                keyDrivers: categoryPerformance.slice(0, 3).map(c => ({
+                  name: c.category,
+                  impact: Math.round((c.activations / totalActivations) * 100),
+                  description: `${c.activations} activations`,
+                })),
+              })}
+            >
+              <div className="flex items-center gap-3 cursor-pointer">
+                <div className="p-2.5 rounded-xl" style={{ backgroundColor: `${COLORS.violet}15` }}>
+                  <ShoppingBag className="h-6 w-6" style={{ color: COLORS.violet }} />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{formatInteger(totalActivations)}</p>
+                  <p className="text-sm text-muted-foreground">Total Activations</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold">{formatInteger(totalActivations)}</p>
-                <p className="text-sm text-muted-foreground">Total Activations</p>
-              </div>
-            </div>
+            </MetricEvidenceTrigger>
             {compareToPrevious && (
               <div className="flex items-center gap-1 mt-2 text-xs text-success">
                 <TrendingUp className="h-3 w-3" />
@@ -283,15 +299,30 @@ export default function MarketplaceAnalyticsPage() {
 
         <Card className="card-elevated">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl" style={{ backgroundColor: `${COLORS.blue}15` }}>
-                <Users className="h-6 w-6" style={{ color: COLORS.blue }} />
+            <MetricEvidenceTrigger
+              data={createMetricEvidenceData('engagement_rate', 'Engagement Rate', {
+                definition: 'Percentage of eligible employees who activated at least one marketplace offer.',
+                currentValue: engagementRate,
+                formattedValue: `${engagementRate}%`,
+                target: 85,
+                formattedTarget: '85%',
+                deltaToTarget: engagementRate - 85,
+                unit: 'percent',
+                confidence: 'estimated',
+                isEstimated: true,
+                estimationReason: 'Based on 79% employee data coverage.',
+              })}
+            >
+              <div className="flex items-center gap-3 cursor-pointer">
+                <div className="p-2.5 rounded-xl" style={{ backgroundColor: `${COLORS.blue}15` }}>
+                  <Users className="h-6 w-6" style={{ color: COLORS.blue }} />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{engagementRate}%</p>
+                  <p className="text-sm text-muted-foreground">Engagement Rate</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold">{engagementRate}%</p>
-                <p className="text-sm text-muted-foreground">Engagement Rate</p>
-              </div>
-            </div>
+            </MetricEvidenceTrigger>
             <Progress value={engagementRate} className="h-2 mt-2" />
             {compareToPrevious && (
               <div className="flex items-center gap-1 mt-2 text-xs text-success">
@@ -304,15 +335,28 @@ export default function MarketplaceAnalyticsPage() {
 
         <Card className="card-elevated">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl" style={{ backgroundColor: `${COLORS.amber}15` }}>
-                <Star className="h-6 w-6" style={{ color: COLORS.amber }} />
+            <MetricEvidenceTrigger
+              data={createMetricEvidenceData('avg_rating', 'Avg Offer Rating', {
+                definition: 'Average employee rating on redeemed offers (excludes unrated redemptions).',
+                currentValue: avgRating,
+                formattedValue: `${avgRating}/5`,
+                target: 4.5,
+                formattedTarget: '4.5/5',
+                deltaToTarget: avgRating - 4.5,
+                unit: 'score',
+                confidence: 'measured',
+              })}
+            >
+              <div className="flex items-center gap-3 cursor-pointer">
+                <div className="p-2.5 rounded-xl" style={{ backgroundColor: `${COLORS.amber}15` }}>
+                  <Star className="h-6 w-6" style={{ color: COLORS.amber }} />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{avgRating}</p>
+                  <p className="text-sm text-muted-foreground">Avg Offer Rating</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold">{avgRating}</p>
-                <p className="text-sm text-muted-foreground">Avg Offer Rating</p>
-              </div>
-            </div>
+            </MetricEvidenceTrigger>
             {compareToPrevious && (
               <div className="flex items-center gap-1 mt-2 text-xs text-success">
                 <TrendingUp className="h-3 w-3" />
@@ -324,15 +368,32 @@ export default function MarketplaceAnalyticsPage() {
 
         <Card className="card-elevated">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl" style={{ backgroundColor: `${COLORS.emerald}15` }}>
-                <TrendingUp className="h-6 w-6" style={{ color: COLORS.emerald }} />
+            <MetricEvidenceTrigger
+              data={createMetricEvidenceData('total_savings', 'Total Savings', {
+                definition: 'Sum of estimated savings per redemption based on offer discount values.',
+                currentValue: totalSavings,
+                formattedValue: formatCurrencyAED(totalSavings),
+                unit: 'currency',
+                confidence: 'estimated',
+                isEstimated: true,
+                estimationReason: 'Savings estimated from discount percentages × average transaction values.',
+                keyDrivers: categoryPerformance.slice(0, 3).map(c => ({
+                  name: c.category,
+                  impact: Math.round((c.activations * c.avgSavings / totalSavings) * 100),
+                  description: formatCurrencyAED(c.activations * c.avgSavings, { abbreviate: true }),
+                })),
+              })}
+            >
+              <div className="flex items-center gap-3 cursor-pointer">
+                <div className="p-2.5 rounded-xl" style={{ backgroundColor: `${COLORS.emerald}15` }}>
+                  <TrendingUp className="h-6 w-6" style={{ color: COLORS.emerald }} />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold" style={{ color: COLORS.emerald }}>{formatCurrencyAED(totalSavings)}</p>
+                  <p className="text-sm text-muted-foreground">Total Savings</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold" style={{ color: COLORS.emerald }}>{formatCurrencyAED(totalSavings)}</p>
-                <p className="text-sm text-muted-foreground">Total Savings</p>
-              </div>
-            </div>
+            </MetricEvidenceTrigger>
             {compareToPrevious && (
               <div className="flex items-center gap-1 mt-2 text-xs text-success">
                 <TrendingUp className="h-3 w-3" />

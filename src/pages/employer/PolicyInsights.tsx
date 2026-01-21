@@ -36,7 +36,7 @@ import {
   ConfidenceDetailsDrawer
 } from '@/components/employer';
 import type { ConfusingArea, PolicyQuestion, PolicyFix } from '@/components/employer';
-import { ConfidenceBadge } from '@/components/shared';
+import { ConfidenceBadge, MetricEvidenceTrigger, createMetricEvidenceData } from '@/components/shared';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useEmployerActions } from '@/hooks/useEmployerActions';
 import { toast } from 'sonner';
@@ -395,29 +395,46 @@ export default function PolicyInsightsPage() {
               <div className="flex items-center gap-2 mb-4">
                 <BarChart3 className="w-5 h-5 text-primary" />
                 <h2 className="font-semibold">Policy Clarity Score</h2>
-                <Tooltip>
-                  <TooltipTrigger><Info className="h-4 w-4 text-muted-foreground" /></TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    <p className="text-xs font-medium mb-1">Score Formula:</p>
-                    <ul className="text-xs space-y-0.5">
-                      <li>• Question Volume (30% weight)</li>
-                      <li>• Resolution Time (20% weight)</li>
-                      <li>• Rejection Rate (30% weight)</li>
-                      <li>• Missing Docs Rate (20% weight)</li>
-                    </ul>
-                  </TooltipContent>
-                </Tooltip>
               </div>
-              <div className="flex items-end gap-3 mb-3">
-                <span className={`text-5xl font-bold ${clarityScoreColor}`}>{clarityData.overallScore}</span>
-                <span className="text-2xl text-muted-foreground mb-1">/ 100</span>
-              </div>
-              <div className="flex items-center gap-2 mb-2">
-                <ConfidenceBadge level={clarityData.confidence} size="sm" />
-                {clarityData.confidence !== 'measured' && (
-                  <span className="text-[10px] text-muted-foreground">Data completeness: {clarityData.dataCompleteness}%</span>
-                )}
-              </div>
+              <MetricEvidenceTrigger
+                data={createMetricEvidenceData('policy_clarity_score', 'Policy Clarity Score', {
+                  definition: 'Composite score measuring how well employees understand and navigate your benefits policies. Higher scores indicate clearer policies with fewer questions and rejections.',
+                  currentValue: clarityData.overallScore,
+                  formattedValue: `${clarityData.overallScore}/100`,
+                  target: clarityData.target,
+                  formattedTarget: `${clarityData.target}/100`,
+                  deltaToTarget: clarityData.overallScore - clarityData.target,
+                  unit: 'score',
+                  confidence: clarityData.confidence,
+                  isEstimated: clarityData.confidence !== 'measured',
+                  estimationReason: `Based on ${clarityData.dataCompleteness}% data completeness from HR tickets and claims analytics.`,
+                  keyDrivers: clarityData.drivers.map(d => ({
+                    name: d.label,
+                    impact: d.isGoodUp ? d.trendValue : -d.trendValue,
+                    description: d.impactNote,
+                  })),
+                  formula: '(100 - QuestionVolume×0.3) + (100 - ResolutionTime×0.2) + (100 - RejectionRate×0.3) + (100 - MissingDocs×0.2)',
+                  formulaInputs: clarityData.drivers.map(d => ({
+                    name: d.label,
+                    value: `${d.value}${d.unit}`,
+                    source: 'HR Tickets / Claims',
+                  })),
+                })}
+                onCreateAction={() => navigate('/employer/recommendations?create=true&source=policies')}
+              >
+                <div className="cursor-pointer">
+                  <div className="flex items-end gap-3 mb-3">
+                    <span className={`text-5xl font-bold ${clarityScoreColor}`}>{clarityData.overallScore}</span>
+                    <span className="text-2xl text-muted-foreground mb-1">/ 100</span>
+                  </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <ConfidenceBadge level={clarityData.confidence} size="sm" />
+                    {clarityData.confidence !== 'measured' && (
+                      <span className="text-[10px] text-muted-foreground">Data completeness: {clarityData.dataCompleteness}%</span>
+                    )}
+                  </div>
+                </div>
+              </MetricEvidenceTrigger>
               <Progress value={clarityData.overallScore} className="h-3 mb-2" />
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground flex items-center gap-1">

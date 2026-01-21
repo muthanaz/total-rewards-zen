@@ -69,3 +69,11 @@ export {
   getLifeAreaLabel,
   getBenefitTypeLabel,
 } from './EnumChip';
+
+// Metric Evidence Drawer (comprehensive metric explainer)
+export { 
+  MetricEvidenceDrawer, 
+  MetricEvidenceTrigger, 
+  createMetricEvidenceData,
+} from './MetricEvidenceDrawer';
+export type { MetricEvidenceData } from './MetricEvidenceDrawer';
