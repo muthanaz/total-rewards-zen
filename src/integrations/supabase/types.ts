@@ -410,6 +410,94 @@ export type Database = {
           },
         ]
       }
+      claim_docs: {
+        Row: {
+          created_at: string
+          doc_name: string
+          doc_type: string
+          file_url: string | null
+          id: string
+          request_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_notes: string | null
+          status: string
+          uploaded_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          doc_name: string
+          doc_type: string
+          file_url?: string | null
+          id?: string
+          request_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          doc_name?: string
+          doc_type?: string
+          file_url?: string | null
+          id?: string
+          request_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_docs_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      claim_notes: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          is_internal: boolean
+          note: string
+          request_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          is_internal?: boolean
+          note: string
+          request_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_internal?: boolean
+          note?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_notes_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       data_access_requests: {
         Row: {
           created_at: string
@@ -1576,30 +1664,36 @@ export type Database = {
       }
       request_events: {
         Row: {
+          action: string | null
           actor_user_id: string
           created_at: string
           from_status: string | null
           id: string
+          meta: Json | null
           notes_employee_visible: string | null
           notes_internal: string | null
           request_id: string
           to_status: string
         }
         Insert: {
+          action?: string | null
           actor_user_id: string
           created_at?: string
           from_status?: string | null
           id?: string
+          meta?: Json | null
           notes_employee_visible?: string | null
           notes_internal?: string | null
           request_id: string
           to_status: string
         }
         Update: {
+          action?: string | null
           actor_user_id?: string
           created_at?: string
           from_status?: string | null
           id?: string
+          meta?: Json | null
           notes_employee_visible?: string | null
           notes_internal?: string | null
           request_id?: string
@@ -1619,11 +1713,14 @@ export type Database = {
         Row: {
           amount: number | null
           assigned_to: string | null
+          assigned_to_user_id: string | null
           category: string
           created_at: string | null
           currency: string | null
           description: string | null
           employee_code: string | null
+          escalated_at: string | null
+          escalation_reason: string | null
           id: string
           last_status_change_at: string | null
           missing_docs: Json | null
@@ -1641,15 +1738,19 @@ export type Database = {
           subject: string
           submitted_at: string | null
           user_id: string
+          value_band: string | null
         }
         Insert: {
           amount?: number | null
           assigned_to?: string | null
+          assigned_to_user_id?: string | null
           category: string
           created_at?: string | null
           currency?: string | null
           description?: string | null
           employee_code?: string | null
+          escalated_at?: string | null
+          escalation_reason?: string | null
           id?: string
           last_status_change_at?: string | null
           missing_docs?: Json | null
@@ -1667,15 +1768,19 @@ export type Database = {
           subject: string
           submitted_at?: string | null
           user_id: string
+          value_band?: string | null
         }
         Update: {
           amount?: number | null
           assigned_to?: string | null
+          assigned_to_user_id?: string | null
           category?: string
           created_at?: string | null
           currency?: string | null
           description?: string | null
           employee_code?: string | null
+          escalated_at?: string | null
+          escalation_reason?: string | null
           id?: string
           last_status_change_at?: string | null
           missing_docs?: Json | null
@@ -1693,6 +1798,7 @@ export type Database = {
           subject?: string
           submitted_at?: string | null
           user_id?: string
+          value_band?: string | null
         }
         Relationships: [
           {
