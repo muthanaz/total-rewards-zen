@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,12 +17,15 @@ import {
   Bell,
   Info
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ChartContainer, ProgressBarList } from '@/components/charts';
 import { DataQualityBadge } from './DataQualityBadge';
 import { DataConfidenceBadge, useDataCoverageMetrics } from './DataConfidenceBadge';
 import { PageConfidenceGate } from './PageConfidenceGate';
 import { TrendIndicatorCompact } from './TrendComparison';
+import { TodaysFocusPanel } from './TodaysFocusPanel';
+import { WorkloadByOwnerTable } from './WorkloadByOwnerTable';
+import { ActionableTasksList, TaskType } from './ActionableTasksList';
 import { useClaimMetrics, useClaimsByCategory, useRecentActivity } from '@/hooks/useEmployerDashboard';
 import { cn } from '@/lib/utils';
 import { EmployerGlobalFiltersBar } from './EmployerGlobalFiltersBar';
@@ -33,18 +36,47 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-const upcomingTasks = [
-  { task: 'Q1 Benefits Review Meeting', date: 'Tomorrow, 10:00 AM', type: 'meeting' },
-  { task: 'Policy Update: L&D Eligible Courses', date: 'Jan 25', type: 'policy' },
-  { task: 'Monthly Utilization Report', date: 'Jan 31', type: 'report' },
-  { task: 'Vendor Contract Renewal', date: 'Feb 1', type: 'contract' },
+// Mock focus items for Today's Focus panel
+const mockFocusItems = [
+  { id: '1', employeeName: 'Ahmed Hassan', requestType: 'Health Insurance', subject: 'Medical Claim - Hospital Stay', dueInHours: -2, owner: 'Sarah Al-R', amount: 4500 },
+  { id: '2', employeeName: 'Fatima Salem', requestType: 'Education', subject: 'Schooling Tuition Claim', dueInHours: 3, owner: 'Sarah Al-R', amount: 12000 },
+  { id: '3', employeeName: 'Omar Khan', requestType: 'Transport', subject: 'Fuel Allowance', dueInHours: 6, amount: 850 },
+  { id: '4', employeeName: 'Sara Ali', requestType: 'Housing', subject: 'Rent Advance Request', dueInHours: 18, owner: 'Ahmed H', amount: 25000 },
+  { id: '5', employeeName: 'Mohamed Khalil', requestType: 'Wellbeing', subject: 'Gym Membership Reimbursement', dueInHours: 22, amount: 1200 },
+];
+
+// Mock workload data
+const mockWorkloads = [
+  { id: '1', name: 'Sarah Al-Rashid', role: 'HR Manager', assigned: 8, slaRisk: 2, oldestDays: 4 },
+  { id: '2', name: 'Ahmed Hassan', role: 'HR Specialist', assigned: 12, slaRisk: 1, oldestDays: 3 },
+  { id: '3', name: 'Fatima Al-Maktoum', role: 'HR Specialist', assigned: 6, slaRisk: 0, oldestDays: 2 },
+  { id: '4', name: 'Omar Khan', role: 'Finance Lead', assigned: 4, slaRisk: 0, oldestDays: 1 },
+];
+
+// Mock upcoming tasks
+const mockTasks: { id: string; title: string; date: string; type: TaskType; link?: string; priority?: 'low' | 'normal' | 'high' }[] = [
+  { id: '1', title: 'Q1 Benefits Review Meeting', date: 'Tomorrow, 10:00 AM', type: 'meeting', link: '/employer/recommendations', priority: 'high' },
+  { id: '2', title: 'Policy Update: L&D Eligible Courses', date: 'Jan 25', type: 'policy', link: '/employer/policies' },
+  { id: '3', title: 'Monthly Utilization Report', date: 'Jan 31', type: 'report', link: '/employer/spend' },
+  { id: '4', title: 'Vendor Contract Renewal', date: 'Feb 1', type: 'contract', link: '/employer/integrations?tab=ops' },
+  { id: '5', title: 'Employee Satisfaction Survey Close', date: 'Feb 5', type: 'deadline', priority: 'high' },
+];
+
+const mockOwners = [
+  { id: '1', name: 'Sarah Al-Rashid' },
+  { id: '2', name: 'Ahmed Hassan' },
+  { id: '3', name: 'Fatima Al-Maktoum' },
 ];
 
 export function HROpsDashboard() {
+  const navigate = useNavigate();
   const { data: claimMetrics, isLoading } = useClaimMetrics();
   const { data: claimsByCategory } = useClaimsByCategory();
   const { data: recentActivity } = useRecentActivity();
   const coverageMetrics = useDataCoverageMetrics();
+
+  // Calculate focus items from real data (using mock for now)
+  const focusItems = useMemo(() => mockFocusItems, []);
 
   const pendingActions = [
     {
@@ -52,7 +84,7 @@ export function HROpsDashboard() {
       title: 'Urgent Claims',
       count: claimMetrics?.urgent || 3,
       description: 'SLA breach in < 24 hours',
-      path: '/employer/claims',
+      path: '/employer/claims?tab=sla_risk&due=24h',
       icon: AlertCircle,
       color: 'text-destructive',
       bgColor: 'bg-destructive/10',
@@ -63,7 +95,7 @@ export function HROpsDashboard() {
       title: 'Standard Queue',
       count: (claimMetrics?.pending || 12) - (claimMetrics?.urgent || 3),
       description: 'Within SLA timeline',
-      path: '/employer/claims',
+      path: '/employer/claims?tab=pending',
       icon: FileCheck,
       color: 'text-warning',
       bgColor: 'bg-warning/10',
@@ -74,7 +106,7 @@ export function HROpsDashboard() {
       title: 'Open Questions',
       count: claimMetrics?.openQuestions || 8,
       description: 'Awaiting response',
-      path: '/employer/claims',
+      path: '/employer/knowledge?tab=questions',
       icon: MessageSquare,
       color: 'text-info',
       bgColor: 'bg-info/10',
@@ -86,7 +118,7 @@ export function HROpsDashboard() {
       count: claimMetrics?.enrollmentsPending || 5,
       description: 'Pending activations',
       tooltip: 'Benefit enrollments waiting for eligibility verification or provider enrollment',
-      path: '/employer/segments?status=pending-enrollment',
+      path: '/employer/marketplace?tab=pending',
       icon: Users,
       color: 'text-success',
       bgColor: 'bg-success/10',
@@ -99,6 +131,10 @@ export function HROpsDashboard() {
     value: c.value,
     color: 'primary' as const,
   })) || [];
+
+  const handleFocusItemClick = (id: string) => {
+    navigate(`/employer/claims?open=${id}`);
+  };
 
   if (isLoading) {
     return <div className="space-y-6 animate-pulse"><div className="h-16 bg-muted rounded-xl" /></div>;
@@ -274,32 +310,13 @@ export function HROpsDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-display flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-primary" />
-              Upcoming Tasks
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {upcomingTasks.map((task, index) => (
-              <div key={index} className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/30">
-                <div className={cn("p-1.5 rounded-lg",
-                  task.type === 'meeting' ? 'bg-info/10' :
-                  task.type === 'policy' ? 'bg-warning/10' : 'bg-chart-3/10'
-                )}>
-                  {task.type === 'meeting' ? <Users className="w-3.5 h-3.5 text-info" /> :
-                   task.type === 'policy' ? <FileCheck className="w-3.5 h-3.5 text-warning" /> :
-                   <TrendingUp className="w-3.5 h-3.5 text-chart-3" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{task.task}</p>
-                  <p className="text-xs text-muted-foreground">{task.date}</p>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <ActionableTasksList 
+          tasks={mockTasks}
+          owners={mockOwners}
+          onAssign={(taskId, ownerId) => console.log('Assigned', taskId, ownerId)}
+          onSetDueDate={(taskId, date) => console.log('Due date set', taskId, date)}
+          onComplete={(taskId) => console.log('Completed', taskId)}
+        />
       </div>
 
       {/* Quick Actions */}

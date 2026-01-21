@@ -78,3 +78,20 @@ export { SyncHistoryDrawer } from './SyncHistoryDrawer';
 export type { SyncRecord } from './SyncHistoryDrawer';
 export { CSVImportPreview, IMPORT_TEMPLATES } from './CSVImportPreview';
 export type { ImportTemplate, CSVPreviewData } from './CSVImportPreview';
+export { IntegrationFieldMappingView } from './IntegrationFieldMappingView';
+
+// HR Ops Dashboard components
+export { TodaysFocusPanel } from './TodaysFocusPanel';
+export { WorkloadByOwnerTable } from './WorkloadByOwnerTable';
+export { ActionableTasksList } from './ActionableTasksList';
+export type { TaskType } from './ActionableTasksList';
+
+// Claims Review components
+export { DecisionRationaleCard } from './DecisionRationaleCard';
+export { MissingDocsChecklist } from './MissingDocsChecklist';
+export { EmployeeMessagePreview } from './EmployeeMessagePreview';
+export { ClaimAuditLog } from './ClaimAuditLog';
+
+// Policy Lifecycle components
+export { PolicyLifecycleBadge, PolicyLifecycleFlow } from './PolicyLifecycleBadge';
+export type { PolicyLifecycleStatus } from './PolicyLifecycleBadge';
