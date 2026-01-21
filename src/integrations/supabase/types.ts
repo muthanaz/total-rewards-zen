@@ -1780,6 +1780,63 @@ export type Database = {
           },
         ]
       }
+      policy_templates: {
+        Row: {
+          benefit_type: string | null
+          category: string
+          created_at: string
+          created_by: string | null
+          default_content: Json | null
+          default_eligibility_rules: Json | null
+          default_limits: Json | null
+          default_required_docs: Json | null
+          default_sla_days: number | null
+          default_workflow: Json | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          transaction_model: string | null
+          updated_at: string
+        }
+        Insert: {
+          benefit_type?: string | null
+          category: string
+          created_at?: string
+          created_by?: string | null
+          default_content?: Json | null
+          default_eligibility_rules?: Json | null
+          default_limits?: Json | null
+          default_required_docs?: Json | null
+          default_sla_days?: number | null
+          default_workflow?: Json | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          transaction_model?: string | null
+          updated_at?: string
+        }
+        Update: {
+          benefit_type?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          default_content?: Json | null
+          default_eligibility_rules?: Json | null
+          default_limits?: Json | null
+          default_required_docs?: Json | null
+          default_sla_days?: number | null
+          default_workflow?: Json | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          transaction_model?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       policy_versions: {
         Row: {
           attachment_url: string | null
