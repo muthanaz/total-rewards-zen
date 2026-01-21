@@ -79,6 +79,10 @@ export type { SyncRecord } from './SyncHistoryDrawer';
 export { CSVImportPreview, IMPORT_TEMPLATES } from './CSVImportPreview';
 export type { ImportTemplate, CSVPreviewData } from './CSVImportPreview';
 export { IntegrationFieldMappingView } from './IntegrationFieldMappingView';
+export { IntegrationFieldMapping } from './IntegrationFieldMapping';
+export type { FieldMapping } from './IntegrationFieldMapping';
+export { IntegrationDataDictionary } from './IntegrationDataDictionary';
+export type { DataDictionaryField } from './IntegrationDataDictionary';
 
 // HR Ops Dashboard components
 export { TodaysFocusPanel } from './TodaysFocusPanel';
