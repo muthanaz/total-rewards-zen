@@ -437,6 +437,11 @@ export function ClaimsOpsView() {
     high_value: requests.filter(r => r.amount && r.amount >= HIGH_VALUE_THRESHOLD).length,
   }), [requests, getSlaInfo]);
 
+  // Filter queue tabs based on SLA enablement - MUST be before any early returns
+  const visibleQueueTabs = useMemo(() => {
+    return QUEUE_TABS.filter(tab => !tab.slaRequired || slaEnabled);
+  }, [slaEnabled]);
+
   // === ROW ACTIONS WITH AUDIT LOGGING ===
   const handleRowApprove = async (id: string) => {
     try {
@@ -790,11 +795,6 @@ export function ClaimsOpsView() {
       </div>
     );
   }
-
-  // Filter queue tabs based on SLA enablement
-  const visibleQueueTabs = useMemo(() => {
-    return QUEUE_TABS.filter(tab => !tab.slaRequired || slaEnabled);
-  }, [slaEnabled]);
 
   return (
     <TooltipProvider>
