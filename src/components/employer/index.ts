@@ -61,3 +61,13 @@ export { PolicyQuestionRow } from './PolicyQuestionRow';
 export type { PolicyQuestion } from './PolicyQuestionRow';
 export { PolicyFixCard } from './PolicyFixCard';
 export type { PolicyFix } from './PolicyFixCard';
+
+// Marketplace Analytics components
+export { MarketplaceOfferDrawer } from './MarketplaceOfferDrawer';
+export type { MarketplaceOffer } from './MarketplaceOfferDrawer';
+export { MarketplaceCategoryDrawer } from './MarketplaceCategoryDrawer';
+export type { CategoryData } from './MarketplaceCategoryDrawer';
+export { MarketplaceSegmentDrawer } from './MarketplaceSegmentDrawer';
+export type { SegmentData } from './MarketplaceSegmentDrawer';
+export { MarketplaceOpportunityInsights } from './MarketplaceOpportunityInsights';
+export { MarketplaceVendorPerformance } from './MarketplaceVendorPerformance';
