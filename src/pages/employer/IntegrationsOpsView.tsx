@@ -44,7 +44,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { EmployerGlobalFiltersBar, IntegrationConnectionDrawer, SyncHistoryDrawer, CSVImportPreview } from '@/components/employer';
+import { EmployerGlobalFiltersBar, IntegrationConnectionDrawer, SyncHistoryDrawer, CSVImportPreview, IntegrationFieldMapping, IntegrationDataDictionary } from '@/components/employer';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useEmployerPermissions } from '@/hooks/useEmployerPermissions';
 import { useIntegrationSources, type IntegrationSource, type IntegrationStatus } from '@/hooks/useIntegrationSources';
@@ -551,6 +551,8 @@ export function IntegrationsOpsView() {
       <Tabs value={activeTab} onValueChange={(v) => setSearchParams({ tab: v })} className="space-y-4">
         <TabsList>
           <TabsTrigger value="connections">Data Connections</TabsTrigger>
+          <TabsTrigger value="mapping">Field Mapping</TabsTrigger>
+          <TabsTrigger value="dictionary">Data Dictionary</TabsTrigger>
           <TabsTrigger value="import">CSV/Excel Import</TabsTrigger>
           <TabsTrigger value="history">Sync History</TabsTrigger>
         </TabsList>
@@ -718,6 +720,14 @@ export function IntegrationsOpsView() {
               </Card>
             );
           })}
+        </TabsContent>
+
+        <TabsContent value="mapping" className="space-y-4">
+          <IntegrationFieldMapping />
+        </TabsContent>
+
+        <TabsContent value="dictionary" className="space-y-4">
+          <IntegrationDataDictionary />
         </TabsContent>
 
         <TabsContent value="import" className="space-y-4">
