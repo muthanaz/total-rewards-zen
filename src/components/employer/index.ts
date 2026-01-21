@@ -1,4 +1,9 @@
 export { ExecutiveDashboard } from './ExecutiveDashboard';
+export { ActionDetailDrawer } from './ActionDetailDrawer';
+export { ActionCreateModal } from './ActionCreateModal';
+export { ActionKanbanView } from './ActionKanbanView';
+export { ActionTableView } from './ActionTableView';
+export { ActionFilters } from './ActionFilters';
 export { HROpsDashboard } from './HROpsDashboard';
 export { DataQualityBadge, DataConfidenceIndicator } from './DataQualityBadge';
 export { DataConfidenceBadge, useDataCoverageMetrics } from './DataConfidenceBadge';
