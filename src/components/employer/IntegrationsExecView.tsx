@@ -1,3 +1,11 @@
+/**
+ * Data Confidence Executive View
+ * 
+ * Shows overall data confidence scores, issues center, and insight limitations.
+ * Allows filtering and resolving issues with dynamic score updates.
+ */
+
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,18 +20,16 @@ import {
   FileText,
   TrendingUp,
   Info,
-  ArrowRight
+  ArrowRight,
+  ArrowUp,
+  Sparkles,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { DataConfidenceBadge, useDataCoverageMetrics } from '@/components/employer';
-
-const dataConfidenceSummary = {
-  overall: 78,
-  employeeProfiles: 95,
-  entitlements: 82,
-  policies: 70,
-  claims: 65,
-};
+import { cn } from '@/lib/utils';
+import { useDataCoverageMetrics } from '@/components/employer';
+import { useDataConfidenceIssues, type DataConfidenceIssue, type IssueOwner } from '@/hooks/useDataConfidenceIssues';
+import { IssuesCenter } from './IssuesCenter';
+import { IssueResolveModal } from './IssueResolveModal';
 
 const dataSources = [
   { name: 'HRIS (SAP)', status: 'connected', lastSync: '2 hours ago', coverage: 95 },
@@ -32,30 +38,60 @@ const dataSources = [
   { name: 'Claims System', status: 'partial', lastSync: '3 days ago', coverage: 65 },
 ];
 
-const insightLimitations = [
-  {
-    metric: 'Retention Impact',
-    confidence: 'low',
-    reason: 'Exit interview data not integrated',
-    suggestion: 'Connect HR exit survey system'
-  },
-  {
-    metric: 'Market Competitiveness',
-    confidence: 'medium',
-    reason: 'Only 3 of 5 benchmark sources active',
-    suggestion: 'Add industry-specific salary data'
-  },
-  {
-    metric: 'Employee Satisfaction',
-    confidence: 'low',
-    reason: 'Survey response rate below 30%',
-    suggestion: 'Launch engagement campaign'
-  },
-];
-
 export function IntegrationsExecView() {
   const coverageMetrics = useDataCoverageMetrics();
-  
+  const {
+    issues,
+    allIssues,
+    filters,
+    setFilters,
+    domainScores,
+    issueCounts,
+    dataSources: issueDataSources,
+    resolveIssue,
+    assignIssue,
+    getIssueById,
+    applyQuickFilter,
+    lastScoreChange,
+  } = useDataConfidenceIssues();
+
+  const [resolveModalOpen, setResolveModalOpen] = useState(false);
+  const [selectedIssue, setSelectedIssue] = useState<DataConfidenceIssue | null>(null);
+  const [highlightedIssueId, setHighlightedIssueId] = useState<string | null>(null);
+
+  // Open issues by domain for the insight limitations cards
+  const openIssuesByDomain = useMemo(() => {
+    return allIssues.filter(i => i.status !== 'Resolved');
+  }, [allIssues]);
+
+  const handleResolveClick = (issue: DataConfidenceIssue) => {
+    setSelectedIssue(issue);
+    setResolveModalOpen(true);
+  };
+
+  const handleResolve = (issueId: string, resolutionType: any, note: string) => {
+    resolveIssue(issueId, resolutionType, note);
+  };
+
+  const handleAssign = (issueId: string, owner: IssueOwner) => {
+    assignIssue(issueId, owner);
+  };
+
+  // Click on insight limitation card to highlight issue in table
+  const handleInsightClick = (issueId: string) => {
+    setHighlightedIssueId(issueId);
+    // Scroll to issues center
+    document.getElementById('issues-center')?.scrollIntoView({ behavior: 'smooth' });
+    // Clear highlight after 3 seconds
+    setTimeout(() => setHighlightedIssueId(null), 3000);
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 85) return 'text-emerald-600';
+    if (score >= 70) return 'text-amber-600';
+    return 'text-destructive';
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -72,7 +108,7 @@ export function IntegrationsExecView() {
         </Button>
       </div>
 
-      {/* Overall Confidence */}
+      {/* Overall Confidence with Dynamic Scores */}
       <Card className="card-elevated border-primary/20">
         <CardContent className="pt-6">
           <div className="flex flex-col lg:flex-row lg:items-center gap-6">
@@ -80,11 +116,19 @@ export function IntegrationsExecView() {
               <div className="relative">
                 <div className="w-24 h-24 rounded-full border-8 border-primary/20 flex items-center justify-center">
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-primary">{dataConfidenceSummary.overall}%</p>
+                    <p className={cn("text-2xl font-bold", getScoreColor(domainScores.overall))}>
+                      {domainScores.overall}%
+                    </p>
                     <p className="text-xs text-muted-foreground">Overall</p>
                   </div>
                 </div>
                 <Shield className="absolute -top-1 -right-1 w-6 h-6 text-primary" />
+                {lastScoreChange && (
+                  <div className="absolute -bottom-2 -right-2 flex items-center gap-0.5 bg-success/20 text-success text-xs font-medium px-1.5 py-0.5 rounded-full animate-in fade-in zoom-in">
+                    <ArrowUp className="h-3 w-3" />
+                    +{lastScoreChange.change}%
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -93,37 +137,60 @@ export function IntegrationsExecView() {
                   <Users className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">Employees</span>
                 </div>
-                <p className="text-xl font-bold">{dataConfidenceSummary.employeeProfiles}%</p>
-                <Progress value={dataConfidenceSummary.employeeProfiles} className="h-1.5 mt-1" />
+                <p className={cn("text-xl font-bold", getScoreColor(domainScores.employees))}>
+                  {domainScores.employees}%
+                </p>
+                <Progress value={domainScores.employees} className="h-1.5 mt-1" />
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <FileText className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">Entitlements</span>
                 </div>
-                <p className="text-xl font-bold">{dataConfidenceSummary.entitlements}%</p>
-                <Progress value={dataConfidenceSummary.entitlements} className="h-1.5 mt-1" />
+                <p className={cn("text-xl font-bold", getScoreColor(domainScores.entitlements))}>
+                  {domainScores.entitlements}%
+                </p>
+                <Progress value={domainScores.entitlements} className="h-1.5 mt-1" />
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <Shield className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">Policies</span>
                 </div>
-                <p className="text-xl font-bold text-amber-600">{dataConfidenceSummary.policies}%</p>
-                <Progress value={dataConfidenceSummary.policies} className="h-1.5 mt-1" />
+                <p className={cn("text-xl font-bold", getScoreColor(domainScores.policies))}>
+                  {domainScores.policies}%
+                </p>
+                <Progress value={domainScores.policies} className="h-1.5 mt-1" />
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <TrendingUp className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">Claims</span>
                 </div>
-                <p className="text-xl font-bold text-amber-600">{dataConfidenceSummary.claims}%</p>
-                <Progress value={dataConfidenceSummary.claims} className="h-1.5 mt-1" />
+                <p className={cn("text-xl font-bold", getScoreColor(domainScores.claims))}>
+                  {domainScores.claims}%
+                </p>
+                <Progress value={domainScores.claims} className="h-1.5 mt-1" />
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Issues Center */}
+      <div id="issues-center">
+        <IssuesCenter
+          issues={issues}
+          filters={filters}
+          setFilters={setFilters}
+          issueCounts={issueCounts}
+          dataSources={issueDataSources}
+          onResolve={handleResolveClick}
+          onAssign={handleAssign}
+          applyQuickFilter={applyQuickFilter}
+          highlightedIssueId={highlightedIssueId}
+        />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Data Sources Health */}
@@ -162,37 +229,63 @@ export function IntegrationsExecView() {
           </CardContent>
         </Card>
 
-        {/* Why Insights May Be Incomplete */}
+        {/* Why Insights May Be Incomplete - Now Clickable */}
         <Card className="card-elevated">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Info className="w-5 h-5 text-amber-500" />
               Why Some Insights May Be Incomplete
             </CardTitle>
-            <CardDescription>Data gaps affecting analytics quality</CardDescription>
+            <CardDescription>Click to view and resolve in Issues Center</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {insightLimitations.map((limitation, index) => (
-                <div key={index} className="p-3 rounded-lg border border-amber-500/20 bg-amber-500/5">
+              {openIssuesByDomain.slice(0, 4).map((issue) => (
+                <div
+                  key={issue.id}
+                  className="p-3 rounded-lg border border-amber-500/20 bg-amber-500/5 cursor-pointer hover:bg-amber-500/10 transition-colors group"
+                  onClick={() => handleInsightClick(issue.id)}
+                >
                   <div className="flex items-start justify-between mb-2">
-                    <span className="font-medium text-sm">{limitation.metric}</span>
+                    <span className="font-medium text-sm group-hover:text-primary transition-colors">
+                      {issue.impactedInsights[0]}
+                    </span>
                     <Badge 
                       variant="outline" 
-                      className={limitation.confidence === 'low' 
-                        ? 'bg-red-500/10 text-red-600 border-0' 
-                        : 'bg-amber-500/10 text-amber-600 border-0'
-                      }
+                      className={cn(
+                        'text-xs border-0',
+                        issue.confidence === 'Low' && 'bg-destructive/10 text-destructive',
+                        issue.confidence === 'Medium' && 'bg-amber-500/10 text-amber-600',
+                        issue.confidence === 'High' && 'bg-success/10 text-success',
+                      )}
                     >
-                      {limitation.confidence} confidence
+                      {issue.confidence.toLowerCase()} confidence
                     </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-2">{limitation.reason}</p>
-                  <p className="text-xs text-primary font-medium">
-                    → {limitation.suggestion}
-                  </p>
+                  <p className="text-xs text-muted-foreground mb-2">{issue.rootCause}</p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto p-0 text-xs text-primary font-medium hover:bg-transparent"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleResolveClick(issue);
+                    }}
+                  >
+                    → Resolve this issue
+                  </Button>
                 </div>
               ))}
+
+              {openIssuesByDomain.length === 0 && (
+                <div className="text-center py-6">
+                  <Sparkles className="h-8 w-8 text-success mx-auto mb-2" />
+                  <p className="text-sm font-medium text-success">All issues resolved!</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Your data confidence is at its best.
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -205,7 +298,9 @@ export function IntegrationsExecView() {
             <div>
               <h3 className="font-semibold text-lg">Improve Your Data Confidence</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Adding 2 more data sources could increase your overall confidence to 90%+
+                {issueCounts.open > 0
+                  ? `Resolving ${issueCounts.open} open issue${issueCounts.open > 1 ? 's' : ''} could increase your overall confidence to ${Math.min(98, domainScores.overall + 15)}%+`
+                  : 'Adding more data sources could further improve your analytics quality'}
               </p>
             </div>
             <Button asChild className="gap-2">
@@ -217,6 +312,14 @@ export function IntegrationsExecView() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Resolve Modal */}
+      <IssueResolveModal
+        open={resolveModalOpen}
+        onOpenChange={setResolveModalOpen}
+        issue={selectedIssue}
+        onResolve={handleResolve}
+      />
     </div>
   );
 }
