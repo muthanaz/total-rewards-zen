@@ -28,8 +28,6 @@ import {
   Copy,
   MoreHorizontal,
   Trash2,
-  Users,
-  DollarSign,
 } from 'lucide-react';
 import { 
   DropdownMenu, 
@@ -46,71 +44,16 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PolicyEditorSheetV2 } from './PolicyEditorSheetV2';
 import { CreatePolicyModal } from './CreatePolicyModal';
+import { PolicyEmptyState, PolicyInsightsStrip } from './PolicyEmptyState';
+import { 
+  PolicyModelChip, 
+  PolicyCapabilityChips, 
+} from './PolicyCapabilityDisplay';
 import { format } from 'date-fns';
 import { LifeAreaChip, getLifeAreaLabel } from '@/components/shared/EnumChip';
 import { toast } from 'sonner';
-import { TransactionModel } from '@/lib/policyEngine';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-
-// ============ Policy Capability Chips ============
-
-function PolicyModelChip({ model }: { model: string }) {
-  const labels: Record<string, { label: string; className: string }> = {
-    'request_only': { label: 'Request', className: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
-    'claim_only': { label: 'Claim', className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
-    'request_and_claim': { label: 'Request + Claim', className: 'bg-violet-500/10 text-violet-600 border-violet-500/20' },
-  };
-  const config = labels[model] || { label: model, className: '' };
-  return <Badge className={`text-xs ${config.className}`}>{config.label}</Badge>;
-}
-
-function PolicyCapabilityChips({ policy }: { policy: PolicyRow }) {
-  // For now, show placeholder chips based on policy properties
-  // In a full implementation, this would come from policy_versions.logic_json
-  const chips: Array<{ label: string; icon: React.ReactNode; enabled: boolean }> = [
-    { 
-      label: 'SLA', 
-      icon: <Clock className="w-3 h-3" />, 
-      enabled: true // Would check policy.currentVersion?.logic_json?.workflow?.sla_days > 0
-    },
-    { 
-      label: 'Docs', 
-      icon: <FileCheck className="w-3 h-3" />, 
-      enabled: true // Would check if required_docs exist
-    },
-    { 
-      label: 'Eligibility', 
-      icon: <Users className="w-3 h-3" />, 
-      enabled: true // Would check if eligibility rules are set
-    },
-    { 
-      label: 'Limits', 
-      icon: <DollarSign className="w-3 h-3" />, 
-      enabled: !!policy.benefit_type && ['allowance', 'reimbursement'].includes(policy.benefit_type)
-    },
-  ];
-  
-  return (
-    <div className="flex gap-1 flex-wrap">
-      {chips.filter(c => c.enabled).slice(0, 3).map((chip) => (
-        <Tooltip key={chip.label}>
-          <TooltipTrigger>
-            <Badge variant="outline" className="text-xs gap-1 py-0 px-1.5">
-              {chip.icon}
-              {chip.label}
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent>{chip.label} configured</TooltipContent>
-        </Tooltip>
-      ))}
-      {chips.filter(c => c.enabled).length > 3 && (
-        <Badge variant="outline" className="text-xs py-0 px-1.5">
-          +{chips.filter(c => c.enabled).length - 3}
-        </Badge>
-      )}
-    </div>
-  );
-}
+import { PolicyLogic } from '@/lib/policyEngine';
+import { useAuditLog } from '@/hooks/useAuditLog';
 
 interface PolicyRow {
   id: string;
@@ -136,10 +79,12 @@ interface PolicyRow {
     effective_from: string | null;
     effective_to: string | null;
     updated_at: string;
+    logic_json?: PolicyLogic | null;
   } | null;
   draftVersion?: {
     id: string;
     version_number: number;
+    logic_json?: PolicyLogic | null;
   } | null;
 }
 
@@ -212,10 +157,12 @@ export function PolicyManagementView() {
             effective_from: published.effective_from,
             effective_to: published.effective_to,
             updated_at: published.last_updated_at || published.created_at,
+            logic_json: published.logic_json as PolicyLogic | null,
           } : null,
           draftVersion: draft ? {
             id: draft.id,
             version_number: draft.version_number,
+            logic_json: draft.logic_json as PolicyLogic | null,
           } : null,
         };
       });
@@ -320,6 +267,8 @@ export function PolicyManagementView() {
     }
   };
 
+  const { logEvent } = useAuditLog();
+
   const handleArchive = async (policy: PolicyRow) => {
     try {
       await supabase
@@ -327,12 +276,51 @@ export function PolicyManagementView() {
         .update({ is_active: false, status: 'archived' })
         .eq('id', policy.id);
 
+      logEvent({
+        action: 'POLICY_ARCHIVE',
+        resourceType: 'policy',
+        resourceId: policy.id,
+        details: { title: policy.title },
+      });
+
       queryClient.invalidateQueries({ queryKey: ['policies_management'] });
       toast.success('Policy archived');
     } catch (error) {
       toast.error('Failed to archive policy');
     }
   };
+
+  // Generate insights
+  const insights = useMemo(() => {
+    const result: Array<{ type: 'info' | 'warning' | 'success'; message: string }> = [];
+    
+    if (draftCount > 0) {
+      result.push({
+        type: 'warning',
+        message: `${draftCount} draft${draftCount > 1 ? 's' : ''} pending review and publication`,
+      });
+    }
+    
+    const policiesWithoutSLA = filteredPolicies.filter(p => {
+      const logic = p.currentVersion?.logic_json || p.draftVersion?.logic_json;
+      return !logic?.workflow?.sla_days || logic.workflow.sla_days === 0;
+    });
+    if (policiesWithoutSLA.length > 0 && publishedCount > 0) {
+      result.push({
+        type: 'info',
+        message: `${policiesWithoutSLA.length} polic${policiesWithoutSLA.length > 1 ? 'ies have' : 'y has'} no SLA configured (optional)`,
+      });
+    }
+    
+    if (publishedCount > 0) {
+      result.push({
+        type: 'success',
+        message: `${publishedCount} polic${publishedCount > 1 ? 'ies are' : 'y is'} live and visible to employees`,
+      });
+    }
+    
+    return result;
+  }, [filteredPolicies, draftCount, publishedCount]);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -360,6 +348,9 @@ export function PolicyManagementView() {
       {/* Global Filters */}
       <EmployerGlobalFiltersBar compact />
 
+      {/* Key Insights */}
+      {insights.length > 0 && <PolicyInsightsStrip insights={insights} />}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -378,9 +369,9 @@ export function PolicyManagementView() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Published</p>
-                <p className="text-2xl font-bold text-green-600">{publishedCount}</p>
+                <p className="text-2xl font-bold text-emerald-600">{publishedCount}</p>
               </div>
-              <CheckCircle className="w-8 h-8 text-green-500/30" />
+              <CheckCircle className="w-8 h-8 text-emerald-500/30" />
             </div>
           </CardContent>
         </Card>
@@ -400,9 +391,9 @@ export function PolicyManagementView() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Archived</p>
-                <p className="text-2xl font-bold text-gray-600">{archivedCount}</p>
+                <p className="text-2xl font-bold text-muted-foreground">{archivedCount}</p>
               </div>
-              <Archive className="w-8 h-8 text-gray-500/30" />
+              <Archive className="w-8 h-8 text-muted-foreground/30" />
             </div>
           </CardContent>
         </Card>
@@ -428,20 +419,20 @@ export function PolicyManagementView() {
         </div>
 
         <TabsContent value="all" className="space-y-4">
-          <Card className="card-elevated">
-            <CardContent className="pt-6">
-              {isLoading ? (
+          {isLoading ? (
+            <Card className="card-elevated">
+              <CardContent className="pt-6">
                 <div className="text-center py-8 text-muted-foreground">Loading policies...</div>
-              ) : filteredPolicies.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
-                  <p>No policies found</p>
-                  <Button variant="outline" className="mt-4" onClick={() => setCreateModalOpen(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create your first policy
-                  </Button>
-                </div>
-              ) : (
+              </CardContent>
+            </Card>
+          ) : filteredPolicies.length === 0 ? (
+            <PolicyEmptyState 
+              onCreateClick={() => setCreateModalOpen(true)}
+              canCreate={hasPermission('can_manage_policies')}
+            />
+          ) : (
+            <Card className="card-elevated">
+              <CardContent className="pt-6">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -471,7 +462,11 @@ export function PolicyManagementView() {
                           <PolicyModelChip model={policy.transaction_model || 'claim_only'} />
                         </TableCell>
                         <TableCell>
-                          <PolicyCapabilityChips policy={policy} />
+                          <PolicyCapabilityChips 
+                            logicJson={policy.currentVersion?.logic_json || policy.draftVersion?.logic_json} 
+                            transactionModel={policy.transaction_model}
+                            compact
+                          />
                         </TableCell>
                         <TableCell>
                           {policy.currentVersion 
@@ -530,9 +525,9 @@ export function PolicyManagementView() {
                     ))}
                   </TableBody>
                 </Table>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="published" className="space-y-4">
