@@ -261,6 +261,52 @@ export function ConfidenceDetailsDrawer({
           </div>
 
           <Separator />
+          
+          {/* How This Affects Insights */}
+          <div>
+            <h4 className="text-sm font-semibold mb-3 flex items-center gap-2 text-foreground">
+              <AlertTriangle className="h-4 w-4 text-warning" />
+              {t('How This Affects Insights', 'كيف يؤثر هذا على الرؤى')}
+            </h4>
+            <div className="space-y-2">
+              {metrics.employeeCoverage < 85 && (
+                <div className="p-2 rounded-lg bg-muted/30 text-xs">
+                  <span className="font-medium">Segment Analysis:</span>{' '}
+                  <span className="text-muted-foreground">
+                    {metrics.employeeCoverage < 70 
+                      ? 'Segment breakdowns may be incomplete due to missing employee data'
+                      : 'Some segment values are estimated based on partial data'}
+                  </span>
+                </div>
+              )}
+              {metrics.entitlementCoverage < 85 && (
+                <div className="p-2 rounded-lg bg-muted/30 text-xs">
+                  <span className="font-medium">Utilization Metrics:</span>{' '}
+                  <span className="text-muted-foreground">
+                    Utilization rates may not reflect all entitled benefits
+                  </span>
+                </div>
+              )}
+              {metrics.claimsCoverage < 85 && (
+                <div className="p-2 rounded-lg bg-muted/30 text-xs">
+                  <span className="font-medium">Spend Analytics:</span>{' '}
+                  <span className="text-muted-foreground">
+                    Claims cost figures are based on available claims data only
+                  </span>
+                </div>
+              )}
+              {metrics.policyCoverage < 70 && (
+                <div className="p-2 rounded-lg bg-muted/30 text-xs">
+                  <span className="font-medium">Policy Compliance:</span>{' '}
+                  <span className="text-muted-foreground">
+                    Risk flags may be incomplete without full policy definitions
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <Separator />
 
           {/* Missing Fields */}
           {metrics.missingFields && metrics.missingFields.length > 0 && (

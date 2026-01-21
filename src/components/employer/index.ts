@@ -46,3 +46,5 @@ export { SegmentDimensionCard } from './SegmentDimensionCard';
 export { SegmentDrilldownTable } from './SegmentDrilldownTable';
 export { SegmentInsightsDrawer } from './SegmentInsightsDrawer';
 export { SegmentCharts } from './SegmentCharts';
+export { RiskFlagsModal } from './RiskFlagsModal';
+export { SegmentComparePanel } from './SegmentComparePanel';

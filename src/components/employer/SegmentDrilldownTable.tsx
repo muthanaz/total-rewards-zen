@@ -2,6 +2,7 @@
  * Segment Drilldown Table
  * 
  * Sortable table showing segment values with key metrics.
+ * Includes clickable risk flags with modal.
  */
 
 import { useState, useMemo } from 'react';
@@ -12,9 +13,11 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
-import { ArrowUpDown, Search, Eye, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ArrowUpDown, Search, Eye, AlertTriangle, TrendingUp, TrendingDown, HelpCircle } from 'lucide-react';
 import { formatCurrencyAED, formatPercent, formatInteger, cn } from '@/lib/utils';
 import { SegmentDimension, SegmentValue } from '@/hooks/useSegmentData';
+import { RiskFlagsModal } from './RiskFlagsModal';
 
 interface SegmentDrilldownTableProps {
   dimension: SegmentDimension;
@@ -26,6 +29,13 @@ type SortDirection = 'asc' | 'desc';
 
 export function SegmentDrilldownTable({ dimension, onViewInsights }: SegmentDrilldownTableProps) {
   const [search, setSearch] = useState('');
+  const [riskFlagsOpen, setRiskFlagsOpen] = useState(false);
+  const [selectedRiskSegment, setSelectedRiskSegment] = useState<SegmentValue | null>(null);
+  
+  const handleRiskFlagsClick = (value: SegmentValue) => {
+    setSelectedRiskSegment(value);
+    setRiskFlagsOpen(true);
+  };
   const [sortField, setSortField] = useState<SortField>('headcount');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   
@@ -153,7 +163,30 @@ export function SegmentDrilldownTable({ dimension, onViewInsights }: SegmentDril
                 <TableHead>Spend</TableHead>
                 <SortHeader field="unusedEntitlement">Unused</SortHeader>
                 <TableHead>Top Categories</TableHead>
-                <SortHeader field="slaRiskCount">Risk</SortHeader>
+                <TableHead>
+                  <div className="flex items-center gap-1">
+                    <SortHeader field="slaRiskCount">Risk Flags</SortHeader>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="font-medium mb-1">Risk Flags include:</p>
+                          <ul className="text-xs space-y-1">
+                            <li>• Low utilization vs org average</li>
+                            <li>• High unused entitlement</li>
+                            <li>• SLA breach risk</li>
+                            <li>• Missing documentation</li>
+                            <li>• Over-limit claims</li>
+                            <li>• Outlier spend patterns</li>
+                          </ul>
+                          <p className="text-xs text-muted-foreground mt-2">Click a flag count to see details</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -200,11 +233,12 @@ export function SegmentDrilldownTable({ dimension, onViewInsights }: SegmentDril
                         <Badge 
                           variant="outline" 
                           className={cn(
-                            'text-xs',
+                            'text-xs cursor-pointer hover:opacity-80 transition-opacity',
                             totalRisk >= 5 ? 'bg-destructive/10 text-destructive border-destructive/30' :
                             totalRisk >= 2 ? 'bg-warning/10 text-warning border-warning/30' :
                             'bg-muted'
                           )}
+                          onClick={() => handleRiskFlagsClick(value)}
                         >
                           {totalRisk} flags
                         </Badge>
@@ -236,6 +270,14 @@ export function SegmentDrilldownTable({ dimension, onViewInsights }: SegmentDril
           </div>
         )}
       </CardContent>
+      
+      {/* Risk Flags Modal */}
+      <RiskFlagsModal
+        open={riskFlagsOpen}
+        onOpenChange={setRiskFlagsOpen}
+        segmentName={selectedRiskSegment?.name || ''}
+        segmentValue={selectedRiskSegment}
+      />
     </Card>
   );
 }
