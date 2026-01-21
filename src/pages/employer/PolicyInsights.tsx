@@ -33,9 +33,10 @@ import {
   PolicyHotspotDrawer,
   PolicyQuestionRow,
   PolicyFixCard,
-  ConfidenceDetailsDrawer
+  ConfidenceDetailsDrawer,
+  UnifiedActionModal,
 } from '@/components/employer';
-import type { ConfusingArea, PolicyQuestion, PolicyFix } from '@/components/employer';
+import type { ConfusingArea, PolicyQuestion, PolicyFix, PolicyInsightPrefill } from '@/components/employer';
 import { ConfidenceBadge, MetricEvidenceTrigger, createMetricEvidenceData } from '@/components/shared';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useEmployerActions } from '@/hooks/useEmployerActions';
@@ -192,11 +193,15 @@ export default function PolicyInsightsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { isExecutive } = useEmployerViewMode();
   const coverageMetrics = useDataCoverageMetrics();
-  const { createAction } = useEmployerActions();
+  const { createAction, owners } = useEmployerActions();
   
   // State from URL params
   const [selectedHotspot, setSelectedHotspot] = useState<ConfusingArea | null>(null);
   const [confidenceDrawerOpen, setConfidenceDrawerOpen] = useState(false);
+  
+  // Unified Action Modal state
+  const [actionModalOpen, setActionModalOpen] = useState(false);
+  const [actionPrefill, setActionPrefill] = useState<PolicyInsightPrefill | undefined>();
   
   // Filters with URL persistence
   const [questionFilter, setQuestionFilter] = useState<'all' | 'answered' | 'needs_review' | 'unanswered'>(
@@ -236,52 +241,43 @@ export default function PolicyInsightsPage() {
   });
 
   const handleCreateActionFromHotspot = (hotspot: ConfusingArea, fix: ConfusingArea['suggestedFixes'][0]) => {
-    const dueDate = new Date();
-    if (fix.timeToImplement.includes('hour')) dueDate.setDate(dueDate.getDate() + 1);
-    else if (fix.timeToImplement.includes('day')) dueDate.setDate(dueDate.getDate() + 3);
-    else if (fix.timeToImplement.includes('week')) dueDate.setDate(dueDate.getDate() + 14);
-    else dueDate.setDate(dueDate.getDate() + 30);
-
-    createAction({
-      title: fix.fix,
-      description: `Fix policy confusion in ${hotspot.policyName} - ${hotspot.clause}. Root cause: ${hotspot.rootCauses[0]?.cause || 'Policy clarity issue'}`,
-      type: 'policy',
-      priority: hotspot.severity === 'critical' ? 'P0' : hotspot.severity === 'high' ? 'P1' : 'P2',
-      sourceType: 'policies',
-      sourceRefId: hotspot.id,
-      linkedCategories: [hotspot.policyName.replace(' Policy', '')],
-      expectedImpact: { 
-        costAvoidance: hotspot.impactEstimates.estimatedCost,
-      },
-      confidence: hotspot.confidence === 'measured' ? 'high' : hotspot.confidence === 'estimated' ? 'medium' : 'low',
-      dueDate,
+    // Open unified modal with prefill
+    setActionPrefill({
+      type: 'policy_insight',
+      policyName: hotspot.policyName,
+      policyRef: hotspot.id,
+      section: hotspot.clause,
+      topQuestions: hotspot.rootCauses.map(r => r.cause),
+      clarityPercent: hotspot.clarityScore,
+      dropOffPercent: hotspot.dropOffRate,
+      evidenceLink: `/employer/policy-insights?hotspot=${hotspot.id}`,
+      recommendedFix: fix.fix,
+      confidenceLevel: hotspot.confidence === 'measured' ? 'high' : hotspot.confidence === 'estimated' ? 'medium' : 'low',
     });
-    toast.success('Action created in Benefits Action Plan', {
-      action: { label: 'View', onClick: () => navigate('/employer/recommendations') }
-    });
+    setActionModalOpen(true);
     setSelectedHotspot(null);
   };
 
   const handleCreateActionFromFix = (fix: PolicyFix) => {
-    const dueDate = new Date();
-    if (fix.timeToImplement.includes('hour')) dueDate.setDate(dueDate.getDate() + 1);
-    else if (fix.timeToImplement.includes('day')) dueDate.setDate(dueDate.getDate() + 3);
-    else if (fix.timeToImplement.includes('week')) dueDate.setDate(dueDate.getDate() + 14);
-    else dueDate.setDate(dueDate.getDate() + 30);
-
-    createAction({
-      title: fix.fix,
-      description: `Policy improvement for ${fix.policy}. Owner: ${fix.ownerRole}`,
-      type: 'policy',
-      priority: fix.effort === 'low' ? 'P1' : 'P2',
-      sourceType: 'policies',
-      sourceRefId: fix.id,
-      linkedCategories: [fix.policy.replace(' Policy', '')],
-      expectedImpact: { costAvoidance: fix.expectedImpact.costAvoidance },
-      confidence: fix.confidence === 'measured' ? 'high' : fix.confidence === 'estimated' ? 'medium' : 'low',
-      dueDate,
+    // Open unified modal with prefill
+    setActionPrefill({
+      type: 'policy_insight',
+      policyName: fix.policy,
+      policyRef: fix.id,
+      section: undefined,
+      topQuestions: [],
+      clarityPercent: undefined,
+      dropOffPercent: fix.expectedImpact.cycleTimeReduction,
+      evidenceLink: `/employer/policy-insights?fix=${fix.id}`,
+      recommendedFix: fix.fix,
+      confidenceLevel: fix.confidence === 'measured' ? 'high' : fix.confidence === 'estimated' ? 'medium' : 'low',
     });
-    toast.success('Added to Action Plan', {
+    setActionModalOpen(true);
+  };
+
+  const handleActionCreate = (action: any) => {
+    createAction(action);
+    toast.success('Action created in Benefits Action Plan', {
       action: { label: 'View', onClick: () => navigate('/employer/recommendations') }
     });
   };
@@ -766,6 +762,15 @@ export default function PolicyInsightsPage() {
           open={confidenceDrawerOpen}
           onOpenChange={setConfidenceDrawerOpen}
           metrics={coverageMetrics}
+        />
+
+        {/* Unified Action Modal */}
+        <UnifiedActionModal
+          open={actionModalOpen}
+          onOpenChange={setActionModalOpen}
+          onCreate={handleActionCreate}
+          owners={owners}
+          prefill={actionPrefill}
         />
       </div>
     </PageConfidenceGate>

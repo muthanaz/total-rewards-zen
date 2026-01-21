@@ -107,3 +107,15 @@ export type { PolicyLifecycleStatus } from './PolicyLifecycleBadge';
 // Claims Bulk Actions & SLA
 export { ClaimsBulkActionsBar } from './ClaimsBulkActionsBar';
 export { SLARulesModal } from './SLARulesModal';
+
+// Unified Action Modal & Cards
+export { UnifiedActionModal } from './UnifiedActionModal';
+export type { 
+  ActionPrefill, 
+  PolicyInsightPrefill, 
+  MarketplaceOpportunityPrefill,
+  ZombieSpendPrefill,
+  SegmentInsightPrefill,
+  MetricEvidencePrefill,
+} from './UnifiedActionModal';
+export { ActionPlanCard } from './ActionPlanCard';
