@@ -206,12 +206,12 @@ export function CreatePolicyModal({
             <Label htmlFor="benefitKey">
               Link to Benefit Category
             </Label>
-            <Select value={benefitKey} onValueChange={handleBenefitChange}>
+            <Select value={benefitKey || '__none__'} onValueChange={(v) => handleBenefitChange(v === '__none__' ? '' : v)}>
               <SelectTrigger id="benefitKey">
                 <SelectValue placeholder="Select a benefit (optional)..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">— No linked benefit —</SelectItem>
+                <SelectItem value="__none__">— No linked benefit —</SelectItem>
                 {benefits.map((b) => (
                   <SelectItem key={b.id} value={b.id}>
                     {b.name}
