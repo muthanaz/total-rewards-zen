@@ -27,7 +27,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
+import { 
+  INVOICE_STATUS_CONFIG, 
+  NORTH_STAR_ORGS,
+  type InvoiceStatus 
+} from '@/lib/admin/constants';
+import { ADMIN_I18N } from '@/lib/admin/i18n';
+import { formatCurrencyCompact, formatCurrencyFull, formatPercentage } from '@/lib/admin/formatting';
+import { InvoiceStatusBadge } from '@/components/admin/badges';
 
+// Plans aligned with North Star orgs
 const PLANS = [
   { 
     id: 'starter', name: 'Starter', price: 2500, 
@@ -49,20 +58,17 @@ const PLANS = [
   },
 ];
 
+// Invoices using North Star orgs - includes one overdue and one pending
 const INVOICES = [
-  { id: 'INV-2025-001', org: 'Acme Corp', orgId: 'org1', plan: 'Enterprise', amount: 15000, status: 'paid', date: '2025-01-15', due_date: '2025-01-30', paid_date: '2025-01-20', method: 'Bank Transfer' },
-  { id: 'INV-2025-002', org: 'TechStart Inc', orgId: 'org2', plan: 'Professional', amount: 7500, status: 'paid', date: '2025-01-15', due_date: '2025-01-30', paid_date: '2025-01-22', method: 'Credit Card' },
-  { id: 'INV-2025-003', org: 'GlobalBank', orgId: 'org3', plan: 'Enterprise', amount: 15000, status: 'pending', date: '2025-01-18', due_date: '2025-02-02', paid_date: null, method: null },
-  { id: 'INV-2025-004', org: 'RetailMax', orgId: 'org4', plan: 'Starter', amount: 2500, status: 'overdue', date: '2024-12-15', due_date: '2024-12-30', paid_date: null, method: null, daysOverdue: 22 },
-  { id: 'INV-2025-005', org: 'HealthCo', orgId: 'org5', plan: 'Professional', amount: 7500, status: 'paid', date: '2025-01-10', due_date: '2025-01-25', paid_date: '2025-01-18', method: 'Credit Card' },
-  { id: 'INV-2024-098', org: 'FinServe Ltd', orgId: 'org6', plan: 'Enterprise', amount: 15000, status: 'paid', date: '2024-12-15', due_date: '2024-12-30', paid_date: '2024-12-28', method: 'Bank Transfer' },
+  { id: 'INV-2025-001', org: 'Acme Corp', orgId: 'org_acme', plan: 'Enterprise', amount: 15000, status: 'paid' as InvoiceStatus, date: '2025-01-15', due_date: '2025-01-30', paid_date: '2025-01-20', method: 'Bank Transfer' },
+  { id: 'INV-2025-002', org: 'TechStart Inc', orgId: 'org_tech', plan: 'Professional', amount: 7500, status: 'paid' as InvoiceStatus, date: '2025-01-15', due_date: '2025-01-30', paid_date: '2025-01-22', method: 'Credit Card' },
+  { id: 'INV-2025-003', org: 'GlobalBank', orgId: 'org_global', plan: 'Enterprise', amount: 15000, status: 'pending' as InvoiceStatus, date: '2025-01-18', due_date: '2025-02-02', paid_date: null, method: null },
+  { id: 'INV-2025-004', org: 'RetailMax', orgId: 'org_retail', plan: 'Starter', amount: 2500, status: 'overdue' as InvoiceStatus, date: '2024-12-15', due_date: '2024-12-30', paid_date: null, method: null, daysOverdue: 22 },
+  { id: 'INV-2025-005', org: 'HealthCo', orgId: 'org_health', plan: 'Professional', amount: 7500, status: 'paid' as InvoiceStatus, date: '2025-01-10', due_date: '2025-01-25', paid_date: '2025-01-18', method: 'Credit Card' },
 ];
 
-const STATUS_CONFIG = {
-  paid: { label: 'Paid', labelAr: 'مدفوع', color: 'bg-success/10 text-success border-success/30', icon: CheckCircle },
-  pending: { label: 'Pending', labelAr: 'معلق', color: 'bg-warning/10 text-warning border-warning/30', icon: Clock },
-  overdue: { label: 'Overdue', labelAr: 'متأخر', color: 'bg-destructive/10 text-destructive border-destructive/30', icon: AlertTriangle },
-};
+// Use shared status config
+const STATUS_CONFIG = INVOICE_STATUS_CONFIG;
 
 // Monthly Revenue History for chart coherence
 const MONTHLY_REVENUE = [
