@@ -22,6 +22,7 @@ import { AnimatedLineChart } from '@/components/charts/AnimatedLineChart';
 import { AnimatedBarChart } from '@/components/charts/AnimatedBarChart';
 import { toast } from 'sonner';
 import { PayoutThresholds } from '@/components/vendor/PayoutThresholds';
+import { VendorPayoutInvoices } from '@/components/vendor/VendorPayoutInvoices';
 import { PageLayout, MetricCard, MetricGrid } from '@/components/shared';
 import { usePayoutSummary, useVendorAnalytics } from '@/hooks/useVendorData';
 
@@ -119,6 +120,10 @@ export default function VendorEarnings() {
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
           <TabsTrigger value="overview">{t('Overview', 'نظرة عامة')}</TabsTrigger>
+          <TabsTrigger value="payouts" className="gap-1.5">
+            <Wallet className="w-3.5 h-3.5" />
+            {t('Payouts & Invoices', 'المدفوعات والفواتير')}
+          </TabsTrigger>
           <TabsTrigger value="tiers" className="gap-1.5">
             <Target className="w-3.5 h-3.5" />
             {t('Commission Tiers', 'مستويات العمولة')}
@@ -216,6 +221,10 @@ export default function VendorEarnings() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="payouts" className="space-y-6">
+          <VendorPayoutInvoices />
         </TabsContent>
 
         <TabsContent value="tiers" className="space-y-6">
