@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useProfile as useSupabaseProfile } from '@/hooks/useSupabaseData';
+import { useIsDemo } from '@/contexts/DemoModeContext';
+import { DEMO_EXEC_METRICS, DEMO_SPEND_ALLOCATION, DEMO_ORG } from '@/lib/demoScenario';
 
 // Types for employer dashboard data
 export interface EmployerMetrics {
@@ -81,9 +83,39 @@ function calculateConfidence(sampleSize: number, lastUpdated: Date): 'high' | 'm
 
 // Hook for Executive Dashboard metrics
 export function useExecutiveMetrics(organizationId?: string) {
+  const isDemoMode = useIsDemo();
+  
   return useQuery({
-    queryKey: ['executive_metrics', organizationId],
+    queryKey: ['executive_metrics', organizationId, isDemoMode],
     queryFn: async (): Promise<EmployerMetrics> => {
+      // In demo mode, return cohesive Nexa Holdings data
+      if (isDemoMode) {
+        return {
+          totalInvestment: DEMO_EXEC_METRICS.totalInvestment,
+          budgetUtilized: DEMO_EXEC_METRICS.budgetUtilized,
+          utilizationRate: DEMO_EXEC_METRICS.utilizationRate,
+          targetUtilization: DEMO_EXEC_METRICS.targetUtilization,
+          employeeCount: DEMO_ORG.employeeCount,
+          costPerEmployee: DEMO_EXEC_METRICS.costPerEmployee,
+          industryBenchmark: DEMO_EXEC_METRICS.industryBenchmark,
+          peerBenchmark: DEMO_EXEC_METRICS.peerBenchmark,
+          roi: DEMO_EXEC_METRICS.roi,
+          roiBenchmark: DEMO_EXEC_METRICS.roiBenchmark,
+          retentionRate: DEMO_EXEC_METRICS.retentionRate,
+          retentionBenchmark: DEMO_EXEC_METRICS.retentionBenchmark,
+          zombieSpend: DEMO_EXEC_METRICS.zombieSpend,
+          recoveryPotential: DEMO_EXEC_METRICS.recoveryPotential,
+          esatScore: DEMO_EXEC_METRICS.esatScore,
+          esatBenchmark: DEMO_EXEC_METRICS.esatBenchmark,
+          esatTrend: DEMO_EXEC_METRICS.esatTrend,
+          turnoverRate: DEMO_EXEC_METRICS.turnoverRate,
+          turnoverBenchmark: DEMO_EXEC_METRICS.turnoverBenchmark,
+          lastUpdated: DEMO_EXEC_METRICS.lastUpdated,
+          dataConfidence: DEMO_EXEC_METRICS.dataConfidence,
+          dataSources: [...DEMO_EXEC_METRICS.dataSources],
+        };
+      }
+      
       // Fetch real data from multiple sources
       const [profilesResult, entitlementsResult, requestsResult, satisfactionResult] = await Promise.all([
         supabase.from('profiles').select('id, monthly_salary, employment_date, organization_id'),

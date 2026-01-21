@@ -90,43 +90,43 @@ const opsNavigationGroups: NavGroup[] = [
 
 /**
  * Executive Navigation - Strategic, high-level insights
- * ONLY: Executive Dashboard, Spend & Utilization, Zombie Spend, Employee Segments,
- * Recommendations, Policy Insights, Marketplace Analytics (feature-flagged)
- * NO separate Data Confidence page - shown as badge + drawer across pages
+ * DEMO-OPTIMIZED: 7 items max with action-oriented labels
+ * Routes: /employer/dashboard, spend, zombie, segments, recommendations, policy-insights, integrations
  */
 const execNavigationGroups: NavGroup[] = [
-  // 1) Overview
+  // 1) Overview (single item, no group header needed in collapsed view)
   {
     id: 'overview',
     label: 'Overview',
     items: [
-      { label: 'Executive Dashboard', path: '/employer', icon: LayoutDashboard },
+      { label: 'Dashboard', path: '/employer', icon: LayoutDashboard },
     ],
   },
-  // 2) Financials & Value
+  // 2) Analytics & Insights
   {
-    id: 'financials',
-    label: 'Financials & Value',
+    id: 'analytics',
+    label: 'Analytics',
     items: [
       { label: 'Spend & Utilization', path: '/employer/spend', icon: DollarSign },
-      { label: 'Zombie Spend', path: '/employer/zombie', icon: Ghost },
+      { label: 'Optimization Opportunities', path: '/employer/zombie', icon: Ghost },
+      { label: 'Employee Insights', path: '/employer/segments', icon: Users },
     ],
   },
-  // 3) Workforce Insights
-  {
-    id: 'workforce',
-    label: 'Workforce Insights',
-    items: [
-      { label: 'Employee Segments', path: '/employer/segments', icon: Users },
-    ],
-  },
-  // 4) Strategy
+  // 3) Strategy & Actions
   {
     id: 'strategy',
     label: 'Strategy',
     items: [
-      { label: 'Recommendations', path: '/employer/recommendations', icon: Lightbulb },
-      { label: 'Policy Insights', path: '/employer/policy-insights', icon: TrendingUp },
+      { label: 'Action Plan', path: '/employer/recommendations', icon: Lightbulb },
+      { label: 'Policy Impact', path: '/employer/policy-insights', icon: TrendingUp },
+    ],
+  },
+  // 4) Data Foundation
+  {
+    id: 'data',
+    label: 'Data & Confidence',
+    items: [
+      { label: 'Data Sources', path: '/employer/integrations', icon: Database },
     ],
   },
   // 5) Marketplace (Phase 2 - feature-flagged, exec read-only)
@@ -135,7 +135,7 @@ const execNavigationGroups: NavGroup[] = [
     label: 'Marketplace',
     featureFlag: 'marketplaceEnabled',
     items: [
-      { label: 'Marketplace Analytics', path: '/employer/marketplace', icon: ShoppingBag },
+      { label: 'Marketplace Impact', path: '/employer/marketplace', icon: ShoppingBag },
     ],
   },
 ];
