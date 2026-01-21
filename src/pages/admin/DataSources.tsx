@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -21,7 +20,7 @@ import {
   Database, CheckCircle, XCircle, Clock, AlertTriangle, 
   RefreshCw, Link2, Unlink, Settings, Plus, Activity, ArrowRight,
   Key, Globe, Server, FileSpreadsheet, Shield, Loader2, Eye,
-  AlertCircle, HelpCircle, ChevronRight, Copy, Wrench, ExternalLink, Play
+  AlertCircle, HelpCircle, Copy, Wrench, ExternalLink, Play, Zap
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
@@ -30,14 +29,14 @@ import { useAdminAuditLog } from '@/hooks/useAdminAuditLog';
 
 // Available connectors configuration
 const AVAILABLE_CONNECTORS = [
-  { id: 'workday', name: 'Workday', icon: '🔷', category: 'HRIS', authMethods: ['oauth', 'api_key'], domains: ['employees', 'payroll', 'benefits', 'leave'] },
-  { id: 'sap_sf', name: 'SAP SuccessFactors', icon: '🟦', category: 'HRIS', authMethods: ['oauth', 'api_key'], domains: ['employees', 'payroll'] },
-  { id: 'oracle_hcm', name: 'Oracle HCM', icon: '🔶', category: 'HRIS', authMethods: ['oauth', 'api_key'], domains: ['employees', 'payroll', 'benefits'] },
-  { id: 'bamboohr', name: 'BambooHR', icon: '🌿', category: 'HRIS', authMethods: ['api_key'], domains: ['employees'] },
-  { id: 'entra_id', name: 'Microsoft Entra ID', icon: '🔵', category: 'SSO/SCIM', authMethods: ['oauth'], domains: ['employees'] },
-  { id: 'google_workspace', name: 'Google Workspace', icon: '🔴', category: 'SSO', authMethods: ['oauth'], domains: ['employees'] },
-  { id: 'azure_ad', name: 'Azure AD', icon: '⚡', category: 'SSO/SCIM', authMethods: ['oauth'], domains: ['employees'] },
-  { id: 'csv_sftp', name: 'CSV/SFTP', icon: '📁', category: 'Manual', authMethods: ['sftp', 'upload'], domains: ['employees', 'payroll', 'benefits', 'claims'] },
+  { id: 'workday', name: 'Workday', icon: '🔷', category: 'HRIS', description: 'Enterprise HR and Finance system', authMethods: ['oauth', 'api_key'], domains: ['employees', 'payroll', 'benefits', 'leave'] },
+  { id: 'sap_sf', name: 'SAP SuccessFactors', icon: '🟦', category: 'HRIS', description: 'Cloud-based HR management', authMethods: ['oauth', 'api_key'], domains: ['employees', 'payroll'] },
+  { id: 'oracle_hcm', name: 'Oracle HCM', icon: '🔶', category: 'HRIS', description: 'HR and talent management suite', authMethods: ['oauth', 'api_key'], domains: ['employees', 'payroll', 'benefits'] },
+  { id: 'bamboohr', name: 'BambooHR', icon: '🌿', category: 'HRIS', description: 'SMB-focused HR platform', authMethods: ['api_key'], domains: ['employees'] },
+  { id: 'entra_id', name: 'Microsoft Entra ID', icon: '🔵', category: 'SSO/SCIM', description: 'Identity and access management', authMethods: ['oauth'], domains: ['employees'] },
+  { id: 'google_workspace', name: 'Google Workspace', icon: '🔴', category: 'SSO', description: 'Google identity provider', authMethods: ['oauth'], domains: ['employees'] },
+  { id: 'azure_ad', name: 'Azure AD', icon: '⚡', category: 'SSO/SCIM', description: 'Microsoft directory services', authMethods: ['oauth'], domains: ['employees'] },
+  { id: 'csv_sftp', name: 'CSV/SFTP', icon: '📁', category: 'Manual', description: 'Manual file-based integration', authMethods: ['sftp', 'upload'], domains: ['employees', 'payroll', 'benefits', 'claims'] },
 ];
 
 const DATA_DOMAINS = [
@@ -74,7 +73,7 @@ const STATUS_CONFIG = {
   not_connected: { label: 'Not Connected', labelAr: 'غير متصل', color: 'bg-muted text-muted-foreground border-border', icon: Unlink },
 };
 
-// Sample connected sources with health data
+// Sample connected sources
 const INITIAL_CONNECTED_SOURCES = [
   { 
     id: '1', connectorId: 'sap_sf', name: 'SAP SuccessFactors', status: 'connected', 
@@ -83,6 +82,7 @@ const INITIAL_CONNECTED_SOURCES = [
     missingFields: ['manager_id'], org: 'All Organizations', authType: 'OAuth 2.0',
     environment: 'Production', owner: 'IT Admin', createdAt: new Date('2024-06-15'),
     schedule: 'Every hour at :00', fieldsMapped: 8, fieldsTotal: 9,
+    lastAuthCheck: new Date(Date.now() - 1000 * 60 * 30), lastRunDuration: '4m 12s',
     recentRuns: [
       { id: 'run-1', status: 'success', startedAt: new Date(Date.now() - 1000 * 60 * 15), duration: '4m 12s', recordsIn: 12450, recordsOut: 12448, errors: 2, retries: 0 },
       { id: 'run-2', status: 'success', startedAt: new Date(Date.now() - 1000 * 60 * 75), duration: '4m 08s', recordsIn: 12445, recordsOut: 12445, errors: 0, retries: 0 },
@@ -96,9 +96,9 @@ const INITIAL_CONNECTED_SOURCES = [
     missingFields: ['bonus_date'], org: 'Acme Corp', authType: 'API Key',
     environment: 'Production', owner: 'HRIS Team', createdAt: new Date('2024-08-20'),
     schedule: 'Daily at 02:00 UTC', fieldsMapped: 7, fieldsTotal: 9,
+    lastAuthCheck: new Date(Date.now() - 1000 * 60 * 60 * 2), lastRunDuration: '8m 45s',
     recentRuns: [
       { id: 'run-4', status: 'success', startedAt: new Date(Date.now() - 1000 * 60 * 60), duration: '8m 45s', recordsIn: 8920, recordsOut: 8915, errors: 5, retries: 0 },
-      { id: 'run-5', status: 'success', startedAt: new Date(Date.now() - 1000 * 60 * 60 * 25), duration: '8m 32s', recordsIn: 8918, recordsOut: 8918, errors: 0, retries: 0 },
     ],
   },
   { 
@@ -108,9 +108,8 @@ const INITIAL_CONNECTED_SOURCES = [
     missingFields: ['dependent_count', 'plan_tier'], org: 'TechStart Inc', authType: 'API Key',
     environment: 'Production', owner: 'HR Ops', createdAt: new Date('2024-10-01'),
     schedule: 'Every hour at :30', fieldsMapped: 6, fieldsTotal: 9,
-    recentRuns: [
-      { id: 'run-6', status: 'running', startedAt: new Date(Date.now() - 1000 * 60 * 5), duration: '5m 12s...', recordsIn: 3200, recordsOut: 2890, errors: 0, retries: 0 },
-    ],
+    lastAuthCheck: new Date(Date.now() - 1000 * 60 * 45), lastRunDuration: '5m 12s',
+    recentRuns: [],
   },
   { 
     id: '4', connectorId: 'csv_sftp', name: 'Payroll CSV Feed', status: 'error', 
@@ -119,21 +118,18 @@ const INITIAL_CONNECTED_SOURCES = [
     missingFields: ['cost_center', 'budget_code'], org: 'GlobalBank', authType: 'SFTP',
     environment: 'Production', owner: 'Finance IT', createdAt: new Date('2024-11-10'),
     schedule: 'Daily at 04:00 UTC', fieldsMapped: 5, fieldsTotal: 9,
+    lastAuthCheck: new Date(Date.now() - 1000 * 60 * 60 * 24), lastRunDuration: '0m 32s',
     error: 'SFTP connection failed: Authentication timeout',
     errorDetails: {
       code: 'SFTP_AUTH_TIMEOUT',
-      message: 'Connection to sftp.globalbank.com timed out after 30 seconds. The server did not respond to the authentication request.',
+      message: 'Connection to sftp.globalbank.com timed out after 30 seconds.',
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24),
-      suggestedFix: 'Verify SFTP credentials are correct and the server is accessible. Check firewall rules and IP whitelist.',
+      suggestedFix: 'Verify SFTP credentials and check firewall rules.',
     },
-    recentRuns: [
-      { id: 'run-7', status: 'failed', startedAt: new Date(Date.now() - 1000 * 60 * 60 * 24), duration: '0m 32s', recordsIn: 0, recordsOut: 0, errors: 1, retries: 3 },
-      { id: 'run-8', status: 'success', startedAt: new Date(Date.now() - 1000 * 60 * 60 * 48), duration: '2m 18s', recordsIn: 2100, recordsOut: 2100, errors: 0, retries: 0 },
-    ],
+    recentRuns: [],
   },
 ];
 
-// Sample field mappings
 const SAMPLE_FIELD_MAPPINGS = [
   { sourceField: 'emp_id', bnftField: 'employeeId', transform: null, status: 'mapped' },
   { sourceField: 'org_code', bnftField: 'orgId', transform: 'lookup:org_mapping', status: 'mapped' },
@@ -164,18 +160,19 @@ export default function AdminDataSources() {
   const [isTesting, setIsTesting] = useState(false);
   const [fieldMappingOpen, setFieldMappingOpen] = useState(false);
   const [selectedSource, setSelectedSource] = useState<typeof sources[0] | null>(null);
-  const [fieldMappings, setFieldMappings] = useState(SAMPLE_FIELD_MAPPINGS);
+  const [fieldMappings] = useState(SAMPLE_FIELD_MAPPINGS);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+  const [fixConnectionOpen, setFixConnectionOpen] = useState(false);
 
   const connectedCount = sources.filter(s => s.status === 'connected' || s.status === 'syncing').length;
-  const avgCoverage = Math.round(sources.reduce((acc, s) => acc + s.coverage, 0) / sources.length);
   const errorCount = sources.filter(s => s.status === 'error').length;
   const avgHealth = Math.round(sources.reduce((acc, s) => acc + s.healthScore, 0) / sources.length);
+  const totalRecords = sources.reduce((acc, s) => acc + s.recordsSynced, 0);
 
   const metrics = [
-    { title: t('Total Connectors', 'إجمالي الموصلات'), value: sources.length, icon: Database },
-    { title: t('Connected', 'متصل'), value: connectedCount, icon: CheckCircle },
+    { title: t('Connected Sources', 'المصادر المتصلة'), value: connectedCount, icon: Link2 },
     { title: t('Avg Health', 'متوسط الصحة'), value: `${avgHealth}%`, icon: Activity },
+    { title: t('Total Records', 'إجمالي السجلات'), value: `${(totalRecords / 1000).toFixed(1)}k`, icon: Database },
     { title: t('Errors', 'أخطاء'), value: errorCount, icon: AlertTriangle },
   ];
 
@@ -193,9 +190,7 @@ export default function AdminDataSources() {
   const handleTestConnection = async () => {
     setIsTesting(true);
     setTestResult('pending');
-    
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
     const success = Math.random() > 0.2;
     setTestResult(success ? 'success' : 'failure');
     setIsTesting(false);
@@ -225,6 +220,8 @@ export default function AdminDataSources() {
       schedule: syncFrequency === 'hourly' ? 'Every hour at :00' : 'Daily at 02:00 UTC',
       fieldsMapped: 0,
       fieldsTotal: 9,
+      lastAuthCheck: new Date(),
+      lastRunDuration: '—',
       recentRuns: [],
     };
 
@@ -234,69 +231,33 @@ export default function AdminDataSources() {
       action: 'SETTINGS_UPDATE',
       entityType: 'settings',
       entityId: newSource.id,
-      metadata: {
-        setting_type: 'connector',
-        action: 'connector_created',
-        connector_name: connector.name,
-        domains: selectedDomains,
-        frequency: syncFrequency,
-      },
+      metadata: { setting_type: 'connector', action: 'connector_created', connector_name: connector.name },
     });
 
     toast.success(t(`Connected ${connector.name}`, `تم توصيل ${connector.name}`));
     setWizardOpen(false);
   };
 
-  const handleSync = async (source: typeof sources[0]) => {
+  const handleSyncNow = async (source: typeof sources[0]) => {
     toast.info(t(`Syncing ${source.name}...`, `جاري مزامنة ${source.name}...`));
-    
-    setSources(prev => prev.map(s => 
-      s.id === source.id ? { ...s, status: 'syncing' as const } : s
-    ));
+    setSources(prev => prev.map(s => s.id === source.id ? { ...s, status: 'syncing' as const } : s));
 
     await createAuditLog({
       action: 'SETTINGS_UPDATE',
       entityType: 'settings',
       entityId: source.id,
-      metadata: {
-        setting_type: 'connector',
-        action: 'sync_started',
-        connector_name: source.name,
-      },
+      metadata: { setting_type: 'connector', action: 'sync_started', connector_name: source.name },
     });
 
     setTimeout(() => {
-      setSources(prev => prev.map(s => 
-        s.id === source.id ? { ...s, status: 'connected' as const, lastSync: new Date() } : s
-      ));
+      setSources(prev => prev.map(s => s.id === source.id ? { ...s, status: 'connected' as const, lastSync: new Date() } : s));
       toast.success(t(`${source.name} synced successfully`, `تمت مزامنة ${source.name} بنجاح`));
     }, 3000);
   };
 
-  const handleRetry = async (source: typeof sources[0]) => {
-    toast.info(t(`Retrying ${source.name}...`, `إعادة محاولة ${source.name}...`));
-    
-    setSources(prev => prev.map(s => 
-      s.id === source.id ? { ...s, status: 'syncing' as const, error: undefined, errorDetails: undefined } : s
-    ));
-
-    await createAuditLog({
-      action: 'SETTINGS_UPDATE',
-      entityType: 'settings',
-      entityId: source.id,
-      metadata: {
-        setting_type: 'connector',
-        action: 'sync_retried',
-        connector_name: source.name,
-      },
-    });
-
-    setTimeout(() => {
-      setSources(prev => prev.map(s => 
-        s.id === source.id ? { ...s, status: 'connected' as const, lastSync: new Date(), healthScore: 85 } : s
-      ));
-      toast.success(t(`${source.name} recovered successfully`, `تم استرداد ${source.name} بنجاح`));
-    }, 3000);
+  const handleViewDetails = (source: typeof sources[0]) => {
+    setSelectedSource(source);
+    setDetailDrawerOpen(true);
   };
 
   const handleOpenFieldMapping = (source: typeof sources[0]) => {
@@ -304,9 +265,32 @@ export default function AdminDataSources() {
     setFieldMappingOpen(true);
   };
 
-  const handleOpenDetails = (source: typeof sources[0]) => {
+  const handleFixConnection = (source: typeof sources[0]) => {
     setSelectedSource(source);
-    setDetailDrawerOpen(true);
+    setFixConnectionOpen(true);
+  };
+
+  const handleTestAndFix = async () => {
+    setIsTesting(true);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    if (selectedSource) {
+      setSources(prev => prev.map(s => 
+        s.id === selectedSource.id ? { ...s, status: 'connected' as const, error: undefined, errorDetails: undefined, healthScore: 85 } : s
+      ));
+      
+      await createAuditLog({
+        action: 'SETTINGS_UPDATE',
+        entityType: 'settings',
+        entityId: selectedSource.id,
+        metadata: { setting_type: 'connector', action: 'connection_fixed', connector_name: selectedSource.name },
+      });
+      
+      toast.success(t('Connection fixed successfully', 'تم إصلاح الاتصال بنجاح'));
+    }
+    
+    setIsTesting(false);
+    setFixConnectionOpen(false);
   };
 
   const unmappedCount = fieldMappings.filter(f => f.status === 'unmapped').length;
@@ -314,18 +298,10 @@ export default function AdminDataSources() {
     f.status === 'unmapped' && REQUIRED_FIELDS.find(r => r.id === f.bnftField)?.required
   ).length;
 
-  const getStatusCTA = (source: typeof sources[0]) => {
-    switch (source.status) {
-      case 'connected':
-        return { primary: 'Sync Now', secondary: 'View Logs', icon: RefreshCw, action: () => handleSync(source) };
-      case 'syncing':
-        return { primary: 'View Run', secondary: 'Cancel', icon: Eye, action: () => handleOpenDetails(source) };
-      case 'error':
-        return { primary: 'Troubleshoot', secondary: 'Retry', icon: Wrench, action: () => handleOpenDetails(source) };
-      default:
-        return { primary: 'Connect', secondary: null, icon: Link2, action: handleOpenWizard };
-    }
-  };
+  // Get unconnected connectors for catalog
+  const unconnectedConnectors = AVAILABLE_CONNECTORS.filter(
+    c => !sources.some(s => s.connectorId === c.id)
+  );
 
   return (
     <PageLayout
@@ -353,7 +329,7 @@ export default function AdminDataSources() {
             <Link2 className="w-5 h-5" />
             {t('Connected Sources', 'المصادر المتصلة')}
           </CardTitle>
-          <CardDescription>{t('Click any card to view details', 'انقر على أي بطاقة لعرض التفاصيل')}</CardDescription>
+          <CardDescription>{t('Active data integrations', 'عمليات تكامل البيانات النشطة')}</CardDescription>
         </CardHeader>
         <CardContent>
           {sources.length === 0 ? (
@@ -371,17 +347,16 @@ export default function AdminDataSources() {
               {sources.map((source) => {
                 const connector = AVAILABLE_CONNECTORS.find(c => c.id === source.connectorId);
                 const statusConfig = STATUS_CONFIG[source.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.not_connected;
-                const cta = getStatusCTA(source);
+                const isError = source.status === 'error';
+                const isSyncing = source.status === 'syncing';
                 
                 return (
                   <Card 
                     key={source.id} 
                     className={cn(
-                      "border-l-4 cursor-pointer transition-all hover:shadow-md",
-                      source.status === 'error' ? 'border-l-destructive' : 
-                      source.status === 'syncing' ? 'border-l-blue-500' : 'border-l-success'
+                      "border-l-4",
+                      isError ? 'border-l-destructive' : isSyncing ? 'border-l-blue-500' : 'border-l-success'
                     )}
-                    onClick={() => handleOpenDetails(source)}
                   >
                     <CardHeader className="pb-2">
                       <div className={cn("flex items-start justify-between", isRTL && "flex-row-reverse")}>
@@ -393,7 +368,7 @@ export default function AdminDataSources() {
                           </div>
                         </div>
                         <Badge variant="outline" className={cn("shrink-0 text-xs", statusConfig.color)}>
-                          <statusConfig.icon className={cn("w-3 h-3 me-1", source.status === 'syncing' && 'animate-spin')} />
+                          <statusConfig.icon className={cn("w-3 h-3 me-1", isSyncing && 'animate-spin')} />
                           {isRTL ? statusConfig.labelAr : statusConfig.label}
                         </Badge>
                       </div>
@@ -416,7 +391,7 @@ export default function AdminDataSources() {
                               </div>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p className="text-xs max-w-48">{t('Health score based on sync success rate, error frequency, and data completeness', 'نقاط الصحة بناءً على معدل نجاح المزامنة')}</p>
+                              <p className="text-xs max-w-48">{t('Based on sync success rate and error frequency', 'بناءً على معدل نجاح المزامنة')}</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
@@ -429,7 +404,7 @@ export default function AdminDataSources() {
                               </div>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p className="text-xs max-w-48">{t('Percentage of required fields mapped and populated', 'نسبة الحقول المطلوبة المعينة والمعبأة')}</p>
+                              <p className="text-xs max-w-48">{t('Percentage of required fields mapped', 'نسبة الحقول المطلوبة المعينة')}</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
@@ -451,21 +426,66 @@ export default function AdminDataSources() {
                         {t('Last sync:', 'آخر مزامنة:')} {formatDistanceToNow(source.lastSync, { addSuffix: true })}
                       </p>
 
-                      <div className={cn("flex gap-2", isRTL && "flex-row-reverse")} onClick={e => e.stopPropagation()}>
-                        <Button 
-                          variant={source.status === 'error' ? 'destructive' : 'outline'} 
-                          size="sm" 
-                          className="flex-1 text-xs" 
-                          onClick={() => source.status === 'error' ? handleRetry(source) : cta.action()}
-                          disabled={source.status === 'syncing'}
-                        >
-                          <cta.icon className={cn("w-3 h-3 me-1", source.status === 'syncing' && 'animate-spin')} />
-                          {source.status === 'error' ? t('Retry', 'إعادة') : t(cta.primary, cta.primary)}
-                        </Button>
-                        <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => handleOpenDetails(source)}>
-                          <Eye className="w-3 h-3 me-1" />
-                          {t('Details', 'التفاصيل')}
-                        </Button>
+                      {/* Standardized CTAs */}
+                      <div className={cn("flex gap-2", isRTL && "flex-row-reverse")}>
+                        {isError ? (
+                          <>
+                            <Button 
+                              variant="destructive" 
+                              size="sm" 
+                              className="flex-1 text-xs"
+                              onClick={() => handleFixConnection(source)}
+                            >
+                              <Wrench className="w-3 h-3 me-1" />
+                              {t('Fix Connection', 'إصلاح الاتصال')}
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="text-xs"
+                              onClick={() => handleViewDetails(source)}
+                            >
+                              <Eye className="w-3 h-3" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex-1 text-xs"
+                              onClick={() => handleSyncNow(source)}
+                              disabled={isSyncing}
+                            >
+                              <RefreshCw className={cn("w-3 h-3 me-1", isSyncing && 'animate-spin')} />
+                              {t('Sync Now', 'مزامنة الآن')}
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex-1 text-xs"
+                              onClick={() => handleViewDetails(source)}
+                            >
+                              <Eye className="w-3 h-3 me-1" />
+                              {t('View Details', 'عرض التفاصيل')}
+                            </Button>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8"
+                                    onClick={() => handleOpenFieldMapping(source)}
+                                  >
+                                    <Settings className="w-3 h-3" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>{t('Map Fields', 'تعيين الحقول')}</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -476,42 +496,50 @@ export default function AdminDataSources() {
         </CardContent>
       </Card>
 
-      {/* Available Connectors */}
+      {/* Available Connectors Catalog */}
       <Card>
         <CardHeader>
           <CardTitle className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
             <Globe className="w-5 h-5" />
             {t('Available Connectors', 'الموصلات المتاحة')}
           </CardTitle>
-          <CardDescription>{t('Click to connect a new data source', 'انقر لتوصيل مصدر بيانات جديد')}</CardDescription>
+          <CardDescription>{t('Browse and connect new data sources', 'تصفح وتوصيل مصادر بيانات جديدة')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {AVAILABLE_CONNECTORS.map((connector) => {
-              const isConnected = sources.some(s => s.connectorId === connector.id);
-              return (
-                <div
-                  key={connector.id}
-                  onClick={() => !isConnected && handleOpenWizard()}
-                  className={cn(
-                    "p-4 rounded-lg border text-center cursor-pointer transition-all",
-                    isConnected 
-                      ? "bg-success/5 border-success/30 opacity-75" 
-                      : "hover:bg-muted/50 hover:border-primary/30"
-                  )}
-                >
-                  <div className="text-3xl mb-2">{connector.icon}</div>
-                  <p className="font-medium text-sm">{connector.name}</p>
-                  <Badge variant="outline" className="text-[10px] mt-1">{connector.category}</Badge>
-                  {isConnected && (
-                    <Badge variant="outline" className="text-[10px] mt-1 ms-1 bg-success/10 text-success">
-                      <CheckCircle className="w-2 h-2 me-1" /> Connected
-                    </Badge>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          {unconnectedConnectors.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <CheckCircle className="w-10 h-10 mx-auto mb-3 text-success" />
+              <p className="font-medium">{t('All connectors are configured', 'تم تكوين جميع الموصلات')}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {unconnectedConnectors.map((connector) => (
+                <Card key={connector.id} className="border hover:border-primary/50 transition-colors">
+                  <CardContent className="pt-4">
+                    <div className="flex items-start gap-3">
+                      <div className="text-3xl">{connector.icon}</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">{connector.name}</p>
+                        <Badge variant="outline" className="text-[10px] mt-1">{connector.category}</Badge>
+                        <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{connector.description}</p>
+                      </div>
+                    </div>
+                    <Button 
+                      className="w-full mt-4" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedConnector(connector.id);
+                        handleOpenWizard();
+                      }}
+                    >
+                      <Plus className="w-3 h-3 me-1" />
+                      {t('Connect', 'توصيل')}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -529,10 +557,10 @@ export default function AdminDataSources() {
           {selectedSource && (
             <ScrollArea className="h-[calc(100vh-160px)] mt-4">
               <div className="space-y-4 pr-4">
-                {/* Status & Overview */}
+                {/* Status & Auth */}
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">{t('Overview', 'نظرة عامة')}</CardTitle>
+                    <CardTitle className="text-sm">{t('Connection Details', 'تفاصيل الاتصال')}</CardTitle>
                   </CardHeader>
                   <CardContent className="grid grid-cols-2 gap-3 text-sm">
                     <div>
@@ -542,172 +570,112 @@ export default function AdminDataSources() {
                       </Badge>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">{t('Auth Type', 'نوع المصادقة')}</p>
+                      <p className="text-muted-foreground">{t('Auth Method', 'طريقة المصادقة')}</p>
                       <p className="font-medium">{selectedSource.authType}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">{t('Last Auth Check', 'آخر فحص')}</p>
+                      <p className="text-xs">{selectedSource.lastAuthCheck ? formatDistanceToNow(selectedSource.lastAuthCheck, { addSuffix: true }) : '—'}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">{t('Environment', 'البيئة')}</p>
                       <Badge variant="secondary">{selectedSource.environment}</Badge>
                     </div>
-                    <div>
-                      <p className="text-muted-foreground">{t('Owner', 'المالك')}</p>
-                      <p className="font-medium">{selectedSource.owner}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">{t('Schedule', 'الجدول')}</p>
-                      <p className="text-xs font-mono">{selectedSource.schedule}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">{t('Created', 'تم الإنشاء')}</p>
-                      <p className="text-xs">{format(selectedSource.createdAt, 'MMM d, yyyy')}</p>
-                    </div>
                   </CardContent>
                 </Card>
 
-                {/* Scopes */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">{t('Data Scopes', 'نطاقات البيانات')}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex gap-2 flex-wrap">
-                      {selectedSource.domains.map(d => (
-                        <Badge key={d} variant="secondary">
-                          {DATA_DOMAINS.find(dd => dd.id === d)?.icon} {DATA_DOMAINS.find(dd => dd.id === d)?.label}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Health & Coverage */}
+                {/* Coverage Breakdown */}
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
-                      {t('Health & Coverage', 'الصحة والتغطية')}
+                      {t('Coverage Breakdown', 'تفاصيل التغطية')}
                       <TooltipProvider>
                         <Tooltip>
-                          <TooltipTrigger>
-                            <HelpCircle className="w-3 h-3 text-muted-foreground" />
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-64">
-                            <p className="text-xs"><strong>Health:</strong> Based on sync success rate and error frequency</p>
-                            <p className="text-xs mt-1"><strong>Coverage:</strong> Percentage of required fields mapped</p>
+                          <TooltipTrigger><HelpCircle className="w-3 h-3 text-muted-foreground" /></TooltipTrigger>
+                          <TooltipContent className="max-w-48">
+                            <p className="text-xs">{t('Records count per data domain', 'عدد السجلات لكل نطاق بيانات')}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>{t('Health Score', 'نقاط الصحة')}</span>
-                        <span className="font-bold">{selectedSource.healthScore}%</span>
+                  <CardContent className="space-y-2">
+                    {selectedSource.domains.map(d => (
+                      <div key={d} className="flex items-center justify-between">
+                        <span className="text-sm flex items-center gap-2">
+                          {DATA_DOMAINS.find(dd => dd.id === d)?.icon} {DATA_DOMAINS.find(dd => dd.id === d)?.label}
+                        </span>
+                        <span className="font-mono text-sm">{Math.floor(selectedSource.recordsSynced / selectedSource.domains.length).toLocaleString()}</span>
                       </div>
-                      <Progress value={selectedSource.healthScore} className="h-2" />
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>{t('Field Coverage', 'تغطية الحقول')}</span>
-                        <span className="font-bold">{selectedSource.coverage}%</span>
-                      </div>
-                      <Progress value={selectedSource.coverage} className="h-2" />
-                    </div>
+                    ))}
                   </CardContent>
                 </Card>
 
-                {/* Recent Runs */}
+                {/* Sync Info */}
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">{t('Recent Runs (Last 10)', 'التشغيلات الأخيرة')}</CardTitle>
+                    <CardTitle className="text-sm">{t('Sync Information', 'معلومات المزامنة')}</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    {selectedSource.recentRuns && selectedSource.recentRuns.length > 0 ? (
-                      <div className="space-y-2">
-                        {selectedSource.recentRuns.map((run, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-2 rounded bg-muted/50 text-xs">
-                            <div className="flex items-center gap-2">
-                              {run.status === 'success' && <CheckCircle className="w-3 h-3 text-success" />}
-                              {run.status === 'failed' && <XCircle className="w-3 h-3 text-destructive" />}
-                              {run.status === 'running' && <RefreshCw className="w-3 h-3 text-blue-500 animate-spin" />}
-                              <span>{formatDistanceToNow(run.startedAt, { addSuffix: true })}</span>
-                            </div>
-                            <span className="font-mono">{run.duration}</span>
-                            <span>{run.recordsIn.toLocaleString()} → {run.recordsOut.toLocaleString()}</span>
-                            {run.errors > 0 && <Badge variant="destructive" className="text-[10px]">{run.errors} err</Badge>}
-                            <Button variant="ghost" size="icon" className="h-6 w-6">
-                              <Eye className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground text-center py-4">{t('No runs yet', 'لا توجد تشغيلات بعد')}</p>
-                    )}
+                  <CardContent className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">{t('Last Sync', 'آخر مزامنة')}</p>
+                      <p className="font-medium">{formatDistanceToNow(selectedSource.lastSync, { addSuffix: true })}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">{t('Last Run Duration', 'مدة آخر تشغيل')}</p>
+                      <p className="font-mono">{selectedSource.lastRunDuration}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">{t('Schedule', 'الجدول')}</p>
+                      <p className="text-xs">{selectedSource.schedule}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">{t('Owner', 'المالك')}</p>
+                      <p className="font-medium">{selectedSource.owner}</p>
+                    </div>
                   </CardContent>
                 </Card>
 
-                {/* Field Mapping */}
+                {/* Mapping Status */}
                 <Card>
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm">{t('Field Mapping', 'تعيين الحقول')}</CardTitle>
-                      <Button variant="outline" size="sm" onClick={() => handleOpenFieldMapping(selectedSource)}>
+                      <Button variant="outline" size="sm" onClick={() => { setDetailDrawerOpen(false); handleOpenFieldMapping(selectedSource); }}>
                         {t('Open Mapping', 'فتح التعيين')}
                       </Button>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-2xl font-bold">{Math.round((selectedSource.fieldsMapped / selectedSource.fieldsTotal) * 100)}%</p>
-                        <p className="text-xs text-muted-foreground">{selectedSource.fieldsMapped}/{selectedSource.fieldsTotal} {t('fields mapped', 'حقول معينة')}</p>
-                      </div>
-                      {selectedSource.missingFields.length > 0 && (
-                        <Badge variant="destructive" className="text-xs">
-                          {selectedSource.missingFields.length} {t('unmapped required', 'مطلوبة غير معينة')}
-                        </Badge>
-                      )}
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm">{t('Mapped', 'معين')}</span>
+                      <span className="font-bold">{Math.round((selectedSource.fieldsMapped / selectedSource.fieldsTotal) * 100)}%</span>
                     </div>
+                    <Progress value={(selectedSource.fieldsMapped / selectedSource.fieldsTotal) * 100} className="h-2" />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {selectedSource.fieldsMapped}/{selectedSource.fieldsTotal} {t('fields configured', 'حقول مكونة')}
+                    </p>
                   </CardContent>
                 </Card>
 
-                {/* Errors Section */}
+                {/* Error Panel */}
                 {selectedSource.errorDetails && (
                   <Card className="border-destructive/30">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm text-destructive flex items-center gap-2">
                         <AlertCircle className="w-4 h-4" />
-                        {t('Error Details', 'تفاصيل الخطأ')}
+                        {t('Connection Error', 'خطأ الاتصال')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <div>
-                        <p className="text-xs text-muted-foreground">{t('Error Code', 'رمز الخطأ')}</p>
-                        <Badge variant="destructive" className="font-mono">{selectedSource.errorDetails.code}</Badge>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">{t('Message', 'الرسالة')}</p>
-                        <p className="text-sm">{selectedSource.errorDetails.message}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">{t('Timestamp', 'الوقت')}</p>
-                        <p className="text-sm font-mono">{format(selectedSource.errorDetails.timestamp, 'yyyy-MM-dd HH:mm:ss')}</p>
-                      </div>
-                      <Separator />
+                      <Badge variant="destructive" className="font-mono">{selectedSource.errorDetails.code}</Badge>
+                      <p className="text-sm">{selectedSource.errorDetails.message}</p>
                       <div className="p-3 rounded bg-success/10 border border-success/30">
                         <p className="text-xs font-medium text-success flex items-center gap-1 mb-1">
-                          <Wrench className="w-3 h-3" /> {t('Suggested Fix', 'الإصلاح المقترح')}
+                          <Zap className="w-3 h-3" /> {t('Suggested Fix', 'الإصلاح المقترح')}
                         </p>
                         <p className="text-sm">{selectedSource.errorDetails.suggestedFix}</p>
                       </div>
-                      <Button variant="outline" size="sm" className="w-full" onClick={() => {
-                        navigator.clipboard.writeText(JSON.stringify(selectedSource.errorDetails, null, 2));
-                        toast.success(t('Copied to clipboard', 'تم النسخ'));
-                      }}>
-                        <Copy className="w-3 h-3 me-2" />
-                        {t('Copy Details', 'نسخ التفاصيل')}
-                      </Button>
                     </CardContent>
                   </Card>
                 )}
@@ -715,28 +683,20 @@ export default function AdminDataSources() {
                 {/* Actions */}
                 <div className="space-y-2">
                   {selectedSource.status === 'error' ? (
-                    <>
-                      <Button className="w-full" onClick={() => handleRetry(selectedSource)}>
-                        <RefreshCw className="w-4 h-4 me-2" />
-                        {t('Retry Connection', 'إعادة الاتصال')}
-                      </Button>
-                      <Button className="w-full" variant="outline" onClick={() => handleOpenDetails(selectedSource)}>
-                        <Wrench className="w-4 h-4 me-2" />
-                        {t('Troubleshoot', 'استكشاف الأخطاء')}
-                      </Button>
-                    </>
+                    <Button className="w-full" onClick={() => { setDetailDrawerOpen(false); handleFixConnection(selectedSource); }}>
+                      <Wrench className="w-4 h-4 me-2" />
+                      {t('Fix Connection', 'إصلاح الاتصال')}
+                    </Button>
                   ) : (
-                    <>
-                      <Button className="w-full" onClick={() => handleSync(selectedSource)} disabled={selectedSource.status === 'syncing'}>
-                        <RefreshCw className={cn("w-4 h-4 me-2", selectedSource.status === 'syncing' && 'animate-spin')} />
-                        {selectedSource.status === 'syncing' ? t('Syncing...', 'مزامنة...') : t('Sync Now', 'مزامنة الآن')}
-                      </Button>
-                      <Button className="w-full" variant="outline" onClick={() => handleOpenFieldMapping(selectedSource)}>
-                        <Settings className="w-4 h-4 me-2" />
-                        {t('Edit Field Mapping', 'تعديل تعيين الحقول')}
-                      </Button>
-                    </>
+                    <Button className="w-full" onClick={() => handleSyncNow(selectedSource)} disabled={selectedSource.status === 'syncing'}>
+                      <RefreshCw className={cn("w-4 h-4 me-2", selectedSource.status === 'syncing' && 'animate-spin')} />
+                      {t('Sync Now', 'مزامنة الآن')}
+                    </Button>
                   )}
+                  <Button className="w-full" variant="outline" onClick={handleTestConnection}>
+                    <Activity className="w-4 h-4 me-2" />
+                    {t('Test Connection', 'اختبار الاتصال')}
+                  </Button>
                 </div>
               </div>
             </ScrollArea>
@@ -744,14 +704,71 @@ export default function AdminDataSources() {
         </SheetContent>
       </Sheet>
 
+      {/* Fix Connection Modal */}
+      <Dialog open={fixConnectionOpen} onOpenChange={setFixConnectionOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('Fix Connection', 'إصلاح الاتصال')}</DialogTitle>
+            <DialogDescription>{selectedSource?.name} - {t('Update connection settings', 'تحديث إعدادات الاتصال')}</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>{t('Host', 'المضيف')}</Label>
+              <Input defaultValue="sftp.globalbank.com" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t('Port', 'المنفذ')}</Label>
+                <Input defaultValue="22" type="number" />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('Timeout (s)', 'المهلة (ث)')}</Label>
+                <Input defaultValue="30" type="number" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>{t('Username', 'اسم المستخدم')}</Label>
+              <Input defaultValue="bnft_integration" />
+            </div>
+            <div className="space-y-2">
+              <Label>{t('Auth Method', 'طريقة المصادقة')}</Label>
+              <Select defaultValue="password">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="password">{t('Password', 'كلمة المرور')}</SelectItem>
+                  <SelectItem value="ssh_key">{t('SSH Key', 'مفتاح SSH')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>{t('Password', 'كلمة المرور')}</Label>
+              <Input type="password" placeholder="••••••••" />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setFixConnectionOpen(false)}>{t('Cancel', 'إلغاء')}</Button>
+            <Button variant="outline" onClick={handleTestConnection} disabled={isTesting}>
+              {isTesting ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Activity className="w-4 h-4 me-2" />}
+              {t('Test Connection', 'اختبار الاتصال')}
+            </Button>
+            <Button onClick={handleTestAndFix} disabled={isTesting}>
+              <CheckCircle className="w-4 h-4 me-2" />
+              {t('Save & Connect', 'حفظ وتوصيل')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Connect Wizard Dialog */}
       <Dialog open={wizardOpen} onOpenChange={setWizardOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{t('Connect Data Source', 'توصيل مصدر البيانات')}</DialogTitle>
-            <DialogDescription>
-              {t(`Step ${wizardStep} of 5`, `الخطوة ${wizardStep} من 5`)}
-            </DialogDescription>
+            <DialogDescription>{t(`Step ${wizardStep} of 5`, `الخطوة ${wizardStep} من 5`)}</DialogDescription>
           </DialogHeader>
 
           <div className="flex gap-1 mb-4">
@@ -760,7 +777,6 @@ export default function AdminDataSources() {
             ))}
           </div>
 
-          {/* Step 1: Select Connector */}
           {wizardStep === 1 && (
             <div className="space-y-4">
               <Label>{t('Select Connector', 'اختر الموصل')}</Label>
@@ -783,7 +799,6 @@ export default function AdminDataSources() {
             </div>
           )}
 
-          {/* Step 2: Organization Scope */}
           {wizardStep === 2 && (
             <div className="space-y-4">
               <Label>{t('Organization Scope', 'نطاق المنظمة')}</Label>
@@ -798,13 +813,9 @@ export default function AdminDataSources() {
                   <SelectItem value="globalbank">GlobalBank</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                {t('Select which organization this data source will sync to', 'اختر المنظمة التي سيتم مزامنة مصدر البيانات هذا إليها')}
-              </p>
             </div>
           )}
 
-          {/* Step 3: Auth Method */}
           {wizardStep === 3 && selectedConnector && (
             <div className="space-y-4">
               <Label>{t('Authentication Method', 'طريقة المصادقة')}</Label>
@@ -825,7 +836,7 @@ export default function AdminDataSources() {
                     <div>
                       <p className="font-medium capitalize">{method.replace('_', ' ')}</p>
                       <p className="text-xs text-muted-foreground">
-                        {method === 'oauth' && 'Secure OAuth 2.0 connection'}
+                        {method === 'oauth' && 'Secure OAuth 2.0'}
                         {method === 'api_key' && 'API key authentication'}
                         {method === 'sftp' && 'SFTP file transfer'}
                         {method === 'upload' && 'Manual file upload'}
@@ -834,26 +845,9 @@ export default function AdminDataSources() {
                   </div>
                 ))}
               </div>
-              {authMethod === 'api_key' && (
-                <div className="space-y-2">
-                  <Label>{t('API Key', 'مفتاح API')}</Label>
-                  <Input type="password" placeholder="sk-..." />
-                </div>
-              )}
-              {authMethod === 'sftp' && (
-                <div className="space-y-2">
-                  <Label>{t('SFTP Host', 'مضيف SFTP')}</Label>
-                  <Input placeholder="sftp.company.com" />
-                  <Label>{t('Username', 'اسم المستخدم')}</Label>
-                  <Input placeholder="username" />
-                  <Label>{t('Password', 'كلمة المرور')}</Label>
-                  <Input type="password" />
-                </div>
-              )}
             </div>
           )}
 
-          {/* Step 4: Data Domains & Frequency */}
           {wizardStep === 4 && (
             <div className="space-y-4">
               <div>
@@ -863,11 +857,7 @@ export default function AdminDataSources() {
                     <div
                       key={domain.id}
                       onClick={() => {
-                        setSelectedDomains(prev => 
-                          prev.includes(domain.id) 
-                            ? prev.filter(d => d !== domain.id) 
-                            : [...prev, domain.id]
-                        );
+                        setSelectedDomains(prev => prev.includes(domain.id) ? prev.filter(d => d !== domain.id) : [...prev, domain.id]);
                       }}
                       className={cn(
                         "p-3 rounded-lg border cursor-pointer transition-all flex items-center gap-2",
@@ -897,7 +887,6 @@ export default function AdminDataSources() {
             </div>
           )}
 
-          {/* Step 5: Test Connection */}
           {wizardStep === 5 && (
             <div className="space-y-4 text-center py-4">
               {testResult === null && (
@@ -924,11 +913,6 @@ export default function AdminDataSources() {
                     <CheckCircle className="w-8 h-8 text-success" />
                   </div>
                   <p className="text-success font-medium">{t('Connection successful!', 'الاتصال ناجح!')}</p>
-                  <p className="text-sm text-muted-foreground">{t('Ready to save and start syncing', 'جاهز للحفظ وبدء المزامنة')}</p>
-                  <div className="flex gap-2 justify-center mt-4">
-                    <Badge variant="secondary">{t('Next: Map Fields', 'التالي: تعيين الحقول')}</Badge>
-                    <Badge variant="secondary">{t('Then: Run First Sync', 'ثم: تشغيل المزامنة الأولى')}</Badge>
-                  </div>
                 </>
               )}
               {testResult === 'failure' && (
@@ -937,10 +921,7 @@ export default function AdminDataSources() {
                     <XCircle className="w-8 h-8 text-destructive" />
                   </div>
                   <p className="text-destructive font-medium">{t('Connection failed', 'فشل الاتصال')}</p>
-                  <p className="text-sm text-muted-foreground">{t('Check credentials and try again', 'تحقق من بيانات الاعتماد وحاول مرة أخرى')}</p>
-                  <Button variant="outline" onClick={handleTestConnection}>
-                    {t('Retry', 'إعادة المحاولة')}
-                  </Button>
+                  <Button variant="outline" onClick={handleTestConnection}>{t('Retry', 'إعادة')}</Button>
                 </>
               )}
             </div>
@@ -948,18 +929,12 @@ export default function AdminDataSources() {
 
           <DialogFooter className="gap-2">
             {wizardStep > 1 && (
-              <Button variant="outline" onClick={() => setWizardStep(s => s - 1)}>
-                {t('Back', 'رجوع')}
-              </Button>
+              <Button variant="outline" onClick={() => setWizardStep(s => s - 1)}>{t('Back', 'رجوع')}</Button>
             )}
             {wizardStep < 5 && (
               <Button 
                 onClick={() => setWizardStep(s => s + 1)}
-                disabled={
-                  (wizardStep === 1 && !selectedConnector) ||
-                  (wizardStep === 3 && !authMethod) ||
-                  (wizardStep === 4 && selectedDomains.length === 0)
-                }
+                disabled={(wizardStep === 1 && !selectedConnector) || (wizardStep === 3 && !authMethod) || (wizardStep === 4 && selectedDomains.length === 0)}
               >
                 {t('Next', 'التالي')}
                 <ArrowRight className="w-4 h-4 ms-2" />
@@ -980,17 +955,13 @@ export default function AdminDataSources() {
         <SheetContent className="sm:max-w-xl">
           <SheetHeader>
             <SheetTitle>{t('Field Mapping', 'تعيين الحقول')}</SheetTitle>
-            <SheetDescription>
-              {selectedSource?.name} - {t('Configure how source fields map to platform fields', 'تكوين كيفية تعيين حقول المصدر إلى حقول المنصة')}
-            </SheetDescription>
+            <SheetDescription>{selectedSource?.name}</SheetDescription>
           </SheetHeader>
 
           {requiredUnmapped > 0 && (
             <Alert variant="destructive" className="mt-4">
               <AlertTriangle className="w-4 h-4" />
-              <AlertDescription>
-                {requiredUnmapped} {t('required fields are unmapped', 'حقول مطلوبة غير معينة')}
-              </AlertDescription>
+              <AlertDescription>{requiredUnmapped} {t('required fields unmapped', 'حقول مطلوبة غير معينة')}</AlertDescription>
             </Alert>
           )}
 
@@ -998,9 +969,9 @@ export default function AdminDataSources() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('Source Field', 'حقل المصدر')}</TableHead>
+                  <TableHead>{t('Source', 'المصدر')}</TableHead>
                   <TableHead></TableHead>
-                  <TableHead>{t('bnft Field', 'حقل المنصة')}</TableHead>
+                  <TableHead>{t('Platform', 'المنصة')}</TableHead>
                   <TableHead>{t('Transform', 'التحويل')}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -1038,9 +1009,7 @@ export default function AdminDataSources() {
           </div>
 
           <SheetFooter className="mt-6">
-            <Button variant="outline" onClick={() => setFieldMappingOpen(false)}>
-              {t('Close', 'إغلاق')}
-            </Button>
+            <Button variant="outline" onClick={() => setFieldMappingOpen(false)}>{t('Close', 'إغلاق')}</Button>
             <Button onClick={async () => {
               await createAuditLog({
                 action: 'SETTINGS_UPDATE',
@@ -1048,7 +1017,7 @@ export default function AdminDataSources() {
                 entityId: selectedSource?.id || '',
                 metadata: { setting_type: 'field_mapping', action: 'field_mapping_updated' },
               });
-              toast.success(t('Field mappings saved', 'تم حفظ تعيينات الحقول'));
+              toast.success(t('Field mappings saved', 'تم حفظ التعيينات'));
               setFieldMappingOpen(false);
             }}>
               {t('Save Mappings', 'حفظ التعيينات')}

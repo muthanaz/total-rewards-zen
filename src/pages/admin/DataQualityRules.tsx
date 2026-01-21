@@ -1,6 +1,4 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useState } from 'react';
 import { PageLayout, MetricCard, MetricGrid } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,16 +13,18 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFo
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { 
   ShieldCheck, Plus, Search, AlertTriangle, CheckCircle, XCircle,
-  Settings, Database, Users, FileText, Edit2, Trash2, Eye, Zap, Building2,
-  Filter, Download, Ban, FileCheck, Play
+  Settings, Database, Users, FileText, Edit2, Eye, Zap, Building2,
+  Download, Ban, FileCheck, Play, Clock, UserPlus, BellOff, Loader2, History
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { useAdminAuditLog } from '@/hooks/useAdminAuditLog';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 
 const SEVERITY_CONFIG = {
@@ -32,6 +32,13 @@ const SEVERITY_CONFIG = {
   high: { label: 'High', labelAr: 'عالي', color: 'bg-warning/10 text-warning border-warning/30' },
   medium: { label: 'Medium', labelAr: 'متوسط', color: 'bg-primary/10 text-primary border-primary/30' },
   low: { label: 'Low', labelAr: 'منخفض', color: 'bg-muted text-muted-foreground border-border' },
+};
+
+const STATUS_CONFIG = {
+  open: { label: 'Open', color: 'bg-destructive/10 text-destructive border-destructive/30' },
+  acknowledged: { label: 'Acknowledged', color: 'bg-warning/10 text-warning border-warning/30' },
+  snoozed: { label: 'Snoozed', color: 'bg-muted text-muted-foreground border-border' },
+  resolved: { label: 'Resolved', color: 'bg-success/10 text-success border-success/30' },
 };
 
 const ENTITY_TYPES = [
@@ -51,21 +58,29 @@ const CONDITION_TEMPLATES = [
 ];
 
 const DEFAULT_RULES = [
-  { id: '1', name: 'Missing Grade', entity: 'employee', field: 'grade', severity: 'critical', condition: 'grade IS NULL', enabled: true, scope: 'global', lastTriggered: new Date(Date.now() - 1000 * 60 * 60 * 2), triggerCount30d: 45, owner: 'HR Ops' },
-  { id: '2', name: 'Invalid Salary', entity: 'employee', field: 'salary', severity: 'critical', condition: 'monthly_salary <= 0', enabled: true, scope: 'global', lastTriggered: new Date(Date.now() - 1000 * 60 * 60 * 24), triggerCount30d: 12, owner: 'Payroll' },
-  { id: '3', name: 'Allowance Exceeds Cap', entity: 'employee', field: 'allowances', severity: 'high', condition: 'housing_allowance > grade.housing_cap', enabled: true, scope: 'global', lastTriggered: new Date(Date.now() - 1000 * 60 * 30), triggerCount30d: 28, owner: 'Finance' },
-  { id: '4', name: 'Duplicate Employee ID', entity: 'employee', field: 'employee_id', severity: 'critical', condition: 'DUPLICATE(employee_id)', enabled: true, scope: 'global', lastTriggered: null, triggerCount30d: 3, owner: 'HR Ops' },
-  { id: '5', name: 'Claim Exceeds Policy Limit', entity: 'claim', field: 'amount', severity: 'high', condition: 'amount > policy.annual_limit', enabled: true, scope: 'global', lastTriggered: new Date(Date.now() - 1000 * 60 * 60 * 5), triggerCount30d: 67, owner: 'Claims' },
-  { id: '6', name: 'Vendor KYB Incomplete', entity: 'vendor', field: 'kyb_status', severity: 'medium', condition: 'kyb_docs.count < 6', enabled: true, scope: 'global', lastTriggered: new Date(Date.now() - 1000 * 60 * 60 * 12), triggerCount30d: 15, owner: 'Vendor Ops' },
-  { id: '7', name: 'Offer Missing Terms', entity: 'offer', field: 'terms', severity: 'medium', condition: 'terms IS NULL OR length(terms) < 20', enabled: false, scope: 'connector:csv_sftp', lastTriggered: null, triggerCount30d: 0, owner: 'Marketplace' },
+  { id: '1', name: 'Missing Grade', entity: 'employee', field: 'grade', severity: 'critical', condition: 'grade IS NULL', enabled: true, scope: 'global', lastTriggered: new Date(Date.now() - 1000 * 60 * 60 * 2), triggerCount30d: 45, owner: 'HR Ops', notifications: true, lastEdited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7), editedBy: 'Admin' },
+  { id: '2', name: 'Invalid Salary', entity: 'employee', field: 'salary', severity: 'critical', condition: 'monthly_salary <= 0', enabled: true, scope: 'global', lastTriggered: new Date(Date.now() - 1000 * 60 * 60 * 24), triggerCount30d: 12, owner: 'Payroll', notifications: true, lastEdited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14), editedBy: 'System' },
+  { id: '3', name: 'Allowance Exceeds Cap', entity: 'employee', field: 'allowances', severity: 'high', condition: 'housing_allowance > grade.housing_cap', enabled: true, scope: 'global', lastTriggered: new Date(Date.now() - 1000 * 60 * 30), triggerCount30d: 28, owner: 'Finance', notifications: false, lastEdited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), editedBy: 'Finance Admin' },
+  { id: '4', name: 'Duplicate Employee ID', entity: 'employee', field: 'employee_id', severity: 'critical', condition: 'DUPLICATE(employee_id)', enabled: true, scope: 'global', lastTriggered: null, triggerCount30d: 3, owner: 'HR Ops', notifications: true, lastEdited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), editedBy: 'System' },
+  { id: '5', name: 'Claim Exceeds Policy Limit', entity: 'claim', field: 'amount', severity: 'high', condition: 'amount > policy.annual_limit', enabled: true, scope: 'global', lastTriggered: new Date(Date.now() - 1000 * 60 * 60 * 5), triggerCount30d: 67, owner: 'Claims', notifications: true, lastEdited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5), editedBy: 'Claims Manager' },
+  { id: '6', name: 'Vendor KYB Incomplete', entity: 'vendor', field: 'kyb_status', severity: 'medium', condition: 'kyb_docs.count < 6', enabled: true, scope: 'global', lastTriggered: new Date(Date.now() - 1000 * 60 * 60 * 12), triggerCount30d: 15, owner: 'Vendor Ops', notifications: false, lastEdited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10), editedBy: 'Vendor Admin' },
+  { id: '7', name: 'Offer Missing Terms', entity: 'offer', field: 'terms', severity: 'medium', condition: 'terms IS NULL OR length(terms) < 20', enabled: false, scope: 'connector:csv_sftp', lastTriggered: null, triggerCount30d: 0, owner: 'Marketplace', notifications: false, lastEdited: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60), editedBy: 'System' },
 ];
 
 const SAMPLE_VIOLATIONS = [
-  { id: '1', rule: 'Missing Grade', entity: 'employee', recordId: 'EMP-2345', recordName: 'Ahmed Al-Rashid', org: 'Acme Corp', field: 'grade', value: null, detectedAt: new Date(Date.now() - 1000 * 60 * 30), source: 'HRIS Sync', status: 'open' },
-  { id: '2', rule: 'Invalid Salary', entity: 'employee', recordId: 'EMP-5678', recordName: 'Sarah Johnson', org: 'TechStart Inc', field: 'salary', value: '-500', detectedAt: new Date(Date.now() - 1000 * 60 * 60 * 2), source: 'CSV Import', status: 'open' },
-  { id: '3', rule: 'Claim Exceeds Policy Limit', entity: 'claim', recordId: 'CLM-9012', recordName: 'Mohammed Hassan', org: 'GlobalBank', field: 'amount', value: 'AED 15,000 (limit: 10,000)', detectedAt: new Date(Date.now() - 1000 * 60 * 60 * 5), source: 'Manual Entry', status: 'open' },
-  { id: '4', rule: 'Allowance Exceeds Cap', entity: 'employee', recordId: 'EMP-3456', recordName: 'Lisa Chen', org: 'RetailMax', field: 'housing_allowance', value: 'AED 8,000 (cap: 5,000)', detectedAt: new Date(Date.now() - 1000 * 60 * 60 * 24), source: 'Payroll Sync', status: 'suppressed' },
-  { id: '5', rule: 'Vendor KYB Incomplete', entity: 'vendor', recordId: 'VND-789', recordName: 'TravelWise Agency', org: '—', field: 'kyb_docs', value: '2/6 docs', detectedAt: new Date(Date.now() - 1000 * 60 * 60 * 12), source: 'Onboarding', status: 'open' },
+  { id: '1', ruleId: '1', rule: 'Missing Grade', entity: 'employee', recordId: 'EMP-2345', recordName: 'Ahmed Al-Rashid', org: 'Acme Corp', scope: 'global', field: 'grade', value: null, detectedAt: new Date(Date.now() - 1000 * 60 * 30), source: 'HRIS Sync', status: 'open', owner: 'HR Ops', affectedRecords: 23, sla: '4h', slaDue: new Date(Date.now() + 1000 * 60 * 60 * 3) },
+  { id: '2', ruleId: '2', rule: 'Invalid Salary', entity: 'employee', recordId: 'EMP-5678', recordName: 'Sarah Johnson', org: 'TechStart Inc', scope: 'global', field: 'salary', value: '-500', detectedAt: new Date(Date.now() - 1000 * 60 * 60 * 2), source: 'CSV Import', status: 'open', owner: 'Payroll', affectedRecords: 5, sla: '2h', slaDue: new Date(Date.now() - 1000 * 60 * 30) },
+  { id: '3', ruleId: '5', rule: 'Claim Exceeds Policy Limit', entity: 'claim', recordId: 'CLM-9012', recordName: 'Mohammed Hassan', org: 'GlobalBank', scope: 'global', field: 'amount', value: 'AED 15,000 (limit: 10,000)', detectedAt: new Date(Date.now() - 1000 * 60 * 60 * 5), source: 'Manual Entry', status: 'acknowledged', owner: 'Claims', affectedRecords: 12, sla: '8h', slaDue: new Date(Date.now() + 1000 * 60 * 60 * 2) },
+  { id: '4', ruleId: '3', rule: 'Allowance Exceeds Cap', entity: 'employee', recordId: 'EMP-3456', recordName: 'Lisa Chen', org: 'RetailMax', scope: 'global', field: 'housing_allowance', value: 'AED 8,000 (cap: 5,000)', detectedAt: new Date(Date.now() - 1000 * 60 * 60 * 24), source: 'Payroll Sync', status: 'snoozed', owner: 'Finance', affectedRecords: 8, sla: '24h', slaDue: new Date(Date.now() + 1000 * 60 * 60 * 20) },
+  { id: '5', ruleId: '6', rule: 'Vendor KYB Incomplete', entity: 'vendor', recordId: 'VND-789', recordName: 'TravelWise Agency', org: '—', scope: 'global', field: 'kyb_docs', value: '2/6 docs', detectedAt: new Date(Date.now() - 1000 * 60 * 60 * 12), source: 'Onboarding', status: 'open', owner: 'Vendor Ops', affectedRecords: 1, sla: '48h', slaDue: new Date(Date.now() + 1000 * 60 * 60 * 36) },
+];
+
+const SAMPLE_IMPACTED_ROWS = [
+  { id: 'EMP-2345', name: 'Ahmed Al-Rashid', department: 'Engineering', field: 'grade', currentValue: 'NULL', expectedValue: 'G4-G7' },
+  { id: 'EMP-2346', name: 'Fatima Hassan', department: 'Sales', field: 'grade', currentValue: 'NULL', expectedValue: 'G3-G6' },
+  { id: 'EMP-2347', name: 'John Smith', department: 'Marketing', field: 'grade', currentValue: 'NULL', expectedValue: 'G5-G8' },
+  { id: 'EMP-2348', name: 'Maria Garcia', department: 'HR', field: 'grade', currentValue: 'NULL', expectedValue: 'G4-G7' },
+  { id: 'EMP-2349', name: 'Omar Al-Rashid', department: 'Finance', field: 'grade', currentValue: 'NULL', expectedValue: 'G6-G9' },
 ];
 
 interface DataQualityRule {
@@ -80,13 +95,15 @@ interface DataQualityRule {
   lastTriggered: Date | null;
   triggerCount30d: number;
   owner: string;
+  notifications: boolean;
+  lastEdited: Date;
+  editedBy: string;
 }
 
 export default function AdminDataQualityRules() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
-  const queryClient = useQueryClient();
   const { createAuditLog } = useAdminAuditLog();
 
   const [rules, setRules] = useState<DataQualityRule[]>(DEFAULT_RULES);
@@ -94,14 +111,18 @@ export default function AdminDataQualityRules() {
   const [searchTerm, setSearchTerm] = useState('');
   const [entityFilter, setEntityFilter] = useState('all');
   const [severityFilter, setSeverityFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('rules');
   const [ruleBuilderOpen, setRuleBuilderOpen] = useState(false);
   const [selectedRule, setSelectedRule] = useState<DataQualityRule | null>(null);
   const [violationDetailOpen, setViolationDetailOpen] = useState(false);
   const [selectedViolation, setSelectedViolation] = useState<typeof SAMPLE_VIOLATIONS[0] | null>(null);
+  const [impactedRowsOpen, setImpactedRowsOpen] = useState(false);
   const [suppressReason, setSuppressReason] = useState('');
+  const [testingRule, setTestingRule] = useState(false);
+  const [testResults, setTestResults] = useState<{ count: number; sample: string[] } | null>(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
-  // New rule form state
   const [newRule, setNewRule] = useState({
     name: '',
     entity: 'employee',
@@ -110,6 +131,7 @@ export default function AdminDataQualityRules() {
     condition: '',
     scope: 'global',
     owner: '',
+    notifications: true,
   });
 
   const filteredRules = rules.filter(r => {
@@ -119,8 +141,14 @@ export default function AdminDataQualityRules() {
     return matchesSearch && matchesEntity && matchesSeverity;
   });
 
+  const filteredViolations = violations.filter(v => {
+    const matchesStatus = statusFilter === 'all' || v.status === statusFilter;
+    const matchesEntity = entityFilter === 'all' || v.entity === entityFilter;
+    const matchesSeverity = severityFilter === 'all' || rules.find(r => r.name === v.rule)?.severity === severityFilter;
+    return matchesStatus && matchesEntity && matchesSeverity;
+  });
+
   const openViolations = violations.filter(v => v.status === 'open');
-  const totalViolations = violations.length;
   const criticalViolations = violations.filter(v => {
     const rule = rules.find(r => r.name === v.rule);
     return rule?.severity === 'critical' && v.status === 'open';
@@ -137,23 +165,26 @@ export default function AdminDataQualityRules() {
     const rule = rules.find(r => r.id === ruleId);
     if (!rule) return;
 
-    setRules(prev => prev.map(r => 
-      r.id === ruleId ? { ...r, enabled: !r.enabled } : r
-    ));
+    setRules(prev => prev.map(r => r.id === ruleId ? { ...r, enabled: !r.enabled } : r));
 
     await createAuditLog({
       action: 'SETTINGS_UPDATE',
       entityType: 'settings',
       entityId: ruleId,
-      metadata: {
-        setting_type: 'data_quality_rule',
-        action: 'rule_toggled',
-        rule_name: rule.name,
-        new_enabled: !rule.enabled,
-      },
+      metadata: { setting_type: 'data_quality_rule', action: 'rule_toggled', rule_name: rule.name, new_enabled: !rule.enabled },
     });
 
     toast.success(t(`Rule ${!rule.enabled ? 'enabled' : 'disabled'}`, `تم ${!rule.enabled ? 'تفعيل' : 'تعطيل'} القاعدة`));
+  };
+
+  const handleTestRule = async () => {
+    setTestingRule(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setTestResults({
+      count: Math.floor(Math.random() * 50) + 5,
+      sample: ['EMP-1234 (Engineering)', 'EMP-5678 (Sales)', 'EMP-9012 (HR)'],
+    });
+    setTestingRule(false);
   };
 
   const handleSaveRule = async () => {
@@ -163,6 +194,8 @@ export default function AdminDataQualityRules() {
       enabled: true,
       lastTriggered: null,
       triggerCount30d: 0,
+      lastEdited: new Date(),
+      editedBy: 'Admin',
     };
 
     if (selectedRule) {
@@ -175,11 +208,7 @@ export default function AdminDataQualityRules() {
       action: 'SETTINGS_UPDATE',
       entityType: 'settings',
       entityId: ruleToSave.id,
-      metadata: {
-        setting_type: 'data_quality_rule',
-        action: selectedRule ? 'rule_updated' : 'rule_created',
-        rule_name: ruleToSave.name,
-      },
+      metadata: { setting_type: 'data_quality_rule', action: selectedRule ? 'rule_updated' : 'rule_created', rule_name: ruleToSave.name },
     });
 
     toast.success(t(selectedRule ? 'Rule updated' : 'Rule created', selectedRule ? 'تم تحديث القاعدة' : 'تم إنشاء القاعدة'));
@@ -188,8 +217,9 @@ export default function AdminDataQualityRules() {
   };
 
   const resetForm = () => {
-    setNewRule({ name: '', entity: 'employee', field: '', severity: 'medium', condition: '', scope: 'global', owner: '' });
+    setNewRule({ name: '', entity: 'employee', field: '', severity: 'medium', condition: '', scope: 'global', owner: '', notifications: true });
     setSelectedRule(null);
+    setTestResults(null);
   };
 
   const handleEditRule = (rule: DataQualityRule) => {
@@ -202,6 +232,7 @@ export default function AdminDataQualityRules() {
       condition: rule.condition,
       scope: rule.scope,
       owner: rule.owner,
+      notifications: rule.notifications,
     });
     setRuleBuilderOpen(true);
   };
@@ -211,54 +242,70 @@ export default function AdminDataQualityRules() {
     setViolationDetailOpen(true);
   };
 
-  const handleSuppressViolation = async () => {
-    if (!selectedViolation || !suppressReason) return;
+  const handleViewImpactedRows = () => {
+    setViolationDetailOpen(false);
+    setImpactedRowsOpen(true);
+  };
 
-    setViolations(prev => prev.map(v => 
-      v.id === selectedViolation.id ? { ...v, status: 'suppressed' } : v
-    ));
-
+  const handleAssignOwner = async (owner: string) => {
+    if (!selectedViolation) return;
+    setViolations(prev => prev.map(v => v.id === selectedViolation.id ? { ...v, owner } : v));
     await createAuditLog({
       action: 'SETTINGS_UPDATE',
       entityType: 'settings',
       entityId: selectedViolation.id,
-      metadata: {
-        setting_type: 'data_quality_violation',
-        action: 'suppression_applied',
-        record_id: selectedViolation.recordId,
-        reason: suppressReason,
-      },
+      metadata: { setting_type: 'violation', action: 'owner_assigned', new_owner: owner },
     });
+    toast.success(t(`Assigned to ${owner}`, `تم التعيين إلى ${owner}`));
+  };
 
+  const handleSnoozeViolation = async () => {
+    if (!selectedViolation) return;
+    setViolations(prev => prev.map(v => v.id === selectedViolation.id ? { ...v, status: 'snoozed' } : v));
+    await createAuditLog({
+      action: 'SETTINGS_UPDATE',
+      entityType: 'settings',
+      entityId: selectedViolation.id,
+      metadata: { setting_type: 'violation', action: 'snoozed' },
+    });
+    toast.success(t('Violation snoozed for 24h', 'تم تأجيل الانتهاك لمدة 24 ساعة'));
+    setViolationDetailOpen(false);
+  };
+
+  const handleSuppressViolation = async () => {
+    if (!selectedViolation || !suppressReason) return;
+    setViolations(prev => prev.map(v => v.id === selectedViolation.id ? { ...v, status: 'resolved' } : v));
+    await createAuditLog({
+      action: 'SETTINGS_UPDATE',
+      entityType: 'settings',
+      entityId: selectedViolation.id,
+      metadata: { setting_type: 'violation', action: 'suppressed', reason: suppressReason },
+    });
     toast.success(t('Violation suppressed', 'تم تجاهل الانتهاك'));
     setViolationDetailOpen(false);
     setSuppressReason('');
   };
 
-  const handleMarkFixed = async () => {
+  const handleMarkResolved = async () => {
     if (!selectedViolation) return;
-
     setViolations(prev => prev.filter(v => v.id !== selectedViolation.id));
-
     await createAuditLog({
       action: 'SETTINGS_UPDATE',
       entityType: 'settings',
       entityId: selectedViolation.id,
-      metadata: {
-        setting_type: 'data_quality_violation',
-        action: 'manual_override',
-        record_id: selectedViolation.recordId,
-      },
+      metadata: { setting_type: 'violation', action: 'resolved' },
     });
-
-    toast.success(t('Marked as fixed', 'تم تحديده كمصحح'));
+    toast.success(t('Marked as resolved', 'تم تحديده كمحلول'));
     setViolationDetailOpen(false);
   };
 
   const handleExportViolations = () => {
     const csv = [
-      ['Rule', 'Entity', 'Record ID', 'Record Name', 'Organization', 'Field', 'Value', 'Detected At', 'Source', 'Status'].join(','),
-      ...violations.map(v => [v.rule, v.entity, v.recordId, v.recordName, v.org, v.field, v.value, format(v.detectedAt, 'yyyy-MM-dd HH:mm'), v.source, v.status].join(','))
+      ['Rule', 'Entity', 'Record ID', 'Organization', 'Severity', 'Affected Records', 'Detected At', 'Owner', 'Status'].join(','),
+      ...violations.map(v => {
+        const rule = rules.find(r => r.name === v.rule);
+        return [v.rule, v.entity, v.recordId, v.org, rule?.severity || '', v.affectedRecords, format(v.detectedAt, 'yyyy-MM-dd HH:mm'), v.owner, v.status].join(',');
+      })
     ].join('\n');
     
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -267,7 +314,6 @@ export default function AdminDataQualityRules() {
     a.href = url;
     a.download = `data_quality_violations_${format(new Date(), 'yyyy-MM-dd')}.csv`;
     a.click();
-    
     toast.success(t('Export downloaded', 'تم تنزيل التصدير'));
   };
 
@@ -411,8 +457,11 @@ export default function AdminDataQualityRules() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => handleEditRule(rule)}>
+                            <Button variant="ghost" size="icon" onClick={() => handleEditRule(rule)} title={t('Edit', 'تعديل')}>
                               <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleEditRule(rule)} title={t('History', 'السجل')}>
+                              <History className="w-4 h-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -434,189 +483,279 @@ export default function AdminDataQualityRules() {
                   <AlertTriangle className="w-5 h-5 text-warning" />
                   {t('Data Quality Violations', 'انتهاكات جودة البيانات')}
                 </CardTitle>
-                <Button variant="outline" onClick={handleExportViolations}>
-                  <Download className="w-4 h-4 me-2" />
-                  {t('Export CSV', 'تصدير CSV')}
-                </Button>
+                <div className="flex gap-2">
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-36">
+                      <SelectValue placeholder={t('Status', 'الحالة')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('All Status', 'جميع الحالات')}</SelectItem>
+                      {Object.entries(STATUS_CONFIG).map(([key, config]) => (
+                        <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" onClick={handleExportViolations}>
+                    <Download className="w-4 h-4 me-2" />
+                    {t('Export', 'تصدير')}
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('Rule', 'القاعدة')}</TableHead>
-                    <TableHead>{t('Record', 'السجل')}</TableHead>
-                    <TableHead>{t('Organization', 'المنظمة')}</TableHead>
-                    <TableHead>{t('Field / Value', 'الحقل / القيمة')}</TableHead>
-                    <TableHead>{t('Source', 'المصدر')}</TableHead>
-                    <TableHead>{t('Detected', 'تم الكشف')}</TableHead>
-                    <TableHead>{t('Status', 'الحالة')}</TableHead>
-                    <TableHead>{t('Actions', 'الإجراءات')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {violations.map((v) => {
-                    const rule = rules.find(r => r.name === v.rule);
-                    const severityConfig = SEVERITY_CONFIG[rule?.severity as keyof typeof SEVERITY_CONFIG] || SEVERITY_CONFIG.medium;
-                    
-                    return (
-                      <TableRow key={v.id} className={v.status === 'suppressed' ? 'opacity-50' : ''}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <div className={cn("w-2 h-2 rounded-full", severityConfig.color.replace('border-', 'bg-').replace('/30', ''))} />
-                            <span className="font-medium text-sm">{v.rule}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium text-sm">{v.recordName}</p>
-                            <p className="text-xs text-muted-foreground font-mono">{v.recordId}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{v.org}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="text-xs text-muted-foreground">{v.field}</p>
-                            <p className="text-sm font-mono text-destructive">{v.value || 'NULL'}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className="text-xs">{v.source}</Badge>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {format(v.detectedAt, 'MMM d, HH:mm')}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={v.status === 'open' ? 'destructive' : 'secondary'}>
-                            {v.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="icon" onClick={() => handleViewViolation(v)}>
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+              {filteredViolations.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <CheckCircle className="w-12 h-12 mx-auto mb-4 text-success" />
+                  <p className="font-medium">{t('No violations found', 'لا توجد انتهاكات')}</p>
+                  <p className="text-sm mt-1">{t('All data quality checks passed', 'جميع فحوصات جودة البيانات ناجحة')}</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('Rule', 'القاعدة')}</TableHead>
+                      <TableHead>{t('Entity', 'الكيان')}</TableHead>
+                      <TableHead>{t('Org / Scope', 'المنظمة')}</TableHead>
+                      <TableHead>{t('Severity', 'الخطورة')}</TableHead>
+                      <TableHead>{t('Affected', 'المتأثرين')}</TableHead>
+                      <TableHead>{t('Detected', 'تم الكشف')}</TableHead>
+                      <TableHead>{t('Owner', 'المسؤول')}</TableHead>
+                      <TableHead>{t('SLA', 'SLA')}</TableHead>
+                      <TableHead>{t('Status', 'الحالة')}</TableHead>
+                      <TableHead>{t('Actions', 'الإجراءات')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredViolations.map((v) => {
+                      const rule = rules.find(r => r.name === v.rule);
+                      const severityConfig = SEVERITY_CONFIG[rule?.severity as keyof typeof SEVERITY_CONFIG] || SEVERITY_CONFIG.medium;
+                      const statusConfig = STATUS_CONFIG[v.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.open;
+                      const isOverdue = v.slaDue < new Date() && v.status === 'open';
+                      
+                      return (
+                        <TableRow key={v.id} className={cn(v.status !== 'open' && 'opacity-60', isOverdue && 'bg-destructive/5')}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className={cn("w-2 h-2 rounded-full", severityConfig.color.replace('border-', 'bg-').replace('/30', ''))} />
+                              <span className="font-medium text-sm">{v.rule}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="text-xs">{v.entity}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="text-sm">{v.org}</p>
+                              <p className="text-xs text-muted-foreground">{v.scope}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={severityConfig.color}>
+                              {severityConfig.label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={v.affectedRecords > 10 ? 'destructive' : 'secondary'}>
+                              {v.affectedRecords}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {formatDistanceToNow(v.detectedAt, { addSuffix: true })}
+                          </TableCell>
+                          <TableCell className="text-sm">{v.owner}</TableCell>
+                          <TableCell>
+                            <Badge variant={isOverdue ? 'destructive' : 'outline'} className="text-xs">
+                              {isOverdue ? t('Overdue', 'متأخر') : v.sla}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={statusConfig.color}>
+                              {statusConfig.label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="icon" onClick={() => handleViewViolation(v)} title={t('View Details', 'عرض التفاصيل')}>
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
       {/* Rule Builder Dialog */}
-      <Dialog open={ruleBuilderOpen} onOpenChange={setRuleBuilderOpen}>
+      <Dialog open={ruleBuilderOpen} onOpenChange={(open) => { setRuleBuilderOpen(open); if (!open) resetForm(); }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{selectedRule ? t('Edit Rule', 'تعديل القاعدة') : t('Create Rule', 'إنشاء قاعدة')}</DialogTitle>
             <DialogDescription>{t('Define a data quality validation rule', 'تحديد قاعدة التحقق من جودة البيانات')}</DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>{t('Rule Name', 'اسم القاعدة')}</Label>
-              <Input 
-                value={newRule.name} 
-                onChange={(e) => setNewRule(prev => ({ ...prev, name: e.target.value }))}
-                placeholder={t('e.g., Missing Grade', 'مثال: درجة مفقودة')}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+          <ScrollArea className="max-h-[60vh]">
+            <div className="space-y-4 pr-4">
               <div className="space-y-2">
-                <Label>{t('Entity', 'الكيان')}</Label>
-                <Select value={newRule.entity} onValueChange={(v) => setNewRule(prev => ({ ...prev, entity: v }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ENTITY_TYPES.map(e => (
-                      <SelectItem key={e.id} value={e.id}>
-                        <span className="flex items-center gap-2">
-                          <e.icon className="w-4 h-4" />
-                          {e.label}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>{t('Severity', 'الخطورة')}</Label>
-                <Select value={newRule.severity} onValueChange={(v) => setNewRule(prev => ({ ...prev, severity: v }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(SEVERITY_CONFIG).map(([key, config]) => (
-                      <SelectItem key={key} value={key}>{config.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>{t('Field', 'الحقل')}</Label>
-              <Input 
-                value={newRule.field} 
-                onChange={(e) => setNewRule(prev => ({ ...prev, field: e.target.value }))}
-                placeholder="e.g., grade, salary, amount"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>{t('Condition', 'الشرط')}</Label>
-              <div className="flex gap-2 flex-wrap mb-2">
-                {CONDITION_TEMPLATES.map(ct => (
-                  <Button 
-                    key={ct.id} 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-xs"
-                    onClick={() => setNewRule(prev => ({ ...prev, condition: ct.template.replace('${field}', prev.field || 'field') }))}
-                  >
-                    {ct.label}
-                  </Button>
-                ))}
-              </div>
-              <Textarea 
-                value={newRule.condition} 
-                onChange={(e) => setNewRule(prev => ({ ...prev, condition: e.target.value }))}
-                placeholder="e.g., grade IS NULL"
-                rows={2}
-                className="font-mono text-sm"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{t('Scope', 'النطاق')}</Label>
-                <Select value={newRule.scope} onValueChange={(v) => setNewRule(prev => ({ ...prev, scope: v }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="global">{t('Global', 'عام')}</SelectItem>
-                    <SelectItem value="org:acme">{t('Acme Corp only', 'Acme Corp فقط')}</SelectItem>
-                    <SelectItem value="connector:csv_sftp">{t('CSV/SFTP only', 'CSV/SFTP فقط')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>{t('Owner', 'المسؤول')}</Label>
+                <Label>{t('Rule Name', 'اسم القاعدة')}</Label>
                 <Input 
-                  value={newRule.owner} 
-                  onChange={(e) => setNewRule(prev => ({ ...prev, owner: e.target.value }))}
-                  placeholder="e.g., HR Ops"
+                  value={newRule.name} 
+                  onChange={(e) => setNewRule(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder={t('e.g., Missing Grade', 'مثال: درجة مفقودة')}
                 />
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t('Entity', 'الكيان')}</Label>
+                  <Select value={newRule.entity} onValueChange={(v) => setNewRule(prev => ({ ...prev, entity: v }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ENTITY_TYPES.map(e => (
+                        <SelectItem key={e.id} value={e.id}>
+                          <span className="flex items-center gap-2">
+                            <e.icon className="w-4 h-4" />
+                            {e.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('Severity', 'الخطورة')}</Label>
+                  <Select value={newRule.severity} onValueChange={(v) => setNewRule(prev => ({ ...prev, severity: v }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(SEVERITY_CONFIG).map(([key, config]) => (
+                        <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t('Field', 'الحقل')}</Label>
+                <Input 
+                  value={newRule.field} 
+                  onChange={(e) => setNewRule(prev => ({ ...prev, field: e.target.value }))}
+                  placeholder="e.g., grade, salary, amount"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t('Condition', 'الشرط')}</Label>
+                <div className="flex gap-2 flex-wrap mb-2">
+                  {CONDITION_TEMPLATES.map(ct => (
+                    <Button 
+                      key={ct.id} 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-xs"
+                      onClick={() => setNewRule(prev => ({ ...prev, condition: ct.template.replace('${field}', prev.field || 'field') }))}
+                    >
+                      {ct.label}
+                    </Button>
+                  ))}
+                </div>
+                <Textarea 
+                  value={newRule.condition} 
+                  onChange={(e) => setNewRule(prev => ({ ...prev, condition: e.target.value }))}
+                  placeholder="e.g., grade IS NULL"
+                  rows={2}
+                  className="font-mono text-sm"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t('Scope', 'النطاق')}</Label>
+                  <Select value={newRule.scope} onValueChange={(v) => setNewRule(prev => ({ ...prev, scope: v }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="global">{t('Global', 'عام')}</SelectItem>
+                      <SelectItem value="org:acme">{t('Acme Corp only', 'Acme Corp فقط')}</SelectItem>
+                      <SelectItem value="connector:csv_sftp">{t('CSV/SFTP only', 'CSV/SFTP فقط')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('Owner', 'المسؤول')}</Label>
+                  <Input 
+                    value={newRule.owner} 
+                    onChange={(e) => setNewRule(prev => ({ ...prev, owner: e.target.value }))}
+                    placeholder="e.g., HR Ops"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm">{t('Enable notifications', 'تفعيل الإشعارات')}</span>
+                </div>
+                <Switch 
+                  checked={newRule.notifications} 
+                  onCheckedChange={(v) => setNewRule(prev => ({ ...prev, notifications: v }))} 
+                />
+              </div>
+
+              {/* Test Rule Section */}
+              <Separator />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>{t('Test Rule', 'اختبار القاعدة')}</Label>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleTestRule}
+                    disabled={!newRule.condition || testingRule}
+                  >
+                    {testingRule ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Play className="w-4 h-4 me-2" />}
+                    {t('Preview Matches', 'معاينة النتائج')}
+                  </Button>
+                </div>
+                {testResults && (
+                  <Alert className="border-primary/30 bg-primary/5">
+                    <AlertTriangle className="w-4 h-4" />
+                    <AlertDescription>
+                      <p className="font-medium">{testResults.count} {t('records would be affected', 'سجل سيتأثر')}</p>
+                      <p className="text-xs mt-1 text-muted-foreground">{t('Sample:', 'عينة:')} {testResults.sample.join(', ')}</p>
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+
+              {/* Rule History */}
+              {selectedRule && (
+                <>
+                  <Separator />
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <History className="w-4 h-4" />
+                      {t('Rule History', 'سجل القاعدة')}
+                    </Label>
+                    <div className="text-xs text-muted-foreground space-y-1 p-3 rounded bg-muted/50">
+                      <p>{t('Last edited:', 'آخر تعديل:')} {format(selectedRule.lastEdited, 'MMM d, yyyy HH:mm')}</p>
+                      <p>{t('Edited by:', 'بواسطة:')} {selectedRule.editedBy}</p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
-          </div>
+          </ScrollArea>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setRuleBuilderOpen(false)}>{t('Cancel', 'إلغاء')}</Button>
@@ -630,7 +769,7 @@ export default function AdminDataQualityRules() {
 
       {/* Violation Detail Sheet */}
       <Sheet open={violationDetailOpen} onOpenChange={setViolationDetailOpen}>
-        <SheetContent className="sm:max-w-md">
+        <SheetContent className="sm:max-w-md overflow-y-auto">
           <SheetHeader>
             <SheetTitle>{t('Violation Details', 'تفاصيل الانتهاك')}</SheetTitle>
             <SheetDescription>{selectedViolation?.rule}</SheetDescription>
@@ -661,12 +800,54 @@ export default function AdminDataQualityRules() {
                     <span className="font-mono text-sm text-destructive">{selectedViolation.value || 'NULL'}</span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">{t('Affected Records', 'السجلات المتأثرة')}</span>
+                    <Badge variant="destructive">{selectedViolation.affectedRecords}</Badge>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">{t('Source', 'المصدر')}</span>
                     <Badge variant="secondary">{selectedViolation.source}</Badge>
                   </div>
                 </CardContent>
               </Card>
 
+              {/* Recommended Resolution */}
+              <Card className="border-primary/30 bg-primary/5">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Zap className="w-4 h-4" />
+                    {t('Recommended Resolution', 'الحل الموصى به')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm">{t('Update the grade field in the source HRIS system or manually correct via CSV import.', 'تحديث حقل الدرجة في نظام HRIS المصدر أو التصحيح يدوياً عبر استيراد CSV.')}</p>
+                </CardContent>
+              </Card>
+
+              <Button variant="outline" className="w-full" onClick={handleViewImpactedRows}>
+                <Eye className="w-4 h-4 me-2" />
+                {t('View Impacted Records', 'عرض السجلات المتأثرة')}
+              </Button>
+
+              <Separator />
+
+              {/* Assign Owner */}
+              <div className="space-y-2">
+                <Label>{t('Assign Owner', 'تعيين المسؤول')}</Label>
+                <Select defaultValue={selectedViolation.owner} onValueChange={handleAssignOwner}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="HR Ops">HR Ops</SelectItem>
+                    <SelectItem value="Payroll">Payroll</SelectItem>
+                    <SelectItem value="Finance">Finance</SelectItem>
+                    <SelectItem value="Claims">Claims</SelectItem>
+                    <SelectItem value="Vendor Ops">Vendor Ops</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Suppress Reason */}
               <div className="space-y-2">
                 <Label>{t('Suppression Reason (if suppressing)', 'سبب التجاهل')}</Label>
                 <Textarea
@@ -678,23 +859,74 @@ export default function AdminDataQualityRules() {
               </div>
 
               <div className="space-y-2">
-                <Button className="w-full" onClick={handleMarkFixed}>
+                <Button className="w-full" onClick={handleMarkResolved}>
                   <FileCheck className="w-4 h-4 me-2" />
-                  {t('Mark as Fixed', 'تحديد كمصحح')}
+                  {t('Mark Resolved', 'تحديد كمحلول')}
+                </Button>
+                <Button className="w-full" variant="outline" onClick={handleSnoozeViolation}>
+                  <BellOff className="w-4 h-4 me-2" />
+                  {t('Snooze 24h', 'تأجيل 24 ساعة')}
                 </Button>
                 <Button className="w-full" variant="outline" onClick={handleSuppressViolation} disabled={!suppressReason}>
                   <Ban className="w-4 h-4 me-2" />
                   {t('Suppress (False Positive)', 'تجاهل (إيجابي كاذب)')}
                 </Button>
-                <Link to="/admin/alerts">
-                  <Button className="w-full" variant="secondary">
-                    <AlertTriangle className="w-4 h-4 me-2" />
-                    {t('Create Alert', 'إنشاء تنبيه')}
-                  </Button>
-                </Link>
               </div>
             </div>
           )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Impacted Records Drawer */}
+      <Sheet open={impactedRowsOpen} onOpenChange={setImpactedRowsOpen}>
+        <SheetContent className="sm:max-w-2xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>{t('Impacted Records', 'السجلات المتأثرة')}</SheetTitle>
+            <SheetDescription>{selectedViolation?.rule} - {selectedViolation?.affectedRecords} {t('records', 'سجلات')}</SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-6">
+            <Alert className="mb-4 border-primary/30 bg-primary/5">
+              <Zap className="w-4 h-4" />
+              <AlertDescription>
+                <p className="font-medium">{t('Recommended Fix', 'الإصلاح الموصى به')}</p>
+                <p className="text-sm mt-1">{t('Update the grade field for these employees in the source HRIS or via data import.', 'تحديث حقل الدرجة لهؤلاء الموظفين في HRIS المصدر أو عبر استيراد البيانات.')}</p>
+              </AlertDescription>
+            </Alert>
+
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('Record ID', 'المعرف')}</TableHead>
+                  <TableHead>{t('Name', 'الاسم')}</TableHead>
+                  <TableHead>{t('Department', 'القسم')}</TableHead>
+                  <TableHead>{t('Field', 'الحقل')}</TableHead>
+                  <TableHead>{t('Current Value', 'القيمة الحالية')}</TableHead>
+                  <TableHead>{t('Expected', 'المتوقع')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {SAMPLE_IMPACTED_ROWS.map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell className="font-mono text-sm">{row.id}</TableCell>
+                    <TableCell>{row.name}</TableCell>
+                    <TableCell>{row.department}</TableCell>
+                    <TableCell className="font-mono text-sm">{row.field}</TableCell>
+                    <TableCell className="text-destructive font-mono">{row.currentValue}</TableCell>
+                    <TableCell className="text-success font-mono">{row.expectedValue}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          <SheetFooter className="mt-6">
+            <Button variant="outline" onClick={() => setImpactedRowsOpen(false)}>{t('Close', 'إغلاق')}</Button>
+            <Button onClick={() => { toast.success(t('Export started', 'بدأ التصدير')); }}>
+              <Download className="w-4 h-4 me-2" />
+              {t('Export Records', 'تصدير السجلات')}
+            </Button>
+          </SheetFooter>
         </SheetContent>
       </Sheet>
     </PageLayout>
