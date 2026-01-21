@@ -22,6 +22,14 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +40,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   AlertTriangle,
   CheckCircle,
@@ -62,16 +72,20 @@ import {
   Zap,
   History,
   StickyNote,
+  CheckCircle2,
+  Upload,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
   RequestWithDetails, 
   useSharedRequest, 
   useRequestTimeline,
-  useUpdateRequestStatus 
 } from '@/hooks/useSharedRequests';
 import { useCurrentPolicyVersion, useRequiredDocuments } from '@/hooks/useSharedPolicies';
 import { useClaimEntitlementCheck, useClaimValidation, useBenefitByCategory } from '@/hooks/useClaimEntitlements';
+import { useClaimDocs, useMarkDocReceived, getRequiredDocsForCategory } from '@/hooks/useClaimDocs';
+import { useClaimNotes, useAddClaimNote } from '@/hooks/useClaimNotes';
+import { useClaimActions } from '@/hooks/useClaimActions';
 import { 
   getStatusBadgeStyle, 
   getStatusDisplayLabel,
@@ -85,6 +99,14 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, differenceInDays, differenceInHours } from 'date-fns';
+
+// HR team members for assignment
+const HR_TEAM_MEMBERS = [
+  { id: 'hr-manager-1', name: 'Sarah Al-Rashid', role: 'HR Manager' },
+  { id: 'hr-specialist-1', name: 'Ahmed Hassan', role: 'HR Specialist' },
+  { id: 'hr-specialist-2', name: 'Fatima Al-Maktoum', role: 'HR Specialist' },
+  { id: 'finance-lead-1', name: 'Omar Khan', role: 'Finance Lead' },
+];
 
 interface ClaimReviewSheetProps {
   requestId: string | null;
@@ -129,7 +151,13 @@ export function ClaimReviewSheet({
   const [reviewNotes, setReviewNotes] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [newNote, setNewNote] = useState('');
+  
+  // Modal states
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [escalateDialogOpen, setEscalateDialogOpen] = useState(false);
+  const [selectedAssignee, setSelectedAssignee] = useState('');
+  const [escalationReason, setEscalationReason] = useState('');
 
   // Fetch request with full details
   const { data: request, isLoading: requestLoading, refetch: refetchRequest } = useSharedRequest(requestId);
@@ -156,8 +184,16 @@ export function ClaimReviewSheet({
   // Fetch current policy version
   const { data: currentPolicy } = useCurrentPolicyVersion(matchingBenefit?.id || null, organizationId);
   
-  // Status update mutation
-  const updateStatus = useUpdateRequestStatus();
+  // Fetch claim documents
+  const { data: claimDocs = [], refetch: refetchDocs } = useClaimDocs(requestId);
+  const markDocReceived = useMarkDocReceived();
+  
+  // Fetch claim notes
+  const { data: claimNotes = [], refetch: refetchNotes } = useClaimNotes(requestId);
+  const addNote = useAddClaimNote();
+  
+  // Claim actions
+  const { approve, reject, requestInfo, assign, escalate, isLoading: isProcessing } = useClaimActions();
 
   // Calculate SLA
   const slaInfo = useMemo(() => {
@@ -239,11 +275,9 @@ export function ClaimReviewSheet({
 
   const handleApprove = async () => {
     if (!request) return;
-    setIsProcessing(true);
     try {
-      await updateStatus.mutateAsync({
+      await approve.mutateAsync({
         requestId: request.id,
-        newStatus: REQUEST_STATUSES.APPROVED,
         reviewerNotes: reviewNotes || 'Approved',
         internalNotes,
       });
@@ -253,6 +287,7 @@ export function ClaimReviewSheet({
       });
       refetchRequest();
       refetchTimeline();
+      refetchNotes();
       onStatusChange?.();
     } catch (error) {
       toast({
@@ -260,20 +295,17 @@ export function ClaimReviewSheet({
         description: 'Failed to approve claim. Please try again.',
         variant: 'destructive',
       });
-    } finally {
-      setIsProcessing(false);
     }
   };
 
   const handleReject = async () => {
     if (!request || !rejectionReason) return;
-    setIsProcessing(true);
     try {
       const reasonLabel = REJECTION_REASONS.find(r => r.value === rejectionReason)?.label || rejectionReason;
-      await updateStatus.mutateAsync({
+      await reject.mutateAsync({
         requestId: request.id,
-        newStatus: REQUEST_STATUSES.REJECTED,
-        reviewerNotes: `Rejected: ${reasonLabel}${reviewNotes ? `. ${reviewNotes}` : ''}`,
+        reason: reasonLabel,
+        reviewerNotes: reviewNotes,
         internalNotes,
       });
       toast({
@@ -282,6 +314,7 @@ export function ClaimReviewSheet({
       });
       refetchRequest();
       refetchTimeline();
+      refetchNotes();
       onStatusChange?.();
     } catch (error) {
       toast({
@@ -289,37 +322,24 @@ export function ClaimReviewSheet({
         description: 'Failed to reject claim. Please try again.',
         variant: 'destructive',
       });
-    } finally {
-      setIsProcessing(false);
     }
   };
 
   const handleRequestInfo = async () => {
     if (!request || !reviewNotes) return;
-    setIsProcessing(true);
     try {
-      await updateStatus.mutateAsync({
+      await requestInfo.mutateAsync({
         requestId: request.id,
-        newStatus: REQUEST_STATUSES.IN_REVIEW,
-        reviewerNotes: `Information requested: ${reviewNotes}`,
+        requestedInfo: reviewNotes,
         internalNotes,
       });
-      
-      await supabase.from('request_events').insert({
-        request_id: request.id,
-        actor_user_id: user?.id || '',
-        from_status: request.status || 'pending',
-        to_status: 'in_review',
-        notes_employee_visible: reviewNotes,
-        notes_internal: internalNotes || null,
-      });
-      
       toast({
         title: 'Information Requested',
         description: 'The employee will be notified to provide additional information.',
       });
       refetchRequest();
       refetchTimeline();
+      refetchDocs();
       onStatusChange?.();
     } catch (error) {
       toast({
@@ -327,8 +347,84 @@ export function ClaimReviewSheet({
         description: 'Failed to request information. Please try again.',
         variant: 'destructive',
       });
-    } finally {
-      setIsProcessing(false);
+    }
+  };
+
+  const handleAssign = async () => {
+    if (!request || !selectedAssignee) return;
+    try {
+      const member = HR_TEAM_MEMBERS.find(m => m.id === selectedAssignee);
+      await assign.mutateAsync({
+        requestId: request.id,
+        assigneeId: selectedAssignee,
+        assigneeName: member?.name,
+      });
+      toast({
+        title: 'Claim Assigned',
+        description: `Assigned to ${member?.name || 'team member'}.`,
+      });
+      setAssignDialogOpen(false);
+      refetchRequest();
+      refetchTimeline();
+      onStatusChange?.();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to assign claim.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleEscalate = async () => {
+    if (!request || !escalationReason) return;
+    try {
+      await escalate.mutateAsync({
+        requestId: request.id,
+        escalationReason,
+        priority: 'urgent',
+      });
+      toast({
+        title: 'Claim Escalated',
+        description: 'This claim has been marked as urgent.',
+      });
+      setEscalateDialogOpen(false);
+      refetchRequest();
+      refetchTimeline();
+      onStatusChange?.();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to escalate claim.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleAddNote = async () => {
+    if (!request || !newNote.trim()) return;
+    try {
+      await addNote.mutateAsync({
+        requestId: request.id,
+        note: newNote,
+        isInternal: true,
+      });
+      setNewNote('');
+      refetchNotes();
+      refetchTimeline();
+      toast({ title: 'Note added' });
+    } catch (error) {
+      toast({ title: 'Failed to add note', variant: 'destructive' });
+    }
+  };
+
+  const handleMarkDocReceived = async (docId: string) => {
+    try {
+      await markDocReceived.mutateAsync({ docId });
+      refetchDocs();
+      toast({ title: 'Document marked as received' });
+    } catch (error) {
+      toast({ title: 'Failed to update document', variant: 'destructive' });
     }
   };
 
