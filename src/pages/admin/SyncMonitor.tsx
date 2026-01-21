@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PageLayout, MetricCard, MetricGrid } from '@/components/shared';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow } from 'date-fns';
+import { useAdminAuditLog } from '@/hooks/useAdminAuditLog';
 
 const STATUS_CONFIG = {
   success: { label: 'Success', labelAr: 'نجاح', color: 'bg-success/10 text-success border-success/30', icon: CheckCircle },
@@ -36,11 +37,13 @@ export default function AdminSyncMonitor() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
+  const queryClient = useQueryClient();
+  const { createAuditLog } = useAdminAuditLog();
 
   const [jobs, setJobs] = useState(SAMPLE_JOBS);
 
   // Fetch real integration runs
-  const { data: integrationRuns, isLoading } = useQuery({
+  const { data: integrationRuns, isLoading, refetch } = useQuery({
     queryKey: ['sync-monitor-runs'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -53,6 +56,45 @@ export default function AdminSyncMonitor() {
     },
   });
 
+  // P1 FIX: Mutation to update integration run status
+  const updateRunStatusMutation = useMutation({
+    mutationFn: async ({ runId, status, action }: { runId: string; status: string; action: string }) => {
+      // Check if this is a real DB run or sample data
+      const isRealRun = integrationRuns?.some(r => r.id === runId);
+      
+      if (isRealRun) {
+        const { error } = await supabase
+          .from('integration_runs')
+          .update({ status, updated_at: new Date().toISOString() })
+          .eq('id', runId);
+        if (error) throw error;
+      }
+      
+      return { runId, status, action };
+    },
+    onSuccess: async ({ runId, status, action }) => {
+      // Update local state for sample jobs
+      setJobs(prev => prev.map(j => 
+        j.id === runId ? { ...j, status } : j
+      ));
+      
+      // Invalidate real data
+      queryClient.invalidateQueries({ queryKey: ['sync-monitor-runs'] });
+      
+      // Write audit log
+      await createAuditLog({
+        action: 'SETTINGS_UPDATE',
+        entityType: 'settings',
+        entityId: runId,
+        metadata: {
+          setting_type: 'integration_run',
+          action_performed: action,
+          new_status: status,
+        },
+      });
+    },
+  });
+
   const metrics = [
     { title: t('Total Jobs', 'إجمالي المهام'), value: jobs.length, icon: Server },
     { title: t('Successful', 'ناجح'), value: jobs.filter(j => j.status === 'success').length, icon: CheckCircle },
@@ -60,16 +102,32 @@ export default function AdminSyncMonitor() {
     { title: t('Failed', 'فشل'), value: jobs.filter(j => j.status === 'failed').length, icon: AlertTriangle },
   ];
 
-  const handleRetry = (job: typeof SAMPLE_JOBS[0]) => {
+  const handleRetry = async (job: typeof SAMPLE_JOBS[0]) => {
     toast.info(t(`Retrying ${job.name}...`, `إعادة محاولة ${job.name}...`));
+    await updateRunStatusMutation.mutateAsync({ 
+      runId: job.id, 
+      status: 'pending', 
+      action: 'retry' 
+    });
+    toast.success(t(`${job.name} queued for retry`, `تمت جدولة ${job.name} لإعادة المحاولة`));
   };
 
-  const handleCancel = (job: typeof SAMPLE_JOBS[0]) => {
+  const handleCancel = async (job: typeof SAMPLE_JOBS[0]) => {
+    await updateRunStatusMutation.mutateAsync({ 
+      runId: job.id, 
+      status: 'failed', 
+      action: 'cancel' 
+    });
     toast.warning(t(`Cancelled ${job.name}`, `تم إلغاء ${job.name}`));
   };
 
-  const handleRunNow = (job: typeof SAMPLE_JOBS[0]) => {
+  const handleRunNow = async (job: typeof SAMPLE_JOBS[0]) => {
     toast.info(t(`Starting ${job.name}...`, `بدء ${job.name}...`));
+    await updateRunStatusMutation.mutateAsync({ 
+      runId: job.id, 
+      status: 'running', 
+      action: 'run_now' 
+    });
   };
 
   return (
