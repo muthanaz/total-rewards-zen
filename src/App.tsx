@@ -56,6 +56,8 @@ import PolicyInsightsPage from "./pages/employer/PolicyInsights";
 import IntegrationsPage from "./pages/employer/Integrations";
 import KnowledgeCenterPage from "./pages/employer/KnowledgeCenter";
 import RecommendationsPage from "./pages/employer/Recommendations";
+import EmployerDataQualityRules from "./pages/employer/DataQualityRules";
+import EmployerSyncMonitor from "./pages/employer/SyncMonitor";
 
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminBenchmarks from "./pages/admin/Benchmarks";
@@ -240,6 +242,8 @@ function AppRoutes() {
         <Route path="integrations" element={<IntegrationsPage />} />
         <Route path="knowledge" element={<KnowledgeCenterPage />} />
         <Route path="recommendations" element={<RecommendationsPage />} />
+        <Route path="data-quality/rules" element={<EmployerDataQualityRules />} />
+        <Route path="data-quality/sync" element={<EmployerSyncMonitor />} />
       </Route>
 
       {/* Admin Routes - Platform owner only */}
