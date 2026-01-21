@@ -2,6 +2,8 @@ export { ExecutiveDashboard } from './ExecutiveDashboard';
 export { HROpsDashboard } from './HROpsDashboard';
 export { DataQualityBadge, DataConfidenceIndicator } from './DataQualityBadge';
 export { DataConfidenceBadge, useDataCoverageMetrics } from './DataConfidenceBadge';
+export { SegmentMetricDefinitions } from './SegmentMetricDefinitions';
+export { SegmentOpportunities } from './SegmentOpportunities';
 export type { DataCoverageMetrics } from './DataConfidenceBadge';
 export { PageConfidenceGate } from './PageConfidenceGate';
 export { ConfidenceDetailsDrawer } from './ConfidenceDetailsDrawer';
