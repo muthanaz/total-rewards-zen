@@ -1598,6 +1598,7 @@ export type Database = {
       }
       policies: {
         Row: {
+          benefit_type: string | null
           category: string
           coverage_rules: Json | null
           created_at: string
@@ -1605,17 +1606,21 @@ export type Database = {
           effective_to: string | null
           eligibility_rules: Json | null
           id: string
+          is_active: boolean | null
           organization_id: string | null
+          owner_user_id: string | null
           policy_ref: string
           required_docs: Json | null
           sla_rules: Json | null
           status: string
           summary: string | null
           title: string
+          transaction_model: string | null
           updated_at: string
           version: string
         }
         Insert: {
+          benefit_type?: string | null
           category: string
           coverage_rules?: Json | null
           created_at?: string
@@ -1623,17 +1628,21 @@ export type Database = {
           effective_to?: string | null
           eligibility_rules?: Json | null
           id?: string
+          is_active?: boolean | null
           organization_id?: string | null
+          owner_user_id?: string | null
           policy_ref: string
           required_docs?: Json | null
           sla_rules?: Json | null
           status?: string
           summary?: string | null
           title: string
+          transaction_model?: string | null
           updated_at?: string
           version?: string
         }
         Update: {
+          benefit_type?: string | null
           category?: string
           coverage_rules?: Json | null
           created_at?: string
@@ -1641,13 +1650,16 @@ export type Database = {
           effective_to?: string | null
           eligibility_rules?: Json | null
           id?: string
+          is_active?: boolean | null
           organization_id?: string | null
+          owner_user_id?: string | null
           policy_ref?: string
           required_docs?: Json | null
           sla_rules?: Json | null
           status?: string
           summary?: string | null
           title?: string
+          transaction_model?: string | null
           updated_at?: string
           version?: string
         }
@@ -1708,6 +1720,103 @@ export type Database = {
           },
           {
             foreignKeyName: "policy_articles_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      policy_required_docs: {
+        Row: {
+          conditions_json: Json | null
+          created_at: string | null
+          description: string | null
+          doc_name: string
+          doc_type: string
+          id: string
+          is_required: boolean | null
+          policy_version_id: string
+          transaction_type: string
+        }
+        Insert: {
+          conditions_json?: Json | null
+          created_at?: string | null
+          description?: string | null
+          doc_name: string
+          doc_type: string
+          id?: string
+          is_required?: boolean | null
+          policy_version_id: string
+          transaction_type?: string
+        }
+        Update: {
+          conditions_json?: Json | null
+          created_at?: string | null
+          description?: string | null
+          doc_name?: string
+          doc_type?: string
+          id?: string
+          is_required?: boolean | null
+          policy_version_id?: string
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_required_docs_policy_version_id_fkey"
+            columns: ["policy_version_id"]
+            isOneToOne: false
+            referencedRelation: "policy_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      policy_versions: {
+        Row: {
+          attachment_url: string | null
+          content_json: Json | null
+          created_at: string | null
+          created_by: string | null
+          effective_from: string | null
+          effective_to: string | null
+          id: string
+          last_updated_at: string | null
+          logic_json: Json | null
+          policy_id: string
+          status: string
+          version_number: number
+        }
+        Insert: {
+          attachment_url?: string | null
+          content_json?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          id?: string
+          last_updated_at?: string | null
+          logic_json?: Json | null
+          policy_id: string
+          status?: string
+          version_number?: number
+        }
+        Update: {
+          attachment_url?: string | null
+          content_json?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          id?: string
+          last_updated_at?: string | null
+          logic_json?: Json | null
+          policy_id?: string
+          status?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_versions_policy_id_fkey"
             columns: ["policy_id"]
             isOneToOne: false
             referencedRelation: "policies"

@@ -25,8 +25,11 @@ import {
   AlertTriangle,
   Lock,
   Archive,
-  ExternalLink
+  ExternalLink,
+  Copy,
+  MoreHorizontal
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { EmployerGlobalFiltersBar } from '@/components/employer';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useEmployerPermissions } from '@/hooks/useEmployerPermissions';
@@ -35,6 +38,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PolicyEditorSheet } from './PolicyEditorSheet';
+import { CreatePolicyModal } from './CreatePolicyModal';
 import { format } from 'date-fns';
 import { isPolicyVersionActive } from '@/lib/crossPortalContract';
 import { LifeAreaChip, getLifeAreaLabel } from '@/components/shared/EnumChip';
@@ -46,6 +50,7 @@ export function PolicyManagementView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPolicy, setSelectedPolicy] = useState<BenefitPolicy | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const { hasPermission } = useEmployerPermissions();
   const { user } = useAuth();
 
@@ -125,7 +130,7 @@ export function PolicyManagementView() {
             </Badge>
           }
         >
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setCreateModalOpen(true)}>
             <Plus className="w-4 h-4" />
             Create New Policy
           </Button>
