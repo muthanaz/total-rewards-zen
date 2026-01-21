@@ -1621,18 +1621,25 @@ export type Database = {
           assigned_to: string | null
           category: string
           created_at: string | null
+          currency: string | null
           description: string | null
+          employee_code: string | null
           id: string
           last_status_change_at: string | null
+          missing_docs: Json | null
           organization_id: string | null
+          policy_ref: string | null
           priority: string | null
           request_type: Database["public"]["Enums"]["request_type"]
+          required_docs: Json | null
           reviewed_at: string | null
           reviewed_by: string | null
           reviewer_notes: string | null
           sla_due_at: string | null
+          sla_hours: number | null
           status: Database["public"]["Enums"]["request_status"] | null
           subject: string
+          submitted_at: string | null
           user_id: string
         }
         Insert: {
@@ -1640,18 +1647,25 @@ export type Database = {
           assigned_to?: string | null
           category: string
           created_at?: string | null
+          currency?: string | null
           description?: string | null
+          employee_code?: string | null
           id?: string
           last_status_change_at?: string | null
+          missing_docs?: Json | null
           organization_id?: string | null
+          policy_ref?: string | null
           priority?: string | null
           request_type: Database["public"]["Enums"]["request_type"]
+          required_docs?: Json | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           reviewer_notes?: string | null
           sla_due_at?: string | null
+          sla_hours?: number | null
           status?: Database["public"]["Enums"]["request_status"] | null
           subject: string
+          submitted_at?: string | null
           user_id: string
         }
         Update: {
@@ -1659,18 +1673,25 @@ export type Database = {
           assigned_to?: string | null
           category?: string
           created_at?: string | null
+          currency?: string | null
           description?: string | null
+          employee_code?: string | null
           id?: string
           last_status_change_at?: string | null
+          missing_docs?: Json | null
           organization_id?: string | null
+          policy_ref?: string | null
           priority?: string | null
           request_type?: Database["public"]["Enums"]["request_type"]
+          required_docs?: Json | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           reviewer_notes?: string | null
           sla_due_at?: string | null
+          sla_hours?: number | null
           status?: Database["public"]["Enums"]["request_status"] | null
           subject?: string
+          submitted_at?: string | null
           user_id?: string
         }
         Relationships: [
