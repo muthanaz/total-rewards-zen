@@ -68,7 +68,7 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED, formatRelativeTime, formatDate } from '@/lib/utils';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { MetricCard, MetricGrid } from '@/components/shared';
 
@@ -515,8 +515,8 @@ export default function OrganizationsPage() {
                       <TableCell>
                         <Badge variant="secondary">{org.plan || 'Professional'}</Badge>
                       </TableCell>
-                      <TableCell className="font-medium">
-                        AED {(org.mrr || 7500).toLocaleString()}
+                      <TableCell className="font-medium text-right">
+                        {formatCurrencyAED(org.mrr || 7500, { abbreviate: false })}
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary" className="gap-1">
@@ -531,9 +531,7 @@ export default function OrganizationsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
-                        {org.last_activity 
-                          ? new Date(org.last_activity).toLocaleDateString()
-                          : new Date(org.created_at).toLocaleDateString()}
+                        {formatRelativeTime(org.last_activity || org.created_at, { language: language as 'en' | 'ar' })}
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
