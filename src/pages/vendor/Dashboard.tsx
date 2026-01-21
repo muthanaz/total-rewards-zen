@@ -49,6 +49,7 @@ import {
 } from '@/hooks/useVendorDashboard';
 import { AnimatedLineChart } from '@/components/charts';
 import { PageLayout, MetricCard, MetricGrid } from '@/components/shared';
+import { VendorOnboardingChecklist } from '@/components/vendor/VendorOnboardingChecklist';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { formatDistanceToNow } from 'date-fns';
 import { useState } from 'react';
@@ -238,6 +239,11 @@ export default function VendorDashboard() {
         </div>
       }
     >
+      {/* Onboarding Checklist - Show if profile incomplete */}
+      {profileCompleteness && profileCompleteness.completionPercent < 100 && (
+        <VendorOnboardingChecklist compact className="mb-6" />
+      )}
+
       {/* Hero KPI Metrics Grid - Premium 2x3 layout */}
       {isLoading ? (
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
