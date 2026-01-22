@@ -76,6 +76,8 @@ export function CreatePolicyModal({
   
   // Idempotency: ref to track if submission is in progress
   const submissionInProgressRef = useRef(false);
+  // Stable idempotency key: generated once per modal-open, reused for retries
+  const clientRequestIdRef = useRef<string | null>(null);
 
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -102,6 +104,7 @@ export function CreatePolicyModal({
   useEffect(() => {
     if (open) {
       submissionInProgressRef.current = false;
+      clientRequestIdRef.current = crypto.randomUUID();
       setFormError(null);
     } else {
       // Reset form when modal closes
@@ -117,46 +120,9 @@ export function CreatePolicyModal({
       setIsSubmitting(false);
       setFormError(null);
       submissionInProgressRef.current = false;
+      clientRequestIdRef.current = null;
     }
   }, [open]);
-
-  const toUuid = (hex32: string) => {
-    // 32 hex chars => UUID v4-ish formatting (not necessarily RFC4122 version bits, but UUID-shaped)
-    const h = hex32.padEnd(32, '0').slice(0, 32);
-    return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
-  };
-
-  const sha256Hex = async (input: string) => {
-    const bytes = new TextEncoder().encode(input);
-    const hash = await crypto.subtle.digest('SHA-256', bytes);
-    return Array.from(new Uint8Array(hash))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
-  };
-
-  const buildIdempotencyKey = async (params: {
-    orgId: string;
-    createdBy: string;
-    policyName: string;
-    benefitKey?: string;
-    effectiveFrom?: string;
-  }) => {
-    // Deterministic key with time bucket to avoid accidental reuse forever.
-    // Bucket kept relatively wide to absorb double-clicks / retries.
-    const bucketMs = 15_000; // 15s
-    const bucket = Math.floor(Date.now() / bucketMs);
-    const base = [
-      params.orgId,
-      params.createdBy,
-      params.policyName.trim().toLowerCase(),
-      params.benefitKey || '',
-      params.effectiveFrom || '',
-      String(bucket),
-    ].join('|');
-
-    const hex = await sha256Hex(base);
-    return toUuid(hex.slice(0, 32));
-  };
 
   // Apply template when selected and moving to details
   const applyTemplate = (template: PolicyTemplate) => {
@@ -245,13 +211,8 @@ export function CreatePolicyModal({
         },
       };
 
-      const clientRequestId = await buildIdempotencyKey({
-        orgId: organizationId,
-        createdBy: user.id,
-        policyName: name,
-        benefitKey: benefitKey || undefined,
-        effectiveFrom: effectiveFrom || undefined,
-      });
+      const clientRequestId = clientRequestIdRef.current || crypto.randomUUID();
+      clientRequestIdRef.current = clientRequestId;
 
       // Call the atomic RPC function (server-side idempotent)
       const result = await createPolicyWithVersion({
@@ -295,7 +256,7 @@ export function CreatePolicyModal({
       }, 100);
 
       // Non-blocking: required docs + query invalidation + audit log
-      void (async () => {
+       void (async () => {
         try {
           // If template has required docs, create them
           if (template?.default_required_docs && Array.isArray(template.default_required_docs)) {
@@ -336,6 +297,9 @@ export function CreatePolicyModal({
           });
         } catch (err) {
           console.warn('Post-create side effects failed (non-blocking):', err);
+           toast.warning('Policy created, but updates are still syncing', {
+             description: 'If the new policy does not appear immediately, refresh the page.',
+           });
         }
       })();
 
