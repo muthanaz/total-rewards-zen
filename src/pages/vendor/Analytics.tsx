@@ -124,10 +124,10 @@ export default function VendorAnalytics() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7days">{t('Last 7 Days', 'آخر ٧ أيام')}</SelectItem>
-              <SelectItem value="30days">{t('Last 30 Days', 'آخر ٣٠ يوم')}</SelectItem>
-              <SelectItem value="90days">{t('Last 90 Days', 'آخر ٩٠ يوم')}</SelectItem>
-              <SelectItem value="12months">{t('Last 12 Months', 'آخر ١٢ شهر')}</SelectItem>
+              <SelectItem value="7days">{t('Last 7 Days', 'آخر 7 أيام')}</SelectItem>
+              <SelectItem value="30days">{t('Last 30 Days', 'آخر 30 يوم')}</SelectItem>
+              <SelectItem value="90days">{t('Last 90 Days', 'آخر 90 يوم')}</SelectItem>
+              <SelectItem value="12months">{t('Last 12 Months', 'آخر 12 شهر')}</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" className="gap-2">

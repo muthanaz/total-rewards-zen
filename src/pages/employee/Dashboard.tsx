@@ -193,7 +193,7 @@ export default function EmployeeDashboard() {
       icon: DollarSign, 
       value: salaryHidden ? hiddenValue : formatCurrency(calculatedMetrics.annualSalary), 
       label: isRTL ? 'الراتب السنوي' : 'Annual Salary',
-      formula: isRTL ? 'الراتب الشهري × ١٢ شهر' : 'Monthly Salary × 12 months',
+      formula: isRTL ? 'الراتب الشهري × 12 شهر' : 'Monthly Salary × 12 months',
       dataSource: isRTL ? 'نظام الموارد البشرية' : 'HR Payroll System',
       variant: 'primary' as const,
       isSensitive: true,
@@ -217,7 +217,7 @@ export default function EmployeeDashboard() {
       value: salaryHidden ? '••%' : `${calculatedMetrics.guaranteedBenefitsAsPercentOfComp}%`, 
       label: isRTL ? 'المزايا من التعويضات' : 'Benefits % of Package',
       formula: isRTL 
-        ? `(المزايا المضمونة ÷ إجمالي التعويضات المضمونة) × ١٠٠`
+        ? `(المزايا المضمونة ÷ إجمالي التعويضات المضمونة) × 100`
         : `(Guaranteed Benefits ÷ Guaranteed Compensation) × 100`,
       dataSource: isRTL ? 'محسوب - مضمون فقط' : 'Calculated - Guaranteed only',
       variant: 'benefits' as const,

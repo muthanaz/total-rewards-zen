@@ -216,7 +216,7 @@ export const BENEFIT_DEFINITIONS: BenefitDefinition[] = [
     route: '/employee/schooling',
     description: 'Schooling support for dependents',
     bullets: ['Per child up to 18 years', 'Covers tuition fees only'],
-    bulletsAr: ['لكل طفل حتى ١٨ عاماً', 'يغطي الرسوم الدراسية فقط'],
+    bulletsAr: ['لكل طفل حتى 18 عاماً', 'يغطي الرسوم الدراسية فقط'],
   },
   {
     key: 'health',
@@ -249,7 +249,7 @@ export const BENEFIT_DEFINITIONS: BenefitDefinition[] = [
     route: '/employee/bonus',
     description: 'Performance-based annual bonus',
     bullets: ['Performance-based (0-200%)', 'Target: 2 months salary'],
-    bulletsAr: ['مبني على الأداء (٠-٢٠٠٪)', 'الهدف: راتب شهرين'],
+    bulletsAr: ['مبني على الأداء (0-200%)', 'الهدف: راتب شهرين'],
   },
   {
     key: 'financial',
@@ -260,7 +260,7 @@ export const BENEFIT_DEFINITIONS: BenefitDefinition[] = [
     route: '/employee/financial',
     description: 'Retirement savings with employer match',
     bullets: ['5% employer match', 'Multiple fund options'],
-    bulletsAr: ['مطابقة ٥٪ من صاحب العمل', 'خيارات صناديق متعددة'],
+    bulletsAr: ['مطابقة 5% من صاحب العمل', 'خيارات صناديق متعددة'],
   },
   {
     key: 'wellbeing',
@@ -293,7 +293,7 @@ export const BENEFIT_DEFINITIONS: BenefitDefinition[] = [
     route: '/employee/equity',
     description: 'Stock options and equity compensation',
     bullets: ['Vesting over 4 years', 'Exercise after cliff period'],
-    bulletsAr: ['الاستحقاق على ٤ سنوات', 'التمارين بعد فترة الهاوية'],
+    bulletsAr: ['الاستحقاق على 4 سنوات', 'التمارين بعد فترة الهاوية'],
   },
   {
     key: 'timeoff',
@@ -304,7 +304,7 @@ export const BENEFIT_DEFINITIONS: BenefitDefinition[] = [
     route: '/employee/leave',
     description: 'Annual, sick, and other leave types',
     bullets: ['30 days annual leave', 'Carry over up to 5 days'],
-    bulletsAr: ['٣٠ يوم إجازة سنوية', 'ترحيل حتى ٥ أيام'],
+    bulletsAr: ['30 يوم إجازة سنوية', 'ترحيل حتى 5 أيام'],
   },
 ];
 
