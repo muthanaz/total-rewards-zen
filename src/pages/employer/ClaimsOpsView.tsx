@@ -92,28 +92,11 @@ function MissingDocsBadge({
   category: string; 
   missingDocsFromDb?: unknown;
 }) {
-  const { data: requiredDocs = [], isLoading } = useRequiredDocsForCategory(category);
-  
-  // Filter to required only
-  const requiredOnly = requiredDocs.filter(d => d.isRequired);
-  const noDocsRequired = requiredOnly.length === 0;
-  
-  // Use DB value if available, otherwise assume all required docs are missing
-  const missingCount = Array.isArray(missingDocsFromDb) 
-    ? missingDocsFromDb.length 
-    : requiredOnly.length;
-  
-  const hasMissingDocs = !noDocsRequired && missingCount > 0;
-  
-  if (isLoading) {
-    return <span className="text-xs text-muted-foreground">...</span>;
-  }
-  
-  if (noDocsRequired) {
-    return <span className="text-xs text-muted-foreground">—</span>;
-  }
-  
-  if (!hasMissingDocs) {
+  // Policy-driven: rely on the request row's missing_docs array (populated from policy_required_docs at submission time)
+  const missingDocs = Array.isArray(missingDocsFromDb) ? (missingDocsFromDb as string[]) : [];
+  const missingCount = missingDocs.length;
+
+  if (missingCount === 0) {
     return (
       <span className="text-xs text-success flex items-center gap-1">
         <CheckCircle className="w-3 h-3" />
@@ -131,10 +114,10 @@ function MissingDocsBadge({
         </Badge>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-xs">
-        <p className="font-medium text-xs mb-1">Missing Documents:</p>
+        <p className="font-medium text-xs mb-1">Missing Documents (policy):</p>
         <ul className="text-xs space-y-0.5">
-          {requiredOnly.map((doc) => (
-            <li key={doc.id}>• {doc.docName}</li>
+          {missingDocs.map((doc) => (
+            <li key={doc}>• {doc}</li>
           ))}
         </ul>
       </TooltipContent>

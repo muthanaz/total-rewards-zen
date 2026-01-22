@@ -382,9 +382,33 @@ export function CreatePolicyModal({
             )}
 
             {templates.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No templates available. Contact your administrator to create templates.
-              </p>
+              <div className="text-sm text-muted-foreground text-center py-4 space-y-3">
+                <p>No templates available yet.</p>
+                <p className="text-xs">
+                  To onboard faster, an admin can create reusable templates in the Admin portal (Policy Templates).
+                </p>
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText('/admin/policy-templates');
+                        toast.success('Admin link copied', {
+                          description: 'Paste into your browser as an admin: /admin/policy-templates',
+                        });
+                      } catch {
+                        toast.error('Could not copy link', {
+                          description: 'Copy this path: /admin/policy-templates',
+                        });
+                      }
+                    }}
+                  >
+                    Copy Admin Path
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
         ) : (
