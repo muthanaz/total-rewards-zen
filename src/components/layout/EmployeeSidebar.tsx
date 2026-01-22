@@ -26,6 +26,7 @@ import {
   Compass,
   Clock,
   Landmark,
+  Zap,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -68,6 +69,7 @@ const navigation: NavGroup[] = [
     defaultOpen: true,
     items: [
       { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/employee', icon: LayoutDashboard },
+      { label: 'My Actions', labelAr: 'إجراءاتي', path: '/employee/my-actions', icon: Zap },
     ],
   },
   // ONBOARDING (conditional - only show if incomplete)
@@ -88,7 +90,6 @@ const navigation: NavGroup[] = [
     defaultOpen: true,
     items: [
       { label: 'Benefits Overview', labelAr: 'نظرة عامة على المزايا', path: '/employee/benefits', icon: Gift },
-      { label: 'Insights & Optimization', labelAr: 'التحليلات والتحسين', path: '/employee/benefits-analysis', icon: Compass },
     ],
   },
   // BENEFIT CATEGORIES (collapsible)
