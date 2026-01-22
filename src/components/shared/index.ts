@@ -97,3 +97,12 @@ export {
 
 // Global Error Boundary
 export { GlobalErrorBoundary } from './GlobalErrorBoundary';
+
+// Zero States (portal-specific empty states with CTAs)
+export { 
+  ZeroState, 
+  EmployeeZeroState, 
+  EmployerZeroState, 
+  AdminZeroState, 
+  VendorZeroState,
+} from './ZeroState';
