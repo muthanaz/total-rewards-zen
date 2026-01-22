@@ -121,31 +121,33 @@ export default function EmployeeDashboard() {
     return [
       {
         icon: Wallet,
-        value: formatCurrencyAED(monthlyBase),
+        value: formatCurrencyAED(monthlyBase, { abbreviate: false }),
         label: isRTL ? 'الراتب الشهري' : 'MONTHLY SALARY',
         formula: isRTL ? 'الراتب الأساسي الشهري' : 'Monthly base salary',
         dataSource: 'Payroll',
-        variant: 'default' as const,
+        variant: 'primary' as const,
         isSensitive: true,
       },
       {
         icon: DollarSign,
-        value: formatCurrencyAED(annualSalary),
+        value: formatCurrencyAED(annualSalary, { abbreviate: false }),
         label: isRTL ? 'الراتب السنوي' : 'ANNUAL SALARY',
         formula: isRTL ? 'الراتب الشهري × 12' : 'Monthly Salary × 12',
         dataSource: 'HR System',
-        variant: 'default' as const,
+        variant: 'primary' as const,
         isSensitive: true,
       },
       {
         icon: Gift,
-        value: formatCurrencyAED(guaranteedBenefits),
+        value: formatCurrencyAED(guaranteedBenefits, { abbreviate: false }),
         label: isRTL ? 'المزايا المضمونة' : 'GUARANTEED BENEFITS',
         formula: isRTL ? 'السكن + التعليم + النقل' : 'Housing + Education + Transport',
         dataSource: 'Benefits System',
-        variant: 'warning' as const,
+        variant: 'benefits' as const,
         isSensitive: false,
-        subtitle: `Up to ${formatCurrencyAED(totals.totalBenefitsValue)} incl. variable`,
+        subtitle: isRTL 
+          ? `حتى ${formatCurrencyAED(totals.totalBenefitsValue, { abbreviate: false })} شامل المتغير`
+          : `Up to ${formatCurrencyAED(totals.totalBenefitsValue, { abbreviate: false })} incl. variable`,
       },
       {
         icon: Briefcase,
@@ -153,7 +155,7 @@ export default function EmployeeDashboard() {
         label: isRTL ? 'نسبة المزايا' : 'BENEFITS % OF PACKAGE',
         formula: isRTL ? 'المزايا ÷ إجمالي التعويضات' : 'Benefits ÷ Total Compensation',
         dataSource: 'Benefits System',
-        variant: 'default' as const,
+        variant: 'primary' as const,
         isSensitive: false,
       },
     ];
@@ -166,14 +168,15 @@ export default function EmployeeDashboard() {
       ? Math.round((totals.annualSalary / total) * 100)
       : 66;
     const benefitsPercent = 100 - salaryPercent;
+    const potentialTotal = total + (totals.totalBenefitsValue - totals.guaranteedBenefits);
     
     return {
-      value: formatCurrencyAED(total),
+      value: formatCurrencyAED(total, { abbreviate: false }),
       formula: isRTL ? 'الراتب السنوي + المزايا المضمونة' : 'Annual Salary + Guaranteed Benefits',
       dataSource: 'HR & Benefits Systems',
       subtitle: isRTL 
-        ? `المحتمل: ${formatCurrencyAED(total + (totals.totalBenefitsValue - totals.guaranteedBenefits))} شامل المتغير`
-        : `Potential: ${formatCurrencyAED(total + (totals.totalBenefitsValue - totals.guaranteedBenefits))} incl. variable`,
+        ? `المحتمل: ${formatCurrencyAED(potentialTotal, { abbreviate: false })} شامل المتغير`
+        : `Potential: ${formatCurrencyAED(potentialTotal, { abbreviate: false })} incl. variable`,
       salaryHidden,
       onTogglePrivacy: () => setSalaryHidden(!salaryHidden),
       salaryPercent,
