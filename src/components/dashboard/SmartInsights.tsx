@@ -116,7 +116,7 @@ export function SmartInsights({ benefits, className }: SmartInsightsProps) {
           type: 'opportunity',
           title: isRTL ? 'ميزانية تطوير غير مستخدمة' : 'Unused Development Budget',
           description: isRTL
-            ? `${learningRemaining.toLocaleString('ar-AE')} درهم متبقية (${monthlyBudget.toLocaleString('ar-AE')} شهرياً). دورات LinkedIn و Coursera مؤهلة.`
+            ? `AED ${learningRemaining.toLocaleString('en-US')} متبقية (AED ${monthlyBudget.toLocaleString('en-US')} شهرياً). دورات LinkedIn و Coursera مؤهلة.`
             : `AED ${learningRemaining.toLocaleString()} remaining (AED ${monthlyBudget.toLocaleString()}/month). LinkedIn Learning & Coursera courses eligible.`,
           action: isRTL ? 'تصفح الدورات' : 'Browse Courses',
           route: learningBenefit.route,
@@ -136,7 +136,7 @@ export function SmartInsights({ benefits, className }: SmartInsightsProps) {
           type: 'opportunity',
           title: isRTL ? 'عضوية النادي مغطاة' : 'Gym Membership Covered',
           description: isRTL
-            ? `فعّل عضوية Fitness First أو GymNation مجاناً. ${wellbeingRemaining.toLocaleString('ar-AE')} درهم متبقية لتطبيقات الصحة.`
+            ? `فعّل عضوية Fitness First أو GymNation مجاناً. AED ${wellbeingRemaining.toLocaleString('en-US')} متبقية لتطبيقات الصحة.`
             : `Activate Fitness First or GymNation membership free. AED ${wellbeingRemaining.toLocaleString()} left for wellness apps.`,
           action: isRTL ? 'فعّل الآن' : 'Activate Now',
           route: wellbeingBenefit.route,
@@ -153,7 +153,7 @@ export function SmartInsights({ benefits, className }: SmartInsightsProps) {
         type: 'reminder',
         title: isRTL ? `${weeksRemaining} أسابيع متبقية` : `${weeksRemaining} Weeks Left This Year`,
         description: isRTL
-          ? `${totalRemaining.toLocaleString('ar-AE')} درهم من المزايا لن تُرحّل. راجع الآن لتحقيق أقصى استفادة.`
+          ? `AED ${totalRemaining.toLocaleString('en-US')} من المزايا لن تُرحّل. راجع الآن لتحقيق أقصى استفادة.`
           : `AED ${totalRemaining.toLocaleString()} in benefits won't carry over. Review now to maximize your package.`,
         action: isRTL ? 'راجع الكل' : 'Review All',
         route: '/employee/benefits',
@@ -171,7 +171,7 @@ export function SmartInsights({ benefits, className }: SmartInsightsProps) {
           type: 'action',
           title: isRTL ? 'احصل على مطابقة صاحب العمل' : 'Claim Employer Match',
           description: isRTL
-            ? `صاحب العمل يطابق مدخراتك حتى ${matchAvailable.toLocaleString('ar-AE')} درهم سنوياً. ضاعف مدخراتك.`
+            ? `صاحب العمل يطابق مدخراتك حتى AED ${matchAvailable.toLocaleString('en-US')} سنوياً. ضاعف مدخراتك.`
             : `Your employer matches contributions up to AED ${matchAvailable.toLocaleString()}/year. Double your savings.`,
           action: isRTL ? 'زيادة المساهمة' : 'Increase Contribution',
           route: financialBenefit.route,
@@ -202,7 +202,7 @@ export function SmartInsights({ benefits, className }: SmartInsightsProps) {
           type: 'reminder',
           title: isRTL ? 'تذاكر الطيران السنوية' : 'Annual Flight Tickets',
           description: isRTL
-            ? `تذكر حجز تذاكر الإجازة السنوية. ${transportRemaining.toLocaleString('ar-AE')} درهم متاحة للسفر.`
+            ? `تذكر حجز تذاكر الإجازة السنوية. AED ${transportRemaining.toLocaleString('en-US')} متاحة للسفر.`
             : `Remember to book your annual leave flights. AED ${transportRemaining.toLocaleString()} available for travel.`,
           action: isRTL ? 'عرض التفاصيل' : 'View Details',
           route: transportBenefit.route,

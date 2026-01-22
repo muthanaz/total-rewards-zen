@@ -81,13 +81,13 @@ export default function VendorEarnings() {
       title: t('Pending Disbursement', 'في انتظار الصرف'),
       value: formatCurrencyAED(pendingPayout),
       icon: Clock,
-      subtitle: t('Scheduled: Jan 15', 'مجدول: ١٥ يناير'),
+      subtitle: t('Scheduled: Jan 15', 'مجدول: 15 يناير'),
     },
     {
       title: t('Lifetime Earnings', 'الأرباح الإجمالية'),
       value: formatCurrencyAED(lifetimeEarnings),
       icon: TrendingUp,
-      subtitle: t('Since Oct 2024', 'منذ أكتوبر ٢٠٢٤'),
+      subtitle: t('Since Oct 2024', 'منذ أكتوبر 2024'),
     },
     {
       title: t('Commission Rate', 'نسبة العمولة'),

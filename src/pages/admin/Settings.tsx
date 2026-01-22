@@ -635,8 +635,8 @@ export default function AdminSettings() {
                 </div>
                 <div className={cn("flex-1", isRTL && "text-right")}>
                   <h4 className="font-semibold">{t('Active Vendors', 'البائعون النشطون')}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {t('12 vendors with pending payouts totaling AED 45,230', '12 بائع لديهم دفعات معلقة بإجمالي 45,230 درهم')}
+                  <p className="text-sm text-muted-foreground tabular-nums">
+                    {t('12 vendors with pending payouts totaling AED 45,230', '12 بائع لديهم دفعات معلقة بإجمالي AED 45,230')}
                   </p>
                 </div>
                 <Button>

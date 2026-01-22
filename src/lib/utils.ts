@@ -71,6 +71,9 @@ export function formatNullable<T>(
 /**
  * Currency prefix for UAE Dirham - ALWAYS "AED" per platform standard.
  * This is the ONLY currency label used across the entire platform.
+ * 
+ * CRITICAL: Never use "د.إ", "درهم", or any other currency representation.
+ * AED is the standard for both English AND Arabic UI.
  */
 export const CURRENCY_LABEL = 'AED';
 
@@ -78,6 +81,18 @@ export const CURRENCY_LABEL = 'AED';
  * @deprecated Use CURRENCY_LABEL instead. Kept for backward compatibility only.
  */
 export const DIRHAM_SYMBOL = 'AED';
+
+/**
+ * Formats a currency value for Arabic UI using AED label and Western digits.
+ * Use this in Arabic translations instead of "درهم".
+ * 
+ * @example formatCurrencyArabic(45000) // "45,000 AED"
+ */
+export function formatCurrencyArabic(value: number | null | undefined): string {
+  if (value === null || value === undefined) return '— AED';
+  // Force Western digits using en-US locale
+  return `${value.toLocaleString('en-US')} AED`;
+}
 
 export interface CurrencyFormatOptions {
   abbreviate?: boolean;       // Use K/M abbreviations (default: true for values >= 10,000)

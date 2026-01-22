@@ -331,7 +331,7 @@ const translations: Record<Language, Record<string, string>> = {
     'employee.dashboard.yourUtilization': 'استخدامك',
     'employee.dashboard.companyAvg': 'متوسط الشركة',
     'employee.dashboard.requestClaim': 'الطلبات والمطالبات',
-    'employee.dashboard.benefitsAt100': 'مزايا بنسبة ١٠٠٪',
+    'employee.dashboard.benefitsAt100': 'مزايا بنسبة 100%',
     'employee.dashboard.benefitsWithRemaining': 'مزايا مع رصيد متبقي',
     'employee.dashboard.perkActivations': 'تفعيلات الامتيازات',
     'employee.dashboard.claimsApproved': 'مطالبات تمت الموافقة عليها',
@@ -397,10 +397,10 @@ const translations: Record<Language, Record<string, string>> = {
     'employer.dashboard.recoverable': 'قابل للاسترداد',
     'employer.dashboard.awaitingReview': 'في انتظار المراجعة',
     
-    // Insights
-    'insight.utilizationUp': 'ارتفاع الاستخدام بنسبة ٥٪ هذا الشهر',
-    'insight.zombieDecreased': 'انخفض الإنفاق غير المستغل بمقدار ٤٥ ألف درهم',
-    'insight.healthUnderutilized': 'المزايا الصحية أقل استخداماً بنسبة ٢٣٪',
+    // Insights - Using AED consistently
+    'insight.utilizationUp': 'ارتفاع الاستخدام بنسبة 5% هذا الشهر',
+    'insight.zombieDecreased': 'انخفض الإنفاق غير المستغل بمقدار AED 45,000',
+    'insight.healthUnderutilized': 'المزايا الصحية أقل استخداماً بنسبة 23%',
     'insight.topPerforming': 'بدل السكن هو الأفضل أداءً',
     
     // Actions

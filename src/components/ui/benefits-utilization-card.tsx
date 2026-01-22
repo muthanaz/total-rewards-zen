@@ -67,9 +67,9 @@ export function BenefitsUtilizationCard({ utilization, isRTL = false, salaryHidd
   const colors = getUtilizationColorScheme(level);
   
   const legendItems = [
-    { level: 'high' as UtilizationLevel, label: isRTL ? '٧٠٪+' : '70%+', labelFull: isRTL ? 'ممتاز' : 'Good' },
-    { level: 'medium' as UtilizationLevel, label: isRTL ? '٣٠-٦٩٪' : '30-69%', labelFull: isRTL ? 'متوسط' : 'Moderate' },
-    { level: 'low' as UtilizationLevel, label: isRTL ? '<٣٠٪' : '<30%', labelFull: isRTL ? 'منخفض' : 'Low' },
+    { level: 'high' as UtilizationLevel, label: isRTL ? '70%+' : '70%+', labelFull: isRTL ? 'ممتاز' : 'Good' },
+    { level: 'medium' as UtilizationLevel, label: isRTL ? '30-69%' : '30-69%', labelFull: isRTL ? 'متوسط' : 'Moderate' },
+    { level: 'low' as UtilizationLevel, label: isRTL ? '<30%' : '<30%', labelFull: isRTL ? 'منخفض' : 'Low' },
   ];
   
   return (

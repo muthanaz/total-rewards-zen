@@ -165,9 +165,9 @@ export function PersonalizedRecommendations({ benefits, className }: Personalize
                         rec.utilization < 30 ? "[&>div]:bg-amber-500" : "[&>div]:bg-accent"
                       )} 
                     />
-                    <p className={cn("text-[10px] text-muted-foreground", isRTL && "text-right")}>
+                    <p className={cn("text-[10px] text-muted-foreground tabular-nums", isRTL && "text-right")}>
                       {isRTL 
-                        ? `${rec.remaining.toLocaleString('ar-AE')} درهم متبقي`
+                        ? `AED ${rec.remaining.toLocaleString('en-US')} متبقي`
                         : `AED ${rec.remaining.toLocaleString()} remaining`
                       }
                     </p>
