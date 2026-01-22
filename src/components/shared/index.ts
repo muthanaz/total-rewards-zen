@@ -4,7 +4,7 @@
 // Page Structure
 export { PageHeader } from './PageHeader';
 export { PageLayout, PageSection } from './PageLayout';
-export { FilterBar } from './FilterBar';
+export { FilterBar, StatusTabs } from './FilterBar';
 
 // Section Components
 export { SectionCard, CompactSectionCard } from './SectionCard';
