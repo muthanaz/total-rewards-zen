@@ -397,7 +397,7 @@ export async function getOrgPolicySettings(
 ): Promise<OrgPolicySettings | null> {
   // Use type assertion since org_policy_settings is a new table
   const { data, error } = await (supabase
-    .from('org_policy_settings' as any)
+    .from('org_policy_governance_settings' as any)
     .select('*')
     .eq('organization_id', orgId)
     .maybeSingle()) as any;
@@ -410,16 +410,16 @@ export async function getOrgPolicySettings(
   if (!data) {
     // Return defaults if no settings exist
     return {
-      require_policy_approval: false, // Default: no approval required
-      approver_role: 'hr_manager',
+      require_policy_approval: true,
+      approver_role: 'executive',
       approval_sla_days: 3,
       allow_hr_ops_draft: true,
     };
   }
 
   return {
-    require_policy_approval: data.require_policy_approval ?? false,
-    approver_role: (data.approver_role as OrgPolicySettings['approver_role']) || 'hr_manager',
+    require_policy_approval: data.require_policy_approval ?? true,
+    approver_role: (data.approver_role as OrgPolicySettings['approver_role']) || 'executive',
     approval_sla_days: data.approval_sla_days ?? 3,
     allow_hr_ops_draft: data.allow_hr_ops_draft ?? true,
   };
