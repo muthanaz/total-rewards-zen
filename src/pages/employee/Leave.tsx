@@ -114,7 +114,7 @@ export default function LeavePage() {
         title={t('Leave Management', 'إدارة الإجازات')}
         description={t('View balances, request time off, and track approvals', 'عرض الأرصدة وطلب إجازة ومتابعة الموافقات')}
         icon={Calendar}
-        iconClassName="from-blue-500 to-blue-400 shadow-blue-500/25"
+        iconClassName="from-info to-info/80 shadow-info/25"
         badge={pendingCount > 0 ? {
           label: `${pendingCount} ${t('pending', 'معلقة')}`,
           icon: Clock,
@@ -124,13 +124,13 @@ export default function LeavePage() {
 
       {/* Primary Balance: Annual Leave */}
       {annualLeave && (
-        <Card className="border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-transparent">
+        <Card className="border-info/20 bg-gradient-to-br from-info/5 to-transparent">
           <CardContent className="p-6">
             <div className={cn('flex items-start justify-between gap-6', isRTL && 'flex-row-reverse')}>
               <div className="space-y-3 flex-1">
                 <div className={cn('flex items-center gap-3', isRTL && 'flex-row-reverse')}>
-                  <div className="w-12 h-12 rounded-2xl bg-blue-500 flex items-center justify-center">
-                    <Calendar className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 rounded-2xl bg-info flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-info-foreground" />
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold">{t('Annual Leave', 'الإجازة السنوية')}</h2>
@@ -140,7 +140,7 @@ export default function LeavePage() {
 
                 <div className="grid grid-cols-3 gap-4 pt-2">
                   <div className="text-center p-3 rounded-lg bg-background/50">
-                    <p className="text-3xl font-bold text-blue-600">{annualLeave.total - annualLeave.used}</p>
+                    <p className="text-3xl font-bold text-info">{annualLeave.total - annualLeave.used}</p>
                     <p className="text-xs text-muted-foreground mt-1">{t('Days Remaining', 'الأيام المتبقية')}</p>
                   </div>
                   <div className="text-center p-3 rounded-lg bg-background/50">
@@ -155,7 +155,7 @@ export default function LeavePage() {
 
                 <Progress 
                   value={(annualLeave.used / annualLeave.total) * 100} 
-                  className="h-2 [&>div]:bg-blue-500"
+                  className="h-2 [&>div]:bg-info"
                 />
               </div>
 

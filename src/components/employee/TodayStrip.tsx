@@ -23,22 +23,22 @@ export function TodayStrip({ className }: TodayStripProps) {
       label: language === 'ar' ? 'تقديم مطالبة' : 'Submit Claim',
       icon: Receipt,
       path: '/employee/requests',
-      color: 'from-emerald-500/10 to-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40',
-      iconBg: 'bg-emerald-500',
+      color: 'from-success/10 to-success/5 border-success/20 hover:border-success/40',
+      iconBg: 'bg-success',
     },
     {
       label: language === 'ar' ? 'طلب مستند' : 'Request Document',
       icon: FileText,
       path: '/employee/documents',
-      color: 'from-blue-500/10 to-blue-500/5 border-blue-500/20 hover:border-blue-500/40',
-      iconBg: 'bg-blue-500',
+      color: 'from-info/10 to-info/5 border-info/20 hover:border-info/40',
+      iconBg: 'bg-info',
     },
     {
       label: language === 'ar' ? 'تصفح السوق' : 'Browse Marketplace',
       icon: ShoppingBag,
       path: '/employee/marketplace',
-      color: 'from-violet-500/10 to-violet-500/5 border-violet-500/20 hover:border-violet-500/40',
-      iconBg: 'bg-violet-500',
+      color: 'from-chart-3/10 to-chart-3/5 border-chart-3/20 hover:border-chart-3/40',
+      iconBg: 'bg-chart-3',
     },
   ];
 

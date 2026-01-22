@@ -179,13 +179,13 @@ export const CATEGORY_ICON_GRADIENTS: Record<string, string> = {
   health: 'from-chart-5 to-chart-5/80 shadow-chart-5/25',
   schooling: 'from-chart-4 to-chart-4/80 shadow-chart-4/25',
   transport: 'from-chart-2 to-chart-2/80 shadow-chart-2/25',
-  leave: 'from-blue-500 to-blue-400 shadow-blue-500/25',
+  leave: 'from-info to-info/80 shadow-info/25',
   learning: 'from-chart-3 to-chart-3/80 shadow-chart-3/25',
   wellbeing: 'from-chart-6 to-chart-6/80 shadow-chart-6/25',
-  financial: 'from-teal-500 to-teal-400 shadow-teal-500/25',
-  equity: 'from-purple-500 to-purple-400 shadow-purple-500/25',
-  bonus: 'from-amber-500 to-amber-400 shadow-amber-500/25',
-  gratuity: 'from-emerald-500 to-emerald-400 shadow-emerald-500/25',
+  financial: 'from-accent to-accent/80 shadow-accent/25',
+  equity: 'from-chart-3 to-chart-3/80 shadow-chart-3/25',
+  bonus: 'from-chart-4 to-chart-4/80 shadow-chart-4/25',
+  gratuity: 'from-success to-success/80 shadow-success/25',
 };
 
 /**

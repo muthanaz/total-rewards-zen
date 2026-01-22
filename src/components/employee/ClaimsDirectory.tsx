@@ -94,31 +94,37 @@ export function ClaimsDirectory({ isRTL = false }: ClaimsDirectoryProps) {
   });
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return (
-          <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 border-amber-500/20">
-            <Clock className="h-3 w-3 mr-1" />
-            {isRTL ? 'قيد الانتظار' : 'Pending'}
-          </Badge>
-        );
-      case 'approved':
-        return (
-          <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">
-            <CheckCircle className="h-3 w-3 mr-1" />
-            {isRTL ? 'موافق عليه' : 'Approved'}
-          </Badge>
-        );
-      case 'rejected':
-        return (
-          <Badge variant="secondary" className="bg-red-500/10 text-red-600 border-red-500/20">
-            <XCircle className="h-3 w-3 mr-1" />
-            {isRTL ? 'مرفوض' : 'Rejected'}
-          </Badge>
-        );
-      default:
-        return null;
-    }
+    const statusConfig: Record<string, { icon: typeof Clock; label: string; labelAr: string; className: string }> = {
+      pending: {
+        icon: Clock,
+        label: 'Pending',
+        labelAr: 'قيد الانتظار',
+        className: 'bg-warning/10 text-warning border-warning/20',
+      },
+      approved: {
+        icon: CheckCircle,
+        label: 'Approved',
+        labelAr: 'موافق عليه',
+        className: 'bg-success/10 text-success border-success/20',
+      },
+      rejected: {
+        icon: XCircle,
+        label: 'Rejected',
+        labelAr: 'مرفوض',
+        className: 'bg-destructive/10 text-destructive border-destructive/20',
+      },
+    };
+    
+    const config = statusConfig[status];
+    if (!config) return null;
+    
+    const IconComponent = config.icon;
+    return (
+      <Badge variant="secondary" className={config.className}>
+        <IconComponent className="h-3 w-3 mr-1" />
+        {isRTL ? config.labelAr : config.label}
+      </Badge>
+    );
   };
 
   const getTypeBadge = (type: string) => {

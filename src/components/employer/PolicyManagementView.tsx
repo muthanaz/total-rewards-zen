@@ -225,23 +225,23 @@ export function PolicyManagementView() {
 
   const getStatusBadge = (policy: PolicyRow) => {
     if (policy.currentVersion) {
-      return <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">Published v{policy.currentVersion.version_number}</Badge>;
+      return <Badge className="bg-success/10 text-success border-success/20">Published v{policy.currentVersion.version_number}</Badge>;
     }
     if (policy.draftVersion) {
       const s = policy.draftVersion.status || 'draft';
       if (s === 'submitted') {
-        return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20">Pending approval</Badge>;
+        return <Badge className="bg-info/10 text-info border-info/20">Pending approval</Badge>;
       }
       if (s === 'approved') {
-        return <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">Approved</Badge>;
+        return <Badge className="bg-success/10 text-success border-success/20">Approved</Badge>;
       }
       if (s === 'rejected') {
-        return <Badge className="bg-rose-500/10 text-rose-600 border-rose-500/20">Rejected</Badge>;
+        return <Badge className="bg-destructive/10 text-destructive border-destructive/20">Rejected</Badge>;
       }
-      return <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20">Draft v{policy.draftVersion.version_number}</Badge>;
+      return <Badge className="bg-warning/10 text-warning border-warning/20">Draft v{policy.draftVersion.version_number}</Badge>;
     }
     if (!policy.is_active) {
-      return <Badge className="bg-gray-500/10 text-gray-600 border-gray-500/20">Archived</Badge>;
+      return <Badge className="bg-muted text-muted-foreground border-border">Archived</Badge>;
     }
     return <Badge className="bg-muted text-muted-foreground">No Version</Badge>;
   };
