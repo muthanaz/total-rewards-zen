@@ -442,7 +442,12 @@ export function UniversalReviewDetail({
                 slaInfo.isUrgent ? 'bg-amber-100 text-amber-700' : 'bg-muted'
               )}>
                 <Timer className="w-3 h-3" />
-                {slaInfo.label}
+                {slaInfo.isOverdue 
+                  ? `${Math.abs(slaInfo.hoursRemaining)}h overdue` 
+                  : slaInfo.hoursRemaining < 24 
+                    ? `${slaInfo.hoursRemaining}h left`
+                    : `${slaInfo.daysRemaining}d left`
+                }
               </Badge>
             )}
           </div>

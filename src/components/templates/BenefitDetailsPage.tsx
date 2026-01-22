@@ -119,8 +119,8 @@ export function BenefitDetailsPage({
   const utilization = customUtilization || benefitData?.utilization;
   const policyHighlights = customHighlights || policyContent?.summary || benefitData?.policyHighlights || [];
   
-  // Determine if read-only from policy or prop
-  const effectiveReadOnly = isReadOnly || policyLogic?.is_read_only;
+  // Determine if read-only from prop
+  const effectiveReadOnly = isReadOnly;
   
   // Derive workflow steps
   const workflowSteps = useMemo(() => {
@@ -182,7 +182,7 @@ export function BenefitDetailsPage({
           iconClassName={iconClassName}
         />
         <ZeroState 
-          pageId={`employee-${categoryKey}`}
+          page="benefits"
           portal="employee"
         />
       </div>
@@ -286,10 +286,10 @@ export function BenefitDetailsPage({
                   </div>
                   <div className={cn(isRTL && "text-right")}>
                     <p className="font-medium text-sm">
-                      {language === 'ar' && step.step_name_ar ? step.step_name_ar : step.step_name}
+                      {step.step_name}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {language === 'ar' && step.description_ar ? step.description_ar : step.description}
+                      {step.description}
                     </p>
                     {step.sla_hours && (
                       <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
@@ -305,18 +305,18 @@ export function BenefitDetailsPage({
         </Card>
       )}
 
-      {/* 4. What You Get (from employee_guidance) */}
-      {guidance?.what_you_get && guidance.what_you_get.length > 0 && (
+      {/* 4. How To Use (from employee_guidance) */}
+      {guidance?.how_to_use && guidance.how_to_use.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className={cn("text-base font-display flex items-center gap-2", isRTL && "flex-row-reverse")}>
               <Shield className="w-5 h-5 text-muted-foreground" />
-              {t('What You Get', 'ما تحصل عليه')}
+              {t('How To Use', 'كيفية الاستخدام')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="grid md:grid-cols-2 gap-2">
-              {(language === 'ar' && guidance.what_you_get_ar ? guidance.what_you_get_ar : guidance.what_you_get).map((item, i) => (
+              {(language === 'ar' && guidance.how_to_use_ar ? guidance.how_to_use_ar : guidance.how_to_use).map((item, i) => (
                 <li key={i} className={cn("flex items-start gap-2 text-sm", isRTL && "flex-row-reverse text-right")}>
                   <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
                   {item}
@@ -449,7 +449,7 @@ export function BenefitDetailsPage({
                         {t('Watch Out For', 'احذر من')}
                       </p>
                       <ul className={cn("space-y-1.5", isRTL ? "pe-6" : "pl-6")}>
-                        {(language === 'ar' && policyLogic?.pitfalls_ar ? policyLogic.pitfalls_ar : pitfalls).map((pitfall, i) => (
+                        {(language === 'ar' && policyContent?.pitfalls_ar ? policyContent.pitfalls_ar : pitfalls).map((pitfall, i) => (
                           <li key={i} className={cn("text-sm text-muted-foreground", isRTL && "text-right")}>• {pitfall}</li>
                         ))}
                       </ul>
