@@ -1246,6 +1246,36 @@ export type Database = {
           },
         ]
       }
+      org_policy_governance_settings: {
+        Row: {
+          approval_sla_days: number | null
+          approver_role: string
+          created_at: string
+          id: string
+          organization_id: string
+          require_policy_approval: boolean
+          updated_at: string
+        }
+        Insert: {
+          approval_sla_days?: number | null
+          approver_role?: string
+          created_at?: string
+          id?: string
+          organization_id: string
+          require_policy_approval?: boolean
+          updated_at?: string
+        }
+        Update: {
+          approval_sla_days?: number | null
+          approver_role?: string
+          created_at?: string
+          id?: string
+          organization_id?: string
+          require_policy_approval?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       org_policy_settings: {
         Row: {
           created_at: string
