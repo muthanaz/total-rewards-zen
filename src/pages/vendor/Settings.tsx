@@ -180,9 +180,9 @@ export default function VendorSettings() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="AED">AED - UAE Dirham</SelectItem>
-                  <SelectItem value="SAR">SAR - Saudi Riyal</SelectItem>
-                  <SelectItem value="KWD">KWD - Kuwaiti Dinar</SelectItem>
+                  <SelectItem value="AED">د.إ - UAE Dirham (AED)</SelectItem>
+                  <SelectItem value="SAR">﷼ - Saudi Riyal (SAR)</SelectItem>
+                  <SelectItem value="KWD">د.ك - Kuwaiti Dinar (KWD)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -29,7 +29,7 @@ import {
   ChevronRight,
   Info
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED } from '@/lib/utils';
 import { ConfidenceBadge } from '@/components/shared';
 
 export interface ConfusingArea {
@@ -150,12 +150,6 @@ export function PolicyHotspotDrawer({
   const severityConfig = getSeverityConfig(hotspot.severity);
   const dataSourceDetails = getDataSourceDetails(hotspot.id);
   const funnelData = getFunnelData(hotspot);
-
-  const formatCurrency = (value: number) => {
-    if (value >= 1000000) return `AED ${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `AED ${(value / 1000).toFixed(0)}K`;
-    return `AED ${value}`;
-  };
 
   const formatLastSync = (date: Date) => {
     const now = new Date();
@@ -513,7 +507,7 @@ export function PolicyHotspotDrawer({
                 <p className="text-xs text-muted-foreground">Estimated Cost Avoidance</p>
                 <div className="flex items-center gap-2">
                   <p className="text-lg font-bold text-green-600">
-                    {formatCurrency(hotspot.impactEstimates.estimatedCost)}
+                    {formatCurrencyAED(hotspot.impactEstimates.estimatedCost)}
                   </p>
                   <ConfidenceBadge level={hotspot.impactEstimates.confidence} size="sm" />
                 </div>

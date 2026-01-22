@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ChevronRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
 
 interface BenefitCardProps {
@@ -30,8 +30,6 @@ export function BenefitCard({
   const utilization = value > 0 ? Math.round((utilized / value) * 100) : 0;
   const remaining = value - utilized;
   const isFullyUsed = utilization >= 100;
-  
-  const formatCurrency = (val: number) => `AED ${val.toLocaleString()}`;
   
   // Determine status color based on utilization - using semantic tokens
   const getStatusConfig = () => {
@@ -106,7 +104,7 @@ export function BenefitCard({
           <div className={cn("flex items-end justify-between gap-3", isRTL && "flex-row-reverse")}>
             <div className={cn(isRTL && "text-right")}>
               <p className="text-xl font-bold text-foreground tracking-tight">
-                {formatCurrency(value)}
+                {formatCurrencyAED(value, { abbreviate: false })}
               </p>
               <p className="text-[13px] text-muted-foreground mt-1">
                 {isRTL ? 'الاستحقاق السنوي' : 'Annual Entitlement'}
@@ -130,14 +128,14 @@ export function BenefitCard({
             {/* Utilization details */}
             <div className={cn("flex items-center justify-between text-[13px]", isRTL && "flex-row-reverse")}>
               <span className="text-muted-foreground">
-                {formatCurrency(utilized)} {isRTL ? 'مستخدم' : 'utilized'}
+                {formatCurrencyAED(utilized, { abbreviate: false })} {isRTL ? 'مستخدم' : 'utilized'}
               </span>
               <span className={cn(
                 "font-medium",
                 remaining > 0 ? "text-accent" : "text-success"
               )}>
                 {remaining > 0 
-                  ? `${formatCurrency(remaining)} ${isRTL ? 'متبقي' : 'remaining'}`
+                  ? `${formatCurrencyAED(remaining, { abbreviate: false })} ${isRTL ? 'متبقي' : 'remaining'}`
                   : isRTL ? 'تم الاستخدام بالكامل' : 'Fully utilized'
                 }
               </span>

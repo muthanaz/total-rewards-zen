@@ -324,7 +324,7 @@ export function EmployeeCreateRequestSheet({
           {/* Amount (for claims only) */}
           {type === 'claim' && (
             <div className="space-y-2">
-              <Label htmlFor="amount">Amount (AED)</Label>
+              <Label htmlFor="amount">Amount (د.إ)</Label>
               <Input
                 id="amount"
                 type="number"

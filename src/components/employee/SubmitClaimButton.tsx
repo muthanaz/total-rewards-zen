@@ -121,7 +121,7 @@ export function SubmitClaimButton({
           </div>
 
           <div className="space-y-2">
-            <Label>Amount (AED) *</Label>
+            <Label>Amount (د.إ) *</Label>
             <Input
               type="number"
               placeholder="0.00"

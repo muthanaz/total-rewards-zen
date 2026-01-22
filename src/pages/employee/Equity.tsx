@@ -4,6 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { TrendingUp, Calendar, DollarSign, CheckCircle, Clock, Award, Gem } from 'lucide-react';
+import { formatCurrencyAED } from '@/lib/utils';
 
 const TOTAL_SHARES = 5000;
 const VESTED_SHARES = 2500;
@@ -22,7 +23,7 @@ const grants = [
 ];
 
 export default function EquityPage() {
-  const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
+  const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
   const vestedValue = VESTED_SHARES * SHARE_PRICE;
   const totalValue = TOTAL_SHARES * SHARE_PRICE;
   const vestedPercent = Math.round((VESTED_SHARES / TOTAL_SHARES) * 100);

@@ -11,7 +11,7 @@ import {
   BarChart3, Trophy, Sparkles
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED } from '@/lib/utils';
 import { AnimatedBarChart, AnimatedDonutChart, ChartContainer } from '@/components/charts';
 import { chartColors, getChartColor } from '@/lib/chartColors';
 
@@ -179,7 +179,7 @@ export default function BonusPage() {
   
   const [selectedRating, setSelectedRating] = useState([currentEvaluation.overallRating]);
   
-  const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
+  const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString(isRTL ? 'ar-AE' : 'en-AE', { year: 'numeric', month: 'short', day: 'numeric' });
 
   // Calculate projected bonus based on current rating

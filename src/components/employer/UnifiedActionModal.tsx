@@ -137,7 +137,7 @@ const CONFIDENCE_OPTIONS: Array<{ value: Confidence; label: string; description:
 ];
 
 const IMPACT_TYPES = [
-  { value: 'cost_avoidance', label: 'Cost Avoidance', prefix: 'AED' },
+  { value: 'cost_avoidance', label: 'Cost Avoidance', prefix: 'د.إ' },
   { value: 'utilization_change', label: 'Utilization Change', suffix: '%' },
   { value: 'sla_reduction', label: 'SLA Improvement', suffix: 'hours' },
   { value: 'satisfaction_change', label: 'Satisfaction Change', suffix: 'pts' },

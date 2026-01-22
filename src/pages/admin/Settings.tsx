@@ -153,11 +153,11 @@ export default function AdminSettings() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="AED">AED - Dirham</SelectItem>
-                        <SelectItem value="USD">USD - Dollar</SelectItem>
-                        <SelectItem value="EUR">EUR - Euro</SelectItem>
-                        <SelectItem value="GBP">GBP - Pound</SelectItem>
-                        <SelectItem value="SAR">SAR - Riyal</SelectItem>
+                        <SelectItem value="AED">د.إ - Dirham (AED)</SelectItem>
+                        <SelectItem value="USD">$ - Dollar (USD)</SelectItem>
+                        <SelectItem value="EUR">€ - Euro (EUR)</SelectItem>
+                        <SelectItem value="GBP">£ - Pound (GBP)</SelectItem>
+                        <SelectItem value="SAR">﷼ - Riyal (SAR)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
