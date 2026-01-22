@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -233,6 +233,19 @@ export function PolicyManagementView() {
       setEditorOpen(true);
     }
   };
+
+  // Listen for policy-created events from CreatePolicyModal
+  useEffect(() => {
+    const handlePolicyCreatedEvent = (event: CustomEvent<{ policyId: string; versionId: string }>) => {
+      const { policyId, versionId } = event.detail;
+      handlePolicyCreated(policyId, versionId);
+    };
+
+    window.addEventListener('policy-created', handlePolicyCreatedEvent as EventListener);
+    return () => {
+      window.removeEventListener('policy-created', handlePolicyCreatedEvent as EventListener);
+    };
+  }, [queryClient]);
 
   const handleDuplicate = async (policy: PolicyRow) => {
     try {
