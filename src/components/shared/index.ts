@@ -137,3 +137,25 @@ export {
   AdminZeroState, 
   VendorZeroState,
 } from './ZeroState';
+
+// Pilot/Temporary Benefits
+export { PilotBadge, PolicyWindowBadge } from './PilotBadge';
+
+// Proration Display
+export { 
+  ProrationDisplay, 
+  EntitlementBreakdown, 
+  ProrationAuditInfo,
+} from './ProrationDisplay';
+
+// Sensitive Data Display (Privacy)
+export {
+  SensitiveDataDisplay,
+  SalaryDisplay,
+  ProtectedDataBadge,
+  PlaintextWarningBadge,
+  DemoModeDataNotice,
+  maskValue,
+  formatSensitiveValue,
+} from './SensitiveDataDisplay';
+export type { SensitiveDataType } from './SensitiveDataDisplay';

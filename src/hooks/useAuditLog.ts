@@ -51,7 +51,8 @@ export function useAuditLog() {
     }
 
     try {
-      const { data, error } = await supabase.rpc('log_audit_event', {
+      // Use sanitized audit function that strips sensitive values
+      const { data, error } = await supabase.rpc('log_audit_event_sanitized', {
         p_user_id: user.id,
         p_action: action,
         p_resource_type: resourceType,
@@ -59,11 +60,26 @@ export function useAuditLog() {
         p_details: details ? JSON.stringify(details) : null,
         p_ip_address: null,
         p_user_agent: navigator.userAgent,
-      });
+      } as any);
 
       if (error) {
-        console.error('Failed to log audit event:', error);
-        return null;
+        // Fallback to original if sanitized version not available
+        console.warn('Sanitized audit failed, trying original:', error);
+        const { data: fallbackData, error: fallbackError } = await supabase.rpc('log_audit_event', {
+          p_user_id: user.id,
+          p_action: action,
+          p_resource_type: resourceType,
+          p_resource_id: resourceId || null,
+          p_details: details ? JSON.stringify(details) : null,
+          p_ip_address: null,
+          p_user_agent: navigator.userAgent,
+        });
+        
+        if (fallbackError) {
+          console.error('Failed to log audit event:', fallbackError);
+          return null;
+        }
+        return fallbackData;
       }
 
       return data;
