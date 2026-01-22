@@ -19,7 +19,8 @@ import {
   Users,
   TrendingUp
 } from 'lucide-react';
-import { formatCurrencyAED, formatPercent, cn } from '@/lib/utils';
+import { Currency } from '@/components/ui/Currency';
+import { formatPercent, cn } from '@/lib/utils';
 import { SegmentOpportunity, DRIVER_DEFINITIONS, ConfidenceLevel } from '@/hooks/useSegmentData';
 import { toast } from 'sonner';
 
@@ -125,7 +126,7 @@ export function SegmentOpportunities({ opportunities, onSelectSegment }: Segment
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-accent">
-                    {formatCurrencyAED(opp.opportunityAED, { abbreviate: true })}
+                    <Currency amount={opp.opportunityAED} />
                   </p>
                   <p className="text-xs text-muted-foreground">recoverable</p>
                 </div>
