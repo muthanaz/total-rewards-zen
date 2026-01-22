@@ -3,9 +3,13 @@
  * 
  * Modal/drawer for creating new claims, requests, or questions.
  * Integrates with policy engine for eligibility, limits, and required docs validation.
+ * 
+ * Supports enforcement modes:
+ * - soft (default): allow submit but flag non-compliant
+ * - strict: block submit on policy violations
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Receipt, 
   FileText, 
@@ -24,6 +29,7 @@ import {
   Info,
   Loader2,
   CheckCircle,
+  ShieldAlert,
 } from 'lucide-react';
 import { 
   usePolicyForCategory, 
@@ -32,6 +38,7 @@ import {
   useSubmissionValidation,
   usePolicyDrivenSubmission,
 } from '@/hooks/usePolicyDrivenSubmission';
+import { useCurrentOrgEnforcementMode } from '@/hooks/useEnforcementMode';
 import { PolicyValidationBanner } from '@/components/employee/PolicyValidationBanner';
 import { cn } from '@/lib/utils';
 
@@ -101,6 +108,22 @@ export function EmployeeCreateRequestSheet({
   const { data: employeeContext } = useEmployeeContext();
   const { data: utilization = 0 } = useEmployeeUtilization(policy?.policyId || null);
   
+  // Enforcement mode - org level (can be overridden by policy)
+  const { data: orgEnforcementMode = 'soft', isLoading: enforcementLoading } = useCurrentOrgEnforcementMode();
+  
+  // Check for policy-level override
+  const effectiveEnforcementMode = useMemo(() => {
+    if (policy?.workflow && 'enforcement_mode' in policy.workflow) {
+      const policyMode = (policy.workflow as any).enforcement_mode;
+      if (policyMode === 'soft' || policyMode === 'strict') {
+        return policyMode;
+      }
+    }
+    return orgEnforcementMode;
+  }, [policy, orgEnforcementMode]);
+  
+  const isStrictMode = effectiveEnforcementMode === 'strict';
+  
   const parsedAmount = amount ? parseFloat(amount) : null;
   
   const validation = useSubmissionValidation(
@@ -124,7 +147,11 @@ export function EmployeeCreateRequestSheet({
   
   const handleSubmit = async () => {
     if (!category || !title) return;
-    if (!validation.canSubmit && type !== 'question') return;
+    
+    // In strict mode, blockers prevent submission
+    if (isStrictMode && validation.blockers.length > 0 && type !== 'question') {
+      return;
+    }
     
     await submitRequest.mutateAsync({
       params: {
@@ -136,6 +163,9 @@ export function EmployeeCreateRequestSheet({
         priority,
       },
       policy: policy || null,
+      validation,
+      employeeContext,
+      enforcementMode: effectiveEnforcementMode,
     });
     
     resetForm();
@@ -170,7 +200,13 @@ export function EmployeeCreateRequestSheet({
   };
   
   const TypeIcon = typeConfig[type].icon;
-  const canSubmit = category && title && (type === 'question' || validation.canSubmit);
+  
+  // In soft mode: can submit even with blockers (will be flagged)
+  // In strict mode: blockers prevent submission
+  const canSubmit = category && title && (
+    type === 'question' || 
+    (isStrictMode ? validation.canSubmit : true)
+  );
   
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
