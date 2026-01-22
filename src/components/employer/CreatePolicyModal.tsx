@@ -72,6 +72,7 @@ export function CreatePolicyModal({
   const [effectiveFrom, setEffectiveFrom] = useState('');
   const [effectiveTo, setEffectiveTo] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   
   // Idempotency: ref to track if submission is in progress
   const submissionInProgressRef = useRef(false);
@@ -101,6 +102,7 @@ export function CreatePolicyModal({
   useEffect(() => {
     if (open) {
       submissionInProgressRef.current = false;
+      setFormError(null);
     } else {
       // Reset form when modal closes
       setStep('source');
@@ -113,9 +115,48 @@ export function CreatePolicyModal({
       setEffectiveFrom('');
       setEffectiveTo('');
       setIsSubmitting(false);
+      setFormError(null);
       submissionInProgressRef.current = false;
     }
   }, [open]);
+
+  const toUuid = (hex32: string) => {
+    // 32 hex chars => UUID v4-ish formatting (not necessarily RFC4122 version bits, but UUID-shaped)
+    const h = hex32.padEnd(32, '0').slice(0, 32);
+    return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+  };
+
+  const sha256Hex = async (input: string) => {
+    const bytes = new TextEncoder().encode(input);
+    const hash = await crypto.subtle.digest('SHA-256', bytes);
+    return Array.from(new Uint8Array(hash))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+  };
+
+  const buildIdempotencyKey = async (params: {
+    orgId: string;
+    createdBy: string;
+    policyName: string;
+    benefitKey?: string;
+    effectiveFrom?: string;
+  }) => {
+    // Deterministic key with time bucket to avoid accidental reuse forever.
+    // Bucket kept relatively wide to absorb double-clicks / retries.
+    const bucketMs = 15_000; // 15s
+    const bucket = Math.floor(Date.now() / bucketMs);
+    const base = [
+      params.orgId,
+      params.createdBy,
+      params.policyName.trim().toLowerCase(),
+      params.benefitKey || '',
+      params.effectiveFrom || '',
+      String(bucket),
+    ].join('|');
+
+    const hex = await sha256Hex(base);
+    return toUuid(hex.slice(0, 32));
+  };
 
   // Apply template when selected and moving to details
   const applyTemplate = (template: PolicyTemplate) => {
@@ -153,11 +194,13 @@ export function CreatePolicyModal({
 
     // Prevent double submission using ref (works across re-renders)
     if (submissionInProgressRef.current || isSubmitting) {
-      console.log('Submission already in progress, ignoring duplicate click');
       return;
     }
 
+    setFormError(null);
+
     if (!name.trim() || !lifeArea) {
+      setFormError('Please provide a policy name and select a life area.');
       toast.error('Missing required fields', {
         description: 'Please provide a policy name and select a life area.',
       });
@@ -202,7 +245,15 @@ export function CreatePolicyModal({
         },
       };
 
-      // Call the atomic RPC function
+      const clientRequestId = await buildIdempotencyKey({
+        orgId: organizationId,
+        createdBy: user.id,
+        policyName: name,
+        benefitKey: benefitKey || undefined,
+        effectiveFrom: effectiveFrom || undefined,
+      });
+
+      // Call the atomic RPC function (server-side idempotent)
       const result = await createPolicyWithVersion({
         orgId: organizationId,
         createdBy: user.id,
@@ -215,6 +266,7 @@ export function CreatePolicyModal({
         templateId: selectedTemplateId,
         contentJson,
         logicJson,
+        clientRequestId,
       });
 
       if (!result.success) {
@@ -224,48 +276,11 @@ export function CreatePolicyModal({
       const policyId = result.policy_id!;
       const versionId = result.policy_version_id!;
 
-      // If template has required docs, create them
-      if (template?.default_required_docs && Array.isArray(template.default_required_docs)) {
-        const requiredDocs = template.default_required_docs.map((doc: any) => ({
-          policy_version_id: versionId,
-          doc_type: doc.doc_type || 'other',
-          doc_name: doc.doc_name || 'Document',
-          is_required: doc.is_required ?? true,
-          transaction_type: doc.transaction_type || 'claim',
-        }));
-
-        if (requiredDocs.length > 0) {
-          const { error: docsError } = await supabase.from('policy_required_docs').insert(requiredDocs);
-          if (docsError) {
-            console.warn('Failed to create required docs:', docsError);
-            // Non-critical, continue
-          }
-        }
-      }
-
-      // Invalidate queries
-      await queryClient.invalidateQueries({ queryKey: ['policies_management'] });
-      queryClient.invalidateQueries({ queryKey: ['policies_v2'] });
-      queryClient.invalidateQueries({ queryKey: ['policies'] });
-      queryClient.invalidateQueries({ queryKey: ['organization_policies'] });
-
-      // Audit log
-      await logEvent({
-        action: 'POLICY_CREATE',
-        resourceType: 'policy',
-        resourceId: policyId,
-        details: { 
-          title: name.trim(), 
-          category: lifeArea,
-          transaction_model: transactionModel,
-          organization_id: organizationId,
-          version_id: versionId,
-          from_template: selectedTemplateId || null,
-        },
-      });
-
-      toast.success('Policy created (Draft v1)', {
-        description: `"${name.trim()}" has been created. Opening editor...`,
+      // Always show success feedback immediately (avoid "created but showed error" mismatch)
+      toast.success(result.already_exists ? 'A similar policy already exists' : 'Policy created (Draft v1)', {
+        description: result.already_exists
+          ? `Opening the existing draft for "${name.trim()}"...`
+          : `"${name.trim()}" has been created. Opening editor...`,
       });
 
       // Close modal
@@ -279,8 +294,66 @@ export function CreatePolicyModal({
         }));
       }, 100);
 
+      // Non-blocking: required docs + query invalidation + audit log
+      void (async () => {
+        try {
+          // If template has required docs, create them
+          if (template?.default_required_docs && Array.isArray(template.default_required_docs)) {
+            const requiredDocs = template.default_required_docs.map((doc: any) => ({
+              policy_version_id: versionId,
+              doc_type: doc.doc_type || 'other',
+              doc_name: doc.doc_name || 'Document',
+              is_required: doc.is_required ?? true,
+              transaction_type: doc.transaction_type || 'claim',
+            }));
+
+            if (requiredDocs.length > 0) {
+              const { error: docsError } = await supabase.from('policy_required_docs').insert(requiredDocs);
+              if (docsError) console.warn('Failed to create required docs:', docsError);
+            }
+          }
+
+          await queryClient.invalidateQueries({ queryKey: ['policies_management'] });
+          queryClient.invalidateQueries({ queryKey: ['policies_v2'] });
+          queryClient.invalidateQueries({ queryKey: ['policies'] });
+          queryClient.invalidateQueries({ queryKey: ['organization_policies'] });
+
+          await logEvent({
+            action: 'POLICY_CREATE',
+            resourceType: 'policy',
+            resourceId: policyId,
+            details: {
+              outcome: 'success',
+              title: name.trim(),
+              category: lifeArea,
+              transaction_model: transactionModel,
+              organization_id: organizationId,
+              version_id: versionId,
+              from_template: selectedTemplateId || null,
+              client_request_id: clientRequestId,
+              already_exists: Boolean(result.already_exists),
+            },
+          });
+        } catch (err) {
+          console.warn('Post-create side effects failed (non-blocking):', err);
+        }
+      })();
+
     } catch (error: any) {
       console.error('Failed to create policy:', error);
+
+      void logEvent({
+        action: 'POLICY_CREATE_FAILED',
+        resourceType: 'policy',
+        resourceId: undefined,
+        details: {
+          outcome: 'failure',
+          organization_id: organizationId,
+          title: name.trim(),
+          category: lifeArea,
+          message: error?.message || String(error),
+        },
+      });
       
       toast.error('Failed to create policy', {
         description: error.message || 'An unexpected error occurred. Please try again.',
@@ -319,6 +392,14 @@ export function CreatePolicyModal({
             </div>
           </div>
         </DialogHeader>
+
+        {formError && step === 'details' && (
+          <div className="mt-3">
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {formError}
+            </div>
+          </div>
+        )}
 
         {step === 'source' ? (
           <div className="py-6 space-y-4">
