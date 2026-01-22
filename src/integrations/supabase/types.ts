@@ -1253,6 +1253,9 @@ export type Database = {
           created_at: string
           id: string
           organization_id: string
+          policy_enforcement_mode:
+            | Database["public"]["Enums"]["policy_enforcement_mode"]
+            | null
           require_policy_approval: boolean
           updated_at: string
         }
@@ -1262,6 +1265,9 @@ export type Database = {
           created_at?: string
           id?: string
           organization_id: string
+          policy_enforcement_mode?:
+            | Database["public"]["Enums"]["policy_enforcement_mode"]
+            | null
           require_policy_approval?: boolean
           updated_at?: string
         }
@@ -1271,6 +1277,9 @@ export type Database = {
           created_at?: string
           id?: string
           organization_id?: string
+          policy_enforcement_mode?:
+            | Database["public"]["Enums"]["policy_enforcement_mode"]
+            | null
           require_policy_approval?: boolean
           updated_at?: string
         }
@@ -2362,51 +2371,66 @@ export type Database = {
       request_documents: {
         Row: {
           created_at: string
+          derivation_reason: string | null
           doc_name: string
           doc_type: string
           file_url: string | null
           id: string
           is_required: boolean
           policy_version_id: string | null
+          rejection_reason: string | null
           request_id: string
           required_for: string | null
           reviewer_notes: string | null
+          source_doc_id: string | null
           status: string
           updated_at: string
           uploaded_at: string | null
           uploaded_by: string | null
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           created_at?: string
+          derivation_reason?: string | null
           doc_name: string
           doc_type: string
           file_url?: string | null
           id?: string
           is_required?: boolean
           policy_version_id?: string | null
+          rejection_reason?: string | null
           request_id: string
           required_for?: string | null
           reviewer_notes?: string | null
+          source_doc_id?: string | null
           status?: string
           updated_at?: string
           uploaded_at?: string | null
           uploaded_by?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           created_at?: string
+          derivation_reason?: string | null
           doc_name?: string
           doc_type?: string
           file_url?: string | null
           id?: string
           is_required?: boolean
           policy_version_id?: string | null
+          rejection_reason?: string | null
           request_id?: string
           required_for?: string | null
           reviewer_notes?: string | null
+          source_doc_id?: string | null
           status?: string
           updated_at?: string
           uploaded_at?: string | null
           uploaded_by?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: [
           {
@@ -2492,6 +2516,9 @@ export type Database = {
           assigned_to: string | null
           assigned_to_user_id: string | null
           category: string
+          checklist_snapshot_json: Json | null
+          compliance_reasons_json: Json | null
+          compliance_status: string | null
           created_at: string | null
           currency: string | null
           decision_at: string | null
@@ -2538,6 +2565,9 @@ export type Database = {
           assigned_to?: string | null
           assigned_to_user_id?: string | null
           category: string
+          checklist_snapshot_json?: Json | null
+          compliance_reasons_json?: Json | null
+          compliance_status?: string | null
           created_at?: string | null
           currency?: string | null
           decision_at?: string | null
@@ -2584,6 +2614,9 @@ export type Database = {
           assigned_to?: string | null
           assigned_to_user_id?: string | null
           category?: string
+          checklist_snapshot_json?: Json | null
+          compliance_reasons_json?: Json | null
+          compliance_status?: string | null
           created_at?: string | null
           currency?: string | null
           decision_at?: string | null
@@ -3229,6 +3262,7 @@ export type Database = {
         | "career"
         | "lifestyle"
         | "mobility"
+      policy_enforcement_mode: "soft" | "strict"
       request_status:
         | "pending"
         | "approved"
@@ -3389,6 +3423,7 @@ export const Constants = {
         "lifestyle",
         "mobility",
       ],
+      policy_enforcement_mode: ["soft", "strict"],
       request_status: [
         "pending",
         "approved",
