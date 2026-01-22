@@ -1604,11 +1604,16 @@ export type Database = {
           category: string
           coverage_rules: Json | null
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          deleted_reason: string | null
           effective_from: string
           effective_to: string | null
           eligibility_rules: Json | null
           id: string
           is_active: boolean | null
+          is_archived: boolean | null
+          is_deleted: boolean | null
           organization_id: string | null
           owner_user_id: string | null
           policy_ref: string
@@ -1629,11 +1634,16 @@ export type Database = {
           category: string
           coverage_rules?: Json | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deleted_reason?: string | null
           effective_from?: string
           effective_to?: string | null
           eligibility_rules?: Json | null
           id?: string
           is_active?: boolean | null
+          is_archived?: boolean | null
+          is_deleted?: boolean | null
           organization_id?: string | null
           owner_user_id?: string | null
           policy_ref: string
@@ -1654,11 +1664,16 @@ export type Database = {
           category?: string
           coverage_rules?: Json | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deleted_reason?: string | null
           effective_from?: string
           effective_to?: string | null
           eligibility_rules?: Json | null
           id?: string
           is_active?: boolean | null
+          is_archived?: boolean | null
+          is_deleted?: boolean | null
           organization_id?: string | null
           owner_user_id?: string | null
           policy_ref?: string
@@ -1678,6 +1693,66 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      policy_approvals: {
+        Row: {
+          approver_role: string | null
+          approver_user_id: string | null
+          comment: string | null
+          created_at: string | null
+          id: string
+          note: string | null
+          organization_id: string
+          policy_id: string
+          policy_version_id: string
+          requested_by: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          approver_role?: string | null
+          approver_user_id?: string | null
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          note?: string | null
+          organization_id: string
+          policy_id: string
+          policy_version_id: string
+          requested_by: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          approver_role?: string | null
+          approver_user_id?: string | null
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          note?: string | null
+          organization_id?: string
+          policy_id?: string
+          policy_version_id?: string
+          requested_by?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_approvals_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policy_approvals_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
             referencedColumns: ["id"]
           },
         ]
@@ -1729,6 +1804,51 @@ export type Database = {
           },
           {
             foreignKeyName: "policy_articles_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      policy_create_requests: {
+        Row: {
+          client_request_id: string
+          created_at: string | null
+          created_by: string
+          id: string
+          organization_id: string
+          policy_id: string | null
+          policy_version_id: string | null
+        }
+        Insert: {
+          client_request_id: string
+          created_at?: string | null
+          created_by: string
+          id?: string
+          organization_id: string
+          policy_id?: string | null
+          policy_version_id?: string | null
+        }
+        Update: {
+          client_request_id?: string
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          organization_id?: string
+          policy_id?: string | null
+          policy_version_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_create_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policy_create_requests_policy_id_fkey"
             columns: ["policy_id"]
             isOneToOne: false
             referencedRelation: "policies"
@@ -1839,6 +1959,8 @@ export type Database = {
       }
       policy_versions: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           attachment_url: string | null
           content_json: Json | null
           created_at: string | null
@@ -1849,10 +1971,17 @@ export type Database = {
           last_updated_at: string | null
           logic_json: Json | null
           policy_id: string
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
           status: string
+          submitted_at: string | null
+          submitted_by: string | null
           version_number: number
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           attachment_url?: string | null
           content_json?: Json | null
           created_at?: string | null
@@ -1863,10 +1992,17 @@ export type Database = {
           last_updated_at?: string | null
           logic_json?: Json | null
           policy_id: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
           status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
           version_number?: number
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           attachment_url?: string | null
           content_json?: Json | null
           created_at?: string | null
@@ -1877,7 +2013,12 @@ export type Database = {
           last_updated_at?: string | null
           logic_json?: Json | null
           policy_id?: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
           status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
           version_number?: number
         }
         Relationships: [
@@ -2816,9 +2957,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_policy_version: {
+        Args: { p_approval_id: string; p_comment?: string }
+        Returns: Json
+      }
+      archive_or_delete_policy: {
+        Args: { p_action: string; p_policy_id: string; p_reason?: string }
+        Returns: Json
+      }
       create_policy_with_version: {
         Args: {
           p_benefit_type?: string
+          p_client_request_id?: string
           p_content_json?: Json
           p_created_by: string
           p_effective_from?: string
@@ -2930,6 +3080,18 @@ export type Database = {
           p_policy_id: string
           p_version_id: string
         }
+        Returns: Json
+      }
+      reject_policy_version: {
+        Args: { p_approval_id: string; p_reason: string }
+        Returns: Json
+      }
+      revert_policy_to_draft: {
+        Args: { p_policy_version_id: string }
+        Returns: Json
+      }
+      submit_policy_for_approval: {
+        Args: { p_note?: string; p_policy_version_id: string }
         Returns: Json
       }
     }
