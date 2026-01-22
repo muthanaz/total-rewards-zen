@@ -70,7 +70,8 @@ export function formatNullable<T>(
 
 /**
  * UAE Dirham symbol (د.إ) for display.
- * Use this constant for text-based currency display.
+ * DEPRECATED: Use <Currency> component or <DirhamSymbolIcon> instead.
+ * Kept for backward compatibility.
  */
 export const DIRHAM_SYMBOL = 'د.إ';
 
@@ -87,6 +88,10 @@ export interface CurrencyFormatOptions {
  * - < 10,000: Full number with commas (e.g., "د.إ 1,234")
  * 
  * ALWAYS outputs Western digits (0-9), never Arabic-Indic.
+ * 
+ * RECOMMENDED: For modern usage, prefer:
+ * - <Currency amount={value} /> for display
+ * - formatCurrencyNumber(value) + <DirhamSymbolIcon> for custom layouts
  */
 export function formatCurrencyAED(
   value: number | null | undefined,
@@ -130,6 +135,20 @@ export function formatCurrencyAED(
     ? safeLocaleFormat(absValue, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
     : safeLocaleFormat(absValue);
   return `${sign}${prefix}${formatted}`;
+}
+
+/**
+ * Format a number for currency display WITHOUT the symbol.
+ * Use with <DirhamSymbolIcon> for consistent SVG-based currency display.
+ * 
+ * @example
+ * <DirhamSymbolIcon /> {formatCurrencyNumber(45000)} // → د.إ 45K
+ */
+export function formatCurrencyNumber(
+  value: number | null | undefined,
+  options: Omit<CurrencyFormatOptions, 'showCurrency'> = {}
+): string {
+  return formatCurrencyAED(value, { ...options, showCurrency: false });
 }
 
 /**

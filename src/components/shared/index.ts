@@ -77,3 +77,23 @@ export {
   createMetricEvidenceData,
 } from './MetricEvidenceDrawer';
 export type { MetricEvidenceData } from './MetricEvidenceDrawer';
+
+// Trust Layer Components
+export { DataProvenanceTooltip, ProvenanceInline } from './DataProvenanceTooltip';
+export { 
+  EstimateDisclaimer, 
+  UtilizationDisclaimer, 
+  EntitlementDisclaimer,
+  ForecastDisclaimer,
+  BenchmarkDisclaimer,
+} from './EstimateDisclaimer';
+export { 
+  TrustedValue, 
+  TrustedCurrency, 
+  TrustedPercent, 
+  TrustedInteger,
+  TrustedMetricCard,
+} from './TrustedValue';
+
+// Global Error Boundary
+export { GlobalErrorBoundary } from './GlobalErrorBoundary';
