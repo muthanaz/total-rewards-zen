@@ -1,24 +1,22 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Home, GraduationCap, 
-  Heart, Car, Dumbbell, BookOpen, Gift,
-  LucideIcon,
+  Home, GraduationCap, Heart, Car, Dumbbell, BookOpen, Gift,
+  Wallet, Calendar, DollarSign, Briefcase, LucideIcon,
 } from 'lucide-react';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useUIVisibility } from '@/contexts/UIVisibilityContext';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED } from '@/lib/utils';
 import { useEmployeeDashboard } from '@/hooks/useEmployeeDashboard';
 import { DemoTip, DEMO_TIPS } from '@/components/demo';
 
-// New components
-import { EntitlementKPIRow } from '@/components/employee/EntitlementKPIRow';
-import { NextActionsModule, generateNextActions } from '@/components/employee/NextActionsModule';
-import { BenefitEntitlementCard } from '@/components/employee/BenefitEntitlementCard';
-import { ProfileDataBanner } from '@/components/employee/ProfileDataBanner';
+// Original dashboard components
 import { ProfileCompleteness } from '@/components/employee/ProfileCompleteness';
-import { DataProvenance } from '@/lib/dataProvenance';
+import { TodayStrip } from '@/components/employee/TodayStrip';
+import { BenefitCard } from '@/components/employee/BenefitCard';
+import { CompensationGrid } from '@/components/ui/compensation-summary-card';
+import { SmartInsights } from '@/components/dashboard/SmartInsights';
 
 // Benefit value types
 type BenefitValueType = 'guaranteed' | 'employer_cost' | 'performance' | 'budget';
@@ -43,23 +41,22 @@ const demoBenefits = [
   { name: 'Learning & Development', nameKey: 'benefit.learning', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', valueType: 'budget' as BenefitValueType, area: 'career', route: '/employee/learning', category: 'learning', claimable: true, description: 'Professional courses and certifications' },
 ];
 
-// Demo leave data
-const demoLeaveBalances = [
-  { leaveType: 'Annual Leave', totalDays: 30, usedDays: 8, remainingDays: 22, year: 2024 },
-  { leaveType: 'Sick Leave', totalDays: 15, usedDays: 2, remainingDays: 13, year: 2024 },
-];
-
 export default function EmployeeDashboard() {
   const navigate = useNavigate();
   const { t, language, direction } = useLanguage();
   const { isElementVisible } = useUIVisibility();
   const isRTL = direction === 'rtl';
   
+  // Privacy toggle state
+  const [salaryHidden, setSalaryHidden] = useState(false);
+  
   // Fetch real data
   const { data: dashboardData, isLoading } = useEmployeeDashboard();
   
   // Check visibility for each section
+  const showCompensation = isElementVisible('employee', 'dashboard', 'compensation_summary');
   const showYourBenefits = isElementVisible('employee', 'dashboard', 'your_benefits');
+  const showSmartInsights = isElementVisible('employee', 'dashboard', 'smart_insights');
   const showSatisfactionSurvey = isElementVisible('employee', 'dashboard', 'satisfaction_survey');
 
   // Use real data or fallback to demo
@@ -71,9 +68,14 @@ export default function EmployeeDashboard() {
     missingFields: ['Phone Number', 'Emirates ID'],
   };
 
-  const pendingRequests = dashboardData?.pendingRequests || [];
-  const pendingCount = pendingRequests.length;
-  const pendingAmount = pendingRequests.reduce((sum, r) => sum + (r.amount || 0), 0);
+  const totals = dashboardData?.totals || {
+    annualSalary: 420000,
+    guaranteedBenefits: 219000,
+    totalBenefitsValue: 282000,
+    totalUtilized: 215200,
+    utilizationPercent: 76,
+    totalCompensation: 639000,
+  };
 
   // Map real benefits to display format or use demo
   const benefits = useMemo(() => {
@@ -98,64 +100,97 @@ export default function EmployeeDashboard() {
     }
     return demoBenefits;
   }, [dashboardData?.benefits]);
-  
-  // Calculate entitlement totals
-  const entitlementTotals = useMemo(() => {
-    const totalEligible = benefits.reduce((sum, b) => sum + b.value, 0);
-    const totalUsed = benefits.reduce((sum, b) => sum + b.utilized, 0);
-    const totalRemaining = totalEligible - totalUsed;
+
+  // Build compensation metrics for the grid
+  const compensationMetrics = useMemo(() => {
+    const annualSalary = totals.annualSalary;
+    const monthlyBase = profileData.monthlySalary;
+    const guaranteedBenefits = totals.guaranteedBenefits;
+    const totalBenefitsValue = totals.totalBenefitsValue;
+    
+    return [
+      {
+        icon: DollarSign,
+        value: formatCurrencyAED(annualSalary),
+        label: isRTL ? 'الراتب السنوي' : 'Annual Salary',
+        formula: isRTL ? 'الراتب الشهري × 12' : 'Monthly Salary × 12',
+        dataSource: 'HR System',
+        variant: 'primary' as const,
+        isSensitive: true,
+      },
+      {
+        icon: Wallet,
+        value: formatCurrencyAED(monthlyBase),
+        label: isRTL ? 'الراتب الشهري' : 'Monthly Base',
+        formula: isRTL ? 'الراتب الأساسي + البدلات' : 'Base Salary + Allowances',
+        dataSource: 'Payroll',
+        variant: 'default' as const,
+        isSensitive: true,
+      },
+      {
+        icon: Briefcase,
+        value: formatCurrencyAED(guaranteedBenefits),
+        label: isRTL ? 'البدلات النقدية' : 'Cash Allowances',
+        formula: isRTL ? 'السكن + التعليم + النقل' : 'Housing + Education + Transport',
+        dataSource: 'Benefits System',
+        variant: 'success' as const,
+        isSensitive: false,
+      },
+      {
+        icon: Gift,
+        value: formatCurrencyAED(totalBenefitsValue),
+        label: isRTL ? 'إجمالي المزايا' : 'Total Benefits',
+        formula: isRTL ? 'جميع المزايا المتاحة' : 'All Available Benefits',
+        dataSource: 'Benefits System',
+        variant: 'benefits' as const,
+        isSensitive: false,
+        subtitle: `${totals.utilizationPercent}% ${isRTL ? 'مستخدم' : 'utilized'}`,
+      },
+    ];
+  }, [totals, profileData.monthlySalary, isRTL]);
+
+  // Total compensation for the main card
+  const totalCompensation = useMemo(() => {
+    const total = totals.totalCompensation;
+    const salaryPercent = totals.annualSalary > 0 
+      ? Math.round((totals.annualSalary / total) * 100)
+      : 66;
+    const benefitsPercent = 100 - salaryPercent;
     
     return {
-      totalEligible,
-      totalUsed,
-      totalRemaining,
+      value: formatCurrencyAED(total),
+      formula: isRTL ? 'الراتب السنوي + المزايا المضمونة' : 'Annual Salary + Guaranteed Benefits',
+      dataSource: 'HR & Benefits Systems',
+      subtitle: isRTL 
+        ? `مع المزايا المتغيرة: ${formatCurrencyAED(total + (totals.totalBenefitsValue - totals.guaranteedBenefits))}`
+        : `With variable benefits: ${formatCurrencyAED(total + (totals.totalBenefitsValue - totals.guaranteedBenefits))}`,
+      salaryHidden,
+      onTogglePrivacy: () => setSalaryHidden(!salaryHidden),
+      salaryPercent,
+      benefitsPercent,
     };
+  }, [totals, salaryHidden, isRTL]);
+
+  // Transform benefits for SmartInsights
+  const insightsBenefits = useMemo(() => {
+    return benefits.map(b => ({
+      name: b.name,
+      value: b.value,
+      utilized: b.utilized,
+      route: b.route,
+      valueType: b.valueType,
+    }));
   }, [benefits]);
-
-  // Generate next actions
-  const nextActions = useMemo(() => {
-    return generateNextActions({
-      pendingRequests: pendingRequests.map(r => ({
-        id: r.id,
-        subject: r.subject || 'Request',
-        category: r.category || 'General',
-        hasMissingDocs: false, // Will be enhanced when request detail is fetched
-        missingDocsCount: 0,
-        status: r.status || 'pending',
-        amount: r.amount,
-      })),
-      benefits: benefits.map(b => ({
-        name: b.name,
-        value: b.value,
-        utilized: b.utilized,
-        route: b.route,
-        category: b.category,
-      })),
-      profileCompleteness: profileData.profileCompleteness,
-      missingFields: profileData.missingFields,
-    });
-  }, [pendingRequests, benefits, profileData]);
-
-  // Data provenance for the entitlement summary
-  const entitlementProvenance: DataProvenance = {
-    source_type: 'system',
-    source_label: 'Benefits System',
-    last_updated_at: dashboardData?.lastUpdated || new Date().toISOString(),
-    confidence_level: profileData.profileCompleteness >= 80 ? 'high' : 'medium',
-    assumptions: profileData.profileCompleteness < 80 
-      ? ['Some values may be estimated due to incomplete profile data']
-      : undefined,
-  };
 
   if (isLoading) {
     return (
       <div className="space-y-5 animate-pulse">
         <div className="h-16 bg-muted rounded-xl" />
         <div className="h-12 bg-muted rounded-xl" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="h-32 bg-muted rounded-xl" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => <div key={i} className="h-24 bg-muted rounded-xl" />)}
         </div>
-        <div className="h-48 bg-muted rounded-xl" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map(i => <div key={i} className="h-48 bg-muted rounded-xl" />)}
         </div>
@@ -168,7 +203,7 @@ export default function EmployeeDashboard() {
       {/* Demo Tip */}
       <DemoTip {...DEMO_TIPS.employeeBenefits} variant="highlight" />
       
-      {/* 1. Personalized Greeting */}
+      {/* 1. Personalized Greeting + Profile Completeness */}
       <ProfileCompleteness
         firstName={profileData.firstName}
         completenessPercent={profileData.profileCompleteness}
@@ -176,32 +211,19 @@ export default function EmployeeDashboard() {
         isRTL={isRTL}
       />
 
-      {/* 2. Profile Data Banner (if incomplete) */}
-      <ProfileDataBanner
-        missingFields={profileData.missingFields}
-        completenessPercent={profileData.profileCompleteness}
-        isRTL={isRTL}
-        dismissible
-      />
+      {/* 2. Quick Actions Strip */}
+      <TodayStrip />
 
-      {/* 3. Entitlement KPI Row - TOP PRIORITY */}
-      <EntitlementKPIRow
-        totalEligible={entitlementTotals.totalEligible}
-        usedYTD={entitlementTotals.totalUsed}
-        remaining={entitlementTotals.totalRemaining}
-        pendingCount={pendingCount}
-        pendingAmount={pendingAmount}
-        provenance={entitlementProvenance}
-        isRTL={isRTL}
-      />
+      {/* 3. Compensation Grid - Total Compensation + 4 Metrics */}
+      {showCompensation && (
+        <CompensationGrid
+          metrics={compensationMetrics}
+          totalCompensation={totalCompensation}
+          isRTL={isRTL}
+        />
+      )}
 
-      {/* 4. Next Actions Module - ALWAYS VISIBLE */}
-      <NextActionsModule
-        actions={nextActions}
-        isRTL={isRTL}
-      />
-
-      {/* 5. Benefits Grid */}
+      {/* 4. Benefits Grid */}
       {showYourBenefits && (
         <section>
           <div className={cn("flex items-center justify-between mb-5", isRTL && "flex-row-reverse")}>
@@ -212,22 +234,26 @@ export default function EmployeeDashboard() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {benefits.map((benefit, index) => (
-              <BenefitEntitlementCard
+              <BenefitCard
                 key={benefit.name}
                 name={t(benefit.nameKey)}
                 icon={benefit.icon}
-                eligible={benefit.value}
-                used={benefit.utilized}
-                remaining={benefit.value - benefit.utilized}
-                route={benefit.route}
+                value={benefit.value}
+                utilized={benefit.utilized}
                 description={benefit.description}
-                canSubmitClaim={benefit.claimable}
-                isRTL={isRTL}
+                route={benefit.route}
+                onClick={() => navigate(benefit.route)}
                 index={index}
+                isRTL={isRTL}
               />
             ))}
           </div>
         </section>
+      )}
+
+      {/* 5. Smart Insights */}
+      {showSmartInsights && (
+        <SmartInsights benefits={insightsBenefits} />
       )}
 
       {/* 6. Satisfaction Survey (secondary, at bottom) */}
