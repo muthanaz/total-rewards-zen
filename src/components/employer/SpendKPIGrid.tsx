@@ -18,8 +18,9 @@ import {
   Users,
   TrendingUp,
 } from 'lucide-react';
-import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
-import { cn } from '@/lib/utils';
+import { formatPercent, formatInteger, cn } from '@/lib/utils';
+import { Currency } from '@/components/ui/Currency';
+import { createSystemProvenance, DataProvenance } from '@/lib/dataProvenance';
 
 interface SpendMetrics {
   allocatedBudget: number;
@@ -37,6 +38,8 @@ interface SpendKPIGridProps {
   metrics: SpendMetrics;
   isDemo?: boolean;
   onKPIClick?: (kpiId: string) => void;
+  /** Optional provenance for trust layer */
+  provenance?: DataProvenance;
 }
 
 const METRIC_DEFINITIONS = {
@@ -72,18 +75,22 @@ const METRIC_DEFINITIONS = {
   },
 };
 
-export function SpendKPIGrid({ metrics, isDemo, onKPIClick }: SpendKPIGridProps) {
+export function SpendKPIGrid({ metrics, isDemo, onKPIClick, provenance }: SpendKPIGridProps) {
   const getUtilizationColor = (rate: number) => {
     if (rate >= 80) return 'text-success';
     if (rate >= 60) return 'text-warning';
     return 'text-destructive';
   };
 
+  // Default provenance for demo mode
+  const defaultProvenance = provenance || createSystemProvenance('Benefits Calculation Engine', new Date().toISOString());
+
   const kpis = [
     {
       id: 'allocated',
       label: 'Allocated Budget',
-      value: formatCurrencyAED(metrics.allocatedBudget),
+      value: metrics.allocatedBudget,
+      isCurrency: true,
       icon: DollarSign,
       iconBg: 'bg-primary/10',
       iconColor: 'text-primary',
@@ -92,20 +99,22 @@ export function SpendKPIGrid({ metrics, isDemo, onKPIClick }: SpendKPIGridProps)
     {
       id: 'entitled',
       label: 'Entitled Value',
-      value: formatCurrencyAED(metrics.entitledValue),
+      value: metrics.entitledValue,
+      isCurrency: true,
       icon: Target,
       iconBg: 'bg-secondary/10',
       iconColor: 'text-secondary',
       definition: METRIC_DEFINITIONS.entitledValue,
       subtitle: metrics.entitledValue > metrics.allocatedBudget 
-        ? `Over-entitled by ${formatCurrencyAED(metrics.entitledValue - metrics.allocatedBudget)}`
+        ? <><Currency amount={metrics.entitledValue - metrics.allocatedBudget} size="xs" /> over-entitled</>
         : 'Within budget',
       subtitleColor: metrics.entitledValue > metrics.allocatedBudget ? 'text-warning' : 'text-success',
     },
     {
       id: 'claimed',
       label: 'Claimed Amount',
-      value: formatCurrencyAED(metrics.claimedAmount),
+      value: metrics.claimedAmount,
+      isCurrency: true,
       icon: BarChart3,
       iconBg: 'bg-accent/10',
       iconColor: 'text-accent',
@@ -116,6 +125,7 @@ export function SpendKPIGrid({ metrics, isDemo, onKPIClick }: SpendKPIGridProps)
       id: 'utilization',
       label: 'Utilization Rate',
       value: formatPercent(metrics.utilizationRate),
+      isCurrency: false,
       valueColor: getUtilizationColor(metrics.utilizationRate),
       icon: PieChart,
       iconBg: 'bg-chart-2/10',
@@ -126,7 +136,8 @@ export function SpendKPIGrid({ metrics, isDemo, onKPIClick }: SpendKPIGridProps)
     {
       id: 'unused',
       label: 'Unused Entitlement',
-      value: formatCurrencyAED(metrics.unusedEntitlement),
+      value: metrics.unusedEntitlement,
+      isCurrency: true,
       valueColor: 'text-warning',
       icon: TrendingDown,
       iconBg: 'bg-warning/10',
@@ -137,7 +148,8 @@ export function SpendKPIGrid({ metrics, isDemo, onKPIClick }: SpendKPIGridProps)
     ...(metrics.avgCostPerEmployee !== undefined ? [{
       id: 'avgCost',
       label: 'Avg Cost / Employee',
-      value: formatCurrencyAED(metrics.avgCostPerEmployee),
+      value: metrics.avgCostPerEmployee,
+      isCurrency: true,
       icon: Users,
       iconBg: 'bg-info/10',
       iconColor: 'text-info',
@@ -177,12 +189,12 @@ export function SpendKPIGrid({ metrics, isDemo, onKPIClick }: SpendKPIGridProps)
               </div>
 
               {/* Value */}
-              <p className={cn(
+              <div className={cn(
                 "text-xl lg:text-2xl font-bold tracking-tight",
                 kpi.valueColor
               )}>
-                {kpi.value}
-              </p>
+                {kpi.isCurrency ? <Currency amount={kpi.value as number} /> : kpi.value}
+              </div>
 
               {/* Label */}
               <p className="text-xs text-muted-foreground mt-1">{kpi.label}</p>

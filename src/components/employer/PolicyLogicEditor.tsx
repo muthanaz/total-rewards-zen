@@ -335,9 +335,9 @@ export function PolicyLogicEditor({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="AED">د.إ (AED)</SelectItem>
-                    <SelectItem value="USD">$ (USD)</SelectItem>
-                    <SelectItem value="EUR">€ (EUR)</SelectItem>
+                    <SelectItem value="AED">AED</SelectItem>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="EUR">EUR</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

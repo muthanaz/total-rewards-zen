@@ -17,8 +17,8 @@ import {
   AlertTriangle,
   ChevronRight,
 } from 'lucide-react';
-import { cn, formatCurrencyAED } from '@/lib/utils';
-
+import { cn } from '@/lib/utils';
+import { Currency } from '@/components/ui/Currency';
 interface FocusItem {
   id: string;
   employeeName: string;
@@ -111,7 +111,7 @@ export function TodaysFocusPanel({ items, onItemClick }: TodaysFocusPanelProps) 
                   <span className="font-medium text-sm truncate">{item.subject}</span>
                   {item.amount && (
                     <span className="text-xs text-muted-foreground font-mono">
-                      {formatCurrencyAED(item.amount, { abbreviate: false })}
+                      <Currency amount={item.amount} abbreviate={false} size="xs" />
                     </span>
                   )}
                 </div>

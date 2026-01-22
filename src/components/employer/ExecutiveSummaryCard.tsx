@@ -28,7 +28,8 @@ import {
   CheckCircle,
   Target,
 } from 'lucide-react';
-import { cn, formatCurrencyAED } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { Currency } from '@/components/ui/Currency';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { DEMO_EXEC_METRICS, DEMO_ZOMBIE_OPPORTUNITIES } from '@/lib/demoScenario';
@@ -93,7 +94,7 @@ export function ExecutiveSummaryCard({ className, variant = 'full' }: ExecutiveS
             <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
               <PiggyBank className="w-4 h-4 text-primary" />
               <span className="text-sm text-muted-foreground">{t('Investment', 'الاستثمار')}</span>
-              <span className="font-semibold">{formatCurrencyAED(metrics.totalInvestment, { abbreviate: true })}</span>
+              <span className="font-semibold"><Currency amount={metrics.totalInvestment} /></span>
             </div>
             
             {/* Utilization */}
@@ -128,7 +129,7 @@ export function ExecutiveSummaryCard({ className, variant = 'full' }: ExecutiveS
             <div className={cn("text-center p-4 rounded-xl bg-background/50 border border-border/40", isRTL && "text-right")}>
               <PiggyBank className="w-8 h-8 text-primary mx-auto mb-2" />
               <p className="text-xs text-muted-foreground mb-1">{t('Total Investment', 'إجمالي الاستثمار')}</p>
-              <p className="text-2xl font-bold">{formatCurrencyAED(metrics.totalInvestment, { abbreviate: true })}</p>
+              <div className="text-2xl font-bold"><Currency amount={metrics.totalInvestment} /></div>
             </div>
             
             {/* Utilization */}
@@ -143,7 +144,7 @@ export function ExecutiveSummaryCard({ className, variant = 'full' }: ExecutiveS
             <div className={cn("text-center p-4 rounded-xl bg-background/50 border border-border/40", isRTL && "text-right")}>
               <AlertTriangle className="w-8 h-8 text-warning mx-auto mb-2" />
               <p className="text-xs text-muted-foreground mb-1">{t('Unused Spend', 'الإنفاق غير المستخدم')}</p>
-              <p className="text-2xl font-bold text-warning">{formatCurrencyAED(metrics.zombieSpend, { abbreviate: true })}</p>
+              <div className="text-2xl font-bold text-warning"><Currency amount={metrics.zombieSpend} /></div>
               <p className="text-xs text-muted-foreground">{t('Recovery opportunity', 'فرصة استرداد')}</p>
             </div>
             
@@ -185,7 +186,7 @@ export function ExecutiveSummaryCard({ className, variant = 'full' }: ExecutiveS
               <PiggyBank className="w-4 h-4 text-primary" />
               <span className="text-xs text-muted-foreground">{t('Investment', 'الاستثمار')}</span>
             </div>
-            <p className="text-xl font-bold">{formatCurrencyAED(metrics.totalInvestment, { abbreviate: true })}</p>
+            <div className="text-xl font-bold"><Currency amount={metrics.totalInvestment} /></div>
           </div>
           
           {/* Utilization */}
@@ -248,7 +249,7 @@ export function ExecutiveSummaryCard({ className, variant = 'full' }: ExecutiveS
                   </p>
                 </div>
                 <div className={cn("text-right", isRTL && "text-left")}>
-                  <p className="text-sm font-semibold text-warning">{formatCurrencyAED(opp.impact, { abbreviate: true })}</p>
+                  <div className="text-sm font-semibold text-warning"><Currency amount={opp.impact} /></div>
                   <p className="text-[10px] text-muted-foreground">{t('unused', 'غير مستخدم')}</p>
                 </div>
               </div>

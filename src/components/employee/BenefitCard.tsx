@@ -2,9 +2,9 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ChevronRight } from 'lucide-react';
-import { cn, formatCurrencyAED } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { Currency } from '@/components/ui/Currency';
 import { LucideIcon } from 'lucide-react';
-
 interface BenefitCardProps {
   name: string;
   icon: LucideIcon;
@@ -103,9 +103,9 @@ export function BenefitCard({
           {/* Value and status row */}
           <div className={cn("flex items-end justify-between gap-3", isRTL && "flex-row-reverse")}>
             <div className={cn(isRTL && "text-right")}>
-              <p className="text-xl font-bold text-foreground tracking-tight">
-                {formatCurrencyAED(value, { abbreviate: false })}
-              </p>
+              <div className="text-xl font-bold text-foreground tracking-tight">
+                <Currency amount={value} abbreviate={false} />
+              </div>
               <p className="text-[13px] text-muted-foreground mt-1">
                 {isRTL ? 'الاستحقاق السنوي' : 'Annual Entitlement'}
               </p>
@@ -128,14 +128,14 @@ export function BenefitCard({
             {/* Utilization details */}
             <div className={cn("flex items-center justify-between text-[13px]", isRTL && "flex-row-reverse")}>
               <span className="text-muted-foreground">
-                {formatCurrencyAED(utilized, { abbreviate: false })} {isRTL ? 'مستخدم' : 'utilized'}
+                <Currency amount={utilized} abbreviate={false} size="sm" /> {isRTL ? 'مستخدم' : 'utilized'}
               </span>
               <span className={cn(
                 "font-medium",
                 remaining > 0 ? "text-accent" : "text-success"
               )}>
                 {remaining > 0 
-                  ? `${formatCurrencyAED(remaining, { abbreviate: false })} ${isRTL ? 'متبقي' : 'remaining'}`
+                  ? <><Currency amount={remaining} abbreviate={false} size="sm" /> {isRTL ? 'متبقي' : 'remaining'}</>
                   : isRTL ? 'تم الاستخدام بالكامل' : 'Fully utilized'
                 }
               </span>

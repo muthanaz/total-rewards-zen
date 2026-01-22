@@ -12,7 +12,7 @@ import {
   FileText, Settings, Megaphone, Store, BarChart3, ArrowUpDown, MoreHorizontal,
   UserPlus, Trash2, CheckSquare, AlertTriangle
 } from 'lucide-react';
-import { formatCurrencyAED } from '@/lib/utils';
+import { Currency } from '@/components/ui/Currency';
 import { format, isPast, formatDistanceToNow } from 'date-fns';
 import type { ActionItem, Status, Priority, ActionType, Confidence, SourceType } from '@/hooks/useEmployerActions';
 
@@ -280,7 +280,7 @@ export function ActionTableView({ actions, onOpenAction, onStatusChange, onBulkA
                   <TableCell>
                     {action.expectedImpact.costAvoidance ? (
                       <span className="text-xs text-green-600 font-medium">
-                        {formatCurrencyAED(action.expectedImpact.costAvoidance, { abbreviate: true })}
+                        <Currency amount={action.expectedImpact.costAvoidance} size="xs" />
                       </span>
                     ) : action.expectedImpact.utilizationChange ? (
                       <span className="text-xs text-green-600 font-medium">
