@@ -2371,6 +2371,7 @@ export type Database = {
       request_documents: {
         Row: {
           created_at: string
+          decision_reason: string | null
           derivation_reason: string | null
           doc_name: string
           doc_type: string
@@ -2392,6 +2393,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          decision_reason?: string | null
           derivation_reason?: string | null
           doc_name: string
           doc_type: string
@@ -2413,6 +2415,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          decision_reason?: string | null
           derivation_reason?: string | null
           doc_name?: string
           doc_type?: string
@@ -3083,7 +3086,27 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      request_document_summary: {
+        Row: {
+          all_required_complete: boolean | null
+          missing_count: number | null
+          pending_review_count: number | null
+          provided_count: number | null
+          rejected_count: number | null
+          request_id: string | null
+          required_count: number | null
+          waived_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_documents_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       approve_policy_version: {

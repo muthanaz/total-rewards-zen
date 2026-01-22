@@ -571,14 +571,14 @@ export function usePolicyDrivenSubmission() {
 
       if (error) throw error;
 
-      // Create document checklist from snapshot (Health uses request_documents)
-      if (checklistSnapshotJson && params.category === 'Health Insurance') {
+      // Create document checklist from snapshot (unified model - all categories use request_documents)
+      if (checklistSnapshotJson) {
         const docRows = snapshotToRequestDocuments(request.id, checklistSnapshotJson);
         if (docRows.length > 0) {
           await supabase.from('request_documents').insert(docRows);
         }
       } else if (params.type !== 'question' && policy?.requiredDocs.length) {
-        // Legacy fallback for non-Health categories
+        // Fallback: create request_documents rows directly from policy docs
         const applicableDocs = policy.requiredDocs.filter(
           (d) =>
             d.is_required &&
@@ -586,12 +586,17 @@ export function usePolicyDrivenSubmission() {
         );
         const docEntries = applicableDocs.map((doc) => ({
           request_id: request.id,
+          policy_version_id: policy.policyVersionId,
           doc_type: doc.doc_type,
           doc_name: doc.doc_name,
+          required_for: doc.transaction_type,
+          is_required: doc.is_required,
           status: 'missing' as const,
+          source_doc_id: doc.id,
+          derivation_reason: `Required by policy ${policy.policyRef}`,
         }));
         if (docEntries.length > 0) {
-          await supabase.from('claim_docs').insert(docEntries);
+          await supabase.from('request_documents').insert(docEntries);
         }
       }
 
