@@ -81,6 +81,7 @@ import AdminFeatureFlags from "./pages/admin/FeatureFlags";
 import AdminBilling from "./pages/admin/Billing";
 import AdminDataQualityRules from "./pages/admin/DataQualityRules";
 import AdminPolicyLibrary from "./pages/admin/PolicyLibrary";
+import AdminPolicyTemplates from "./pages/admin/PolicyTemplates";
 import AdminAlertsCenter from "./pages/admin/AlertsCenter";
 import AdminSessionManagement from "./pages/admin/SessionManagement";
 
@@ -282,6 +283,7 @@ function AppRoutes() {
         <Route path="feature-flags" element={<AdminFeatureFlags />} />
         <Route path="billing" element={<AdminBilling />} />
         {/* Content & Alerts */}
+        <Route path="policy-templates" element={<AdminPolicyTemplates />} />
         <Route path="policy-library" element={<AdminPolicyLibrary />} />
         <Route path="alerts" element={<AdminAlertsCenter />} />
       </Route>
