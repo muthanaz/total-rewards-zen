@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,8 @@ import {
   Eye, 
   History, 
   CheckCircle, 
+  AlertTriangle,
+  Send,
   Clock,
   Search,
   FileCheck,
@@ -59,6 +61,16 @@ import { toast } from 'sonner';
 import { PolicyLogic } from '@/lib/policyEngine';
 import { useAuditLog } from '@/hooks/useAuditLog';
 import { useOrgSettings } from '@/hooks/useOrgSettings';
+import {
+  archiveOrDeletePolicy,
+  approvePolicyVersion,
+  getOrgPolicySettings,
+  publishPolicyVersion,
+  rejectPolicyVersion,
+  submitPolicyForApproval,
+} from '@/hooks/usePolicyRPC';
+import { PolicyArchiveDeleteDialog } from './PolicyArchiveDeleteDialog';
+import { PolicyApprovalDialog } from './PolicyApprovalDialog';
 
 interface PolicyRow {
   id: string;
@@ -89,6 +101,7 @@ interface PolicyRow {
   draftVersion?: {
     id: string;
     version_number: number;
+    status?: string;
     logic_json?: PolicyLogic | null;
   } | null;
 }
@@ -99,8 +112,15 @@ export function PolicyManagementView() {
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [archiveDeleteOpen, setArchiveDeleteOpen] = useState(false);
+  const [archiveDeleteAction, setArchiveDeleteAction] = useState<'archive' | 'delete'>('archive');
+  const [archiveDeleteHint, setArchiveDeleteHint] = useState<string | null>(null);
+  const [archiveDeleteSubmitting, setArchiveDeleteSubmitting] = useState(false);
+  const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
+  const [approvalDialogMode, setApprovalDialogMode] = useState<'submit' | 'reject'>('submit');
+  const [approvalSubmitting, setApprovalSubmitting] = useState(false);
   const { hasPermission } = useEmployerPermissions();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const queryClient = useQueryClient();
 
   // Fetch organization ID
@@ -119,6 +139,18 @@ export function PolicyManagementView() {
   });
 
   const organizationId = profile?.organization_id;
+
+  const { data: policyGovernance } = useQuery({
+    queryKey: ['org_policy_governance', organizationId],
+    queryFn: async () => {
+      if (!organizationId) return null;
+      return getOrgPolicySettings(organizationId);
+    },
+    enabled: !!organizationId,
+  });
+
+  const approvalsEnabled = policyGovernance?.require_policy_approval ?? true;
+  const canApprove = role === 'admin' || hasPermission('can_process_claims');
 
   // Fetch org settings for admin-managed mode
   const { data: orgSettingsData } = useOrgSettings(organizationId);
@@ -154,7 +186,7 @@ export function PolicyManagementView() {
       return (policiesData || []).map(policy => {
         const policyVersions = (versions || []).filter((v: any) => v.policy_id === policy.id);
         const published = policyVersions.find((v: any) => v.status === 'published');
-        const draft = policyVersions.find((v: any) => v.status === 'draft');
+        const working = policyVersions.find((v: any) => ['draft', 'submitted', 'approved', 'rejected'].includes(v.status));
 
         return {
           ...policy,
@@ -167,11 +199,14 @@ export function PolicyManagementView() {
             updated_at: published.last_updated_at || published.created_at,
             logic_json: published.logic_json as PolicyLogic | null,
           } : null,
-          draftVersion: draft ? {
-            id: draft.id,
-            version_number: draft.version_number,
-            logic_json: draft.logic_json as PolicyLogic | null,
-          } : null,
+          draftVersion: working
+            ? {
+                id: working.id,
+                version_number: working.version_number,
+                status: working.status,
+                logic_json: working.logic_json as PolicyLogic | null,
+              }
+            : null,
         };
       });
     },
@@ -183,6 +218,16 @@ export function PolicyManagementView() {
       return <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">Published v{policy.currentVersion.version_number}</Badge>;
     }
     if (policy.draftVersion) {
+      const s = policy.draftVersion.status || 'draft';
+      if (s === 'submitted') {
+        return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20">Pending approval</Badge>;
+      }
+      if (s === 'approved') {
+        return <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">Approved</Badge>;
+      }
+      if (s === 'rejected') {
+        return <Badge className="bg-rose-500/10 text-rose-600 border-rose-500/20">Rejected</Badge>;
+      }
       return <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20">Draft v{policy.draftVersion.version_number}</Badge>;
     }
     if (!policy.is_active) {
@@ -290,24 +335,291 @@ export function PolicyManagementView() {
 
   const { logEvent } = useAuditLog();
 
-  const handleArchive = async (policy: PolicyRow) => {
-    try {
-      await supabase
-        .from('policies')
-        .update({ is_active: false, status: 'archived' })
-        .eq('id', policy.id);
+  const openArchiveDelete = (policy: PolicyRow, action: 'archive' | 'delete') => {
+    setSelectedPolicy(policy);
+    setArchiveDeleteAction(action);
+    setArchiveDeleteHint(null);
+    setArchiveDeleteOpen(true);
+  };
 
-      logEvent({
-        action: 'POLICY_ARCHIVE',
-        resourceType: 'policy',
-        resourceId: policy.id,
-        details: { title: policy.title },
+  const handleArchiveDeleteConfirm = async ({ action, reason }: { action: 'archive' | 'delete'; reason: string }) => {
+    if (!selectedPolicy) return;
+    setArchiveDeleteSubmitting(true);
+    setArchiveDeleteHint(null);
+    try {
+      const res = await archiveOrDeletePolicy({
+        policyId: selectedPolicy.id,
+        action,
+        reason,
       });
 
-      queryClient.invalidateQueries({ queryKey: ['policies_management'] });
-      toast.success('Policy archived');
-    } catch (error) {
-      toast.error('Failed to archive policy');
+      if (!res.success) {
+        setArchiveDeleteHint(res.error || 'Action not allowed');
+        toast.error('Action blocked', { description: res.error || 'Please try archiving instead.' });
+        await logEvent({
+          action: 'ARCHIVE_POLICY',
+          resourceType: 'policy',
+          resourceId: selectedPolicy.id,
+          details: {
+            outcome: 'failure',
+            policy_id: selectedPolicy.id,
+            organization_id: selectedPolicy.organization_id,
+            action,
+            reason,
+            error: res.error,
+          },
+        });
+        return;
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ['policies_management'] });
+      toast.success(action === 'delete' ? 'Policy deleted' : 'Policy archived');
+
+      await logEvent({
+        action: 'ARCHIVE_POLICY',
+        resourceType: 'policy',
+        resourceId: selectedPolicy.id,
+        details: {
+          outcome: 'success',
+          policy_id: selectedPolicy.id,
+          organization_id: selectedPolicy.organization_id,
+          previous_status: selectedPolicy.currentVersion ? 'published' : (selectedPolicy.draftVersion?.status || 'draft'),
+          new_status: 'archived',
+          action,
+          reason,
+        },
+      });
+
+      setArchiveDeleteOpen(false);
+    } catch (err: any) {
+      toast.error('Failed to archive policy', { description: err?.message || 'Unexpected error' });
+      await logEvent({
+        action: 'ARCHIVE_POLICY',
+        resourceType: 'policy',
+        resourceId: selectedPolicy.id,
+        details: {
+          outcome: 'failure',
+          policy_id: selectedPolicy.id,
+          organization_id: selectedPolicy.organization_id,
+          action,
+          reason,
+          error: err?.message || String(err),
+        },
+      });
+    } finally {
+      setArchiveDeleteSubmitting(false);
+    }
+  };
+
+  const openApprovalDialog = (policy: PolicyRow, mode: 'submit' | 'reject') => {
+    setSelectedPolicy(policy);
+    setApprovalDialogMode(mode);
+    setApprovalDialogOpen(true);
+  };
+
+  const handleSubmitForApproval = async (noteOrReason: string) => {
+    if (!selectedPolicy?.draftVersion?.id) return;
+    setApprovalSubmitting(true);
+    try {
+      const res = await submitPolicyForApproval({
+        versionId: selectedPolicy.draftVersion.id,
+        note: noteOrReason || undefined,
+      });
+
+      if (!res.success) {
+        toast.error('Failed to submit for approval', { description: res.error || 'Unexpected error' });
+        await logEvent({
+          action: 'SUBMIT_POLICY_APPROVAL',
+          resourceType: 'policy',
+          resourceId: selectedPolicy.id,
+          details: {
+            outcome: 'failure',
+            policy_id: selectedPolicy.id,
+            organization_id: selectedPolicy.organization_id,
+            previous_status: 'draft',
+            new_status: 'pending_approval',
+            note: noteOrReason || null,
+            error: res.error,
+          },
+        });
+        return;
+      }
+
+      toast.success('Submitted for approval');
+      await queryClient.invalidateQueries({ queryKey: ['policies_management'] });
+      await logEvent({
+        action: 'SUBMIT_POLICY_APPROVAL',
+        resourceType: 'policy',
+        resourceId: selectedPolicy.id,
+        details: {
+          outcome: 'success',
+          policy_id: selectedPolicy.id,
+          organization_id: selectedPolicy.organization_id,
+          previous_status: 'draft',
+          new_status: 'pending_approval',
+          version_id: selectedPolicy.draftVersion.id,
+          note: noteOrReason || null,
+        },
+      });
+      setApprovalDialogOpen(false);
+    } finally {
+      setApprovalSubmitting(false);
+    }
+  };
+
+  const handleReject = async (reason: string) => {
+    if (!selectedPolicy?.draftVersion?.id) return;
+    setApprovalSubmitting(true);
+    try {
+      const { data: approval } = await (supabase
+        .from('policy_approvals' as any)
+        .select('id')
+        .eq('policy_version_id', selectedPolicy.draftVersion.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()) as any;
+
+      if (!approval?.id) {
+        toast.error('Cannot reject', { description: 'No pending approval record found.' });
+        return;
+      }
+
+      const res = await rejectPolicyVersion(approval.id, reason);
+      if (!res.success) {
+        toast.error('Failed to reject policy', { description: res.error || 'Unexpected error' });
+        await logEvent({
+          action: 'REJECT_POLICY',
+          resourceType: 'policy',
+          resourceId: selectedPolicy.id,
+          details: {
+            outcome: 'failure',
+            policy_id: selectedPolicy.id,
+            organization_id: selectedPolicy.organization_id,
+            previous_status: 'pending_approval',
+            new_status: 'draft',
+            reason,
+            error: res.error,
+          },
+        });
+        return;
+      }
+
+      toast.success('Policy rejected', { description: 'Returned to draft.' });
+      await queryClient.invalidateQueries({ queryKey: ['policies_management'] });
+      await logEvent({
+        action: 'REJECT_POLICY',
+        resourceType: 'policy',
+        resourceId: selectedPolicy.id,
+        details: {
+          outcome: 'success',
+          policy_id: selectedPolicy.id,
+          organization_id: selectedPolicy.organization_id,
+          previous_status: 'pending_approval',
+          new_status: 'draft',
+          reason,
+        },
+      });
+      setApprovalDialogOpen(false);
+    } finally {
+      setApprovalSubmitting(false);
+    }
+  };
+
+  const handleApproveAndPublish = async (policy: PolicyRow) => {
+    if (!policy.draftVersion?.id) return;
+    if (!canApprove) {
+      toast.error('Not allowed', { description: 'You do not have permission to approve policies.' });
+      return;
+    }
+
+    setApprovalSubmitting(true);
+    try {
+      const { data: approval } = await (supabase
+        .from('policy_approvals' as any)
+        .select('id')
+        .eq('policy_version_id', policy.draftVersion.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()) as any;
+
+      if (!approval?.id) {
+        toast.error('Cannot approve', { description: 'No pending approval record found.' });
+        return;
+      }
+
+      const approveRes = await approvePolicyVersion({ approvalId: approval.id });
+      if (!approveRes.success) {
+        toast.error('Failed to approve policy', { description: approveRes.error || 'Unexpected error' });
+        await logEvent({
+          action: 'APPROVE_POLICY',
+          resourceType: 'policy',
+          resourceId: policy.id,
+          details: {
+            outcome: 'failure',
+            policy_id: policy.id,
+            organization_id: policy.organization_id,
+            previous_status: 'pending_approval',
+            new_status: 'approved',
+            error: approveRes.error,
+          },
+        });
+        return;
+      }
+
+      await logEvent({
+        action: 'APPROVE_POLICY',
+        resourceType: 'policy',
+        resourceId: policy.id,
+        details: {
+          outcome: 'success',
+          policy_id: policy.id,
+          organization_id: policy.organization_id,
+          previous_status: 'pending_approval',
+          new_status: 'approved',
+          version_id: policy.draftVersion.id,
+        },
+      });
+
+      const publishRes = await publishPolicyVersion({ versionId: policy.draftVersion.id });
+      if (!publishRes.success) {
+        toast.error('Failed to publish policy', { description: publishRes.error || 'Unexpected error' });
+        await logEvent({
+          action: 'PUBLISH_POLICY',
+          resourceType: 'policy',
+          resourceId: policy.id,
+          details: {
+            outcome: 'failure',
+            policy_id: policy.id,
+            organization_id: policy.organization_id,
+            previous_status: 'approved',
+            new_status: 'published',
+            version_id: policy.draftVersion.id,
+            error: publishRes.error,
+          },
+        });
+        return;
+      }
+
+      toast.success(`Published v${publishRes.version_number ?? policy.draftVersion.version_number}`);
+      await queryClient.invalidateQueries({ queryKey: ['policies_management'] });
+      await logEvent({
+        action: 'PUBLISH_POLICY',
+        resourceType: 'policy',
+        resourceId: policy.id,
+        details: {
+          outcome: 'success',
+          policy_id: policy.id,
+          organization_id: policy.organization_id,
+          previous_status: 'approved',
+          new_status: 'published',
+          version_id: policy.draftVersion.id,
+          version_number: publishRes.version_number,
+        },
+      });
+    } finally {
+      setApprovalSubmitting(false);
     }
   };
 
@@ -557,9 +869,46 @@ export function PolicyManagementView() {
                                     Version History
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
+                                  {approvalsEnabled && policy.draftVersion?.status === 'draft' && (
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setSelectedPolicy(policy);
+                                        setSelectedVersionId(policy.draftVersion?.id || null);
+                                        openApprovalDialog(policy, 'submit');
+                                      }}
+                                    >
+                                      <Send className="w-4 h-4 mr-2" />
+                                      Submit for approval
+                                    </DropdownMenuItem>
+                                  )}
+
+                                  {approvalsEnabled && policy.draftVersion?.status === 'submitted' && (
+                                    <>
+                                      <DropdownMenuItem
+                                        onClick={() => handleApproveAndPublish(policy)}
+                                        disabled={!canApprove || approvalSubmitting}
+                                      >
+                                        <CheckCircle className="w-4 h-4 mr-2" />
+                                        Approve & publish
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        className="text-destructive"
+                                        onClick={() => {
+                                          setSelectedPolicy(policy);
+                                          setSelectedVersionId(policy.draftVersion?.id || null);
+                                          openApprovalDialog(policy, 'reject');
+                                        }}
+                                        disabled={approvalSubmitting}
+                                      >
+                                        <AlertTriangle className="w-4 h-4 mr-2" />
+                                        Reject
+                                      </DropdownMenuItem>
+                                    </>
+                                  )}
+
                                   <DropdownMenuItem 
                                     className="text-destructive"
-                                    onClick={() => handleArchive(policy)}
+                                    onClick={() => openArchiveDelete(policy, 'archive')}
                                   >
                                     <Trash2 className="w-4 h-4 mr-2" />
                                     Archive
@@ -722,6 +1071,39 @@ export function PolicyManagementView() {
           onOpenChange={setEditorOpen}
         />
       )}
+
+      {/* Archive/Delete */}
+      <PolicyArchiveDeleteDialog
+        open={archiveDeleteOpen}
+        onOpenChange={setArchiveDeleteOpen}
+        policy={
+          selectedPolicy
+            ? {
+                id: selectedPolicy.id,
+                title: selectedPolicy.title,
+                hasPublishedVersion: Boolean(selectedPolicy.currentVersion),
+              }
+            : null
+        }
+        action={archiveDeleteAction}
+        isSubmitting={archiveDeleteSubmitting}
+        serverHint={archiveDeleteHint}
+        onConfirm={handleArchiveDeleteConfirm}
+      />
+
+      {/* Submit / Reject */}
+      <PolicyApprovalDialog
+        open={approvalDialogOpen}
+        onOpenChange={setApprovalDialogOpen}
+        mode={approvalDialogMode}
+        policy={selectedPolicy ? { id: selectedPolicy.id, title: selectedPolicy.title } : null}
+        isSubmitting={approvalSubmitting}
+        onConfirm={({ noteOrReason }) => {
+          if (!selectedPolicy) return;
+          if (approvalDialogMode === 'submit') void handleSubmitForApproval(noteOrReason);
+          else void handleReject(noteOrReason);
+        }}
+      />
       </PageLayout>
     </TooltipProvider>
   );
