@@ -89,6 +89,8 @@ import { useClaimDocumentStatus } from '@/hooks/useClaimDocumentStatus';
 import { useClaimActions } from '@/hooks/useClaimActions';
 import { ClaimCaseSummary } from '@/components/employer/ClaimCaseSummary';
 import { PolicyCheckBanner } from '@/components/employer/PolicyCheckBanner';
+import { ComplianceStatusBanner } from '@/components/employer/ComplianceStatusBanner';
+import { RequestDocumentsChecklist } from '@/components/employer/RequestDocumentsChecklist';
 import { 
   getStatusBadgeStyle, 
   getStatusDisplayLabel,
@@ -646,6 +648,13 @@ export function ClaimReviewSheet({
 
               {/* Overview Tab */}
               <TabsContent value="overview" className="space-y-4 mt-4">
+                {/* Compliance Status Banner - shows frozen status from submission */}
+                <ComplianceStatusBanner
+                  status={(request as any)?.compliance_status}
+                  reasons={(request as any)?.compliance_reasons_json}
+                  policyRef={request?.policy_ref}
+                />
+
                 {/* SLA Timeline */}
                 {slaInfo && (
                   <Card>
@@ -954,91 +963,11 @@ export function ClaimReviewSheet({
                   </CardContent>
                 </Card>
 
-                {/* Required Documents Checklist - Uses unified hook */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4" />
-                      Required Documents Checklist
-                      {documentStatus.counts.missing > 0 && (
-                        <Badge className="bg-amber-500/10 text-amber-600 border-0 text-xs ml-2">
-                          {documentStatus.counts.missing} missing
-                        </Badge>
-                      )}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {documentStatus.isLoading ? (
-                      <p className="text-sm text-muted-foreground">Loading document requirements...</p>
-                    ) : documentStatus.noDocsRequired ? (
-                      <p className="text-sm text-muted-foreground">
-                        No specific documents required for this benefit category.
-                      </p>
-                    ) : (
-                      <div className="space-y-2">
-                        {documentStatus.requiredDocs.map((doc) => {
-                          const isProvided = documentStatus.providedDocs.some(
-                            p => p.docType.toLowerCase() === doc.docType.toLowerCase() && 
-                                 (p.status === 'provided' || p.status === 'pending')
-                          );
-                          const isMissing = documentStatus.missingDocs.some(
-                            m => m.id === doc.id
-                          );
-                          
-                          return (
-                            <div 
-                              key={doc.id}
-                              className={cn(
-                                "flex items-center justify-between p-3 rounded-lg",
-                                isProvided ? "bg-success/5 border border-success/20" :
-                                isMissing && doc.isRequired ? "bg-amber-500/5 border border-amber-500/20" :
-                                "bg-muted/30"
-                              )}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className={cn(
-                                  "w-6 h-6 rounded-full flex items-center justify-center",
-                                  isProvided ? "bg-success/20" :
-                                  isMissing && doc.isRequired ? "bg-amber-500/20" :
-                                  "bg-muted"
-                                )}>
-                                  {isProvided ? (
-                                    <Check className="w-3 h-3 text-success" />
-                                  ) : isMissing && doc.isRequired ? (
-                                    <AlertCircle className="w-3 h-3 text-amber-600" />
-                                  ) : (
-                                    <Circle className="w-3 h-3 text-muted-foreground" />
-                                  )}
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium">{doc.docName}</p>
-                                  {doc.description && (
-                                    <p className="text-xs text-muted-foreground">{doc.description}</p>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {isProvided && (
-                                  <Badge variant="outline" className="text-xs text-success border-success/30">
-                                    Provided
-                                  </Badge>
-                                )}
-                                {isMissing && doc.isRequired && (
-                                  <Badge className="bg-amber-500/10 text-amber-600 border-0 text-xs">
-                                    Missing
-                                  </Badge>
-                                )}
-                                <Badge variant={doc.isRequired ? 'default' : 'outline'} className="text-xs">
-                                  {doc.isRequired ? 'Required' : 'Optional'}
-                                </Badge>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                {/* Policy-Driven Document Checklist (from request_documents - NOT re-derived) */}
+                <RequestDocumentsChecklist
+                  requestId={requestId}
+                  readOnly={!canProcess}
+                />
               </TabsContent>
 
               {/* Internal Notes Tab */}
