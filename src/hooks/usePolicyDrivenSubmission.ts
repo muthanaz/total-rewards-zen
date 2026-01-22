@@ -426,6 +426,10 @@ export function usePolicyDrivenSubmission() {
       const requiredDocs = policy?.requiredDocs
         .filter(d => d.is_required && (d.transaction_type === params.type || d.transaction_type === 'both'))
         .map(d => d.doc_name) || [];
+
+      const initialStatus = (params.type !== 'question' && requiredDocs.length > 0)
+        ? 'pending_employee'
+        : 'pending';
       
       // Build request
       const { data: request, error } = await supabase
@@ -440,7 +444,7 @@ export function usePolicyDrivenSubmission() {
           description: params.description,
           amount: params.amount || null,
           currency: params.amount ? 'AED' : null,
-          status: 'pending',
+          status: initialStatus,
           priority: params.priority || 'standard',
           submitted_at: new Date().toISOString(),
           sla_hours: slaHours,
@@ -487,7 +491,7 @@ export function usePolicyDrivenSubmission() {
         request_id: request.id,
         actor_user_id: user.id,
         from_status: null,
-        to_status: 'pending',
+        to_status: initialStatus,
         action: 'submitted',
         notes_employee_visible: 'Request submitted successfully',
         meta: policy ? {
@@ -499,11 +503,17 @@ export function usePolicyDrivenSubmission() {
       
       return request;
     },
-    onSuccess: () => {
+    onSuccess: (request: any) => {
       queryClient.invalidateQueries({ queryKey: ['employee_requests'] });
+
+      const missingDocs = Array.isArray(request?.missing_docs) ? request.missing_docs : [];
+      const hasMissingDocs = missingDocs.length > 0;
+
       toast({
-        title: 'Request submitted',
-        description: 'Your request has been submitted and is now pending review.',
+        title: hasMissingDocs ? 'Submitted — documents required' : 'Request submitted',
+        description: hasMissingDocs
+          ? `Upload: ${missingDocs.slice(0, 3).join(', ')}${missingDocs.length > 3 ? '…' : ''}`
+          : 'Your request has been submitted and is now pending review.',
       });
     },
     onError: (error) => {
