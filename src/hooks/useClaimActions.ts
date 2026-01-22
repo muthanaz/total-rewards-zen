@@ -237,16 +237,17 @@ export function useRequestInfo() {
         meta: { missing_docs: missingDocs },
       });
       
-      // Create missing doc entries if specified
+      // Create missing doc entries if specified (using unified request_documents table)
       if (missingDocs && missingDocs.length > 0) {
         const docEntries = missingDocs.map(docName => ({
           request_id: requestId,
           doc_type: docName.toLowerCase().replace(/\s+/g, '_'),
           doc_name: docName,
+          is_required: true,
           status: 'missing' as const,
         }));
         
-        await supabase.from('claim_docs').upsert(docEntries, { 
+        await supabase.from('request_documents').upsert(docEntries, { 
           onConflict: 'request_id,doc_type',
           ignoreDuplicates: true 
         });
@@ -257,7 +258,7 @@ export function useRequestInfo() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shared_requests'] });
       queryClient.invalidateQueries({ queryKey: ['shared_request'] });
-      queryClient.invalidateQueries({ queryKey: ['claim_docs'] });
+      queryClient.invalidateQueries({ queryKey: ['request_documents'] });
       queryClient.invalidateQueries({ queryKey: ['request_timeline'] });
     },
   });

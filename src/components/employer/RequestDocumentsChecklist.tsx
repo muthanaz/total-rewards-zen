@@ -67,7 +67,21 @@ const STATUS_CONFIG: Record<RequestDocumentStatus, {
   bgColor: string;
   borderColor: string;
 }> = {
+  pending: {
+    icon: Clock,
+    label: 'Pending',
+    color: 'text-slate-600',
+    bgColor: 'bg-slate-500/10',
+    borderColor: 'border-slate-500/20',
+  },
   provided: {
+    icon: CheckCircle,
+    label: 'Provided',
+    color: 'text-emerald-600',
+    bgColor: 'bg-emerald-500/10',
+    borderColor: 'border-emerald-500/20',
+  },
+  verified: {
     icon: CheckCircle,
     label: 'Verified',
     color: 'text-emerald-600',
@@ -94,6 +108,13 @@ const STATUS_CONFIG: Record<RequestDocumentStatus, {
     color: 'text-red-600',
     bgColor: 'bg-red-500/10',
     borderColor: 'border-red-500/20',
+  },
+  waived: {
+    icon: CheckCircle,
+    label: 'Waived',
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-500/10',
+    borderColor: 'border-purple-500/20',
   },
 };
 
@@ -344,12 +365,12 @@ export function RequestDocumentsChecklist({
               {counts.missing} missing
             </Badge>
           )}
-          {counts.pending > 0 && (
+          {counts.pending_review > 0 && (
             <Badge className="bg-blue-500/10 text-blue-600 border-0 text-xs ml-2">
-              {counts.pending} pending
+              {counts.pending_review} pending
             </Badge>
           )}
-          {counts.missing === 0 && counts.pending === 0 && counts.total > 0 && (
+          {counts.missing === 0 && counts.pending_review === 0 && counts.total > 0 && (
             <Badge className="bg-emerald-500/10 text-emerald-600 border-0 text-xs ml-2">
               All verified
             </Badge>

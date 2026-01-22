@@ -30,7 +30,7 @@ import {
   Info,
 } from 'lucide-react';
 import { useEmployeeRequest, useAddEmployeeNote, getEmployeeStatusLabel } from '@/hooks/useEmployeeRequests';
-import { useClaimDocs, useClaimDocCounts } from '@/hooks/useClaimDocs';
+import { useRequestDocuments, useRequestDocumentCounts, useClaimDocCounts } from '@/hooks/useRequestDocuments';
 import { useClaimNotes, useAddClaimNote } from '@/hooks/useClaimNotes';
 import { useRequestTimeline } from '@/hooks/useSharedRequests';
 import { getStatusBadgeStyle, formatRelativeTime } from '@/lib/crossPortalContract';
@@ -52,8 +52,8 @@ export function EmployeeRequestDetailSheet({
   const [newNote, setNewNote] = useState('');
   
   const { data: request, isLoading } = useEmployeeRequest(requestId);
-  const { data: docs = [] } = useClaimDocs(requestId);
-  const docCounts = useClaimDocCounts(requestId);
+  const { data: docs = [] } = useRequestDocuments(requestId);
+  const docCounts = useRequestDocumentCounts(requestId);
   const { data: notes = [] } = useClaimNotes(requestId, false); // Employee sees only non-internal
   const { data: timeline = [] } = useRequestTimeline(requestId, false);
   const addNote = useAddClaimNote();

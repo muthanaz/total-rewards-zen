@@ -1,17 +1,36 @@
 /**
- * Request Documents Hook (policy-driven checklist snapshot)
+ * Request Documents Hook (Unified Document Model)
  *
  * Backing table: public.request_documents
- *
- * For the Health vertical slice, this is the source of truth for the employee
- * and employer document checklist (required docs + uploads/status).
+ * 
+ * This is the SINGLE SOURCE OF TRUTH for all document checklists.
+ * Supports all transaction models: request_only, claim_only, request_and_claim.
+ * 
+ * Status lifecycle:
+ * - missing: Document not yet uploaded
+ * - pending_review: Employee uploaded, awaiting employer review
+ * - provided: Employer verified as acceptable (legacy compat)
+ * - verified: Employer verified as acceptable
+ * - rejected: Employer rejected with reason
+ * - waived: Employer waived requirement
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-export type RequestDocumentStatus = 'provided' | 'missing' | 'rejected' | 'pending_review';
+// =============================================================================
+// TYPES
+// =============================================================================
+
+export type RequestDocumentStatus = 
+  | 'pending'
+  | 'missing' 
+  | 'pending_review' 
+  | 'provided' 
+  | 'verified'
+  | 'rejected' 
+  | 'waived';
 
 export interface RequestDocument {
   id: string;
@@ -28,15 +47,35 @@ export interface RequestDocument {
   reviewer_notes: string | null;
   created_at: string;
   updated_at: string;
-  // Snapshot fields
+  // Snapshot fields (from policy at submission time)
   source_doc_id: string | null;
   derivation_reason: string | null;
   // Verification fields
   verified_by: string | null;
   verified_at: string | null;
   rejection_reason: string | null;
+  decision_reason: string | null;
 }
 
+export interface DocumentCounts {
+  total: number;
+  required: number;
+  provided: number;
+  verified: number;
+  missing: number;
+  rejected: number;
+  pending_review: number;
+  waived: number;
+  allRequiredComplete: boolean;
+}
+
+// =============================================================================
+// QUERY HOOKS
+// =============================================================================
+
+/**
+ * Fetch all documents for a request
+ */
 export function useRequestDocuments(requestId: string | null, enabled: boolean = true) {
   return useQuery({
     queryKey: ['request_documents', requestId],
@@ -54,20 +93,35 @@ export function useRequestDocuments(requestId: string | null, enabled: boolean =
   });
 }
 
-export function useRequestDocumentCounts(requestId: string | null, enabled: boolean = true) {
+/**
+ * Get document counts for a request
+ */
+export function useRequestDocumentCounts(requestId: string | null, enabled: boolean = true): DocumentCounts {
   const { data: docs = [] } = useRequestDocuments(requestId, enabled);
+  
+  const required = docs.filter((d) => d.is_required);
+  const provided = docs.filter((d) => d.status === 'provided' || d.status === 'verified');
+  const missingRequired = required.filter((d) => d.status === 'missing');
+  
   return {
     total: docs.length,
-    provided: docs.filter((d) => d.status === 'provided').length,
+    required: required.length,
+    provided: provided.length,
+    verified: docs.filter((d) => d.status === 'verified').length,
     missing: docs.filter((d) => d.status === 'missing').length,
     rejected: docs.filter((d) => d.status === 'rejected').length,
-    pending: docs.filter((d) => d.status === 'pending_review').length,
+    pending_review: docs.filter((d) => d.status === 'pending_review').length,
+    waived: docs.filter((d) => d.status === 'waived').length,
+    allRequiredComplete: missingRequired.length === 0,
   };
 }
 
+// =============================================================================
+// EMPLOYEE MUTATIONS
+// =============================================================================
+
 /**
- * Employee-side upload is modeled as updating the existing checklist row.
- * (This hook does not do binary uploads; it stores the resulting URL.)
+ * Employee uploads a document (updates existing checklist row with file URL)
  */
 export function useUploadRequestDocument() {
   const queryClient = useQueryClient();
@@ -94,9 +148,14 @@ export function useUploadRequestDocument() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['request_documents', data.request_id] });
+      queryClient.invalidateQueries({ queryKey: ['employee_requests'] });
     },
   });
 }
+
+// =============================================================================
+// EMPLOYER MUTATIONS
+// =============================================================================
 
 /**
  * Employer verifies a document as received/acceptable
@@ -106,16 +165,18 @@ export function useVerifyRequestDocument() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ docId }: { docId: string }) => {
+    mutationFn: async ({ docId, notes }: { docId: string; notes?: string }) => {
       if (!user?.id) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
         .from('request_documents')
         .update({
-          status: 'provided',
+          status: 'verified',
           verified_by: user.id,
           verified_at: new Date().toISOString(),
           rejection_reason: null,
+          decision_reason: notes || null,
+          reviewer_notes: notes || null,
         })
         .eq('id', docId)
         .select('id, request_id')
@@ -126,6 +187,7 @@ export function useVerifyRequestDocument() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['request_documents', data.request_id] });
+      queryClient.invalidateQueries({ queryKey: ['claims'] });
     },
   });
 }
@@ -148,6 +210,7 @@ export function useRejectRequestDocument() {
           verified_by: user.id,
           verified_at: new Date().toISOString(),
           rejection_reason: reason,
+          decision_reason: reason,
         })
         .eq('id', docId)
         .select('id, request_id')
@@ -158,6 +221,40 @@ export function useRejectRequestDocument() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['request_documents', data.request_id] });
+      queryClient.invalidateQueries({ queryKey: ['claims'] });
+    },
+  });
+}
+
+/**
+ * Employer waives a document requirement
+ */
+export function useWaiveRequestDocument() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ docId, reason }: { docId: string; reason: string }) => {
+      if (!user?.id) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('request_documents')
+        .update({
+          status: 'waived',
+          verified_by: user.id,
+          verified_at: new Date().toISOString(),
+          decision_reason: reason,
+        })
+        .eq('id', docId)
+        .select('id, request_id')
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['request_documents', data.request_id] });
+      queryClient.invalidateQueries({ queryKey: ['claims'] });
     },
   });
 }
@@ -177,6 +274,9 @@ export function useRequestDocumentUpload() {
         .from('request_documents')
         .update({
           status: 'missing',
+          file_url: null,
+          uploaded_at: null,
+          uploaded_by: null,
           reviewer_notes: notes || 'Please upload this document',
         })
         .eq('id', docId)
@@ -188,6 +288,78 @@ export function useRequestDocumentUpload() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['request_documents', data.request_id] });
+      queryClient.invalidateQueries({ queryKey: ['claims'] });
     },
   });
 }
+
+// =============================================================================
+// BULK OPERATIONS
+// =============================================================================
+
+/**
+ * Verify all pending_review documents for a request
+ */
+export function useBulkVerifyDocuments() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ requestId }: { requestId: string }) => {
+      if (!user?.id) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('request_documents')
+        .update({
+          status: 'verified',
+          verified_by: user.id,
+          verified_at: new Date().toISOString(),
+        })
+        .eq('request_id', requestId)
+        .eq('status', 'pending_review')
+        .select('id');
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, { requestId }) => {
+      queryClient.invalidateQueries({ queryKey: ['request_documents', requestId] });
+      queryClient.invalidateQueries({ queryKey: ['claims'] });
+    },
+  });
+}
+
+// =============================================================================
+// DEPRECATED COMPATIBILITY LAYER
+// =============================================================================
+
+/**
+ * @deprecated Use useRequestDocuments instead
+ * Compatibility alias for legacy claim_docs hook
+ */
+export const useClaimDocs = useRequestDocuments;
+
+/**
+ * @deprecated Use useRequestDocumentCounts instead
+ * Compatibility alias for legacy claim_docs counts
+ */
+export function useClaimDocCounts(requestId: string | null) {
+  const counts = useRequestDocumentCounts(requestId);
+  return {
+    total: counts.total,
+    provided: counts.provided + counts.verified,
+    missing: counts.missing,
+    rejected: counts.rejected,
+    pending: counts.pending_review,
+  };
+}
+
+/**
+ * @deprecated Use useVerifyRequestDocument instead
+ */
+export const useMarkDocReceived = useVerifyRequestDocument;
+
+/**
+ * @deprecated Use useRequestDocumentUpload instead
+ */
+export const useMarkDocMissing = useRequestDocumentUpload;
