@@ -64,6 +64,7 @@ import { useOrgSettings } from '@/hooks/useOrgSettings';
 import {
   archiveOrDeletePolicy,
   approvePolicyVersion,
+  duplicatePolicyVersion,
   getOrgPolicySettings,
   publishPolicyVersion,
   rejectPolicyVersion,
@@ -298,44 +299,67 @@ export function PolicyManagementView() {
     };
   }, [queryClient]);
 
+  // Stable idempotency key for duplicate operation
+  const duplicateRequestIdRef = React.useRef<string | null>(null);
+
   const handleDuplicate = async (policy: PolicyRow) => {
+    // Generate stable idempotency key for this duplicate attempt
+    if (!duplicateRequestIdRef.current) {
+      duplicateRequestIdRef.current = crypto.randomUUID();
+    }
+
     try {
-      const policyRef = `POL-${policy.title.substring(0, 3).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+      const result = await duplicatePolicyVersion({
+        sourcePolicyId: policy.id,
+        sourceVersionId: policy.currentVersion?.id || policy.draftVersion?.id,
+        newTitle: `${policy.title} (Copy)`,
+        clientRequestId: duplicateRequestIdRef.current,
+      });
+
+      if (!result.success) {
+        toast.error('Failed to duplicate policy', {
+          description: result.error || 'Unexpected error',
+        });
+        return;
+      }
+
+      // Reset idempotency key on success
+      duplicateRequestIdRef.current = null;
+
+      const message = result.already_exists 
+        ? 'A duplicate already exists'
+        : 'Policy duplicated';
       
-      const { data: newPolicy, error } = await supabase
-        .from('policies')
-        .insert({
-          organization_id: organizationId,
-          policy_ref: policyRef,
-          title: `${policy.title} (Copy)`,
-          category: policy.category,
-          version: '1.0',
-          status: 'draft',
-          effective_from: new Date().toISOString().split('T')[0],
-          benefit_type: policy.benefit_type,
-          transaction_model: policy.transaction_model,
-          benefit_key: policy.benefit_key,
-          is_active: true,
-        })
-        .select()
-        .single();
+      toast.success(message, {
+        description: result.already_exists
+          ? `Opening "${result.title}"...`
+          : `"${result.title}" created as a draft.`,
+      });
 
-      if (error) throw error;
+      await queryClient.invalidateQueries({ queryKey: ['policies_management'] });
 
-      // Create draft version
-      await (supabase
-        .from('policy_versions' as any)
-        .insert({
-          policy_id: newPolicy.id,
-          version_number: 1,
-          status: 'draft',
-          created_by: user?.id,
-        } as any));
+      // Open the duplicated policy in editor
+      if (result.policy_id && result.policy_version_id) {
+        const { data: newPolicy } = await supabase
+          .from('policies')
+          .select('*')
+          .eq('id', result.policy_id)
+          .single();
 
-      queryClient.invalidateQueries({ queryKey: ['policies_management'] });
-      toast.success('Policy duplicated');
-    } catch (error) {
-      toast.error('Failed to duplicate policy');
+        if (newPolicy) {
+          setSelectedPolicy({
+            ...newPolicy,
+            currentVersion: null,
+            draftVersion: { id: result.policy_version_id, version_number: 1 },
+          });
+          setSelectedVersionId(result.policy_version_id);
+          setEditorOpen(true);
+        }
+      }
+    } catch (error: any) {
+      toast.error('Failed to duplicate policy', {
+        description: error?.message || 'Unexpected error',
+      });
     }
   };
 
