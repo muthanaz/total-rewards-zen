@@ -202,11 +202,60 @@ export default function FinancialPage() {
           formula={t.formulaAnnualProjection}
           dataSource={t.dataSourceProjection}
           variant="info"
-      />
+        />
+      </div>
+
+      {/* Quick Tips - meaningful insights */}
+      <Card className="border-muted">
+        <CardHeader className="pb-3">
+          <CardTitle className={cn(
+            "text-base font-display flex items-center gap-2",
+            isRTL && "flex-row-reverse"
+          )}>
+            <Gift className="w-4 h-4 text-muted-foreground" />
+            {language === 'ar' ? 'نصائح سريعة' : 'Quick Tips & What to Know'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className={cn(
+              "flex items-start gap-3 p-3 rounded-lg bg-success/10 border border-success/20",
+              isRTL && "flex-row-reverse text-right"
+            )}>
+              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
+                <Gift className="w-4 h-4 text-success" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">{language === 'ar' ? 'أموال مجانية!' : 'Free Money!'}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {language === 'ar' 
+                    ? 'ساهم بنسبة 5% على الأقل للحصول على كامل مطابقة صاحب العمل'
+                    : 'Contribute at least 5% to get the full employer match — that\'s 100% return instantly.'}
+                </p>
+              </div>
+            </div>
+            <div className={cn(
+              "flex items-start gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20",
+              isRTL && "flex-row-reverse text-right"
+            )}>
+              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
+                <Calculator className="w-4 h-4 text-warning" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">{language === 'ar' ? 'فترة الاستحقاق' : 'Vesting Period'}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {language === 'ar'
+                    ? 'مطابقة صاحب العمل تُستحق بالكامل بعد سنتين من الخدمة'
+                    : 'Employer match fully vests after 2 years of service. Leave early and you may forfeit some.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Cross-links */}
       <BenefitCrossLinks benefitCategory="Financial Planning" showClaimLink={false} />
-    </div>
 
       {/* How It Works */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">

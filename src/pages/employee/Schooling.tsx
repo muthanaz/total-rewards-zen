@@ -232,6 +232,64 @@ export default function SchoolingPage() {
       {/* Cross-links */}
       <BenefitCrossLinks benefitCategory="Schooling" showClaimLink={false} />
 
+      {/* Quick Tips - meaningful insights */}
+      <Card className="border-muted">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <Info className="w-4 h-4 text-muted-foreground" />
+            Quick Tips & What to Know
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-accent/10 border border-accent/20">
+              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
+                <GraduationCap className="w-4 h-4 text-accent" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Separate Allowances</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Each child gets AED 30,000/year. Unused balance for one child can't cover another.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
+              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
+                <Calculator className="w-4 h-4 text-warning" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Excess = Salary Deduction</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  If fees exceed allowance, the extra is deducted from your monthly salary automatically.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-chart-3/10 border border-chart-3/20">
+              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
+                <School className="w-4 h-4 text-chart-3" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">What to Submit</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  School invoice + proof of payment. Submit term-by-term or annually — your choice.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-success/10 border border-success/20">
+              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
+                <Check className="w-4 h-4 text-success" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">What's Covered</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Tuition, registration, books, and uniform. Extracurricular activities may require approval.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* How It Works Card */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
         <CardHeader className="pb-3">
