@@ -18,7 +18,7 @@ import {
   Target,
   AlertCircle,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { LucideIcon } from 'lucide-react';
 
@@ -224,7 +224,7 @@ export function generateSpendRecommendedActions(data: {
     id: 'policy-review',
     title: `Review ${data.topUnderutilizedCategory.name} policy eligibility`,
     rationale: 'Structural underutilization may indicate overly restrictive rules',
-    expectedImpact: `Potential to unlock ${(data.topUnderutilizedCategory.unused * 0.3).toLocaleString('en-AE', { style: 'currency', currency: 'AED', maximumFractionDigits: 0 })}`,
+    expectedImpact: `Potential to unlock ${formatCurrencyAED(data.topUnderutilizedCategory.unused * 0.3, { abbreviate: false, decimals: 0 })}`,
     owner: 'Admin',
     effort: 'medium',
     priority: 'high',
@@ -256,7 +256,7 @@ export function generateSpendRecommendedActions(data: {
       id: 'zombie-recovery',
       title: 'Launch zombie spend recovery playbook',
       rationale: 'Significant unrealized value requires structured intervention',
-      expectedImpact: `Target: recover ${(data.unusedEntitlement * 0.4).toLocaleString('en-AE', { style: 'currency', currency: 'AED', maximumFractionDigits: 0 })}`,
+      expectedImpact: `Target: recover ${formatCurrencyAED(data.unusedEntitlement * 0.4, { abbreviate: false, decimals: 0 })}`,
       owner: 'Finance',
       effort: 'high',
       priority: 'high',
