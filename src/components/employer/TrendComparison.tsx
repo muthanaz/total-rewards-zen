@@ -1,4 +1,5 @@
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Currency } from '@/components/ui/Currency';
 import { cn, formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
 
 interface TrendComparisonProps {
@@ -30,7 +31,8 @@ export function TrendComparison({
   const formatValue = (value: number): string => {
     switch (format) {
       case 'currency':
-        return formatCurrencyAED(value);
+        // Keep as string in this compact helper; show currency code suppressed elsewhere.
+        return formatCurrencyAED(value, { showCurrency: false });
       case 'percent':
         return formatPercent(value);
       default:
@@ -70,7 +72,7 @@ export function TrendComparison({
       
       {showPrevious && (
         <span className="text-xs text-muted-foreground">
-          vs {formatValue(previous)}
+          vs <Currency amount={previous} />
         </span>
       )}
     </div>

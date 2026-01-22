@@ -7,7 +7,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { formatCurrencyAED, formatPercent } from '@/lib/utils';
+import { Currency } from '@/components/ui/Currency';
+import { formatPercent } from '@/lib/utils';
 import { SegmentDimension } from '@/hooks/useSegmentData';
 
 interface SegmentChartsProps {
@@ -73,7 +74,7 @@ export function SegmentCharts({ dimension }: SegmentChartsProps) {
                   tick={{ fontSize: 10 }} 
                 />
                 <Tooltip 
-                  formatter={(value: number) => formatCurrencyAED(value)}
+                  formatter={(value: number) => <Currency amount={value} />}
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--card))', 
                     borderColor: 'hsl(var(--border))',
@@ -154,7 +155,7 @@ export function SegmentCharts({ dimension }: SegmentChartsProps) {
                   tick={{ fontSize: 10 }} 
                 />
                 <Tooltip 
-                  formatter={(value: number) => formatCurrencyAED(value)}
+                  formatter={(value: number) => <Currency amount={value} />}
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--card))', 
                     borderColor: 'hsl(var(--border))',

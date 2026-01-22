@@ -1,5 +1,6 @@
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { cn, formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
+import { Currency } from '@/components/ui/Currency';
+import { cn, formatPercent, formatInteger } from '@/lib/utils';
 
 interface TrendIndicatorProps {
   currentValue: number;
@@ -29,12 +30,12 @@ export function TrendIndicator({
   const isNegative = difference < 0;
   const isNeutral = difference === 0;
 
-  const formatValue = () => {
+  const formatValue = (): React.ReactNode => {
     const absChange = Math.abs(percentChange);
     if (format === 'percent') {
       return formatPercent(absChange);
     } else if (format === 'currency') {
-      return formatCurrencyAED(Math.abs(difference), { abbreviate: false });
+      return <Currency amount={Math.abs(difference)} />;
     }
     return formatInteger(Math.abs(difference));
   };
@@ -47,17 +48,13 @@ export function TrendIndicator({
       {isPositive && (
         <>
           <TrendingUp className={cn(iconSize, "text-emerald-500")} />
-          <span className={cn(textSize, "font-medium text-emerald-600")}>
-            +{formatValue()}
-          </span>
+          <span className={cn(textSize, "font-medium text-emerald-600")}>+{formatValue()}</span>
         </>
       )}
       {isNegative && (
         <>
           <TrendingDown className={cn(iconSize, "text-red-500")} />
-          <span className={cn(textSize, "font-medium text-red-600")}>
-            -{formatValue()}
-          </span>
+          <span className={cn(textSize, "font-medium text-red-600")}>-{formatValue()}</span>
         </>
       )}
       {isNeutral && (

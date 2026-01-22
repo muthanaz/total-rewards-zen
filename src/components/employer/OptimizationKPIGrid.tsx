@@ -15,7 +15,8 @@ import {
   Clock,
   FileX,
 } from 'lucide-react';
-import { formatCurrencyAED, formatPercent, cn } from '@/lib/utils';
+import { Currency } from '@/components/ui/Currency';
+import { formatPercent, cn } from '@/lib/utils';
 
 interface OptimizationMetrics {
   unrealizedValue: number;
@@ -66,7 +67,7 @@ export function OptimizationKPIGrid({ metrics, isDemo, onKPIClick }: Optimizatio
     {
       id: 'unrealized',
       label: 'Unrealized Value',
-      value: formatCurrencyAED(metrics.unrealizedValue),
+      value: <Currency amount={metrics.unrealizedValue} />,
       valueColor: 'text-warning',
       icon: Ghost,
       iconBg: 'bg-warning/10',
@@ -96,7 +97,7 @@ export function OptimizationKPIGrid({ metrics, isDemo, onKPIClick }: Optimizatio
     {
       id: 'recoverable',
       label: 'Estimated Recoverable',
-      value: formatCurrencyAED(metrics.estimatedRecoverable),
+      value: <Currency amount={metrics.estimatedRecoverable} />,
       valueColor: 'text-success',
       icon: Target,
       iconBg: 'bg-success/10',
@@ -161,7 +162,7 @@ export function OptimizationKPIGrid({ metrics, isDemo, onKPIClick }: Optimizatio
               </div>
 
               {/* Value or Badges */}
-              {kpi.value ? (
+               {kpi.value ? (
                 <p className={cn("text-xl lg:text-2xl font-bold tracking-tight", kpi.valueColor)}>
                   {kpi.value}
                 </p>

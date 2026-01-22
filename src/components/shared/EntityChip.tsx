@@ -24,7 +24,8 @@ import {
   calculateUtilization,
   getUtilizationStyle
 } from '@/lib/crossPortalContract';
-import { formatCurrencyAED, formatPercent } from '@/lib/utils';
+import { formatPercent } from '@/lib/utils';
+import { Currency } from '@/components/ui/Currency';
 
 // ============================================================================
 // ENTITY TYPES
@@ -407,7 +408,7 @@ export function RequestChip({
               <Badge variant="outline" className={cn("text-[10px]", statusStyle.className)}>
                 {getStatusDisplayLabel(status || null)}
               </Badge>
-              {amount && <span>{formatCurrencyAED(amount)}</span>}
+              {amount ? <Currency amount={amount} /> : null}
             </div>
             {createdAt && (
               <p className="text-xs text-muted-foreground">
