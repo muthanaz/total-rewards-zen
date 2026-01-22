@@ -18,7 +18,8 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-import { cn, formatCurrencyAED } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { Currency } from '@/components/ui/Currency';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Benefit {
@@ -161,7 +162,7 @@ export function TopBenefitsTable({ benefits }: TopBenefitsTableProps) {
                     </div>
                   </td>
                   <td className={cn("py-3 text-sm", isRTL && "text-right")}>
-                    {formatCurrencyAED(benefit.avgValue)}
+                    <Currency amount={benefit.avgValue} />
                   </td>
                   <td className={cn("py-3", isRTL && "text-right")}>
                     {getTrendBadge(benefit.trend)}

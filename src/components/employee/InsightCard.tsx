@@ -1,22 +1,24 @@
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Lightbulb, ChevronRight, TrendingUp, AlertTriangle, DollarSign } from 'lucide-react';
-import { cn, formatCurrencyAED } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { Currency } from '@/components/ui/Currency';
 
 type InsightType = 'opportunity' | 'warning' | 'success' | 'info';
 
 interface InsightCardProps {
   type: InsightType;
   title: string;
-  what: string;
+  what: React.ReactNode;
   why: string;
   action: {
     label: string;
     path: string;
   };
-  value?: string;
+  value?: React.ReactNode;
   className?: string;
 }
 
@@ -127,17 +129,20 @@ export function MoneyOnTableInsight({
   topBenefit: string;
   daysRemaining: number;
 }) {
+  // Format amount for display text
+  const formattedAmount = <Currency amount={amount} abbreviate={false} />;
+  
   return (
     <InsightCard
       type="opportunity"
       title="You may be leaving money on the table"
-      what={`You have ${formatCurrencyAED(amount, { abbreviate: false })} in unused benefits, with ${topBenefit} being the largest opportunity.`}
+      what={<>You have {formattedAmount} in unused benefits, with {topBenefit} being the largest opportunity.</>}
       why={`Only ${daysRemaining} days left in the year. These funds don't carry over and represent value you're entitled to.`}
       action={{
         label: `Explore ${topBenefit}`,
         path: `/employee/${topBenefit.toLowerCase().replace(/\s+/g, '-')}`,
       }}
-      value={formatCurrencyAED(amount, { abbreviate: false })}
+      value={formattedAmount}
     />
   );
 }
