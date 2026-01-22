@@ -11,7 +11,7 @@ import {
   AlertTriangle,
   Link2
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED } from '@/lib/utils';
 import { ConfidenceBadge } from '@/components/shared';
 
 export interface PolicyFix {
@@ -68,12 +68,6 @@ export function PolicyFixCard({
 
   const effortConfig = getEffortConfig(fix.effort);
   const isQuickWin = variant === 'quick_win';
-
-  const formatCurrency = (value: number) => {
-    if (value >= 1000000) return `AED ${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `AED ${(value / 1000).toFixed(0)}K`;
-    return `AED ${value}`;
-  };
 
   return (
     <div className={cn(
@@ -153,7 +147,7 @@ export function PolicyFixCard({
             isQuickWin ? "bg-green-500/10 text-green-600 border-green-500/30" : "bg-amber-500/10 text-amber-600 border-amber-500/30"
           )}>
             <Zap className="h-3 w-3 mr-1" />
-            {formatCurrency(fix.expectedImpact.costAvoidance)} savings
+            {formatCurrencyAED(fix.expectedImpact.costAvoidance)} savings
           </Badge>
         )}
       </div>

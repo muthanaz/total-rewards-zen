@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { TrendingUp, TrendingDown, Minus, Users, DollarSign } from 'lucide-react';
 import { AnimatedBarChart, AnimatedLineChart, ProgressBarList } from '@/components/charts';
+import { formatCurrencyAED } from '@/lib/utils';
 
 interface DrillDownData {
   title: string;
@@ -28,7 +29,7 @@ export function DrillDownModal({
   open, 
   onOpenChange, 
   data,
-  formatValue = (v) => `AED ${v.toLocaleString()}`
+  formatValue = (v) => formatCurrencyAED(v, { abbreviate: false })
 }: DrillDownModalProps) {
   if (!data) return null;
 

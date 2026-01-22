@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Progress } from '@/components/ui/progress';
 import { ChevronRight, CheckCircle, TrendingUp, LucideIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED } from '@/lib/utils';
 
 interface Benefit {
   name: string;
@@ -28,7 +28,7 @@ export function BenefitsDrillDownSheet({
 }: BenefitsDrillDownSheetProps) {
   const navigate = useNavigate();
   
-  const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
+  const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
 
   // Filter and sort benefits based on category
   const filteredBenefits = benefits

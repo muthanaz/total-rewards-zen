@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Lightbulb, ChevronRight, TrendingUp, AlertTriangle, DollarSign } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
 type InsightType = 'opportunity' | 'warning' | 'success' | 'info';
@@ -131,13 +131,13 @@ export function MoneyOnTableInsight({
     <InsightCard
       type="opportunity"
       title="You may be leaving money on the table"
-      what={`You have AED ${amount.toLocaleString()} in unused benefits, with ${topBenefit} being the largest opportunity.`}
+      what={`You have ${formatCurrencyAED(amount, { abbreviate: false })} in unused benefits, with ${topBenefit} being the largest opportunity.`}
       why={`Only ${daysRemaining} days left in the year. These funds don't carry over and represent value you're entitled to.`}
       action={{
         label: `Explore ${topBenefit}`,
         path: `/employee/${topBenefit.toLowerCase().replace(/\s+/g, '-')}`,
       }}
-      value={`AED ${amount.toLocaleString()}`}
+      value={formatCurrencyAED(amount, { abbreviate: false })}
     />
   );
 }

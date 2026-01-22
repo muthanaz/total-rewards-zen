@@ -7,7 +7,7 @@ import {
   GraduationCap, Heart, Dumbbell, PiggyBank 
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
@@ -69,7 +69,7 @@ export function PersonalizedRecommendations({ benefits, className }: Personalize
     } else {
       tip = isRTL
         ? `لديك ${benefit.remaining.toLocaleString('ar-AE')} درهم متبقي`
-        : `You have AED ${benefit.remaining.toLocaleString()} remaining`;
+        : `You have ${formatCurrencyAED(benefit.remaining, { abbreviate: false })} remaining`;
     }
 
     return {

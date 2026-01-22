@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED, DIRHAM_SYMBOL } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Shield, TrendingUp, Wallet, DollarSign, CheckCircle2, Clock, Gift } from 'lucide-react';
 
@@ -65,7 +65,7 @@ export function CompensationBreakdownModal({
   benefits,
 }: CompensationBreakdownModalProps) {
   const formatCurrency = (value: number) => 
-    `${isRTL ? '' : 'AED '}${value.toLocaleString(isRTL ? 'ar-AE' : 'en-AE')}${isRTL ? ' درهم' : ''}`;
+    formatCurrencyAED(value, { abbreviate: false });
 
   // Group benefits by valueType
   const guaranteedBenefits = benefits.filter(b => b.valueType === 'guaranteed');

@@ -8,7 +8,7 @@ import {
   Calculator, Sparkles, Target
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED } from '@/lib/utils';
 
 interface BenefitSuggestion {
   id: string;
@@ -114,7 +114,7 @@ export function EmployerBenefitRecommendations({
   className 
 }: EmployerBenefitRecommendationsProps) {
   
-  const formatCurrency = (value: number) => `AED ${value.toLocaleString()}`;
+  const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
   
   const calculateSavings = (suggestion: BenefitSuggestion) => {
     // Expected employees retained due to benefit
