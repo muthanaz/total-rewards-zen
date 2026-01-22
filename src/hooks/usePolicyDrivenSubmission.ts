@@ -32,12 +32,12 @@ export interface PolicyMatch {
   policyTitle: string;
   policyVersionId: string;
   versionNumber: number;
-  transactionModel: 'request_only' | 'claim_only' | 'request_and_claim';
+  transactionModel: 'request_only' | 'claim_only' | 'hybrid';
   eligibilityRules: EligibilityRules;
   limits: LimitsCaps;
   workflow: WorkflowRules;
   requiredDocs: PolicyRequiredDoc[];
-  slaDays: number;
+  slaDays: number | null;
 }
 
 export interface PolicyRequiredDoc {
@@ -70,6 +70,34 @@ export interface PolicySubmissionParams {
   description: string;
   amount?: number;
   priority?: 'low' | 'standard' | 'high' | 'urgent';
+}
+
+function normalizeTransactionModel(model: unknown): PolicyMatch['transactionModel'] {
+  // Backwards compatibility: older code used request_and_claim
+  if (model === 'request_and_claim') return 'hybrid';
+  if (model === 'hybrid') return 'hybrid';
+  if (model === 'request_only') return 'request_only';
+  return 'claim_only';
+}
+
+function getEffectiveTransactionType(params: PolicySubmissionParams, policy: PolicyMatch | null): 'claim' | 'request' | null {
+  if (params.type === 'question') return null;
+  if (!policy) return params.type;
+
+  const amount = params.amount ?? null;
+  const threshold = policy.limits.pre_approval_threshold ?? null;
+
+  switch (policy.transactionModel) {
+    case 'request_only':
+      return 'request';
+    case 'claim_only':
+      return 'claim';
+    case 'hybrid':
+      if (amount && threshold && amount > threshold) return 'request';
+      return 'claim';
+    default:
+      return params.type;
+  }
 }
 
 // ============================================================================
@@ -174,18 +202,18 @@ export function usePolicyForCategory(category: string | null) {
       // Parse logic_json
       const logic = version.logic_json as Record<string, unknown> | null;
       
-      return {
+       return {
         policyId: policy.id,
         policyRef: policy.policy_ref,
         policyTitle: policy.title,
         policyVersionId: version.id,
         versionNumber: version.version_number,
-        transactionModel: (logic?.transaction_model as PolicyMatch['transactionModel']) || 'claim_only',
+         transactionModel: normalizeTransactionModel(logic?.transaction_model),
         eligibilityRules: (logic?.eligibility_rules as EligibilityRules) || DEFAULT_ELIGIBILITY_RULES,
         limits: (logic?.limits_caps as LimitsCaps) || DEFAULT_LIMITS_CAPS,
         workflow: (logic?.workflow as WorkflowRules) || DEFAULT_WORKFLOW,
         requiredDocs: (docs || []) as PolicyRequiredDoc[],
-        slaDays: ((logic?.workflow as WorkflowRules)?.sla_days) || 5,
+         slaDays: ((logic?.workflow as WorkflowRules)?.sla_days as number | null | undefined) ?? null,
       };
     },
     enabled: !!category && !!user?.id,
@@ -418,27 +446,30 @@ export function usePolicyDrivenSubmission() {
       
       if (!profile) throw new Error('Profile not found');
       
-      // Calculate SLA
-      const slaDays = policy?.slaDays || (params.type === 'question' ? 2 : params.type === 'claim' ? 3 : 4);
-      const slaHours = slaDays * 24;
+       // Calculate SLA (optional)
+       const effectiveType = getEffectiveTransactionType(params, policy);
+       const configuredSlaDays = policy?.slaDays ?? null;
+       const fallbackSlaDays = params.type === 'question' ? 2 : effectiveType === 'claim' ? 3 : 4;
+       const slaDays = configuredSlaDays ?? null;
+       const slaHours = slaDays ? slaDays * 24 : null;
       
-      // Get required docs from policy
-      const requiredDocs = policy?.requiredDocs
-        .filter(d => d.is_required && (d.transaction_type === params.type || d.transaction_type === 'both'))
-        .map(d => d.doc_name) || [];
+       // Get required docs from policy (based on effective transaction type)
+       const requiredDocs = policy?.requiredDocs
+         .filter(d => d.is_required && (d.transaction_type === (effectiveType || params.type) || d.transaction_type === 'both'))
+         .map(d => d.doc_name) || [];
 
       const initialStatus = (params.type !== 'question' && requiredDocs.length > 0)
         ? 'pending_employee'
         : 'pending';
       
       // Build request
-      const { data: request, error } = await supabase
+       const { data: request, error } = await supabase
         .from('requests')
         .insert({
           user_id: user.id,
           organization_id: profile.organization_id,
-          request_type: params.type,
-          transaction_type: params.type === 'question' ? null : params.type,
+           request_type: params.type === 'question' ? 'question' : (effectiveType || params.type),
+           transaction_type: params.type === 'question' ? null : (effectiveType || params.type),
           category: params.category,
           subject: params.title,
           description: params.description,
@@ -447,7 +478,7 @@ export function usePolicyDrivenSubmission() {
           status: initialStatus,
           priority: params.priority || 'standard',
           submitted_at: new Date().toISOString(),
-          sla_hours: slaHours,
+           sla_hours: slaHours,
           // Policy linkage
           policy_id: policy?.policyId || null,
           policy_version_id: policy?.policyVersionId || null,
@@ -470,24 +501,39 @@ export function usePolicyDrivenSubmission() {
       
       if (error) throw error;
       
-      // Create claim_docs entries
-      if (params.type !== 'question' && policy?.requiredDocs.length) {
-        const docEntries = policy.requiredDocs
-          .filter(d => d.is_required && (d.transaction_type === params.type || d.transaction_type === 'both'))
-          .map(doc => ({
-            request_id: request.id,
-            doc_type: doc.doc_type,
-            doc_name: doc.doc_name,
-            status: 'missing' as const,
-          }));
-        
-        if (docEntries.length > 0) {
-          await supabase.from('claim_docs').insert(docEntries);
-        }
-      }
+       // Create document checklist snapshot
+       if (params.type !== 'question' && policy?.requiredDocs.length) {
+         const applicableDocs = policy.requiredDocs
+           .filter(d => d.is_required && (d.transaction_type === (effectiveType || params.type) || d.transaction_type === 'both'));
+
+         const docEntries = applicableDocs.map((doc) => ({
+           request_id: request.id,
+           policy_version_id: policy.policyVersionId,
+           doc_type: doc.doc_type,
+           doc_name: doc.doc_name,
+           required_for: effectiveType || params.type,
+           is_required: true,
+           status: 'missing' as const,
+         }));
+
+         // Health vertical slice uses request_documents (new system of record)
+         if (params.category === 'Health Insurance' && docEntries.length > 0) {
+           await supabase.from('request_documents').insert(docEntries);
+         } else if (docEntries.length > 0) {
+           // Backward compatible fallback
+           await supabase.from('claim_docs').insert(
+             docEntries.map((d) => ({
+               request_id: d.request_id,
+               doc_type: d.doc_type,
+               doc_name: d.doc_name,
+               status: 'missing' as const,
+             }))
+           );
+         }
+       }
       
       // Create initial event
-      await supabase.from('request_events').insert({
+       await supabase.from('request_events').insert({
         request_id: request.id,
         actor_user_id: user.id,
         from_status: null,

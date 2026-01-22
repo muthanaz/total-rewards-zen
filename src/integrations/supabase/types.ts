@@ -2359,6 +2359,72 @@ export type Database = {
           },
         ]
       }
+      request_documents: {
+        Row: {
+          created_at: string
+          doc_name: string
+          doc_type: string
+          file_url: string | null
+          id: string
+          is_required: boolean
+          policy_version_id: string | null
+          request_id: string
+          required_for: string | null
+          reviewer_notes: string | null
+          status: string
+          updated_at: string
+          uploaded_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          doc_name: string
+          doc_type: string
+          file_url?: string | null
+          id?: string
+          is_required?: boolean
+          policy_version_id?: string | null
+          request_id: string
+          required_for?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          updated_at?: string
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          doc_name?: string
+          doc_type?: string
+          file_url?: string | null
+          id?: string
+          is_required?: boolean
+          policy_version_id?: string | null
+          request_id?: string
+          required_for?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          updated_at?: string
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_documents_policy_version_id_fkey"
+            columns: ["policy_version_id"]
+            isOneToOne: false
+            referencedRelation: "policy_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "request_documents_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       request_events: {
         Row: {
           action: string | null

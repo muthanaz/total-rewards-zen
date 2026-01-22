@@ -164,7 +164,7 @@ export function EmployeeCreateRequestSheet({
     switch (policy.transactionModel) {
       case 'request_only': return 'Request';
       case 'claim_only': return 'Claim';
-      case 'request_and_claim': return type === 'claim' ? 'Settlement' : 'Request';
+      case 'hybrid': return type === 'claim' ? 'Claim' : 'Request';
       default: return 'Claim';
     }
   };
