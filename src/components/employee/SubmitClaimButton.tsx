@@ -15,8 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Receipt, Send, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
-import { DirhamSymbolIcon } from '@/components/icons/DirhamSymbolIcon';
+import { cn, CURRENCY_LABEL } from '@/lib/utils';
 interface SubmitClaimButtonProps {
   category: string;
   buttonText?: string;
@@ -121,8 +120,8 @@ export function SubmitClaimButton({
           </div>
 
           <div className="space-y-2">
-            <Label className="flex items-center gap-1">
-              Amount (<DirhamSymbolIcon className="h-3.5 w-3.5" />) *
+            <Label>
+              Amount ({CURRENCY_LABEL}) *
             </Label>
             <Input
               type="number"

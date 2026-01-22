@@ -20,7 +20,7 @@ export function formatDiscountLabel(
 
   if (discountAmount && discountAmount > 0) {
     return language === 'ar'
-      ? `وفر ${discountAmount} درهم`
+      ? `وفر AED ${discountAmount}`
       : `Save AED ${discountAmount}`;
   }
 

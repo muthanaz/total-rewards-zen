@@ -192,7 +192,7 @@ export function BenefitActionButtons({
 
             {formData.type === 'claim' && (
               <div>
-                <Label className={cn(isRTL && "block text-right")}>{isRTL ? 'المبلغ (درهم)' : 'Amount (AED)'}</Label>
+                <Label className={cn(isRTL && "block text-right")}>{isRTL ? 'المبلغ (AED)' : 'Amount (AED)'}</Label>
                 <Input
                   type="number"
                   placeholder="0.00"

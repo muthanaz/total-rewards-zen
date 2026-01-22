@@ -83,7 +83,7 @@ export function SmartInsights({ benefits, className }: SmartInsightsProps) {
           type: 'action',
           title: isRTL ? 'فحص طبي سنوي مجاني' : 'Free Annual Health Screening',
           description: isRTL 
-            ? `${healthRemaining.toLocaleString('ar-AE')} درهم متبقية. احجز فحصك الوقائي السنوي - مغطى بالكامل بدون خصم.`
+            ? `AED ${healthRemaining.toLocaleString()} متبقية. احجز فحصك الوقائي السنوي - مغطى بالكامل بدون خصم.`
             : `AED ${healthRemaining.toLocaleString()} remaining. Book your preventive annual screening - fully covered with no deductible.`,
           action: isRTL ? 'احجز موعدك' : 'Book Appointment',
           route: healthBenefit.route,
@@ -95,7 +95,7 @@ export function SmartInsights({ benefits, className }: SmartInsightsProps) {
           type: 'opportunity',
           title: isRTL ? 'لا تنسَ فحص الأسنان' : 'Dental Check-up Covered',
           description: isRTL
-            ? `تأمينك يغطي فحصين للأسنان سنوياً. ${healthRemaining.toLocaleString('ar-AE')} درهم متاحة للعلاجات الأخرى.`
+            ? `تأمينك يغطي فحصين للأسنان سنوياً. AED ${healthRemaining.toLocaleString()} متاحة للعلاجات الأخرى.`
             : `Your plan covers 2 dental visits/year. AED ${healthRemaining.toLocaleString()} available for other treatments.`,
           action: isRTL ? 'عرض التغطية' : 'View Coverage',
           route: healthBenefit.route,

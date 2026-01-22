@@ -10,7 +10,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, X } from 'lucide-react';
 import { format } from 'date-fns';
-import { cn, DIRHAM_SYMBOL } from '@/lib/utils';
+import { cn, CURRENCY_LABEL } from '@/lib/utils';
 import type { ActionItem, ActionType, Priority, Confidence } from '@/hooks/useEmployerActions';
 
 const TYPE_OPTIONS: Array<{ value: ActionType; label: string }> = [
@@ -222,7 +222,7 @@ export function ActionCreateModal({
           {/* Expected Impact & Confidence */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="impact">Expected Impact ({DIRHAM_SYMBOL})</Label>
+              <Label htmlFor="impact">Expected Impact ({CURRENCY_LABEL})</Label>
               <Input
                 id="impact"
                 type="number"

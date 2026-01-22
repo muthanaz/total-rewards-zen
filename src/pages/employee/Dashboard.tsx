@@ -177,7 +177,7 @@ export default function EmployeeDashboard() {
     return { badge: 'bg-muted text-muted-foreground border-border', progress: '[&>div]:bg-muted-foreground/50' };
   };
 
-  const hiddenValue = `${isRTL ? '' : 'AED '}•••,•••${isRTL ? ' درهم' : ''}`;
+  const hiddenValue = 'AED •••,•••';
   
   const keyMetrics = [
     { 

@@ -69,29 +69,30 @@ export function formatNullable<T>(
 // ============= CURRENCY FORMATTING =============
 
 /**
- * UAE Dirham symbol (د.إ) for display.
- * DEPRECATED: Use <Currency> component or <DirhamSymbolIcon> instead.
- * Kept for backward compatibility.
+ * Currency prefix for UAE Dirham - ALWAYS "AED" per platform standard.
+ * This is the ONLY currency label used across the entire platform.
  */
-export const DIRHAM_SYMBOL = 'د.إ';
+export const CURRENCY_LABEL = 'AED';
+
+/**
+ * @deprecated Use CURRENCY_LABEL instead. Kept for backward compatibility only.
+ */
+export const DIRHAM_SYMBOL = 'AED';
 
 export interface CurrencyFormatOptions {
   abbreviate?: boolean;       // Use K/M abbreviations (default: true for values >= 10,000)
   decimals?: number;          // Force specific decimal places
-  showCurrency?: boolean;     // Show currency symbol (default: true)
+  showCurrency?: boolean;     // Show currency label (default: true)
 }
 
 /**
- * Format a number as AED currency with the official Dirham symbol (د.إ):
- * - >= 1,000,000: Use M with 1-2 decimals (e.g., "د.إ 6.15M")
- * - >= 10,000: Use K with 0-1 decimals (e.g., "د.إ 45.2K")
- * - < 10,000: Full number with commas (e.g., "د.إ 1,234")
+ * Format a number as AED currency:
+ * - >= 1,000,000: Use M with 1-2 decimals (e.g., "AED 6.15M")
+ * - >= 10,000: Use K with 0-1 decimals (e.g., "AED 45.2K")
+ * - < 10,000: Full number with commas (e.g., "AED 1,234")
  * 
  * ALWAYS outputs Western digits (0-9), never Arabic-Indic.
- * 
- * RECOMMENDED: For modern usage, prefer:
- * - <Currency amount={value} /> for display
- * - formatCurrencyNumber(value) + <DirhamSymbolIcon> for custom layouts
+ * ALWAYS uses "AED" as the currency label (never د.إ or Dirham symbols).
  */
 export function formatCurrencyAED(
   value: number | null | undefined,
@@ -100,12 +101,12 @@ export function formatCurrencyAED(
   const { abbreviate = true, decimals, showCurrency = true } = options;
   
   if (value === null || value === undefined || isNaN(value)) {
-    return showCurrency ? `${DIRHAM_SYMBOL} 0` : '0';
+    return showCurrency ? `${CURRENCY_LABEL} 0` : '0';
   }
 
   const absValue = Math.abs(value);
   const sign = value < 0 ? '-' : '';
-  const prefix = showCurrency ? `${DIRHAM_SYMBOL} ` : '';
+  const prefix = showCurrency ? `${CURRENCY_LABEL} ` : '';
 
   if (!abbreviate) {
     // Full format with commas - use en-US for Western digits
@@ -340,11 +341,11 @@ export function formatDateISO(
 
 // ============= CHART FORMATTERS =============
 // Use these in Recharts tickFormatter, tooltip formatters, etc.
-// NOTE: For React components in charts, use <Currency> or <DirhamSymbolIcon>
+// NOTE: All formatters use "AED" as the only currency label
 
 /**
  * Format value for chart tick display (compact, number only)
- * Use with DirhamSymbolIcon in custom label components for currency charts
+ * For Y-axis labels on currency charts
  */
 export function formatChartTick(value: number): string {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
@@ -353,8 +354,7 @@ export function formatChartTick(value: number): string {
 }
 
 /**
- * Format value for chart tooltip (full format)
- * For currency, returns "د.إ X,XXX" format
+ * Format value for chart tooltip (full format with AED prefix)
  */
 export function formatChartTooltip(
   value: number,
@@ -371,22 +371,22 @@ export function formatChartTooltip(
 }
 
 /**
- * Format value for chart labels (compact currency with Dirham symbol)
+ * Format value for chart labels (compact currency with AED)
  */
 export function formatChartLabel(value: number): string {
   return formatCurrencyAED(value, { abbreviate: true });
 }
 
 /**
- * Format currency for chart Y-axis (number only, no symbol)
- * Pair with custom axis label that includes DirhamSymbolIcon
+ * Format currency for chart Y-axis (number only, no prefix)
+ * Use with axis label that shows "AED"
  */
 export function formatChartCurrencyAxis(value: number): string {
   return formatCurrencyNumber(value, { abbreviate: true });
 }
 
 /**
- * Format for data table cells (full currency with symbol)
+ * Format for data table cells (full currency with AED)
  */
 export function formatTableCurrency(value: number | null | undefined): string {
   if (value === null || value === undefined) return '—';
