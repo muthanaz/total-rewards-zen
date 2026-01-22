@@ -278,7 +278,6 @@ export function PolicyEditorSheetV2({
 
       // Use RPC for atomic publish operation
       const result = await publishPolicyVersion({
-        policyId,
         versionId,
         effectiveFrom,
       });

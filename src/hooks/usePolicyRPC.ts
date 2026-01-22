@@ -44,7 +44,7 @@ export interface CreatePolicyResult {
 export async function createPolicyWithVersion(
   params: CreatePolicyParams
 ): Promise<CreatePolicyResult> {
-  const { data, error } = await supabase.rpc('create_policy_with_version', {
+  const { data, error } = await supabase.rpc('create_policy_with_draft_version', {
     p_org_id: params.orgId,
     p_created_by: params.createdBy,
     p_policy_name: params.policyName,
@@ -91,7 +91,6 @@ export async function createPolicyWithVersion(
 // =============================================================================
 
 export interface PublishPolicyParams {
-  policyId: string;
   versionId: string;
   effectiveFrom?: string;
 }
@@ -113,8 +112,7 @@ export async function publishPolicyVersion(
   params: PublishPolicyParams
 ): Promise<PublishPolicyResult> {
   const { data, error } = await supabase.rpc('publish_policy_version', {
-    p_policy_id: params.policyId,
-    p_version_id: params.versionId,
+    p_policy_version_id: params.versionId,
     p_effective_from: params.effectiveFrom || new Date().toISOString().split('T')[0],
   });
 
