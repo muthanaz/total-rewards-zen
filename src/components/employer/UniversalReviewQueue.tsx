@@ -239,7 +239,12 @@ function QueueItemRow({ item, onSelect, showCategory }: QueueItemRowProps) {
             isRTL && "flex-row-reverse"
           )}>
             <Timer className="w-3 h-3" />
-            {slaInfo.label}
+            {slaInfo.isOverdue 
+              ? `${Math.abs(slaInfo.hoursRemaining)}h overdue` 
+              : slaInfo.hoursRemaining < 24 
+                ? `${slaInfo.hoursRemaining}h left`
+                : `${slaInfo.daysRemaining}d left`
+            }
           </span>
         )}
       </div>
@@ -344,7 +349,7 @@ export function UniversalReviewQueue({
   if (items.length === 0) {
     return (
       <ZeroState 
-        pageId="employer-claims"
+        page="claims"
         portal="employer"
       />
     );
