@@ -1080,6 +1080,7 @@ export function ClaimsOpsView() {
                     </th>
                     <th className="text-left py-3 px-3 font-medium">Employee</th>
                     <th className="text-left py-3 px-3 font-medium">Type / Category</th>
+                    <th className="text-left py-3 px-2 font-medium">Policy</th>
                     <th className="text-right py-3 px-3 font-medium">Amount</th>
                     <th className="text-center py-3 px-2 font-medium">Days</th>
                     {slaEnabled && (
@@ -1124,6 +1125,27 @@ export function ClaimsOpsView() {
                             </div>
                             <p className="text-sm truncate" title={request.subject}>{request.subject}</p>
                           </div>
+                        </td>
+                        <td className="py-3 px-2">
+                          {request.policy_ref ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge variant="outline" className="text-xs cursor-help font-mono">
+                                  {request.policy_ref.length > 12 
+                                    ? request.policy_ref.slice(0, 12) + '…' 
+                                    : request.policy_ref}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-xs">
+                                <p className="font-medium">{request.policy_ref}</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Policy rules apply: eligibility, limits, required docs
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
                         </td>
                         <td className="py-3 px-3 text-right">
                           {request.amount ? (
