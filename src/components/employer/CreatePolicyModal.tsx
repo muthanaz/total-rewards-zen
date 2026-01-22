@@ -1,12 +1,13 @@
 /**
- * Create Policy Modal (Enhanced with Idempotency)
+ * Create Policy Modal (Refactored with RPC)
  * 
- * Modal dialog for creating new policies with:
+ * Modal dialog for creating new policies using atomic RPC function.
+ * Features:
  * - Organization selection (Admin mode)
  * - Template selection (optional)
  * - Policy Name, Life Area, Benefit Type, Transaction Model
  * - Effective Dates
- * - Idempotent creation (prevents duplicates)
+ * - Idempotent creation via server-side RPC (prevents duplicates)
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -44,6 +45,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuditLog } from '@/hooks/useAuditLog';
 import { usePolicyTemplates, type PolicyTemplate } from '@/hooks/usePolicyTemplates';
+import { createPolicyWithVersion } from '@/hooks/usePolicyRPC';
 import { cn } from '@/lib/utils';
 
 interface CreatePolicyModalProps {
@@ -51,11 +53,6 @@ interface CreatePolicyModalProps {
   onOpenChange: (open: boolean) => void;
   organizationId: string;
   onCreated?: (policyId: string, versionId: string) => void;
-}
-
-// Generate a unique client request ID
-function generateClientRequestId(): string {
-  return `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 }
 
 export function CreatePolicyModal({
@@ -76,8 +73,7 @@ export function CreatePolicyModal({
   const [effectiveTo, setEffectiveTo] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Idempotency: track the client request ID for the current submission
-  const clientRequestIdRef = useRef<string | null>(null);
+  // Idempotency: ref to track if submission is in progress
   const submissionInProgressRef = useRef(false);
 
   const { user } = useAuth();
@@ -101,11 +97,9 @@ export function CreatePolicyModal({
     },
   });
 
-  // Reset form when modal opens (generate new request ID)
+  // Reset form when modal opens
   useEffect(() => {
     if (open) {
-      // Generate a new client request ID when modal opens
-      clientRequestIdRef.current = generateClientRequestId();
       submissionInProgressRef.current = false;
     } else {
       // Reset form when modal closes
@@ -119,7 +113,6 @@ export function CreatePolicyModal({
       setEffectiveFrom('');
       setEffectiveTo('');
       setIsSubmitting(false);
-      clientRequestIdRef.current = null;
       submissionInProgressRef.current = false;
     }
   }, [open]);
@@ -158,7 +151,7 @@ export function CreatePolicyModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Prevent double submission
+    // Prevent double submission using ref (works across re-renders)
     if (submissionInProgressRef.current || isSubmitting) {
       console.log('Submission already in progress, ignoring duplicate click');
       return;
@@ -171,12 +164,16 @@ export function CreatePolicyModal({
       return;
     }
 
+    if (!user?.id) {
+      toast.error('Authentication required', {
+        description: 'Please log in to create a policy.',
+      });
+      return;
+    }
+
     // Mark submission in progress
     submissionInProgressRef.current = true;
     setIsSubmitting(true);
-
-    // Capture the client request ID for this submission
-    const currentRequestId = clientRequestIdRef.current;
 
     try {
       // Get template defaults if using template
@@ -184,68 +181,53 @@ export function CreatePolicyModal({
         ? templates.find(t => t.id === selectedTemplateId) 
         : null;
 
-      // Generate policy_ref with unique suffix
-      const policyRef = `POL-${name.substring(0, 3).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
-
-      // Create policy record
-      const { data: policy, error: policyError } = await supabase
-        .from('policies')
-        .insert({
-          organization_id: organizationId,
-          policy_ref: policyRef,
-          title: name.trim(),
-          category: lifeArea,
-          version: '1.0',
-          status: 'draft',
-          effective_from: effectiveFrom || new Date().toISOString().split('T')[0],
-          effective_to: effectiveTo || null,
-          benefit_type: benefitType,
-          transaction_model: transactionModel,
-          benefit_key: benefitKey || null,
-          is_active: true,
-        })
-        .select()
-        .single();
-
-      if (policyError) {
-        throw new Error(policyError.message || 'Failed to create policy record');
-      }
-
-      // Prepare content and logic from template or defaults
-      const contentJson = template?.default_content || DEFAULT_POLICY_CONTENT;
+      // Prepare content and logic from template or defaults (merging with defaults for complete types)
+      const contentJson = {
+        ...DEFAULT_POLICY_CONTENT,
+        ...(template?.default_content || {}),
+      };
       const logicJson = {
         transaction_model: transactionModel,
-        eligibility_rules: template?.default_eligibility_rules || DEFAULT_POLICY_LOGIC.eligibility_rules,
-        limits_caps: template?.default_limits || DEFAULT_POLICY_LOGIC.limits_caps,
-        workflow: template?.default_workflow || DEFAULT_POLICY_LOGIC.workflow,
+        eligibility_rules: {
+          ...DEFAULT_POLICY_LOGIC.eligibility_rules,
+          ...(template?.default_eligibility_rules || {}),
+        },
+        limits_caps: {
+          ...DEFAULT_POLICY_LOGIC.limits_caps,
+          ...(template?.default_limits || {}),
+        },
+        workflow: {
+          ...DEFAULT_POLICY_LOGIC.workflow,
+          ...(template?.default_workflow || {}),
+        },
       };
 
-      // Create initial draft version
-      const { data: version, error: versionError } = await (supabase
-        .from('policy_versions' as any)
-        .insert({
-          policy_id: policy.id,
-          version_number: 1,
-          status: 'draft',
-          effective_from: effectiveFrom || null,
-          effective_to: effectiveTo || null,
-          created_by: user?.id,
-          content_json: contentJson,
-          logic_json: logicJson,
-        } as any)
-        .select()
-        .single()) as any;
+      // Call the atomic RPC function
+      const result = await createPolicyWithVersion({
+        orgId: organizationId,
+        createdBy: user.id,
+        policyName: name.trim(),
+        lifeArea,
+        benefitType,
+        transactionModel,
+        effectiveFrom: effectiveFrom || undefined,
+        effectiveTo: effectiveTo || null,
+        templateId: selectedTemplateId,
+        contentJson,
+        logicJson,
+      });
 
-      if (versionError) {
-        // Clean up: delete the policy if version creation failed
-        await supabase.from('policies').delete().eq('id', policy.id);
-        throw new Error(versionError.message || 'Failed to create policy version');
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to create policy');
       }
+
+      const policyId = result.policy_id!;
+      const versionId = result.policy_version_id!;
 
       // If template has required docs, create them
       if (template?.default_required_docs && Array.isArray(template.default_required_docs)) {
         const requiredDocs = template.default_required_docs.map((doc: any) => ({
-          policy_version_id: version.id,
+          policy_version_id: versionId,
           doc_type: doc.doc_type || 'other',
           doc_name: doc.doc_name || 'Document',
           is_required: doc.is_required ?? true,
@@ -271,47 +253,42 @@ export function CreatePolicyModal({
       await logEvent({
         action: 'POLICY_CREATE',
         resourceType: 'policy',
-        resourceId: policy.id,
+        resourceId: policyId,
         details: { 
-          title: policy.title, 
+          title: name.trim(), 
           category: lifeArea,
           transaction_model: transactionModel,
           organization_id: organizationId,
-          version_id: version.id,
+          version_id: versionId,
           from_template: selectedTemplateId || null,
         },
       });
 
-      toast.success('Policy created successfully', {
-        description: `"${policy.title}" has been created as Draft v1. Click to edit.`,
+      toast.success('Policy created (Draft v1)', {
+        description: `"${name.trim()}" has been created. Opening editor...`,
       });
 
-      // Close modal and trigger callback
+      // Close modal
       onOpenChange(false);
 
       // Small delay before opening editor to allow query invalidation
       setTimeout(() => {
         // Navigate to the policy editor by dispatching a custom event
         window.dispatchEvent(new CustomEvent('policy-created', {
-          detail: { policyId: policy.id, versionId: version.id }
+          detail: { policyId, versionId }
         }));
       }, 100);
 
     } catch (error: any) {
       console.error('Failed to create policy:', error);
       
-      // Only show error if this is still the active submission
-      if (clientRequestIdRef.current === currentRequestId) {
-        toast.error('Failed to create policy', {
-          description: error.message || 'An unexpected error occurred. Please try again.',
-        });
-      }
+      toast.error('Failed to create policy', {
+        description: error.message || 'An unexpected error occurred. Please try again.',
+      });
     } finally {
       // Reset submission state
-      if (clientRequestIdRef.current === currentRequestId) {
-        setIsSubmitting(false);
-        submissionInProgressRef.current = false;
-      }
+      setIsSubmitting(false);
+      submissionInProgressRef.current = false;
     }
   };
 
@@ -485,53 +462,52 @@ export function CreatePolicyModal({
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {/* Benefit Type */}
-              <div className="space-y-2">
-                <Label htmlFor="benefitType">Benefit Type</Label>
-                <Select
-                  value={benefitType}
-                  onValueChange={(v) => setBenefitType(v as BenefitPolicyType)}
-                  disabled={isSubmitting}
-                >
-                  <SelectTrigger id="benefitType">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {BENEFIT_TYPE_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Transaction Model */}
-              <div className="space-y-2">
-                <Label htmlFor="transactionModel">Transaction Model</Label>
-                <Select
-                  value={transactionModel}
-                  onValueChange={(v) => setTransactionModel(v as TransactionModel)}
-                  disabled={isSubmitting}
-                >
-                  <SelectTrigger id="transactionModel">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TRANSACTION_MODEL_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Benefit Type */}
+            <div className="space-y-2">
+              <Label htmlFor="benefitType">Benefit Type</Label>
+              <Select 
+                value={benefitType} 
+                onValueChange={(v) => setBenefitType(v as BenefitPolicyType)}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger id="benefitType">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {BENEFIT_TYPE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <p className="text-xs text-muted-foreground px-1">
-              {TRANSACTION_MODEL_OPTIONS.find((o) => o.value === transactionModel)?.description}
-            </p>
+            {/* Transaction Model */}
+            <div className="space-y-2">
+              <Label htmlFor="transactionModel">Transaction Model</Label>
+              <Select 
+                value={transactionModel} 
+                onValueChange={(v) => setTransactionModel(v as TransactionModel)}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger id="transactionModel">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TRANSACTION_MODEL_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      <div>
+                        <span>{opt.label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {TRANSACTION_MODEL_OPTIONS.find(o => o.value === transactionModel)?.description}
+              </p>
+            </div>
 
             {/* Effective Dates */}
             <div className="grid grid-cols-2 gap-4">
@@ -548,7 +524,6 @@ export function CreatePolicyModal({
                   disabled={isSubmitting}
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="effectiveTo" className="flex items-center gap-1">
                   <CalendarDays className="w-3 h-3" />
@@ -559,6 +534,7 @@ export function CreatePolicyModal({
                   type="date"
                   value={effectiveTo}
                   onChange={(e) => setEffectiveTo(e.target.value)}
+                  min={effectiveFrom}
                   disabled={isSubmitting}
                 />
               </div>
@@ -568,14 +544,20 @@ export function CreatePolicyModal({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => step === 'details' && !selectedTemplateId ? setStep('source') : onOpenChange(false)}
+                onClick={() => setStep('source')}
                 disabled={isSubmitting}
               >
-                {step === 'details' && !selectedTemplateId ? 'Back' : 'Cancel'}
+                Back
               </Button>
               <Button type="submit" disabled={isSubmitting || !name.trim() || !lifeArea}>
-                {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {isSubmitting ? 'Creating...' : 'Create Policy'}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Policy'
+                )}
               </Button>
             </DialogFooter>
           </form>

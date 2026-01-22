@@ -2816,6 +2816,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_policy_with_version: {
+        Args: {
+          p_benefit_type?: string
+          p_content_json?: Json
+          p_created_by: string
+          p_effective_from?: string
+          p_effective_to?: string
+          p_life_area: string
+          p_logic_json?: Json
+          p_org_id: string
+          p_policy_name: string
+          p_template_id?: string
+          p_transaction_model?: string
+        }
+        Returns: Json
+      }
       ensure_demo_user_role: {
         Args: {
           p_email: string
@@ -2907,6 +2923,14 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      publish_policy_version: {
+        Args: {
+          p_effective_from?: string
+          p_policy_id: string
+          p_version_id: string
+        }
+        Returns: Json
       }
     }
     Enums: {

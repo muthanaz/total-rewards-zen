@@ -8,7 +8,7 @@
  * - Proper toast feedback for all actions
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +41,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { PolicyLogicEditor } from './PolicyLogicEditor';
 import { useAuditLog } from '@/hooks/useAuditLog';
+import { publishPolicyVersion } from '@/hooks/usePolicyRPC';
 import {
   PolicyContent,
   PolicyLogic,
@@ -275,50 +276,18 @@ export function PolicyEditorSheetV2({
         return;
       }
 
-      // Archive any currently published version for this policy
-      const { error: archiveError } = await (supabase
-        .from('policy_versions' as any)
-        .update({
-          status: 'archived',
-          effective_to: effectiveFrom,
-        } as any)
-        .eq('policy_id', policyId)
-        .eq('status', 'published')
-        .neq('id', versionId)) as any;
+      // Use RPC for atomic publish operation
+      const result = await publishPolicyVersion({
+        policyId,
+        versionId,
+        effectiveFrom,
+      });
 
-      if (archiveError) {
-        console.error('Archive error:', archiveError);
-        // Continue anyway - this might fail if there's no published version
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to publish policy');
       }
 
-      // Publish this version
-      const { error: publishError } = await (supabase
-        .from('policy_versions' as any)
-        .update({
-          status: 'published',
-          effective_from: effectiveFrom,
-          last_updated_at: new Date().toISOString(),
-        } as any)
-        .eq('id', versionId)) as any;
-
-      if (publishError) {
-        throw new Error(publishError.message || 'Failed to publish version');
-      }
-
-      // Update parent policy status to 'published' (not 'active')
-      const { error: policyUpdateError } = await supabase
-        .from('policies')
-        .update({
-          status: 'published',
-          effective_from: effectiveFrom,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', policyId);
-
-      if (policyUpdateError) {
-        console.error('Policy update error:', policyUpdateError);
-        // Non-critical, version is already published
-      }
+      const publishedVersionNumber = result.version_number || currentVersionNumber;
 
       // Invalidate all relevant queries
       await Promise.all([
@@ -342,14 +311,14 @@ export function PolicyEditorSheetV2({
         resourceId: policyId,
         details: {
           version_id: versionId,
-          version_number: currentVersionNumber,
+          version_number: publishedVersionNumber,
           effective_from: effectiveFrom,
           transaction_model: logic.transaction_model,
           organization_id: organizationId,
         },
       });
       
-      toast.success(`Policy published (v${currentVersionNumber})`, {
+      toast.success(`Published v${publishedVersionNumber}`, {
         description: 'Employees can now see this policy.',
       });
       
