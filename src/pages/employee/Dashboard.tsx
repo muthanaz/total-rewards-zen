@@ -1,22 +1,22 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Home, GraduationCap, Heart, Car, Dumbbell, BookOpen, Gift,
-  Wallet, Calendar, DollarSign, Briefcase, LucideIcon,
+  LucideIcon,
 } from 'lucide-react';
 import { SatisfactionSurvey } from '@/components/employee/SatisfactionSurvey';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useUIVisibility } from '@/contexts/UIVisibilityContext';
-import { cn, formatCurrencyAED } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { useEmployeeDashboard } from '@/hooks/useEmployeeDashboard';
 import { DemoTip, DEMO_TIPS } from '@/components/demo';
 
-// Original dashboard components
+// Original older dashboard components
 import { ProfileCompleteness } from '@/components/employee/ProfileCompleteness';
 import { TodayStrip } from '@/components/employee/TodayStrip';
+import { BenefitsSummaryCard } from '@/components/employee/BenefitsSummaryCard';
 import { BenefitCard } from '@/components/employee/BenefitCard';
-import { CompensationGrid } from '@/components/ui/compensation-summary-card';
-import { SmartInsights } from '@/components/dashboard/SmartInsights';
+import { RecentActivityFeed } from '@/components/employee/RecentActivityFeed';
 
 // Benefit value types
 type BenefitValueType = 'guaranteed' | 'employer_cost' | 'performance' | 'budget';
@@ -47,16 +47,11 @@ export default function EmployeeDashboard() {
   const { isElementVisible } = useUIVisibility();
   const isRTL = direction === 'rtl';
   
-  // Privacy toggle state
-  const [salaryHidden, setSalaryHidden] = useState(false);
-  
   // Fetch real data
   const { data: dashboardData, isLoading } = useEmployeeDashboard();
   
   // Check visibility for each section
-  const showCompensation = isElementVisible('employee', 'dashboard', 'compensation_summary');
   const showYourBenefits = isElementVisible('employee', 'dashboard', 'your_benefits');
-  const showSmartInsights = isElementVisible('employee', 'dashboard', 'smart_insights');
   const showSatisfactionSurvey = isElementVisible('employee', 'dashboard', 'satisfaction_survey');
 
   // Use real data or fallback to demo
@@ -66,15 +61,6 @@ export default function EmployeeDashboard() {
     monthlySalary: 35000,
     profileCompleteness: 70,
     missingFields: ['Phone Number', 'Emirates ID'],
-  };
-
-  const totals = dashboardData?.totals || {
-    annualSalary: 420000,
-    guaranteedBenefits: 219000,
-    totalBenefitsValue: 282000,
-    totalUtilized: 215200,
-    utilizationPercent: 76,
-    totalCompensation: 639000,
   };
 
   // Map real benefits to display format or use demo
@@ -101,96 +87,12 @@ export default function EmployeeDashboard() {
     return demoBenefits;
   }, [dashboardData?.benefits]);
 
-  // Build compensation metrics for the grid
-  const compensationMetrics = useMemo(() => {
-    const annualSalary = totals.annualSalary;
-    const monthlyBase = profileData.monthlySalary;
-    const guaranteedBenefits = totals.guaranteedBenefits;
-    const totalBenefitsValue = totals.totalBenefitsValue;
-    
-    return [
-      {
-        icon: DollarSign,
-        value: formatCurrencyAED(annualSalary),
-        label: isRTL ? 'الراتب السنوي' : 'Annual Salary',
-        formula: isRTL ? 'الراتب الشهري × 12' : 'Monthly Salary × 12',
-        dataSource: 'HR System',
-        variant: 'primary' as const,
-        isSensitive: true,
-      },
-      {
-        icon: Wallet,
-        value: formatCurrencyAED(monthlyBase),
-        label: isRTL ? 'الراتب الشهري' : 'Monthly Base',
-        formula: isRTL ? 'الراتب الأساسي + البدلات' : 'Base Salary + Allowances',
-        dataSource: 'Payroll',
-        variant: 'default' as const,
-        isSensitive: true,
-      },
-      {
-        icon: Briefcase,
-        value: formatCurrencyAED(guaranteedBenefits),
-        label: isRTL ? 'البدلات النقدية' : 'Cash Allowances',
-        formula: isRTL ? 'السكن + التعليم + النقل' : 'Housing + Education + Transport',
-        dataSource: 'Benefits System',
-        variant: 'success' as const,
-        isSensitive: false,
-      },
-      {
-        icon: Gift,
-        value: formatCurrencyAED(totalBenefitsValue),
-        label: isRTL ? 'إجمالي المزايا' : 'Total Benefits',
-        formula: isRTL ? 'جميع المزايا المتاحة' : 'All Available Benefits',
-        dataSource: 'Benefits System',
-        variant: 'benefits' as const,
-        isSensitive: false,
-        subtitle: `${totals.utilizationPercent}% ${isRTL ? 'مستخدم' : 'utilized'}`,
-      },
-    ];
-  }, [totals, profileData.monthlySalary, isRTL]);
-
-  // Total compensation for the main card
-  const totalCompensation = useMemo(() => {
-    const total = totals.totalCompensation;
-    const salaryPercent = totals.annualSalary > 0 
-      ? Math.round((totals.annualSalary / total) * 100)
-      : 66;
-    const benefitsPercent = 100 - salaryPercent;
-    
-    return {
-      value: formatCurrencyAED(total),
-      formula: isRTL ? 'الراتب السنوي + المزايا المضمونة' : 'Annual Salary + Guaranteed Benefits',
-      dataSource: 'HR & Benefits Systems',
-      subtitle: isRTL 
-        ? `مع المزايا المتغيرة: ${formatCurrencyAED(total + (totals.totalBenefitsValue - totals.guaranteedBenefits))}`
-        : `With variable benefits: ${formatCurrencyAED(total + (totals.totalBenefitsValue - totals.guaranteedBenefits))}`,
-      salaryHidden,
-      onTogglePrivacy: () => setSalaryHidden(!salaryHidden),
-      salaryPercent,
-      benefitsPercent,
-    };
-  }, [totals, salaryHidden, isRTL]);
-
-  // Transform benefits for SmartInsights
-  const insightsBenefits = useMemo(() => {
-    return benefits.map(b => ({
-      name: b.name,
-      value: b.value,
-      utilized: b.utilized,
-      route: b.route,
-      valueType: b.valueType,
-    }));
-  }, [benefits]);
-
   if (isLoading) {
     return (
       <div className="space-y-5 animate-pulse">
         <div className="h-16 bg-muted rounded-xl" />
         <div className="h-12 bg-muted rounded-xl" />
-        <div className="h-32 bg-muted rounded-xl" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-24 bg-muted rounded-xl" />)}
-        </div>
+        <div className="h-48 bg-muted rounded-xl" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map(i => <div key={i} className="h-48 bg-muted rounded-xl" />)}
         </div>
@@ -214,49 +116,46 @@ export default function EmployeeDashboard() {
       {/* 2. Quick Actions Strip */}
       <TodayStrip />
 
-      {/* 3. Compensation Grid - Total Compensation + 4 Metrics */}
-      {showCompensation && (
-        <CompensationGrid
-          metrics={compensationMetrics}
-          totalCompensation={totalCompensation}
-          isRTL={isRTL}
-        />
-      )}
+      {/* 3. Benefits Summary Card with Next Actions */}
+      <BenefitsSummaryCard variant="full" />
 
-      {/* 4. Benefits Grid */}
-      {showYourBenefits && (
-        <section>
-          <div className={cn("flex items-center justify-between mb-5", isRTL && "flex-row-reverse")}>
-            <h2 className="text-lg font-display font-semibold tracking-tight">
-              {isRTL ? 'مزاياك' : 'Your Benefits'}
-            </h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {benefits.map((benefit, index) => (
-              <BenefitCard
-                key={benefit.name}
-                name={t(benefit.nameKey)}
-                icon={benefit.icon}
-                value={benefit.value}
-                utilized={benefit.utilized}
-                description={benefit.description}
-                route={benefit.route}
-                onClick={() => navigate(benefit.route)}
-                index={index}
-                isRTL={isRTL}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+      {/* 4. Two-column layout: Benefits Grid + Activity Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Benefits Grid - 2 columns on large screens */}
+        {showYourBenefits && (
+          <section className="lg:col-span-2">
+            <div className={cn("flex items-center justify-between mb-5", isRTL && "flex-row-reverse")}>
+              <h2 className="text-lg font-display font-semibold tracking-tight">
+                {isRTL ? 'مزاياك' : 'Your Benefits'}
+              </h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {benefits.map((benefit, index) => (
+                <BenefitCard
+                  key={benefit.name}
+                  name={t(benefit.nameKey)}
+                  icon={benefit.icon}
+                  value={benefit.value}
+                  utilized={benefit.utilized}
+                  description={benefit.description}
+                  route={benefit.route}
+                  onClick={() => navigate(benefit.route)}
+                  index={index}
+                  isRTL={isRTL}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
-      {/* 5. Smart Insights */}
-      {showSmartInsights && (
-        <SmartInsights benefits={insightsBenefits} />
-      )}
+        {/* Recent Activity Feed - sidebar */}
+        <aside className="lg:col-span-1">
+          <RecentActivityFeed />
+        </aside>
+      </div>
 
-      {/* 6. Satisfaction Survey (secondary, at bottom) */}
+      {/* 5. Satisfaction Survey (secondary, at bottom) */}
       {showSatisfactionSurvey && (
         <SatisfactionSurvey compact={true} />
       )}
