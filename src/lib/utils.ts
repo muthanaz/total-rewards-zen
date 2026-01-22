@@ -340,9 +340,11 @@ export function formatDateISO(
 
 // ============= CHART FORMATTERS =============
 // Use these in Recharts tickFormatter, tooltip formatters, etc.
+// NOTE: For React components in charts, use <Currency> or <DirhamSymbolIcon>
 
 /**
- * Format value for chart tick display (compact)
+ * Format value for chart tick display (compact, number only)
+ * Use with DirhamSymbolIcon in custom label components for currency charts
  */
 export function formatChartTick(value: number): string {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
@@ -352,6 +354,7 @@ export function formatChartTick(value: number): string {
 
 /**
  * Format value for chart tooltip (full format)
+ * For currency, returns "د.إ X,XXX" format
  */
 export function formatChartTooltip(
   value: number,
@@ -368,8 +371,24 @@ export function formatChartTooltip(
 }
 
 /**
- * Format value for chart labels (compact currency)
+ * Format value for chart labels (compact currency with Dirham symbol)
  */
 export function formatChartLabel(value: number): string {
   return formatCurrencyAED(value, { abbreviate: true });
+}
+
+/**
+ * Format currency for chart Y-axis (number only, no symbol)
+ * Pair with custom axis label that includes DirhamSymbolIcon
+ */
+export function formatChartCurrencyAxis(value: number): string {
+  return formatCurrencyNumber(value, { abbreviate: true });
+}
+
+/**
+ * Format for data table cells (full currency with symbol)
+ */
+export function formatTableCurrency(value: number | null | undefined): string {
+  if (value === null || value === undefined) return '—';
+  return formatCurrencyAED(value, { abbreviate: false });
 }

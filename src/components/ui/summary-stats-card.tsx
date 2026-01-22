@@ -1,9 +1,17 @@
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, Info, Clock, Database } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { 
+  DataProvenance, 
+  SOURCE_TYPE_LABELS, 
+  CONFIDENCE_COLORS,
+  getFreshnessLabel,
+} from '@/lib/dataProvenance';
 
 type CardVariant = 'primary' | 'utilized' | 'remaining' | 'utilization' | 'info';
 
@@ -20,6 +28,10 @@ interface SummaryStatsCardProps {
   secondaryValue?: string | null;
   compact?: boolean;
   highlight?: boolean;
+  /** Data provenance for Trust Layer */
+  provenance?: DataProvenance;
+  /** Mark value as estimate */
+  isEstimate?: boolean;
 }
 
 const variantStyles: Record<CardVariant, { bg: string; iconBg: string; iconColor: string; valueColor: string; border: string; glow: string }> = {
@@ -86,8 +98,12 @@ export function SummaryStatsCard({
   secondaryValue,
   compact = false,
   highlight = false,
+  provenance,
+  isEstimate = false,
 }: SummaryStatsCardProps) {
   const styles = variantStyles[variant];
+  const showProvenance = provenance && !compact;
+  const confidenceColors = provenance ? CONFIDENCE_COLORS[provenance.confidence_level] : null;
 
   return (
     <motion.div
@@ -128,9 +144,66 @@ export function SummaryStatsCard({
           >
             <Icon className={cn(compact ? 'w-3 h-3' : 'w-4 h-4', styles.iconColor)} />
           </motion.div>
-          {formula && !compact && (
-            <InfoTooltip formula={formula} dataSource={dataSource} />
-          )}
+          <div className="flex items-center gap-1">
+            {/* Estimate badge */}
+            {isEstimate && !compact && (
+              <Badge 
+                variant="outline" 
+                className="text-[9px] px-1 py-0 bg-amber-500/10 text-amber-600 border-amber-500/20"
+              >
+                Est.
+              </Badge>
+            )}
+            {/* Provenance indicator */}
+            {showProvenance && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="cursor-help">
+                      <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground transition-colors" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs p-3 space-y-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <Database className="h-3.5 w-3.5 shrink-0" />
+                      <span className="font-medium">
+                        {provenance.source_label || SOURCE_TYPE_LABELS[provenance.source_type]}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-3.5 w-3.5 shrink-0" />
+                      <span>Updated: {getFreshnessLabel(provenance)}</span>
+                    </div>
+                    {confidenceColors && (
+                      <div className="flex items-center gap-2">
+                        <div className={cn(
+                          'h-2 w-2 rounded-full shrink-0',
+                          provenance.confidence_level === 'high' && 'bg-emerald-500',
+                          provenance.confidence_level === 'medium' && 'bg-amber-500',
+                          provenance.confidence_level === 'low' && 'bg-red-500'
+                        )} />
+                        <span className="capitalize">{provenance.confidence_level} confidence</span>
+                      </div>
+                    )}
+                    {provenance.assumptions && provenance.assumptions.length > 0 && (
+                      <div className="pt-1 border-t text-muted-foreground">
+                        <span className="font-medium">Assumptions:</span>
+                        <ul className="mt-1 space-y-0.5">
+                          {provenance.assumptions.map((a, i) => (
+                            <li key={i}>• {a}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {/* Original formula tooltip */}
+            {formula && !compact && !showProvenance && (
+              <InfoTooltip formula={formula} dataSource={dataSource} />
+            )}
+          </div>
         </div>
         
         <div className={cn(compact ? 'mt-1.5' : 'mt-2', 'flex-1 flex flex-col justify-center')}>

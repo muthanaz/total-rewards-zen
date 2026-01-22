@@ -86,6 +86,9 @@ export {
   EntitlementDisclaimer,
   ForecastDisclaimer,
   BenchmarkDisclaimer,
+  DEFAULT_ESTIMATE_MESSAGE,
+  DEFAULT_ESTIMATE_SHORT,
+  DISCLAIMER_MESSAGES,
 } from './EstimateDisclaimer';
 export { 
   TrustedValue, 
@@ -94,6 +97,10 @@ export {
   TrustedInteger,
   TrustedMetricCard,
 } from './TrustedValue';
+export type { TrustedValueProps, TrustedMetricCardProps, ValueType } from './TrustedValue';
+
+// Policy Reference Badge
+export { PolicyRefBadge } from './PolicyRefBadge';
 
 // Global Error Boundary
 export { GlobalErrorBoundary } from './GlobalErrorBoundary';
