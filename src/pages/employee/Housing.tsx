@@ -160,6 +160,64 @@ export default function HousingPage() {
       {/* Cross-links */}
       <BenefitCrossLinks benefitCategory="Housing" showClaimLink={false} />
 
+      {/* Quick Tips - meaningful insights */}
+      <Card className="border-muted">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
+            Quick Tips & What to Know
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-accent/10 border border-accent/20">
+              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
+                <Home className="w-4 h-4 text-accent" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Paid Monthly with Salary</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Housing allowance is auto-credited each month. No claim needed for standard payments.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
+              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
+                <Clock className="w-4 h-4 text-warning" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Annual Renewal</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Submit new tenancy contract to HR before lease renewal to maintain tax-free status.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-chart-3/10 border border-chart-3/20">
+              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
+                <MapPin className="w-4 h-4 text-chart-3" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Top-Up Option</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Rent above your allowance? The excess is deducted from salary (pre-tax where applicable).
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-success/10 border border-success/20">
+              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
+                <CheckCircle2 className="w-4 h-4 text-success" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Documents to Keep</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Tenancy contract (Ejari), landlord details, and rent receipts for audit purposes.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Recommended Vendors */}
       <RecommendedVendorsModule benefitCategory="Housing" title="Housing & Home Partners" />
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">

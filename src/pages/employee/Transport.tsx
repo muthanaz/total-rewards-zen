@@ -134,6 +134,64 @@ export default function TransportPage() {
       {/* Cross-links */}
       <BenefitCrossLinks benefitCategory="Transport" showClaimLink={false} />
 
+      {/* Quick Tips - meaningful insights */}
+      <Card className="border-muted">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <Fuel className="w-4 h-4 text-muted-foreground" />
+            Quick Tips & What to Know
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-accent/10 border border-accent/20">
+              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
+                <Car className="w-4 h-4 text-accent" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Fuel is Auto-Credited</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  No claim needed — fuel allowance appears in your monthly salary automatically.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
+              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
+                <Plane className="w-4 h-4 text-warning" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Book Tickets Early</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Annual flight tickets get best rates when booked 2-3 months ahead. Unused tickets don't encash.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-chart-3/10 border border-chart-3/20">
+              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
+                <FileText className="w-4 h-4 text-chart-3" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">What to Submit</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  For ticket claims: E-ticket + boarding pass + payment receipt. For car: Registration + loan docs.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-chart-2/10 border border-chart-2/20">
+              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
+                <CreditCard className="w-4 h-4 text-chart-2" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Family Coverage</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Flight tickets cover spouse and children. Update your dependents in your Smart Profile.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* 3. How It Works */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
         <CardHeader className="pb-3">

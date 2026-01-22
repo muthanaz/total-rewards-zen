@@ -125,6 +125,64 @@ export default function WellbeingPage() {
       {/* Cross-links */}
       <BenefitCrossLinks benefitCategory="Wellbeing" showClaimLink={false} />
 
+      {/* Quick Tips - meaningful insights */}
+      <Card className="border-muted">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <Heart className="w-4 h-4 text-muted-foreground" />
+            Quick Tips & What to Know
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-accent/10 border border-accent/20">
+              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
+                <Dumbbell className="w-4 h-4 text-accent" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Mix & Match Programs</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  You can combine gym + wellness app + counseling up to your total AED 6,000 budget.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-success/10 border border-success/20">
+              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
+                <Brain className="w-4 h-4 text-success" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">100% Confidential</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Mental health sessions are completely private. Your employer only sees aggregate utilization data.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
+              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
+                <Moon className="w-4 h-4 text-warning" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Use It or Lose It</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Wellbeing budget doesn't roll over. Check your remaining balance before year-end.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-chart-2/10 border border-chart-2/20">
+              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
+                <Leaf className="w-4 h-4 text-chart-2" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Family Can Join</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Some programs allow family members at an additional cost. Check with the partner facility.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* 3. How It Works */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
         <CardHeader className="pb-3">

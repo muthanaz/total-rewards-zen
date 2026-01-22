@@ -1,3 +1,4 @@
+export { EmployerPageInsights } from './EmployerPageInsights';
 export { ExecutiveDashboard } from './ExecutiveDashboard';
 export { ActionDetailDrawer } from './ActionDetailDrawer';
 export { ActionCreateModal } from './ActionCreateModal';
