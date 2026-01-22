@@ -58,6 +58,7 @@ import {
 import { format } from 'date-fns';
 import { LifeAreaChip, getLifeAreaLabel } from '@/components/shared/EnumChip';
 import { toast } from 'sonner';
+import { showPolicySuccess, showPolicyError } from '@/lib/policyToasts';
 import { PolicyLogic } from '@/lib/policyEngine';
 import { useAuditLog } from '@/hooks/useAuditLog';
 import { useOrgSettings } from '@/hooks/useOrgSettings';
@@ -317,8 +318,9 @@ export function PolicyManagementView() {
       });
 
       if (!result.success) {
-        toast.error('Failed to duplicate policy', {
-          description: result.error || 'Unexpected error',
+        showPolicyError('duplicate', {
+          policyTitle: policy.title,
+          error: result.error,
         });
         return;
       }
@@ -326,14 +328,9 @@ export function PolicyManagementView() {
       // Reset idempotency key on success
       duplicateRequestIdRef.current = null;
 
-      const message = result.already_exists 
-        ? 'A duplicate already exists'
-        : 'Policy duplicated';
-      
-      toast.success(message, {
-        description: result.already_exists
-          ? `Opening "${result.title}"...`
-          : `"${result.title}" created as a draft.`,
+      showPolicySuccess('duplicate', {
+        policyTitle: result.title,
+        alreadyExists: result.already_exists,
       });
 
       await queryClient.invalidateQueries({ queryKey: ['policies_management'] });
@@ -357,8 +354,9 @@ export function PolicyManagementView() {
         }
       }
     } catch (error: any) {
-      toast.error('Failed to duplicate policy', {
-        description: error?.message || 'Unexpected error',
+      showPolicyError('duplicate', {
+        policyTitle: policy.title,
+        error: error?.message,
       });
     }
   };
@@ -390,7 +388,13 @@ export function PolicyManagementView() {
           hasPublishedVersion: Boolean(res.has_published_version),
           hasLinkedRequests: Boolean(res.has_linked_claims),
         });
-        toast.error('Action blocked', { description: res.error || 'Please try archiving instead.' });
+        showPolicyError(action, {
+          policyTitle: selectedPolicy.title,
+          error: res.error,
+          hasPublishedVersion: res.has_published_version,
+          hasLinkedClaims: res.has_linked_claims,
+          canArchive: res.can_archive,
+        });
         await logEvent({
           action: 'ARCHIVE_POLICY',
           resourceType: 'policy',
@@ -408,7 +412,7 @@ export function PolicyManagementView() {
       }
 
       await queryClient.invalidateQueries({ queryKey: ['policies_management'] });
-      toast.success(action === 'delete' ? 'Policy deleted' : 'Policy archived');
+      showPolicySuccess(action, { policyTitle: selectedPolicy.title });
 
       await logEvent({
         action: 'ARCHIVE_POLICY',
@@ -427,7 +431,7 @@ export function PolicyManagementView() {
 
       setArchiveDeleteOpen(false);
     } catch (err: any) {
-      toast.error('Failed to update policy', { description: err?.message || 'Unexpected error' });
+      showPolicyError(action, { policyTitle: selectedPolicy.title, error: err?.message });
       await logEvent({
         action: 'ARCHIVE_POLICY',
         resourceType: 'policy',
@@ -452,16 +456,23 @@ export function PolicyManagementView() {
       const res = await publishPolicyVersion({ versionId: policy.draftVersion.id });
       if (!res.success) {
         if (res.requires_approval) {
-          toast.error('Approvals are enabled. Submit for approval first.', {
-            description: 'This draft must be reviewed before it can be published.',
+          showPolicyError('publish', {
+            policyTitle: policy.title,
+            requiresApproval: true,
           });
           return;
         }
-        toast.error('Failed to publish policy', { description: res.error || 'Unexpected error' });
+        showPolicyError('publish', {
+          policyTitle: policy.title,
+          error: res.error,
+        });
         return;
       }
 
-      toast.success(`Published v${res.version_number ?? policy.draftVersion.version_number}`);
+      showPolicySuccess('publish', {
+        policyTitle: policy.title,
+        versionNumber: res.version_number ?? policy.draftVersion.version_number,
+      });
       await queryClient.invalidateQueries({ queryKey: ['policies_management'] });
       await logEvent({
         action: 'PUBLISH_POLICY',
@@ -478,7 +489,7 @@ export function PolicyManagementView() {
         },
       });
     } catch (e: any) {
-      toast.error('Failed to publish policy', { description: e?.message || 'Unexpected error' });
+      showPolicyError('publish', { policyTitle: policy.title, error: e?.message });
     }
   };
 
@@ -498,7 +509,10 @@ export function PolicyManagementView() {
       });
 
       if (!res.success) {
-        toast.error('Failed to submit for approval', { description: res.error || 'Unexpected error' });
+        showPolicyError('submit', {
+          policyTitle: selectedPolicy.title,
+          error: res.error,
+        });
         await logEvent({
           action: 'SUBMIT_POLICY_APPROVAL',
           resourceType: 'policy',
@@ -516,7 +530,10 @@ export function PolicyManagementView() {
         return;
       }
 
-      toast.success('Submitted for approval');
+      showPolicySuccess('submit', {
+        policyTitle: selectedPolicy.title,
+        versionNumber: selectedPolicy.draftVersion.version_number,
+      });
       await queryClient.invalidateQueries({ queryKey: ['policies_management'] });
       await logEvent({
         action: 'SUBMIT_POLICY_APPROVAL',
@@ -552,13 +569,13 @@ export function PolicyManagementView() {
         .maybeSingle()) as any;
 
       if (!approval?.id) {
-        toast.error('Cannot reject', { description: 'No pending approval record found.' });
+        showPolicyError('reject', { error: 'No pending approval record found.' });
         return;
       }
 
       const res = await rejectPolicyVersion(approval.id, reason);
       if (!res.success) {
-        toast.error('Failed to reject policy', { description: res.error || 'Unexpected error' });
+        showPolicyError('reject', { policyTitle: selectedPolicy.title, error: res.error });
         await logEvent({
           action: 'REJECT_POLICY',
           resourceType: 'policy',
@@ -576,7 +593,7 @@ export function PolicyManagementView() {
         return;
       }
 
-      toast.success('Policy rejected', { description: 'Returned to draft.' });
+      showPolicySuccess('reject', { policyTitle: selectedPolicy.title });
       await queryClient.invalidateQueries({ queryKey: ['policies_management'] });
       await logEvent({
         action: 'REJECT_POLICY',
@@ -616,13 +633,13 @@ export function PolicyManagementView() {
         .maybeSingle()) as any;
 
       if (!approval?.id) {
-        toast.error('Cannot approve', { description: 'No pending approval record found.' });
+        showPolicyError('approve', { error: 'No pending approval record found.' });
         return;
       }
 
       const approveRes = await approvePolicyVersion({ approvalId: approval.id });
       if (!approveRes.success) {
-        toast.error('Failed to approve policy', { description: approveRes.error || 'Unexpected error' });
+        showPolicyError('approve', { policyTitle: policy.title, error: approveRes.error });
         await logEvent({
           action: 'APPROVE_POLICY',
           resourceType: 'policy',
@@ -655,7 +672,7 @@ export function PolicyManagementView() {
 
       const publishRes = await publishPolicyVersion({ versionId: policy.draftVersion.id });
       if (!publishRes.success) {
-        toast.error('Failed to publish policy', { description: publishRes.error || 'Unexpected error' });
+        showPolicyError('publish', { policyTitle: policy.title, error: publishRes.error });
         await logEvent({
           action: 'PUBLISH_POLICY',
           resourceType: 'policy',
@@ -673,7 +690,10 @@ export function PolicyManagementView() {
         return;
       }
 
-      toast.success(`Published v${publishRes.version_number ?? policy.draftVersion.version_number}`);
+      showPolicySuccess('publish', {
+        policyTitle: policy.title,
+        versionNumber: publishRes.version_number ?? policy.draftVersion.version_number,
+      });
       await queryClient.invalidateQueries({ queryKey: ['policies_management'] });
       await logEvent({
         action: 'PUBLISH_POLICY',

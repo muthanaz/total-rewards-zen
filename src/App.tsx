@@ -12,6 +12,7 @@ import { UIVisibilityProvider } from "@/contexts/UIVisibilityContext";
 import { PrivacyProvider } from "@/components/ui/privacy-toggle";
 import { DemoModeProvider } from "@/contexts/DemoModeContext";
 import { DemoModeBadge } from "@/components/demo";
+import { GlobalErrorBoundary } from "@/components/shared/GlobalErrorBoundary";
 import { supabase } from "@/integrations/supabase/client";
 
 import Index from "./pages/Index";
@@ -314,30 +315,32 @@ function AppRoutes() {
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <LanguageProvider>
-        <AuthProvider>
-          <ProfileProvider>
-            <PrivacyProvider>
-              <DemoModeProvider>
-                <UIVisibilityProvider>
-                  <SecurityProvider enableSessionTimeout={true}>
-                    <TooltipProvider>
-                      <Toaster />
-                      <Sonner />
-                      <AppRoutes />
-                      <DemoModeBadge />
-                    </TooltipProvider>
-                  </SecurityProvider>
-                </UIVisibilityProvider>
-              </DemoModeProvider>
-            </PrivacyProvider>
-          </ProfileProvider>
-        </AuthProvider>
-      </LanguageProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
+  <GlobalErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <LanguageProvider>
+          <AuthProvider>
+            <ProfileProvider>
+              <PrivacyProvider>
+                <DemoModeProvider>
+                  <UIVisibilityProvider>
+                    <SecurityProvider enableSessionTimeout={true}>
+                      <TooltipProvider>
+                        <Toaster />
+                        <Sonner />
+                        <AppRoutes />
+                        <DemoModeBadge />
+                      </TooltipProvider>
+                    </SecurityProvider>
+                  </UIVisibilityProvider>
+                </DemoModeProvider>
+              </PrivacyProvider>
+            </ProfileProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  </GlobalErrorBoundary>
 );
 
 export default App;
