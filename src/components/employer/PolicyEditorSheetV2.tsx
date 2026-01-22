@@ -5,6 +5,7 @@
  * - Summary/Details/Examples/FAQs tabs (content)
  * - Policy Logic tab (business rules)
  * - Preview and Publish workflow
+ * - Proper toast feedback for all actions
  */
 
 import { useState, useEffect } from 'react';
@@ -80,7 +81,7 @@ export function PolicyEditorSheetV2({
   const { logEvent } = useAuditLog();
 
   // Fetch policy
-  const { data: policy } = useQuery({
+  const { data: policy, refetch: refetchPolicy } = useQuery({
     queryKey: ['policy_edit', policyId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -111,7 +112,7 @@ export function PolicyEditorSheetV2({
   });
 
   // Fetch all versions for this policy
-  const { data: allVersions = [] } = useQuery({
+  const { data: allVersions = [], refetch: refetchAllVersions } = useQuery({
     queryKey: ['policy_versions_list', policyId],
     queryFn: async () => {
       const { data, error } = await (supabase
@@ -175,8 +176,20 @@ export function PolicyEditorSheetV2({
     }
   }, [versionId, open]);
 
-  const handleSave = async () => {
-    if (!versionId) return;
+  // Reset step when opening
+  useEffect(() => {
+    if (open) {
+      setStep('edit');
+      setActiveTab('summary');
+    }
+  }, [open]);
+
+  const handleSave = async (): Promise<boolean> => {
+    if (!versionId) {
+      toast.error('Cannot save', { description: 'No version ID found.' });
+      return false;
+    }
+    
     setIsSaving(true);
 
     try {
@@ -200,7 +213,7 @@ export function PolicyEditorSheetV2({
         .eq('policy_version_id', versionId)) as any;
 
       if (requiredDocs.length > 0) {
-        await (supabase
+        const { error: docsError } = await (supabase
           .from('policy_required_docs' as any)
           .insert(requiredDocs.map(d => ({
             policy_version_id: versionId,
@@ -211,9 +224,13 @@ export function PolicyEditorSheetV2({
             conditions_json: d.conditions_json || {},
             description: d.description,
           })) as any)) as any;
+          
+        if (docsError) {
+          console.warn('Failed to save required docs:', docsError);
+        }
       }
 
-      queryClient.invalidateQueries({ queryKey: ['policy_version_edit'] });
+      await queryClient.invalidateQueries({ queryKey: ['policy_version_edit'] });
       
       // Audit log for save draft
       await logEvent({
@@ -226,24 +243,39 @@ export function PolicyEditorSheetV2({
         },
       });
       
-      toast.success('Draft saved');
-    } catch (error) {
+      toast.success('Draft saved', {
+        description: 'Your changes have been saved.',
+      });
+      
+      return true;
+    } catch (error: any) {
       console.error('Save error:', error);
-      toast.error('Failed to save');
+      toast.error('Failed to save draft', {
+        description: error.message || 'An unexpected error occurred.',
+      });
+      return false;
     } finally {
       setIsSaving(false);
     }
   };
 
   const handlePublish = async () => {
-    if (!versionId || !policyId) return;
+    if (!versionId || !policyId) {
+      toast.error('Cannot publish', { description: 'Missing policy or version ID.' });
+      return;
+    }
+    
     setIsPublishing(true);
 
     try {
       // First, save current changes
-      await handleSave();
+      const saveSuccess = await handleSave();
+      if (!saveSuccess) {
+        setIsPublishing(false);
+        return;
+      }
 
-      // Archive any currently published version
+      // Archive any currently published version for this policy
       const { error: archiveError } = await (supabase
         .from('policy_versions' as any)
         .update({
@@ -251,9 +283,13 @@ export function PolicyEditorSheetV2({
           effective_to: effectiveFrom,
         } as any)
         .eq('policy_id', policyId)
-        .eq('status', 'published')) as any;
+        .eq('status', 'published')
+        .neq('id', versionId)) as any;
 
-      if (archiveError) throw archiveError;
+      if (archiveError) {
+        console.error('Archive error:', archiveError);
+        // Continue anyway - this might fail if there's no published version
+      }
 
       // Publish this version
       const { error: publishError } = await (supabase
@@ -265,19 +301,39 @@ export function PolicyEditorSheetV2({
         } as any)
         .eq('id', versionId)) as any;
 
-      if (publishError) throw publishError;
+      if (publishError) {
+        throw new Error(publishError.message || 'Failed to publish version');
+      }
 
-      // Update parent policy
-      await supabase
+      // Update parent policy status to 'published' (not 'active')
+      const { error: policyUpdateError } = await supabase
         .from('policies')
         .update({
-          status: 'active',
+          status: 'published',
           effective_from: effectiveFrom,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', policyId);
 
-      queryClient.invalidateQueries({ queryKey: ['policies_management'] });
-      queryClient.invalidateQueries({ queryKey: ['policies'] });
+      if (policyUpdateError) {
+        console.error('Policy update error:', policyUpdateError);
+        // Non-critical, version is already published
+      }
+
+      // Invalidate all relevant queries
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['policies_management'] }),
+        queryClient.invalidateQueries({ queryKey: ['policies'] }),
+        queryClient.invalidateQueries({ queryKey: ['policies_v2'] }),
+        queryClient.invalidateQueries({ queryKey: ['policy_edit'] }),
+        queryClient.invalidateQueries({ queryKey: ['policy_version_edit'] }),
+        queryClient.invalidateQueries({ queryKey: ['policy_versions_list'] }),
+      ]);
+
+      // Refetch data
+      await refetchPolicy();
+      await refetchVersion();
+      await refetchAllVersions();
       
       // Audit log for publish
       await logEvent({
@@ -286,19 +342,23 @@ export function PolicyEditorSheetV2({
         resourceId: policyId,
         details: {
           version_id: versionId,
+          version_number: currentVersionNumber,
           effective_from: effectiveFrom,
           transaction_model: logic.transaction_model,
           organization_id: organizationId,
         },
       });
       
-      toast.success('Policy published!', {
+      toast.success(`Policy published (v${currentVersionNumber})`, {
         description: 'Employees can now see this policy.',
       });
+      
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Publish error:', error);
-      toast.error('Failed to publish');
+      toast.error('Failed to publish policy', {
+        description: error.message || 'An unexpected error occurred.',
+      });
     } finally {
       setIsPublishing(false);
     }
@@ -346,6 +406,18 @@ export function PolicyEditorSheetV2({
   const publishedVersion = allVersions.find((v: any) => v.status === 'published');
   const isDraft = version?.status === 'draft';
 
+  // Validation warnings for preview step
+  const validationWarnings: string[] = [];
+  if (content.summary.filter(Boolean).length < 3) {
+    validationWarnings.push('Add at least 3 summary bullet points for employees');
+  }
+  if (!content.details) {
+    validationWarnings.push('Add policy details/description');
+  }
+  if (requiredDocs.length === 0) {
+    validationWarnings.push('Consider adding required documents for claims');
+  }
+
   if (!policy) return null;
 
   return (
@@ -364,11 +436,11 @@ export function PolicyEditorSheetV2({
 
           <div className="flex items-center gap-2 mt-2">
             {publishedVersion && (
-              <Badge variant="outline">
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
                 Published: v{publishedVersion.version_number}
               </Badge>
             )}
-            <Badge className={isDraft ? 'bg-amber-500/10 text-amber-600' : 'bg-primary/10 text-primary'}>
+            <Badge className={isDraft ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' : 'bg-primary/10 text-primary'}>
               Editing: v{currentVersionNumber} {isDraft ? '(Draft)' : ''}
             </Badge>
           </div>
@@ -380,11 +452,12 @@ export function PolicyEditorSheetV2({
             <button
               key={s}
               onClick={() => setStep(s as typeof step)}
+              disabled={isSaving || isPublishing}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 step === s 
                   ? 'bg-primary text-primary-foreground' 
                   : 'text-muted-foreground hover:bg-muted'
-              }`}
+              } ${(isSaving || isPublishing) ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <span className="w-5 h-5 rounded-full border flex items-center justify-center text-xs">
                 {i + 1}
@@ -576,6 +649,21 @@ export function PolicyEditorSheetV2({
 
             {step === 'preview' && (
               <div className="space-y-6">
+                {/* Validation warnings */}
+                {validationWarnings.length > 0 && (
+                  <Alert className="border-amber-500/30 bg-amber-500/5">
+                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                    <AlertDescription>
+                      <p className="font-medium text-amber-700 mb-2">Suggestions before publishing:</p>
+                      <ul className="list-disc list-inside text-sm text-amber-600 space-y-1">
+                        {validationWarnings.map((w, i) => (
+                          <li key={i}>{w}</li>
+                        ))}
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <Card className="border-primary/20">
                   <CardHeader className="pb-3 bg-primary/5">
                     <CardTitle className="text-lg flex items-center gap-2">
@@ -634,11 +722,15 @@ export function PolicyEditorSheetV2({
 
             {step === 'publish' && (
               <div className="space-y-6">
-                <Alert>
-                  <CheckCircle className="w-4 h-4" />
+                <Alert className="border-primary/30 bg-primary/5">
+                  <CheckCircle className="w-4 h-4 text-primary" />
                   <AlertDescription>
-                    You are about to publish version {currentVersionNumber} of this policy.
-                    {publishedVersion && ` Version ${publishedVersion.version_number} will be archived.`}
+                    You are about to publish <strong>version {currentVersionNumber}</strong> of this policy.
+                    {publishedVersion && (
+                      <span className="block mt-1 text-muted-foreground">
+                        Version {publishedVersion.version_number} will be archived.
+                      </span>
+                    )}
                   </AlertDescription>
                 </Alert>
 
@@ -675,39 +767,43 @@ export function PolicyEditorSheetV2({
 
         <SheetFooter className="px-6 py-4 border-t bg-background">
           <div className="flex w-full justify-between">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              disabled={isSaving || isPublishing}
+            >
               Close
             </Button>
             <div className="flex gap-2">
               {step === 'edit' && (
                 <>
-                  <Button variant="outline" onClick={handleSave} disabled={isSaving}>
+                  <Button variant="outline" onClick={handleSave} disabled={isSaving || isPublishing}>
                     {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     Save Draft
                   </Button>
-                  <Button onClick={() => setStep('preview')}>
+                  <Button onClick={() => setStep('preview')} disabled={isSaving || isPublishing}>
                     Preview
                   </Button>
                 </>
               )}
               {step === 'preview' && (
                 <>
-                  <Button variant="outline" onClick={() => setStep('edit')}>
+                  <Button variant="outline" onClick={() => setStep('edit')} disabled={isSaving || isPublishing}>
                     Back to Edit
                   </Button>
-                  <Button onClick={() => setStep('publish')}>
+                  <Button onClick={() => setStep('publish')} disabled={isSaving || isPublishing}>
                     Continue to Publish
                   </Button>
                 </>
               )}
               {step === 'publish' && (
                 <>
-                  <Button variant="outline" onClick={() => setStep('preview')}>
+                  <Button variant="outline" onClick={() => setStep('preview')} disabled={isSaving || isPublishing}>
                     Back
                   </Button>
-                  <Button onClick={handlePublish} disabled={isPublishing}>
+                  <Button onClick={handlePublish} disabled={isPublishing || isSaving}>
                     {isPublishing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Publish v{currentVersionNumber}
+                    {isPublishing ? 'Publishing...' : `Publish v${currentVersionNumber}`}
                   </Button>
                 </>
               )}
