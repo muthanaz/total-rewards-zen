@@ -85,6 +85,8 @@ import AdminPolicyLibrary from "./pages/admin/PolicyLibrary";
 import AdminPolicyTemplates from "./pages/admin/PolicyTemplates";
 import AdminAlertsCenter from "./pages/admin/AlertsCenter";
 import AdminSessionManagement from "./pages/admin/SessionManagement";
+import AdminOnboarding from "./pages/admin/Onboarding";
+import AdminIntegrationReadiness from "./pages/admin/IntegrationReadiness";
 
 import VendorDashboard from "./pages/vendor/Dashboard";
 import VendorOffers from "./pages/vendor/Offers";
@@ -264,6 +266,8 @@ function AppRoutes() {
         <Route path="reports" element={<AdminSavedReports />} />
         <Route path="organizations" element={<AdminOrganizations />} />
         <Route path="organizations/:orgId/settings" element={<AdminOrganizationSettings />} />
+        <Route path="onboarding" element={<AdminOnboarding />} />
+        <Route path="integration-readiness" element={<AdminIntegrationReadiness />} />
         <Route path="users" element={<AdminUsersRoles />} />
         <Route path="audit-log" element={<AdminAuditLog />} />
         <Route path="settings" element={<AdminSettings />} />

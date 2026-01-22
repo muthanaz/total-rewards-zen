@@ -518,6 +518,46 @@ import { motion } from 'framer-motion';
 
 ---
 
+## 19. Premium UI Primitives
+
+Import standardized components from `@/components/ui/premium-primitives`:
+
+```tsx
+import { 
+  SectionHeader,    // Consistent section headers with icon + action
+  StatDisplay,      // Numeric stats with trends
+  LoadingSpinner,   // Inline loading indicator
+  PageLoading,      // Full page loading state
+  InlineMessage,    // Info/success/warning/error messages
+  Divider,          // Section dividers with optional labels
+  EmptyPlaceholder, // Empty state with action
+  DataRow,          // Label + value pairs
+  InlineStatus,     // Status badges
+  IconBox,          // Icon containers
+  ClickableCard,    // Interactive card with active state
+} from '@/components/ui/premium-primitives';
+```
+
+---
+
+## 20. Page Skeletons
+
+Use standardized loading skeletons for every page type:
+
+```tsx
+import { 
+  DashboardSkeleton,     // Full dashboard layout
+  AnalyticsSkeleton,     // Analytics pages with insights
+  OpsQueueSkeleton,      // Queue/table pages
+  TableSkeleton,         // Data tables
+  ChartSkeleton,         // Chart containers
+  FormSkeleton,          // Form layouts
+  DetailDrawerSkeleton,  // Side panel details
+} from '@/components/ui/page-skeleton';
+```
+
+---
+
 ## Quick Reference
 
 ### Do's ✅
@@ -525,9 +565,11 @@ import { motion } from 'framer-motion';
 - 8px spacing grid
 - One primary button per section
 - Empty states with actions
-- Loading skeletons
-- RTL logical properties
+- Loading skeletons (not spinners)
+- RTL logical properties (ms-, me-, ps-, pe-)
 - Western digits (0-9) everywhere
+- Import from design system files
+- Use premium primitives for consistency
 
 ### Don'ts ❌
 - Hardcoded hex colors
@@ -537,7 +579,50 @@ import { motion } from 'framer-motion';
 - Spinner-only loading
 - Fixed margin-left/right for RTL
 - Arabic numerals in UI
+- Duplicate component patterns
+- Raw HTML when primitives exist
 
 ---
 
-*Last updated: January 2026*
+## Component Hierarchy
+
+```
+PageLayout
+├── PageHeader (title, description, icon, actions)
+├── FilterBar (search, filters, status tabs)
+├── Content
+│   ├── SectionCard (with SectionHeader)
+│   │   ├── MetricCard / StatDisplay
+│   │   ├── Table / ResponsiveTable
+│   │   ├── ChartWrapper
+│   │   └── EmptyPlaceholder / ZeroState
+│   └── Drawer / Sheet (DetailDrawerSkeleton)
+└── Footer Actions
+```
+
+---
+
+## File Organization
+
+```
+src/
+├── components/
+│   ├── ui/                    # shadcn + custom primitives
+│   │   ├── premium-primitives.tsx  # Standardized UI elements
+│   │   ├── page-skeleton.tsx       # Loading states
+│   │   └── Currency.tsx            # Dirham display
+│   ├── shared/                # Cross-portal components
+│   │   ├── FilterBar.tsx           # Search/filter UI
+│   │   ├── ZeroState.tsx           # Empty states
+│   │   └── PageHeader.tsx          # Page headers
+│   └── templates/             # Page templates
+│       ├── AnalyticsTemplate.tsx
+│       └── OpsQueueTemplate.tsx
+├── lib/
+│   └── designSystem.ts        # Design tokens & utilities
+└── index.css                  # CSS custom properties
+```
+
+---
+
+*Last updated: January 2026 — v4.0 Premium UI System*
