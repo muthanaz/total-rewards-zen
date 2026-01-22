@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   ArrowLeft,
   Building2, 
   Palette,
   Save,
   RefreshCw,
-  Image,
-  Type,
   MessageSquare,
+  ShieldCheck,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,10 +17,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import { getOrgPolicySettings, updateOrgPolicyGovernanceSettings, OrgPolicySettings } from '@/hooks/usePolicyRPC';
 
 interface OrganizationSettings {
   id: string;
@@ -38,6 +41,7 @@ interface OrganizationSettings {
 export default function OrganizationSettingsPage() {
   const { orgId } = useParams<{ orgId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
   
@@ -56,7 +60,51 @@ export default function OrganizationSettingsPage() {
     footer_text: '',
   });
 
+  // Policy governance settings state
+  const [governanceData, setGovernanceData] = useState<OrgPolicySettings>({
+    require_policy_approval: true,
+    approver_role: 'executive',
+    approval_sla_days: 3,
+    allow_hr_ops_draft: true,
+  });
+
   const t = (en: string, ar: string) => language === 'ar' ? ar : en;
+
+  // Fetch policy governance settings
+  const { data: governanceSettings, isLoading: governanceLoading } = useQuery({
+    queryKey: ['org_policy_governance', orgId],
+    queryFn: async () => {
+      if (!orgId) return null;
+      return getOrgPolicySettings(orgId);
+    },
+    enabled: !!orgId,
+  });
+
+  // Update local governance state when data loads
+  useEffect(() => {
+    if (governanceSettings) {
+      setGovernanceData(governanceSettings);
+    }
+  }, [governanceSettings]);
+
+  // Mutation for saving governance settings
+  const governanceMutation = useMutation({
+    mutationFn: async (settings: Partial<OrgPolicySettings>) => {
+      if (!orgId) throw new Error('No org ID');
+      return updateOrgPolicyGovernanceSettings(orgId, settings);
+    },
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success(t('Policy governance settings saved', 'تم حفظ إعدادات حوكمة السياسات'));
+        queryClient.invalidateQueries({ queryKey: ['org_policy_governance', orgId] });
+      } else {
+        toast.error(result.error || t('Failed to save settings', 'فشل في حفظ الإعدادات'));
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || t('Failed to save settings', 'فشل في حفظ الإعدادات'));
+    },
+  });
 
   useEffect(() => {
     if (orgId) {
@@ -192,6 +240,10 @@ export default function OrganizationSettingsPage() {
           <TabsTrigger value="content" className="gap-2">
             <MessageSquare className="w-4 h-4" />
             {t('Content', 'المحتوى')}
+          </TabsTrigger>
+          <TabsTrigger value="governance" className="gap-2">
+            <ShieldCheck className="w-4 h-4" />
+            {t('Policy Governance', 'حوكمة السياسات')}
           </TabsTrigger>
         </TabsList>
 
@@ -416,6 +468,125 @@ export default function OrganizationSettingsPage() {
                 />
                 <p className="text-xs text-muted-foreground">
                   {t('Displayed at the bottom of pages', 'يظهر في أسفل الصفحات')}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Policy Governance Tab */}
+        <TabsContent value="governance">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-primary" />
+                {t('Policy Governance Settings', 'إعدادات حوكمة السياسات')}
+              </CardTitle>
+              <CardDescription>
+                {t(
+                  'Control how policies are reviewed and approved before publishing. This is the single source of truth for the approval workflow.',
+                  'التحكم في كيفية مراجعة السياسات والموافقة عليها قبل النشر. هذا هو المصدر الوحيد للحقيقة لسير عمل الموافقة.'
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              {/* Require Approval Toggle */}
+              <div className={cn("flex items-center justify-between p-4 border rounded-lg bg-muted/30", isRTL && "flex-row-reverse")}>
+                <div className={cn("space-y-1", isRTL && "text-right")}>
+                  <Label htmlFor="require_approval" className="text-base font-medium">
+                    {t('Require Policy Approval', 'تتطلب الموافقة على السياسة')}
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {t(
+                      'When enabled, policies must be submitted for approval before publishing. When disabled, HR can publish directly.',
+                      'عند التمكين، يجب تقديم السياسات للموافقة قبل النشر. عند التعطيل، يمكن للموارد البشرية النشر مباشرة.'
+                    )}
+                  </p>
+                </div>
+                <Switch
+                  id="require_approval"
+                  checked={governanceData.require_policy_approval}
+                  onCheckedChange={(checked) => setGovernanceData(prev => ({ ...prev, require_policy_approval: checked }))}
+                />
+              </div>
+
+              {/* Conditional: Approval settings only shown if approvals are enabled */}
+              {governanceData.require_policy_approval && (
+                <div className="space-y-6 p-4 border rounded-lg">
+                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                    {t('Approval Workflow Configuration', 'تكوين سير عمل الموافقة')}
+                  </h4>
+
+                  {/* Approver Role */}
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="approver_role">{t('Approver Role', 'دور الموافِق')}</Label>
+                      <Select
+                        value={governanceData.approver_role}
+                        onValueChange={(value) => setGovernanceData(prev => ({
+                          ...prev,
+                          approver_role: value as OrgPolicySettings['approver_role'],
+                        }))}
+                      >
+                        <SelectTrigger id="approver_role">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="executive">{t('Executive', 'تنفيذي')}</SelectItem>
+                          <SelectItem value="hr_manager">{t('HR Manager', 'مدير الموارد البشرية')}</SelectItem>
+                          <SelectItem value="admin">{t('Admin', 'مسؤول')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        {t('Users with this role can approve or reject policy submissions', 'يمكن للمستخدمين بهذا الدور الموافقة على طلبات السياسة أو رفضها')}
+                      </p>
+                    </div>
+
+                    {/* Approval SLA */}
+                    <div className="space-y-2">
+                      <Label htmlFor="approval_sla">{t('Approval SLA (days)', 'مهلة الموافقة (أيام)')}</Label>
+                      <Input
+                        id="approval_sla"
+                        type="number"
+                        min={1}
+                        max={30}
+                        value={governanceData.approval_sla_days}
+                        onChange={(e) => setGovernanceData(prev => ({
+                          ...prev,
+                          approval_sla_days: Math.max(1, Math.min(30, parseInt(e.target.value) || 3)),
+                        }))}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t('Expected time to review pending approvals', 'الوقت المتوقع لمراجعة الموافقات المعلقة')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Save Governance Button */}
+              <div className={cn("flex", isRTL ? "justify-start" : "justify-end")}>
+                <Button
+                  onClick={() => governanceMutation.mutate(governanceData)}
+                  disabled={governanceMutation.isPending || governanceLoading}
+                >
+                  {governanceMutation.isPending ? (
+                    <RefreshCw className={cn("w-4 h-4 animate-spin", isRTL ? "ml-2" : "mr-2")} />
+                  ) : (
+                    <Save className={cn("w-4 h-4", isRTL ? "ml-2" : "mr-2")} />
+                  )}
+                  {t('Save Governance Settings', 'حفظ إعدادات الحوكمة')}
+                </Button>
+              </div>
+
+              {/* Info box about source of truth */}
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <strong>{t('Note:', 'ملاحظة:')}</strong>{' '}
+                  {t(
+                    'These settings are the single source of truth for the policy approval workflow across the entire platform (Employer Portal, Admin Portal, RPCs).',
+                    'هذه الإعدادات هي المصدر الوحيد للحقيقة لسير عمل الموافقة على السياسة عبر المنصة بأكملها (بوابة صاحب العمل، بوابة المسؤول، RPCs).'
+                  )}
                 </p>
               </div>
             </CardContent>
