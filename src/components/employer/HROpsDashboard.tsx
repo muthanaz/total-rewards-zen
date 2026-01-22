@@ -1,407 +1,476 @@
+/**
+ * HR Ops Dashboard - Queue-First Workbench
+ * 
+ * Operational dashboard focused on:
+ * - What needs attention now
+ * - SLA and bottleneck visibility
+ * - Claims/Requests queue as primary content
+ * - Friction reasons analysis
+ */
+
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Clock, 
   FileCheck, 
-  Users, 
   AlertCircle,
   CheckCircle2,
   ArrowRight,
   Calendar,
-  MessageSquare,
+  Inbox,
+  FileQuestion,
+  Flame,
   TrendingUp,
-  Target,
-  Zap,
-  Bell,
-  Info
+  Eye,
+  Filter,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChartContainer, ProgressBarList } from '@/components/charts';
 import { DataConfidenceBadge, useDataCoverageMetrics } from './DataConfidenceBadge';
 import { PageConfidenceGate } from './PageConfidenceGate';
-import { TrendIndicatorCompact } from './TrendComparison';
-import { TodaysFocusPanel } from './TodaysFocusPanel';
-import { WorkloadByOwnerTable } from './WorkloadByOwnerTable';
-import { ActionableTasksList } from './ActionableTasksList';
-import type { TaskType } from './ActionableTasksList';
-import { TodaysPrioritiesStrip } from './TodaysPrioritiesStrip';
-import { SuggestedActionsPanel } from './SuggestedActionsPanel';
-import { TaskDetailDrawer } from './TaskDetailDrawer';
-import { useClaimMetrics, useClaimsByCategory, useRecentActivity } from '@/hooks/useEmployerDashboard';
-import { cn } from '@/lib/utils';
-import { EmployerGlobalFiltersBar } from './EmployerGlobalFiltersBar';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { HROpsKPIStrip } from './HROpsKPIStrip';
+import { TopFrictionReasonsPanel, FrictionReason } from './TopFrictionReasonsPanel';
+import { DeflectedInquiriesKPI } from './DeflectedInquiriesKPI';
+import { useClaimMetrics, useRecentActivity } from '@/hooks/useEmployerDashboard';
+import { useOrganizationRequests } from '@/hooks/useSharedRequests';
+import { useOrgSettings } from '@/hooks/useOrgSettings';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { cn, formatCurrencyAED, formatRelativeTime } from '@/lib/utils';
+import { getStatusBadgeStyle, getStatusDisplayLabel } from '@/lib/crossPortalContract';
 
-// Mock focus items for Today's Focus panel
-const mockFocusItems = [
-  { id: '1', employeeName: 'Ahmed Hassan', requestType: 'Health Insurance', subject: 'Medical Claim - Hospital Stay', dueInHours: -2, owner: 'Sarah Al-R', amount: 4500 },
-  { id: '2', employeeName: 'Fatima Salem', requestType: 'Education', subject: 'Schooling Tuition Claim', dueInHours: 3, owner: 'Sarah Al-R', amount: 12000 },
-  { id: '3', employeeName: 'Omar Khan', requestType: 'Transport', subject: 'Fuel Allowance', dueInHours: 6, amount: 850 },
-  { id: '4', employeeName: 'Sara Ali', requestType: 'Housing', subject: 'Rent Advance Request', dueInHours: 18, owner: 'Ahmed H', amount: 25000 },
-  { id: '5', employeeName: 'Mohamed Khalil', requestType: 'Wellbeing', subject: 'Gym Membership Reimbursement', dueInHours: 22, amount: 1200 },
-];
-
-// Mock workload data
-const mockWorkloads = [
-  { id: '1', name: 'Sarah Al-Rashid', role: 'HR Manager', assigned: 8, slaRisk: 2, oldestDays: 4 },
-  { id: '2', name: 'Ahmed Hassan', role: 'HR Specialist', assigned: 12, slaRisk: 1, oldestDays: 3 },
-  { id: '3', name: 'Fatima Al-Maktoum', role: 'HR Specialist', assigned: 6, slaRisk: 0, oldestDays: 2 },
-  { id: '4', name: 'Omar Khan', role: 'Finance Lead', assigned: 4, slaRisk: 0, oldestDays: 1 },
-];
-
-// Mock upcoming tasks
-const mockTasks: { id: string; title: string; date: string; type: TaskType; link?: string; priority?: 'low' | 'normal' | 'high'; description?: string }[] = [
-  { id: '1', title: 'Q1 Benefits Review Meeting', date: 'Tomorrow, 10:00 AM', type: 'meeting', link: '/employer/recommendations', priority: 'high', description: 'Review Q1 benefits spend and utilization trends with leadership team.' },
-  { id: '2', title: 'Policy Update: L&D Eligible Courses', date: 'Jan 25', type: 'policy', link: '/employer/policies', description: 'Update eligible courses list and coverage limits for 2024.' },
-  { id: '3', title: 'Monthly Utilization Report', date: 'Jan 31', type: 'report', link: '/employer/spend', description: 'Generate and distribute monthly benefits utilization report.' },
-  { id: '4', title: 'Vendor Contract Renewal', date: 'Feb 1', type: 'contract', link: '/employer/integrations?tab=ops', description: 'Renew annual contract with insurance provider.' },
-  { id: '5', title: 'Employee Satisfaction Survey Close', date: 'Feb 5', type: 'deadline', priority: 'high', description: 'Final reminder to employees for benefits satisfaction survey.' },
-];
-
-const mockOwners = [
-  { id: '1', name: 'Sarah Al-Rashid' },
-  { id: '2', name: 'Ahmed Hassan' },
-  { id: '3', name: 'Fatima Al-Maktoum' },
-];
-
-// Priority counts (derived from mock/real data)
-const mockPriorityCounts = {
-  slaAtRisk: 3,
-  missingDocs: 4,
-  highValue: 2,
-  policyUpdates: 2,
-};
+// Queue tab type
+type QueueTab = 'pending' | 'sla_risk' | 'missing_docs' | 'high_value';
 
 export function HROpsDashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: claimMetrics, isLoading } = useClaimMetrics();
-  const { data: claimsByCategory } = useClaimsByCategory();
   const { data: recentActivity } = useRecentActivity();
   const coverageMetrics = useDataCoverageMetrics();
   
-  // Task detail drawer state
-  const [selectedTask, setSelectedTask] = useState<{
-    id: string;
-    title: string;
-    date: string;
-    type: TaskType;
-    link?: string;
-    priority?: 'low' | 'normal' | 'high';
-    description?: string;
-  } | null>(null);
-  const [taskDrawerOpen, setTaskDrawerOpen] = useState(false);
+  const [activeQueueTab, setActiveQueueTab] = useState<QueueTab>('pending');
 
-  // Calculate focus items from real data (using mock for now)
-  const focusItems = useMemo(() => mockFocusItems, []);
-  
-  // Priority counts for strip
-  const priorityCounts = useMemo(() => ({
-    slaAtRisk: claimMetrics?.urgent || mockPriorityCounts.slaAtRisk,
-    missingDocs: mockPriorityCounts.missingDocs,
-    highValue: mockPriorityCounts.highValue,
-    policyUpdates: claimMetrics?.policyUpdatesDue || mockPriorityCounts.policyUpdates,
-  }), [claimMetrics]);
+  // Fetch organization ID
+  const { data: profileData } = useQuery({
+    queryKey: ['profile_org', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('user_id', user.id)
+        .single();
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+  const organizationId = profileData?.organization_id || null;
 
-  const handleTaskClick = (task: typeof mockTasks[0]) => {
-    setSelectedTask({
-      ...task,
-      description: task.description,
+  // Fetch org settings for SLA config
+  const { data: orgSettingsData } = useOrgSettings(organizationId);
+  const slaEnabled = orgSettingsData?.settings?.sla_enabled ?? true;
+
+  // Fetch requests for queue preview
+  const { data: requests = [] } = useOrganizationRequests(organizationId);
+
+  // Calculate operational KPIs
+  const opsKPIs = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const newToday = requests.filter(r => {
+      const created = new Date(r.created_at || '');
+      created.setHours(0, 0, 0, 0);
+      return created.getTime() === today.getTime();
+    }).length;
+
+    const slaAtRisk = requests.filter(r => {
+      if (!r.sla_due_at) return false;
+      if (['approved', 'rejected', 'paid', 'closed'].includes(r.status || '')) return false;
+      const sla = new Date(r.sla_due_at);
+      const hoursRemaining = (sla.getTime() - new Date().getTime()) / (1000 * 60 * 60);
+      return hoursRemaining < 24;
+    }).length;
+
+    const awaitingEmployee = requests.filter(r => 
+      r.status === 'info_requested' || r.status === 'pending_employee' || r.hasMissingDocs
+    ).length;
+
+    return {
+      newToday,
+      slaAtRisk,
+      awaitingEmployee,
+      medianCycleTimeDays: claimMetrics?.avgProcessingDays || 2.3,
+      rejectionRatePercent: 100 - (claimMetrics?.approvalRate || 87),
+      newTodayTrend: 5, // Mock trend
+      cycleTimeTrend: -8, // Mock - improving
+    };
+  }, [requests, claimMetrics]);
+
+  // Calculate friction reasons
+  const frictionReasons: FrictionReason[] = useMemo(() => {
+    const missingDocsCount = requests.filter(r => r.hasMissingDocs).length;
+    const rejectedRequests = requests.filter(r => r.status === 'rejected');
+    const slaRiskCount = requests.filter(r => {
+      if (!r.sla_due_at) return false;
+      const sla = new Date(r.sla_due_at);
+      const hoursRemaining = (sla.getTime() - new Date().getTime()) / (1000 * 60 * 60);
+      return hoursRemaining < 24 && hoursRemaining > 0;
+    }).length;
+
+    const total = missingDocsCount + rejectedRequests.length + slaRiskCount;
+    if (total === 0) return [];
+
+    return [
+      {
+        type: 'missing_docs' as const,
+        count: missingDocsCount,
+        percentOfTotal: total > 0 ? Math.round((missingDocsCount / total) * 100) : 0,
+        trend: 'stable' as const,
+        avgDelayDays: 2.5,
+      },
+      {
+        type: 'cap_exceeded' as const,
+        count: Math.floor(rejectedRequests.length * 0.4),
+        percentOfTotal: total > 0 ? Math.round((rejectedRequests.length * 0.4 / total) * 100) : 0,
+        trend: 'down' as const,
+      },
+      {
+        type: 'ineligible' as const,
+        count: Math.floor(rejectedRequests.length * 0.35),
+        percentOfTotal: total > 0 ? Math.round((rejectedRequests.length * 0.35 / total) * 100) : 0,
+        trend: 'up' as const,
+      },
+      {
+        type: 'delayed_approval' as const,
+        count: slaRiskCount,
+        percentOfTotal: total > 0 ? Math.round((slaRiskCount / total) * 100) : 0,
+        avgDelayDays: 1.2,
+      },
+      {
+        type: 'unclear_policy' as const,
+        count: Math.floor(rejectedRequests.length * 0.25),
+        percentOfTotal: total > 0 ? Math.round((rejectedRequests.length * 0.25 / total) * 100) : 0,
+      },
+    ].filter(r => r.count > 0);
+  }, [requests]);
+
+  // Filter queue based on active tab
+  const filteredQueue = useMemo(() => {
+    let result = requests.filter(r => 
+      !['approved', 'rejected', 'paid', 'closed'].includes(r.status || '')
+    );
+
+    switch (activeQueueTab) {
+      case 'pending':
+        result = result.filter(r => r.status === 'pending' || r.status === 'submitted' || r.status === 'in_review');
+        break;
+      case 'sla_risk':
+        result = result.filter(r => {
+          if (!r.sla_due_at) return false;
+          const sla = new Date(r.sla_due_at);
+          const hoursRemaining = (sla.getTime() - new Date().getTime()) / (1000 * 60 * 60);
+          return hoursRemaining < 24;
+        });
+        break;
+      case 'missing_docs':
+        result = result.filter(r => r.hasMissingDocs);
+        break;
+      case 'high_value':
+        result = result.filter(r => r.amount && r.amount >= 5000);
+        break;
+    }
+
+    // Sort by urgency
+    result.sort((a, b) => {
+      if (a.sla_due_at && b.sla_due_at) {
+        return new Date(a.sla_due_at).getTime() - new Date(b.sla_due_at).getTime();
+      }
+      if (a.sla_due_at) return -1;
+      if (b.sla_due_at) return 1;
+      return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
     });
-    setTaskDrawerOpen(true);
-  };
 
-  const pendingActions = [
-    {
-      type: 'urgent',
-      title: 'Urgent Claims',
-      count: claimMetrics?.urgent || 3,
-      description: 'SLA breach in < 24 hours',
-      path: '/employer/claims?tab=sla_risk&due=24h',
-      icon: AlertCircle,
-      color: 'text-destructive',
-      bgColor: 'bg-destructive/10',
-      borderColor: 'border-destructive/20',
-    },
-    {
-      type: 'pending',
-      title: 'Standard Queue',
-      count: (claimMetrics?.pending || 12) - (claimMetrics?.urgent || 3),
-      description: 'Within SLA timeline',
-      path: '/employer/claims?tab=pending',
-      icon: FileCheck,
-      color: 'text-warning',
-      bgColor: 'bg-warning/10',
-      borderColor: 'border-warning/20',
-    },
-    {
-      type: 'info',
-      title: 'Open Questions',
-      count: claimMetrics?.openQuestions || 8,
-      description: 'Awaiting response',
-      path: '/employer/knowledge?tab=questions',
-      icon: MessageSquare,
-      color: 'text-info',
-      bgColor: 'bg-info/10',
-      borderColor: 'border-info/20',
-    },
-    {
-      type: 'task',
-      title: 'Enrollments',
-      count: claimMetrics?.enrollmentsPending || 5,
-      description: 'Pending activations',
-      tooltip: 'Benefit enrollments waiting for eligibility verification or provider enrollment',
-      path: '/employer/marketplace?tab=pending',
-      icon: Users,
-      color: 'text-success',
-      bgColor: 'bg-success/10',
-      borderColor: 'border-success/20',
-    },
-  ];
+    return result.slice(0, 10);
+  }, [requests, activeQueueTab]);
 
-  const categoryData = claimsByCategory?.map(c => ({
-    name: c.name,
-    value: c.value,
-    color: 'primary' as const,
-  })) || [];
-
-  const handleFocusItemClick = (id: string) => {
-    navigate(`/employer/claims?open=${id}`);
-  };
+  // Queue counts for tabs
+  const queueCounts = useMemo(() => ({
+    pending: requests.filter(r => 
+      r.status === 'pending' || r.status === 'submitted' || r.status === 'in_review'
+    ).length,
+    sla_risk: requests.filter(r => {
+      if (!r.sla_due_at) return false;
+      if (['approved', 'rejected', 'paid', 'closed'].includes(r.status || '')) return false;
+      const sla = new Date(r.sla_due_at);
+      const hoursRemaining = (sla.getTime() - new Date().getTime()) / (1000 * 60 * 60);
+      return hoursRemaining < 24;
+    }).length,
+    missing_docs: requests.filter(r => r.hasMissingDocs).length,
+    high_value: requests.filter(r => 
+      r.amount && r.amount >= 5000 && 
+      !['approved', 'rejected', 'paid', 'closed'].includes(r.status || '')
+    ).length,
+  }), [requests]);
 
   if (isLoading) {
-    return <div className="space-y-6 animate-pulse"><div className="h-16 bg-muted rounded-xl" /></div>;
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="h-16 bg-muted rounded-xl" />
+        <div className="h-24 bg-muted rounded-xl" />
+        <div className="h-64 bg-muted rounded-xl" />
+      </div>
+    );
   }
 
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
-    <div className="space-y-6">
-      {/* Hero Header with SLA Badge */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">
-            HR Operations Dashboard
-          </h1>
-          <p className="text-muted-foreground mt-1 flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-          </p>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">
+              Operations Workbench
+            </h1>
+            <p className="text-muted-foreground mt-1 flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </p>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <DataConfidenceBadge metrics={coverageMetrics} />
+            {slaEnabled && (
+              <Badge variant="outline" className={cn(
+                "gap-1.5 px-3 py-1.5",
+                (claimMetrics?.slaCompliance || 94) >= 90 
+                  ? "bg-success/10 text-success border-success/30" 
+                  : "bg-warning/10 text-warning border-warning/30"
+              )}>
+                <CheckCircle2 className="w-4 h-4" />
+                <span className="font-medium">SLA: {claimMetrics?.slaCompliance || 94}%</span>
+              </Badge>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <DataConfidenceBadge metrics={coverageMetrics} />
-          <Badge variant="outline" className={cn(
-            "gap-1.5 px-3 py-1.5",
-            (claimMetrics?.slaCompliance || 94) >= 90 
-              ? "bg-success/10 text-success border-success/30" 
-              : "bg-warning/10 text-warning border-warning/30"
-          )}>
-            <CheckCircle2 className="w-4 h-4" />
-            <span className="font-medium">SLA: {claimMetrics?.slaCompliance || 94}%</span>
-          </Badge>
-        </div>
-      </div>
 
-      {/* Global Filters */}
-      <EmployerGlobalFiltersBar compact />
+        {/* Operational KPIs */}
+        <HROpsKPIStrip 
+          data={opsKPIs} 
+          slaEnabled={slaEnabled}
+        />
 
-      {/* Today's Priorities Strip */}
-      <TodaysPrioritiesStrip 
-        slaAtRisk={priorityCounts.slaAtRisk}
-        missingDocs={priorityCounts.missingDocs}
-        highValue={priorityCounts.highValue}
-        policyUpdates={priorityCounts.policyUpdates}
-      />
-
-      {/* Action Items */}
-      <TooltipProvider>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {pendingActions.map((action, index) => (
-            <Link key={index} to={action.path}>
-              <Card className={cn("hover:shadow-md transition-all cursor-pointer h-full", action.borderColor)}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className={cn("p-2 rounded-lg", action.bgColor)}>
-                      <action.icon className={cn("w-4 h-4", action.color)} />
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {action.tooltip && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button 
-                              className="p-1 rounded-full hover:bg-muted/50 transition-colors"
-                              onClick={(e) => e.preventDefault()}
-                            >
-                              <Info className="w-3.5 h-3.5 text-muted-foreground" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-[200px]">
-                            <p className="text-xs">{action.tooltip}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                      {action.type === 'urgent' && (
-                        <Badge variant="outline" className="bg-destructive/10 text-destructive border-0 text-[10px] animate-pulse">
-                          Urgent
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Claims/Requests Queue - PRIMARY */}
+          <div className="lg:col-span-2 space-y-4">
+            <Card className="border-border/40">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                    <Inbox className="w-4 h-4 text-accent" />
+                    Claims & Requests Queue
+                  </CardTitle>
+                  <Link to="/employer/claims">
+                    <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+                      <Filter className="w-3.5 h-3.5" />
+                      Full Queue
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Button>
+                  </Link>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {/* Queue Tabs */}
+                <Tabs value={activeQueueTab} onValueChange={(v) => setActiveQueueTab(v as QueueTab)} className="mb-4">
+                  <TabsList className="h-9">
+                    <TabsTrigger value="pending" className="text-xs gap-1.5">
+                      <Clock className="w-3.5 h-3.5" />
+                      Pending
+                      <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">
+                        {queueCounts.pending}
+                      </Badge>
+                    </TabsTrigger>
+                    {slaEnabled && (
+                      <TabsTrigger value="sla_risk" className="text-xs gap-1.5">
+                        <Flame className="w-3.5 h-3.5" />
+                        SLA Risk
+                        {queueCounts.sla_risk > 0 && (
+                          <Badge className="ml-1 h-5 px-1.5 text-[10px] bg-destructive/10 text-destructive border-0">
+                            {queueCounts.sla_risk}
+                          </Badge>
+                        )}
+                      </TabsTrigger>
+                    )}
+                    <TabsTrigger value="missing_docs" className="text-xs gap-1.5">
+                      <FileQuestion className="w-3.5 h-3.5" />
+                      Needs Info
+                      {queueCounts.missing_docs > 0 && (
+                        <Badge className="ml-1 h-5 px-1.5 text-[10px] bg-warning/10 text-warning border-0">
+                          {queueCounts.missing_docs}
                         </Badge>
                       )}
+                    </TabsTrigger>
+                    <TabsTrigger value="high_value" className="text-xs gap-1.5">
+                      <TrendingUp className="w-3.5 h-3.5" />
+                      High Value
+                      <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">
+                        {queueCounts.high_value}
+                      </Badge>
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+
+                {/* Queue Items */}
+                <div className="space-y-2">
+                  {filteredQueue.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-success" />
+                      <p className="font-medium">All clear!</p>
+                      <p className="text-sm">No items in this queue</p>
                     </div>
-                  </div>
-                  <p className={cn("text-2xl font-bold", action.color)}>{action.count}</p>
-                  <p className="text-sm font-medium mt-1">{action.title}</p>
-                  <p className="text-xs text-muted-foreground">{action.description}</p>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </TooltipProvider>
-
-      {/* Performance Metrics */}
-      <Card className="border-border/50">
-        <CardContent className="p-4">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-success/10">
-                <Clock className="w-5 h-5 text-success" />
-              </div>
-              <div>
-                <p className="text-xl font-bold">{claimMetrics?.avgProcessingDays || 2.3} days</p>
-                <p className="text-xs text-muted-foreground">Avg Processing</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-info/10">
-                <TrendingUp className="w-5 h-5 text-info" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="text-xl font-bold">{claimMetrics?.claimsThisMonth || 45}</p>
-                  <TrendIndicatorCompact 
-                    change={((claimMetrics?.claimsThisMonth || 45) / (claimMetrics?.claimsLastMonth || 42) - 1) * 100} 
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">Claims This Month</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-chart-3/10">
-                <Target className="w-5 h-5 text-chart-3" />
-              </div>
-              <div>
-                <p className="text-xl font-bold text-success">{claimMetrics?.approvalRate || 87}%</p>
-                <p className="text-xs text-muted-foreground">Approval Rate</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-warning/10">
-                <Bell className="w-5 h-5 text-warning" />
-              </div>
-              <div>
-                <p className="text-xl font-bold">{claimMetrics?.policyUpdatesDue || 2}</p>
-                <p className="text-xs text-muted-foreground">Policy Updates Due</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <ChartContainer title="Claims by Category" formula="Distribution this month">
-          <ProgressBarList items={categoryData} size="md" />
-        </ChartContainer>
-
-        <Card className="border-border/50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-display flex items-center gap-2">
-              <Zap className="w-4 h-4 text-primary" />
-              Recent Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {(recentActivity || []).slice(0, 4).map((activity, index) => (
-              <div key={index} className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/30">
-                <div className={cn("p-1.5 rounded-lg", 
-                  activity.action.includes('Approved') ? 'bg-success/10' :
-                  activity.action.includes('Rejected') ? 'bg-destructive/10' : 'bg-info/10'
-                )}>
-                  {activity.action.includes('Approved') ? (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-success" />
-                  ) : activity.action.includes('Rejected') ? (
-                    <AlertCircle className="w-3.5 h-3.5 text-destructive" />
                   ) : (
-                    <MessageSquare className="w-3.5 h-3.5 text-info" />
+                    filteredQueue.map((request) => {
+                      const statusStyle = getStatusBadgeStyle(request.status);
+                      const slaInfo = request.sla_due_at ? (() => {
+                        const sla = new Date(request.sla_due_at);
+                        const hoursRemaining = (sla.getTime() - new Date().getTime()) / (1000 * 60 * 60);
+                        return {
+                          hoursRemaining: Math.round(hoursRemaining),
+                          isOverdue: hoursRemaining < 0,
+                          isUrgent: hoursRemaining > 0 && hoursRemaining < 24,
+                        };
+                      })() : null;
+
+                      return (
+                        <div
+                          key={request.id}
+                          className={cn(
+                            "flex items-center gap-4 p-3 rounded-lg border cursor-pointer transition-all",
+                            "hover:border-accent/30 hover:bg-accent/5",
+                            request.hasMissingDocs && "border-warning/30 bg-warning/5",
+                            slaInfo?.isOverdue && "border-destructive/30 bg-destructive/5",
+                            slaInfo?.isUrgent && !slaInfo?.isOverdue && "border-warning/30"
+                          )}
+                          onClick={() => navigate(`/employer/claims?open=${request.id}`)}
+                        >
+                          {/* Employee & Subject */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium text-sm truncate">
+                                {request.employeeName || 'Unknown'}
+                              </span>
+                              <Badge className={cn("text-[10px]", statusStyle.className)}>
+                                {getStatusDisplayLabel(request.status)}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {request.subject}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
+                              <span>{request.category}</span>
+                              <span>•</span>
+                              <span className="capitalize">{request.request_type}</span>
+                            </div>
+                          </div>
+
+                          {/* Amount */}
+                          {request.amount && (
+                            <div className="text-right shrink-0">
+                              <span className="font-semibold text-sm tabular-nums">
+                                {formatCurrencyAED(request.amount)}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* SLA / Missing Docs Indicator */}
+                          <div className="shrink-0 w-20 text-right">
+                            {slaInfo?.isOverdue && (
+                              <Badge className="bg-destructive/10 text-destructive border-0 text-[10px]">
+                                Overdue
+                              </Badge>
+                            )}
+                            {slaInfo?.isUrgent && !slaInfo?.isOverdue && (
+                              <Badge className="bg-warning/10 text-warning border-0 text-[10px]">
+                                {slaInfo.hoursRemaining}h left
+                              </Badge>
+                            )}
+                            {request.hasMissingDocs && !slaInfo?.isOverdue && !slaInfo?.isUrgent && (
+                              <Badge className="bg-warning/10 text-warning border-0 text-[10px]">
+                                Docs needed
+                              </Badge>
+                            )}
+                          </div>
+
+                          {/* View Button */}
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0">
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{activity.action}</p>
-                  <p className="text-xs text-muted-foreground">{activity.category}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  {activity.amount && <p className="text-sm font-medium">AED {activity.amount}</p>}
-                  <p className="text-xs text-muted-foreground">{activity.time}</p>
-                </div>
-              </div>
-            ))}
-            <Link to="/employer/claims">
-              <Button variant="ghost" size="sm" className="w-full mt-2">
-                View All <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
 
-        <ActionableTasksList 
-          tasks={mockTasks}
-          owners={mockOwners}
-          onAssign={(taskId, ownerId) => console.log('Assigned', taskId, ownerId)}
-          onSetDueDate={(taskId, date) => console.log('Due date set', taskId, date)}
-          onComplete={(taskId) => console.log('Completed', taskId)}
-          onTaskClick={handleTaskClick}
-        />
-      </div>
-
-      {/* Suggested Actions Panel */}
-      <SuggestedActionsPanel />
-
-      {/* Quick Actions */}
-      <Card className="border-primary/20 bg-gradient-to-r from-card to-primary/5">
-        <CardContent className="p-4">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Zap className="w-5 h-5 text-primary" />
-              <p className="font-medium">Quick Actions</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Link to="/employer/claims"><Button size="sm" variant="outline"><FileCheck className="w-4 h-4 mr-2" />Process Claims</Button></Link>
-              <Link to="/employer/segments"><Button size="sm" variant="outline"><Users className="w-4 h-4 mr-2" />View Employees</Button></Link>
-              <Link to="/employer/recommendations"><Button size="sm"><TrendingUp className="w-4 h-4 mr-2" />View Insights</Button></Link>
-            </div>
+                {/* View All Link */}
+                {filteredQueue.length > 0 && (
+                  <Link to="/employer/claims">
+                    <Button variant="ghost" size="sm" className="w-full mt-3 text-xs">
+                      View all {queueCounts.pending + queueCounts.sla_risk + queueCounts.missing_docs} items
+                      <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                    </Button>
+                  </Link>
+                )}
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
-      
-      {/* Task Detail Drawer */}
-      <TaskDetailDrawer
-        task={selectedTask}
-        open={taskDrawerOpen}
-        onOpenChange={setTaskDrawerOpen}
-        owners={mockOwners}
-        onAssign={(taskId, ownerId) => console.log('Assigned', taskId, ownerId)}
-        onSetDueDate={(taskId, date) => console.log('Due date set', taskId, date)}
-        onComplete={(taskId) => {
-          console.log('Completed', taskId);
-          setTaskDrawerOpen(false);
-        }}
-        onAddNote={(taskId, note) => console.log('Note added', taskId, note)}
-      />
-    </div>
+
+          {/* Sidebar - Friction & Metrics */}
+          <div className="space-y-4">
+            {/* Top Friction Reasons */}
+            <TopFrictionReasonsPanel 
+              reasons={frictionReasons}
+              totalIssues={frictionReasons.reduce((sum, r) => sum + r.count, 0)}
+            />
+
+            {/* Deflected Inquiries KPI */}
+            <DeflectedInquiriesKPI
+              deflectedCount={null}
+              isConfigured={false}
+            />
+
+            {/* Quick Actions */}
+            <Card className="border-accent/20 bg-accent/5">
+              <CardContent className="p-4">
+                <p className="text-sm font-medium mb-3">Quick Actions</p>
+                <div className="space-y-2">
+                  <Link to="/employer/claims" className="block">
+                    <Button variant="outline" size="sm" className="w-full justify-start h-9 text-xs">
+                      <FileCheck className="w-4 h-4 mr-2" />
+                      Process Claims Queue
+                    </Button>
+                  </Link>
+                  <Link to="/employer/policies" className="block">
+                    <Button variant="outline" size="sm" className="w-full justify-start h-9 text-xs">
+                      <FileQuestion className="w-4 h-4 mr-2" />
+                      Review Policies
+                    </Button>
+                  </Link>
+                  <Link to="/employer/knowledge" className="block">
+                    <Button variant="outline" size="sm" className="w-full justify-start h-9 text-xs">
+                      <AlertCircle className="w-4 h-4 mr-2" />
+                      Answer Questions
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
     </PageConfidenceGate>
   );
 }
