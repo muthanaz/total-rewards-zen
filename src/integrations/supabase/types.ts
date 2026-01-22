@@ -1653,9 +1653,13 @@ export type Database = {
           is_active: boolean | null
           is_archived: boolean | null
           is_deleted: boolean | null
+          is_pilot: boolean | null
           organization_id: string | null
           owner_user_id: string | null
+          pilot_end_date: string | null
+          pilot_group_ids: string[] | null
           policy_ref: string
+          priority: number | null
           required_docs: Json | null
           settlement_required: boolean | null
           sla_rules: Json | null
@@ -1683,9 +1687,13 @@ export type Database = {
           is_active?: boolean | null
           is_archived?: boolean | null
           is_deleted?: boolean | null
+          is_pilot?: boolean | null
           organization_id?: string | null
           owner_user_id?: string | null
+          pilot_end_date?: string | null
+          pilot_group_ids?: string[] | null
           policy_ref: string
+          priority?: number | null
           required_docs?: Json | null
           settlement_required?: boolean | null
           sla_rules?: Json | null
@@ -1713,9 +1721,13 @@ export type Database = {
           is_active?: boolean | null
           is_archived?: boolean | null
           is_deleted?: boolean | null
+          is_pilot?: boolean | null
           organization_id?: string | null
           owner_user_id?: string | null
+          pilot_end_date?: string | null
+          pilot_group_ids?: string[] | null
           policy_ref?: string
+          priority?: number | null
           required_docs?: Json | null
           settlement_required?: boolean | null
           sla_rules?: Json | null
@@ -1791,6 +1803,20 @@ export type Database = {
             foreignKeyName: "policy_approvals_policy_id_fkey"
             columns: ["policy_id"]
             isOneToOne: false
+            referencedRelation: "overlapping_policies"
+            referencedColumns: ["policy_1_id"]
+          },
+          {
+            foreignKeyName: "policy_approvals_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "overlapping_policies"
+            referencedColumns: ["policy_2_id"]
+          },
+          {
+            foreignKeyName: "policy_approvals_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
             referencedRelation: "policies"
             referencedColumns: ["id"]
           },
@@ -1845,6 +1871,20 @@ export type Database = {
             foreignKeyName: "policy_articles_policy_id_fkey"
             columns: ["policy_id"]
             isOneToOne: false
+            referencedRelation: "overlapping_policies"
+            referencedColumns: ["policy_1_id"]
+          },
+          {
+            foreignKeyName: "policy_articles_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "overlapping_policies"
+            referencedColumns: ["policy_2_id"]
+          },
+          {
+            foreignKeyName: "policy_articles_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
             referencedRelation: "policies"
             referencedColumns: ["id"]
           },
@@ -1885,6 +1925,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policy_create_requests_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "overlapping_policies"
+            referencedColumns: ["policy_1_id"]
+          },
+          {
+            foreignKeyName: "policy_create_requests_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "overlapping_policies"
+            referencedColumns: ["policy_2_id"]
           },
           {
             foreignKeyName: "policy_create_requests_policy_id_fkey"
@@ -2061,6 +2115,20 @@ export type Database = {
           version_number?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "policy_versions_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "overlapping_policies"
+            referencedColumns: ["policy_1_id"]
+          },
+          {
+            foreignKeyName: "policy_versions_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "overlapping_policies"
+            referencedColumns: ["policy_2_id"]
+          },
           {
             foreignKeyName: "policy_versions_policy_id_fkey"
             columns: ["policy_id"]
@@ -2370,6 +2438,7 @@ export type Database = {
       }
       request_documents: {
         Row: {
+          condition_evaluation_json: Json | null
           created_at: string
           decision_reason: string | null
           derivation_reason: string | null
@@ -2390,8 +2459,11 @@ export type Database = {
           uploaded_by: string | null
           verified_at: string | null
           verified_by: string | null
+          waiver_reason_category: string | null
+          was_conditionally_required: boolean | null
         }
         Insert: {
+          condition_evaluation_json?: Json | null
           created_at?: string
           decision_reason?: string | null
           derivation_reason?: string | null
@@ -2412,8 +2484,11 @@ export type Database = {
           uploaded_by?: string | null
           verified_at?: string | null
           verified_by?: string | null
+          waiver_reason_category?: string | null
+          was_conditionally_required?: boolean | null
         }
         Update: {
+          condition_evaluation_json?: Json | null
           created_at?: string
           decision_reason?: string | null
           derivation_reason?: string | null
@@ -2434,6 +2509,8 @@ export type Database = {
           uploaded_by?: string | null
           verified_at?: string | null
           verified_by?: string | null
+          waiver_reason_category?: string | null
+          was_conditionally_required?: boolean | null
         }
         Relationships: [
           {
@@ -2532,6 +2609,7 @@ export type Database = {
           escalated_at: string | null
           escalation_reason: string | null
           grade: string | null
+          had_policy_conflict: boolean | null
           id: string
           last_status_change_at: string | null
           location: string | null
@@ -2542,8 +2620,12 @@ export type Database = {
           parent_request_id: string | null
           policy_id: string | null
           policy_ref: string | null
+          policy_selection_reason: string | null
           policy_version_id: string | null
           priority: string | null
+          prorated_amount: number | null
+          proration_factor: number | null
+          proration_reason: string | null
           request_type: Database["public"]["Enums"]["request_type"]
           required_docs: Json | null
           reviewed_at: string | null
@@ -2581,6 +2663,7 @@ export type Database = {
           escalated_at?: string | null
           escalation_reason?: string | null
           grade?: string | null
+          had_policy_conflict?: boolean | null
           id?: string
           last_status_change_at?: string | null
           location?: string | null
@@ -2591,8 +2674,12 @@ export type Database = {
           parent_request_id?: string | null
           policy_id?: string | null
           policy_ref?: string | null
+          policy_selection_reason?: string | null
           policy_version_id?: string | null
           priority?: string | null
+          prorated_amount?: number | null
+          proration_factor?: number | null
+          proration_reason?: string | null
           request_type: Database["public"]["Enums"]["request_type"]
           required_docs?: Json | null
           reviewed_at?: string | null
@@ -2630,6 +2717,7 @@ export type Database = {
           escalated_at?: string | null
           escalation_reason?: string | null
           grade?: string | null
+          had_policy_conflict?: boolean | null
           id?: string
           last_status_change_at?: string | null
           location?: string | null
@@ -2640,8 +2728,12 @@ export type Database = {
           parent_request_id?: string | null
           policy_id?: string | null
           policy_ref?: string | null
+          policy_selection_reason?: string | null
           policy_version_id?: string | null
           priority?: string | null
+          prorated_amount?: number | null
+          proration_factor?: number | null
+          proration_reason?: string | null
           request_type?: Database["public"]["Enums"]["request_type"]
           required_docs?: Json | null
           reviewed_at?: string | null
@@ -2673,6 +2765,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "requests"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "overlapping_policies"
+            referencedColumns: ["policy_1_id"]
+          },
+          {
+            foreignKeyName: "requests_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "overlapping_policies"
+            referencedColumns: ["policy_2_id"]
           },
           {
             foreignKeyName: "requests_policy_id_fkey"
@@ -3086,16 +3192,42 @@ export type Database = {
       }
     }
     Views: {
+      overlapping_policies: {
+        Row: {
+          conflict_reason: string | null
+          organization_id: string | null
+          policy_1_category: string | null
+          policy_1_id: string | null
+          policy_1_priority: number | null
+          policy_1_title: string | null
+          policy_2_category: string | null
+          policy_2_id: string | null
+          policy_2_priority: number | null
+          policy_2_title: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policies_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       request_document_summary: {
         Row: {
           all_required_complete: boolean | null
+          conditional_count: number | null
           missing_count: number | null
           pending_review_count: number | null
           provided_count: number | null
           rejected_count: number | null
           request_id: string | null
           required_count: number | null
+          total_count: number | null
           waived_count: number | null
+          waiver_rate_pct: number | null
         }
         Relationships: [
           {
@@ -3103,6 +3235,57 @@ export type Database = {
             columns: ["request_id"]
             isOneToOne: false
             referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      waiver_analytics: {
+        Row: {
+          conditional_waivers: number | null
+          organization_id: string | null
+          policy_category: string | null
+          policy_id: string | null
+          policy_title: string | null
+          policy_version_id: string | null
+          total_waived: number | null
+          waiver_count: number | null
+          waiver_month: string | null
+          waiver_reason_category: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policies_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policy_versions_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "overlapping_policies"
+            referencedColumns: ["policy_1_id"]
+          },
+          {
+            foreignKeyName: "policy_versions_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "overlapping_policies"
+            referencedColumns: ["policy_2_id"]
+          },
+          {
+            foreignKeyName: "policy_versions_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "request_documents_policy_version_id_fkey"
+            columns: ["policy_version_id"]
+            isOneToOne: false
+            referencedRelation: "policy_versions"
             referencedColumns: ["id"]
           },
         ]
