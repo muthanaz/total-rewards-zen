@@ -3,9 +3,10 @@
  * 
  * Catches unhandled React errors and displays a fallback UI.
  * Logs errors to console and optionally to audit_logs table.
+ * Ensures NO action fails silently.
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,6 +20,7 @@ interface State {
   hasError: boolean;
   error: Error | null;
   errorInfo: ErrorInfo | null;
+  errorId: string | null;
 }
 
 export class GlobalErrorBoundary extends Component<Props, State> {
@@ -26,17 +28,28 @@ export class GlobalErrorBoundary extends Component<Props, State> {
     hasError: false,
     error: null,
     errorInfo: null,
+    errorId: null,
   };
 
   public static getDerivedStateFromError(error: Error): Partial<State> {
-    return { hasError: true, error };
+    // Generate a unique error ID for reference
+    const errorId = `ERR-${Date.now().toString(36).toUpperCase()}`;
+    return { hasError: true, error, errorId };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ errorInfo });
 
-    // Log to console
-    console.error('GlobalErrorBoundary caught an error:', error, errorInfo);
+    // ALWAYS log to console - no silent failures
+    console.error('[GlobalErrorBoundary] Unhandled error:', {
+      errorId: this.state.errorId,
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      url: window.location.href,
+      timestamp: new Date().toISOString(),
+    });
 
     // Log to audit_logs (non-blocking)
     this.logErrorToAudit(error, errorInfo);
@@ -46,25 +59,31 @@ export class GlobalErrorBoundary extends Component<Props, State> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (user) {
+      // Always attempt to log, even for unauthenticated users
+      const userId = user?.id;
+      
+      if (userId) {
         await supabase.from('audit_logs').insert({
-          user_id: user.id,
+          user_id: userId,
           action: 'UNHANDLED_ERROR',
           resource_type: 'application',
           resource_id: window.location.pathname,
           details: {
+            error_id: this.state.errorId,
             error_name: error.name,
             error_message: error.message,
             error_stack: error.stack?.slice(0, 2000),
             component_stack: errorInfo.componentStack?.slice(0, 2000),
             url: window.location.href,
             user_agent: navigator.userAgent,
+            timestamp: new Date().toISOString(),
           },
           outcome: 'failure',
         });
       }
     } catch (logError) {
-      console.warn('Failed to log error to audit:', logError);
+      // Log failure to console - never fail silently
+      console.warn('[GlobalErrorBoundary] Failed to log error to audit:', logError);
     }
   }
 
@@ -77,7 +96,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
   };
 
   private handleRetry = () => {
-    this.setState({ hasError: false, error: null, errorInfo: null });
+    this.setState({ hasError: false, error: null, errorInfo: null, errorId: null });
   };
 
   public render() {
@@ -100,6 +119,11 @@ export class GlobalErrorBoundary extends Component<Props, State> {
               <p className="text-muted-foreground">
                 An unexpected error occurred. Our team has been notified.
               </p>
+              {this.state.errorId && (
+                <p className="text-xs text-muted-foreground font-mono">
+                  Reference: {this.state.errorId}
+                </p>
+              )}
             </div>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (

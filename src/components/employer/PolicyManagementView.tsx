@@ -125,6 +125,10 @@ export function PolicyManagementView() {
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
   const [approvalDialogMode, setApprovalDialogMode] = useState<'submit' | 'reject'>('submit');
   const [approvalSubmitting, setApprovalSubmitting] = useState(false);
+  // Track duplicate in-progress to prevent double-clicks
+  const [duplicatingPolicyId, setDuplicatingPolicyId] = useState<string | null>(null);
+  // Track publish in-progress
+  const [publishingPolicyId, setPublishingPolicyId] = useState<string | null>(null);
   const { hasPermission } = useEmployerPermissions();
   const { user, role } = useAuth();
   const queryClient = useQueryClient();
@@ -304,10 +308,15 @@ export function PolicyManagementView() {
   const duplicateRequestIdRef = React.useRef<string | null>(null);
 
   const handleDuplicate = async (policy: PolicyRow) => {
+    // Prevent double-click
+    if (duplicatingPolicyId) return;
+    
     // Generate stable idempotency key for this duplicate attempt
     if (!duplicateRequestIdRef.current) {
       duplicateRequestIdRef.current = crypto.randomUUID();
     }
+
+    setDuplicatingPolicyId(policy.id);
 
     try {
       const result = await duplicatePolicyVersion({
@@ -328,6 +337,7 @@ export function PolicyManagementView() {
       // Reset idempotency key on success
       duplicateRequestIdRef.current = null;
 
+      // Treat already_exists as success (idempotent)
       showPolicySuccess('duplicate', {
         policyTitle: result.title,
         alreadyExists: result.already_exists,
@@ -358,6 +368,8 @@ export function PolicyManagementView() {
         policyTitle: policy.title,
         error: error?.message,
       });
+    } finally {
+      setDuplicatingPolicyId(null);
     }
   };
 
@@ -452,13 +464,24 @@ export function PolicyManagementView() {
 
   const handlePublishDraftDirect = async (policy: PolicyRow) => {
     if (!policy.draftVersion?.id) return;
+    // Prevent double-click
+    if (publishingPolicyId) return;
+    
+    setPublishingPolicyId(policy.id);
+    
     try {
       const res = await publishPolicyVersion({ versionId: policy.draftVersion.id });
+      
+      // ALWAYS toast on publish attempts - never fail silently
       if (!res.success) {
         if (res.requires_approval) {
           showPolicyError('publish', {
             policyTitle: policy.title,
             requiresApproval: true,
+          });
+          // Show submit CTA via toast
+          toast.info('Approval required', {
+            description: 'Click "Submit for approval" in the policy menu to proceed.',
           });
           return;
         }
@@ -489,7 +512,11 @@ export function PolicyManagementView() {
         },
       });
     } catch (e: any) {
+      // Never fail silently
       showPolicyError('publish', { policyTitle: policy.title, error: e?.message });
+      console.error('[PolicyManagementView] Publish failed:', e);
+    } finally {
+      setPublishingPolicyId(null);
     }
   };
 
@@ -951,15 +978,20 @@ export function PolicyManagementView() {
                                     <Edit className="w-4 h-4 mr-2" />
                                     Edit
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleDuplicate(policy)}>
+                                  <DropdownMenuItem 
+                                    onClick={() => handleDuplicate(policy)}
+                                    disabled={duplicatingPolicyId === policy.id}
+                                  >
                                     <Copy className="w-4 h-4 mr-2" />
-                                    Duplicate
+                                    {duplicatingPolicyId === policy.id ? 'Duplicating...' : 'Duplicate'}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem>
                                     <History className="w-4 h-4 mr-2" />
                                     Version History
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
+                                  
+                                  {/* Approval workflow actions */}
                                   {approvalsEnabled && policy.draftVersion?.status === 'draft' && (
                                     <DropdownMenuItem
                                       onClick={() => {
@@ -967,6 +999,7 @@ export function PolicyManagementView() {
                                         setSelectedVersionId(policy.draftVersion?.id || null);
                                         openApprovalDialog(policy, 'submit');
                                       }}
+                                      disabled={approvalSubmitting}
                                     >
                                       <Send className="w-4 h-4 mr-2" />
                                       Submit for approval
@@ -980,7 +1013,7 @@ export function PolicyManagementView() {
                                         disabled={!canApprove || approvalSubmitting}
                                       >
                                         <CheckCircle className="w-4 h-4 mr-2" />
-                                        Approve & publish
+                                        {approvalSubmitting ? 'Processing...' : 'Approve & publish'}
                                       </DropdownMenuItem>
                                       <DropdownMenuItem
                                         className="text-destructive"
@@ -997,28 +1030,36 @@ export function PolicyManagementView() {
                                     </>
                                   )}
 
-                                   {!approvalsEnabled && policy.draftVersion?.status === 'draft' && (
-                                     <DropdownMenuItem
-                                       onClick={() => void handlePublishDraftDirect(policy)}
-                                       disabled={approvalSubmitting}
-                                     >
-                                       <CheckCircle className="w-4 h-4 mr-2" />
-                                       Publish
-                                     </DropdownMenuItem>
-                                   )}
+                                  {/* Direct publish when approvals disabled */}
+                                  {!approvalsEnabled && policy.draftVersion?.status === 'draft' && (
+                                    <DropdownMenuItem
+                                      onClick={() => void handlePublishDraftDirect(policy)}
+                                      disabled={publishingPolicyId === policy.id || approvalSubmitting}
+                                    >
+                                      <CheckCircle className="w-4 h-4 mr-2" />
+                                      {publishingPolicyId === policy.id ? 'Publishing...' : 'Publish'}
+                                    </DropdownMenuItem>
+                                  )}
 
-                                   <DropdownMenuItem onClick={() => openArchiveDelete(policy, 'archive')}>
-                                     <Archive className="w-4 h-4 mr-2" />
-                                     Archive
-                                   </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
 
-                                   <DropdownMenuItem
-                                     className="text-destructive"
-                                     onClick={() => openArchiveDelete(policy, 'delete')}
-                                   >
-                                     <Trash2 className="w-4 h-4 mr-2" />
-                                     Delete
-                                   </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => openArchiveDelete(policy, 'archive')}
+                                    disabled={archiveDeleteSubmitting}
+                                  >
+                                    <Archive className="w-4 h-4 mr-2" />
+                                    Archive
+                                  </DropdownMenuItem>
+
+                                  {/* Delete - always visible but may be blocked by dialog */}
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={() => openArchiveDelete(policy, 'delete')}
+                                    disabled={archiveDeleteSubmitting}
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </PermissionGate>
