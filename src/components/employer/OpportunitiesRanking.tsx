@@ -6,6 +6,8 @@
  * - recommended action
  * - owner (HR/CompBen)
  * - confidence
+ * 
+ * TRUST LAYER: Opportunities with low confidence are suppressed or shown with caveats.
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,11 +22,13 @@ import {
   TrendingUp,
   Users,
   FileText,
+  ShieldAlert,
 } from 'lucide-react';
 import { formatCurrencyAED, cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { ConfidenceLevel } from '@/lib/dataProvenance';
 
-type ConfidenceLevel = 'high' | 'medium' | 'low';
+type OpportunityConfidence = ConfidenceLevel;
 type OwnerType = 'HR' | 'CompBen' | 'Finance' | 'L&D';
 
 interface Opportunity {
@@ -34,7 +38,7 @@ interface Opportunity {
   impactAED: number;
   recommendedAction: string;
   owner: OwnerType;
-  confidence: ConfidenceLevel;
+  confidence: OpportunityConfidence;
   deepLink?: string;
   icon?: 'awareness' | 'policy' | 'process' | 'vendor';
 }
@@ -43,7 +47,14 @@ interface OpportunitiesRankingProps {
   opportunities: Opportunity[];
   onActionClick?: (opportunity: Opportunity) => void;
   className?: string;
+  /** Minimum confidence level to display opportunities */
+  minConfidence?: OpportunityConfidence;
+  /** Show warning when opportunities are hidden due to low confidence */
+  showConfidenceWarning?: boolean;
 }
+
+// Confidence level ordering for filtering
+const confidenceLevels: OpportunityConfidence[] = ['low', 'medium', 'high'];
 
 const confidenceStyles: Record<ConfidenceLevel, string> = {
   high: 'bg-success/10 text-success border-success/30',
@@ -65,8 +76,22 @@ const iconMap = {
   vendor: Users,
 };
 
-export function OpportunitiesRanking({ opportunities, onActionClick, className }: OpportunitiesRankingProps) {
+export function OpportunitiesRanking({ 
+  opportunities, 
+  onActionClick, 
+  className,
+  minConfidence = 'low',
+  showConfidenceWarning = true,
+}: OpportunitiesRankingProps) {
   const navigate = useNavigate();
+
+  // Filter opportunities by minimum confidence (TRUST LAYER enforcement)
+  const minConfidenceIndex = confidenceLevels.indexOf(minConfidence);
+  const filteredOpportunities = opportunities.filter(opp => {
+    const oppConfidenceIndex = confidenceLevels.indexOf(opp.confidence);
+    return oppConfidenceIndex >= minConfidenceIndex;
+  });
+  const hiddenCount = opportunities.length - filteredOpportunities.length;
 
   const handleClick = (opp: Opportunity) => {
     if (onActionClick) {
@@ -76,12 +101,20 @@ export function OpportunitiesRanking({ opportunities, onActionClick, className }
     }
   };
 
-  if (opportunities.length === 0) {
+  if (filteredOpportunities.length === 0) {
     return (
       <Card className={cn('card-elevated', className)}>
         <CardContent className="py-8 text-center text-muted-foreground">
           <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          <p>No opportunities detected with current data</p>
+          <p>
+            {hiddenCount > 0 
+              ? `${hiddenCount} opportunities hidden due to low data confidence`
+              : 'No opportunities detected with current data'
+            }
+          </p>
+          {hiddenCount > 0 && (
+            <p className="text-xs mt-1">Improve data quality to see more insights</p>
+          )}
         </CardContent>
       </Card>
     );
@@ -100,12 +133,20 @@ export function OpportunitiesRanking({ opportunities, onActionClick, className }
             />
           </CardTitle>
           <Badge variant="outline" className="text-xs">
-            Top {Math.min(opportunities.length, 5)}
+            Top {Math.min(filteredOpportunities.length, 5)}
           </Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {opportunities.slice(0, 5).map((opp, idx) => {
+        {/* Confidence warning if opportunities are hidden */}
+        {showConfidenceWarning && hiddenCount > 0 && (
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 text-xs text-muted-foreground">
+            <ShieldAlert className="w-3.5 h-3.5" />
+            <span>{hiddenCount} recommendation(s) hidden due to low data confidence</span>
+          </div>
+        )}
+        
+        {filteredOpportunities.slice(0, 5).map((opp, idx) => {
           const Icon = opp.icon ? iconMap[opp.icon] : Lightbulb;
           
           return (
