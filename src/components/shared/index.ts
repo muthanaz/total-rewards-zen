@@ -99,6 +99,30 @@ export {
 } from './TrustedValue';
 export type { TrustedValueProps, TrustedMetricCardProps, ValueType } from './TrustedValue';
 
+// Missing Data & Confidence
+export { 
+  MissingDataBanner, 
+  REQUIRED_EMPLOYEE_FIELDS, 
+  REQUIRED_EMPLOYER_FIELDS,
+  detectMissingFields,
+  calculateConfidenceFromFields,
+} from './MissingDataBanner';
+export type { MissingDataField } from './MissingDataBanner';
+
+// ROI/Savings Display Guard (enforces "no guessing" rules)
+export { 
+  ROIDisplayGuard, 
+  shouldDisplayROI, 
+  ConfidenceGatedContent,
+} from './ROIDisplayGuard';
+
+// Universal Confidence Badge
+export { 
+  UniversalConfidenceBadge, 
+  InlineConfidence,
+  getConfidenceFromScore,
+} from './UniversalConfidenceBadge';
+
 // Policy Reference Badge
 export { PolicyRefBadge } from './PolicyRefBadge';
 
