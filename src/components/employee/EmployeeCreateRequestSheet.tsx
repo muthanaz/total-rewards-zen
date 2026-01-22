@@ -2,10 +2,10 @@
  * Employee Create Request Sheet
  * 
  * Modal/drawer for creating new claims, requests, or questions.
- * Integrates with Supabase for persistence.
+ * Integrates with policy engine for eligibility, limits, and required docs validation.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,10 +22,17 @@ import {
   Send,
   AlertCircle,
   Info,
+  Loader2,
+  CheckCircle,
 } from 'lucide-react';
-import { useCreateRequest } from '@/hooks/useEmployeeRequests';
-import { getRequiredDocsForCategory } from '@/hooks/useClaimDocs';
-import { useToast } from '@/hooks/use-toast';
+import { 
+  usePolicyForCategory, 
+  useEmployeeContext, 
+  useEmployeeUtilization,
+  useSubmissionValidation,
+  usePolicyDrivenSubmission,
+} from '@/hooks/usePolicyDrivenSubmission';
+import { PolicyValidationBanner } from '@/components/employee/PolicyValidationBanner';
 import { cn } from '@/lib/utils';
 
 interface EmployeeCreateRequestSheetProps {
@@ -89,11 +96,22 @@ export function EmployeeCreateRequestSheet({
   const [amount, setAmount] = useState('');
   const [priority, setPriority] = useState<'low' | 'standard' | 'high' | 'urgent'>('standard');
   
-  const createRequest = useCreateRequest();
-  const { toast } = useToast();
+  // Policy-driven hooks
+  const { data: policy, isLoading: policyLoading } = usePolicyForCategory(category || null);
+  const { data: employeeContext } = useEmployeeContext();
+  const { data: utilization = 0 } = useEmployeeUtilization(policy?.policyId || null);
   
-  // Get required docs for preview
-  const requiredDocs = category ? getRequiredDocsForCategory(category) : [];
+  const parsedAmount = amount ? parseFloat(amount) : null;
+  
+  const validation = useSubmissionValidation(
+    policy,
+    employeeContext,
+    type,
+    parsedAmount,
+    utilization
+  );
+  
+  const submitRequest = usePolicyDrivenSubmission();
   
   const resetForm = () => {
     setType(initialType || 'claim');
@@ -105,56 +123,54 @@ export function EmployeeCreateRequestSheet({
   };
   
   const handleSubmit = async () => {
-    if (!category || !title) {
-      toast({
-        title: 'Missing information',
-        description: 'Please fill in the category and title.',
-        variant: 'destructive',
-      });
-      return;
-    }
+    if (!category || !title) return;
+    if (!validation.canSubmit && type !== 'question') return;
     
-    try {
-      await createRequest.mutateAsync({
+    await submitRequest.mutateAsync({
+      params: {
         type,
         category,
         title,
         description,
-        amount: type === 'claim' && amount ? parseFloat(amount) : undefined,
+        amount: parsedAmount || undefined,
         priority,
-      });
-      
-      toast({
-        title: 'Request submitted',
-        description: 'Your request has been submitted and is now pending review.',
-      });
-      
-      resetForm();
-      onOpenChange(false);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to submit request. Please try again.',
-        variant: 'destructive',
-      });
+      },
+      policy: policy || null,
+    });
+    
+    resetForm();
+    onOpenChange(false);
+  };
+  
+  // Apply initial values when sheet opens
+  useEffect(() => {
+    if (open) {
+      if (initialType && initialType !== type) setType(initialType);
+      if (initialCategory && initialCategory !== category) setCategory(initialCategory);
+      if (initialTitle && initialTitle !== title) setTitle(initialTitle);
+      if (initialDescription && initialDescription !== description) setDescription(initialDescription);
+    }
+  }, [open, initialType, initialCategory, initialTitle, initialDescription]);
+  
+  // Get applicable required docs from policy
+  const policyRequiredDocs = policy?.requiredDocs.filter(d => 
+    d.is_required && (d.transaction_type === type || d.transaction_type === 'both')
+  ) || [];
+  
+  // Determine the expected transaction type based on policy
+  const getTransactionLabel = () => {
+    if (!policy) return type === 'claim' ? 'Claim' : type === 'request' ? 'Request' : 'Question';
+    
+    switch (policy.transactionModel) {
+      case 'request_only': return 'Request';
+      case 'claim_only': return 'Claim';
+      case 'request_and_claim': return type === 'claim' ? 'Settlement' : 'Request';
+      default: return 'Claim';
     }
   };
   
-  // Apply initial values when sheet opens with new values
-  if (open && initialType && initialType !== type) {
-    setType(initialType);
-  }
-  if (open && initialCategory && initialCategory !== category) {
-    setCategory(initialCategory);
-  }
-  if (open && initialTitle && initialTitle !== title) {
-    setTitle(initialTitle);
-  }
-  if (open && initialDescription && initialDescription !== description) {
-    setDescription(initialDescription);
-  }
-  
   const TypeIcon = typeConfig[type].icon;
+  const canSubmit = category && title && (type === 'question' || validation.canSubmit);
   
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -213,7 +229,38 @@ export function EmployeeCreateRequestSheet({
                 ))}
               </SelectContent>
             </Select>
+            
+            {/* Policy badge */}
+            {category && !policyLoading && policy && (
+              <div className="flex items-center gap-2 mt-2">
+                <Badge variant="outline" className="text-xs gap-1">
+                  <CheckCircle className="h-3 w-3 text-emerald-500" />
+                  Policy: {policy.policyRef}
+                </Badge>
+                {policy.transactionModel !== 'claim_only' && (
+                  <Badge variant="secondary" className="text-xs">
+                    {policy.transactionModel === 'request_only' ? 'Pre-Approval Required' : 'Request + Settlement'}
+                  </Badge>
+                )}
+              </div>
+            )}
+            {category && policyLoading && (
+              <div className="flex items-center gap-2 mt-2 text-muted-foreground text-sm">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Checking policy...
+              </div>
+            )}
           </div>
+          
+          {/* Policy Validation Banner */}
+          {category && type !== 'question' && (
+            <PolicyValidationBanner
+              validation={validation}
+              policy={policy}
+              isLoading={policyLoading}
+              transactionType={type}
+            />
+          )}
           
           {/* Title */}
           <div className="space-y-2">
@@ -249,6 +296,20 @@ export function EmployeeCreateRequestSheet({
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
               />
+              {/* Show limit info if policy has caps */}
+              {policy?.limits.annual_cap && (
+                <p className="text-xs text-muted-foreground">
+                  Annual limit: {policy.limits.annual_cap.toLocaleString()} {policy.limits.annual_cap_currency}
+                  {utilization > 0 && (
+                    <> · Used: {utilization.toLocaleString()} · Remaining: {(policy.limits.annual_cap - utilization).toLocaleString()}</>
+                  )}
+                </p>
+              )}
+              {policy?.limits.per_transaction_cap && (
+                <p className="text-xs text-muted-foreground">
+                  Max per claim: {policy.limits.per_transaction_cap.toLocaleString()} {policy.limits.annual_cap_currency}
+                </p>
+              )}
             </div>
           )}
           
@@ -268,23 +329,23 @@ export function EmployeeCreateRequestSheet({
             </Select>
           </div>
           
-          {/* Required Documents Preview */}
-          {type !== 'question' && category && requiredDocs.length > 0 && (
+          {/* Required Documents Preview - from policy */}
+          {type !== 'question' && policyRequiredDocs.length > 0 && (
             <>
               <Separator />
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Info className="h-4 w-4 text-muted-foreground" />
-                  <Label className="text-sm">Documents Required</Label>
+                  <Label className="text-sm">Documents Required by Policy</Label>
                 </div>
                 <div className="p-3 rounded-lg bg-muted/50 space-y-2">
                   <p className="text-xs text-muted-foreground mb-2">
                     You'll need to upload these documents after submitting:
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {requiredDocs.map((doc) => (
-                      <Badge key={doc.type} variant="outline" className="text-xs">
-                        {doc.name}
+                    {policyRequiredDocs.map((doc) => (
+                      <Badge key={doc.id} variant="outline" className="text-xs">
+                        {doc.doc_name}
                       </Badge>
                     ))}
                   </div>
@@ -293,14 +354,20 @@ export function EmployeeCreateRequestSheet({
             </>
           )}
           
-          {/* SLA Info */}
+          {/* SLA Info - from policy or defaults */}
           <div className="p-3 rounded-lg bg-muted/50 flex items-start gap-3">
             <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5" />
             <div className="text-xs text-muted-foreground">
               <p className="font-medium text-foreground mb-1">Expected Response Time</p>
-              {type === 'question' && <p>Questions are typically answered within 2 business days.</p>}
-              {type === 'claim' && <p>Claims are processed within 3 business days after all documents are provided.</p>}
-              {type === 'request' && <p>Requests are reviewed within 4 business days.</p>}
+              {policy?.slaDays ? (
+                <p>This {getTransactionLabel().toLowerCase()} will be processed within {policy.slaDays} business day{policy.slaDays > 1 ? 's' : ''}.</p>
+              ) : (
+                <>
+                  {type === 'question' && <p>Questions are typically answered within 2 business days.</p>}
+                  {type === 'claim' && <p>Claims are processed within 3 business days after all documents are provided.</p>}
+                  {type === 'request' && <p>Requests are reviewed within 4 business days.</p>}
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -311,11 +378,15 @@ export function EmployeeCreateRequestSheet({
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={!category || !title || createRequest.isPending}
+            disabled={!canSubmit || submitRequest.isPending}
             className="gap-2"
           >
-            <Send className="h-4 w-4" />
-            {createRequest.isPending ? 'Submitting...' : 'Submit'}
+            {submitRequest.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+            {submitRequest.isPending ? 'Submitting...' : `Submit ${getTransactionLabel()}`}
           </Button>
         </SheetFooter>
       </SheetContent>
