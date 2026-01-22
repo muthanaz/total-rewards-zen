@@ -348,10 +348,10 @@ export function CreatePolicyModal({
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <LayoutTemplate className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Or use a template</span>
+                  <span className="text-sm font-medium">Or use a template ({templates.length} available)</span>
                 </div>
-                <div className="grid gap-2">
-                  {templates.slice(0, 5).map((template) => (
+                <div className="grid gap-2 max-h-64 overflow-y-auto pr-1">
+                  {templates.map((template) => (
                     <button
                       key={template.id}
                       onClick={() => handleSourceSelect('template', template.id)}
@@ -365,9 +365,15 @@ export function CreatePolicyModal({
                           <p className="font-medium text-sm">{template.name}</p>
                           <p className="text-xs text-muted-foreground">
                             {LIFE_AREA_LABELS[template.category as keyof typeof LIFE_AREA_LABELS] || template.category}
+                            {template.transaction_model && (
+                              <span className="ml-2 opacity-70">
+                                • {template.transaction_model === 'claim_only' ? 'Claim' : 
+                                   template.transaction_model === 'request_only' ? 'Request' : 'Request + Claim'}
+                              </span>
+                            )}
                           </p>
                         </div>
-                        <Sparkles className="w-4 h-4 text-amber-500" />
+                        <Sparkles className="w-4 h-4 text-amber-500 flex-shrink-0" />
                       </div>
                     </button>
                   ))}
