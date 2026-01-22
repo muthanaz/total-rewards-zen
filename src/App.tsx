@@ -87,6 +87,7 @@ import AdminAlertsCenter from "./pages/admin/AlertsCenter";
 import AdminSessionManagement from "./pages/admin/SessionManagement";
 import AdminOnboarding from "./pages/admin/Onboarding";
 import AdminIntegrationReadiness from "./pages/admin/IntegrationReadiness";
+import DemoScriptPage from "./pages/Demo";
 
 import VendorDashboard from "./pages/vendor/Dashboard";
 import VendorOffers from "./pages/vendor/Offers";
@@ -186,6 +187,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/demo" element={<DemoScriptPage />} />
 
       {/* Employee Routes */}
       <Route

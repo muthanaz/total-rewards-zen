@@ -67,7 +67,7 @@ export default function DemoScriptPage() {
       description="7-10 minute guided walkthrough across all portals"
       icon={Play}
       iconClassName="from-accent to-accent/80"
-      badge={{ label: totalDuration, variant: 'outline', icon: Clock }}
+      badge={{ label: totalDuration, variant: 'accent', icon: Clock }}
     >
       {/* Progress */}
       <Card className="border-accent/20 bg-accent/5">

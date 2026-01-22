@@ -143,5 +143,8 @@ export type { RecommendedAction } from './SpendRecommendedActions';
 export { OptimizationKPIGrid } from './OptimizationKPIGrid';
 export { OptimizationInsights, generateOptimizationInsights } from './OptimizationInsights';
 export type { OptimizationInsight, OptimizationDataForInsights } from './OptimizationInsights';
+
+// Demo Pack components
+export { ExecutiveSummaryCard } from './ExecutiveSummaryCard';
 export { BenefitsActionPlanSummary, generateSampleActionPlan } from './BenefitsActionPlanSummary';
 export type { ActionPlanItem } from './BenefitsActionPlanSummary';

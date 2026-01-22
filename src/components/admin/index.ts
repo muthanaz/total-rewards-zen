@@ -16,3 +16,6 @@ export { AdminErrorDisplay, AdminErrorInline } from './AdminErrorDisplay';
 export { ConfirmationModal } from './ConfirmationModal';
 export { InteractiveIndustryChart } from './InteractiveIndustryChart';
 export { InsightsActionsStrip } from './InsightsActionsStrip';
+
+// Onboarding & Demo
+export { OnboardingStatusCard } from './OnboardingStatusCard';
