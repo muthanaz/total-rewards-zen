@@ -3,7 +3,11 @@
  * 
  * Provides complete policy validation for employee claim/request submissions.
  * Auto-selects the applicable published policy, validates eligibility, limits,
- * and required documents, blocking submission if conditions aren't met.
+ * and required documents.
+ *
+ * Supports configurable enforcement modes:
+ * - soft: allow submit but mark as non-compliant
+ * - strict: block submit on policy violations
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -21,6 +25,8 @@ import {
   DEFAULT_LIMITS_CAPS,
   DEFAULT_WORKFLOW,
 } from '@/lib/policyEngine';
+import { generateChecklistSnapshot, snapshotToRequestDocuments } from '@/lib/checklistSnapshot';
+import type { EnforcementMode } from '@/hooks/useEnforcementMode';
 
 // ============================================================================
 // TYPES
@@ -426,141 +432,218 @@ export function usePolicyDrivenSubmission() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   return useMutation({
     mutationFn: async ({
       params,
       policy,
+      validation,
+      employeeContext,
+      enforcementMode = 'soft',
     }: {
       params: PolicySubmissionParams;
       policy: PolicyMatch | null;
+      validation?: SubmissionValidation;
+      employeeContext?: EmployeeContext | null;
+      enforcementMode?: EnforcementMode;
     }) => {
       if (!user?.id) throw new Error('User not authenticated');
-      
+
+      // STRICT MODE: block submit if validation has blockers
+      if (enforcementMode === 'strict' && validation && validation.blockers.length > 0) {
+        const firstBlocker = validation.blockers[0];
+        throw new Error(`Cannot submit: ${firstBlocker.message}. ${firstBlocker.details || ''}`);
+      }
+
       // Get user's org
       const { data: profile } = await supabase
         .from('profiles')
-        .select('organization_id, grade, department, work_location')
+        .select('organization_id, grade, department, work_location, employment_date')
         .eq('user_id', user.id)
         .single();
-      
-      if (!profile) throw new Error('Profile not found');
-      
-       // Calculate SLA (optional)
-       const effectiveType = getEffectiveTransactionType(params, policy);
-       const configuredSlaDays = policy?.slaDays ?? null;
-       const fallbackSlaDays = params.type === 'question' ? 2 : effectiveType === 'claim' ? 3 : 4;
-       const slaDays = configuredSlaDays ?? null;
-       const slaHours = slaDays ? slaDays * 24 : null;
-      
-       // Get required docs from policy (based on effective transaction type)
-       const requiredDocs = policy?.requiredDocs
-         .filter(d => d.is_required && (d.transaction_type === (effectiveType || params.type) || d.transaction_type === 'both'))
-         .map(d => d.doc_name) || [];
 
-      const initialStatus = (params.type !== 'question' && requiredDocs.length > 0)
-        ? 'pending_employee'
-        : 'pending';
-      
-      // Build request
-       const { data: request, error } = await supabase
-        .from('requests')
-        .insert({
-          user_id: user.id,
-          organization_id: profile.organization_id,
-           request_type: params.type === 'question' ? 'question' : (effectiveType || params.type),
-           transaction_type: params.type === 'question' ? null : (effectiveType || params.type),
-          category: params.category,
-          subject: params.title,
-          description: params.description,
-          amount: params.amount || null,
-          currency: params.amount ? 'AED' : null,
-          status: initialStatus,
-          priority: params.priority || 'standard',
-          submitted_at: new Date().toISOString(),
-           sla_hours: slaHours,
-          // Policy linkage
-          policy_id: policy?.policyId || null,
-          policy_version_id: policy?.policyVersionId || null,
-          policy_ref: policy?.policyRef || null,
-          // Required docs tracking
-          required_docs: requiredDocs,
-          missing_docs: params.type !== 'question' ? requiredDocs : [],
-          // Employee context for audit
-          grade: profile.grade,
-          department: profile.department,
-          location: profile.work_location,
-          employee_context_json: {
-            grade: profile.grade,
-            department: profile.department,
-            location: profile.work_location,
+      if (!profile) throw new Error('Profile not found');
+
+      // Calculate SLA (optional)
+      const effectiveType = getEffectiveTransactionType(params, policy);
+      const configuredSlaDays = policy?.slaDays ?? null;
+      const slaHours = configuredSlaDays ? configuredSlaDays * 24 : null;
+
+      // Get required docs from policy (based on effective transaction type)
+      const requiredDocs =
+        policy?.requiredDocs
+          .filter(
+            (d) =>
+              d.is_required &&
+              (d.transaction_type === (effectiveType || params.type) || d.transaction_type === 'both')
+          )
+          .map((d) => d.doc_name) || [];
+
+      const initialStatus =
+        params.type !== 'question' && requiredDocs.length > 0 ? 'pending_employee' : 'pending';
+
+      // Determine compliance status based on validation
+      let complianceStatus: 'compliant' | 'non_compliant' | 'pending_check' | 'exempt' = 'pending_check';
+      let complianceReasons: ValidationIssue[] = [];
+
+      if (params.type === 'question') {
+        complianceStatus = 'exempt';
+      } else if (validation) {
+        if (validation.blockers.length > 0 || validation.warnings.length > 0) {
+          complianceStatus = 'non_compliant';
+          complianceReasons = [...validation.blockers, ...validation.warnings];
+        } else {
+          complianceStatus = 'compliant';
+        }
+      }
+
+      // Build employee context for snapshot
+      const tenureMonths = profile.employment_date
+        ? Math.floor((Date.now() - new Date(profile.employment_date).getTime()) / (1000 * 60 * 60 * 24 * 30))
+        : 0;
+
+      const contextSnapshot: EmployeeContext = employeeContext || {
+        user_id: user.id,
+        grade: profile.grade || null,
+        department: profile.department || null,
+        location: profile.work_location || null,
+        contract_type: 'permanent',
+        tenure_months: tenureMonths,
+        probation_passed: tenureMonths >= 3,
+      };
+
+      // Generate checklist snapshot (for Health vertical slice)
+      let checklistSnapshotJson: ReturnType<typeof generateChecklistSnapshot> | null = null;
+      if (policy && params.type !== 'question' && effectiveType) {
+        checklistSnapshotJson = generateChecklistSnapshot(
+          {
+            policyId: policy.policyId,
+            policyVersionId: policy.policyVersionId,
+            policyRef: policy.policyRef,
+            requiredDocs: policy.requiredDocs,
           },
-        })
+          effectiveType,
+          contextSnapshot
+        );
+      }
+
+      // Build request (cast to bypass type lag after migration)
+      const insertPayload = {
+        user_id: user.id,
+        organization_id: profile.organization_id,
+        request_type: params.type === 'question' ? 'question' : (effectiveType || params.type),
+        transaction_type: params.type === 'question' ? null : (effectiveType || params.type),
+        category: params.category,
+        subject: params.title,
+        description: params.description,
+        amount: params.amount || null,
+        currency: params.amount ? 'AED' : null,
+        status: initialStatus,
+        priority: params.priority || 'standard',
+        submitted_at: new Date().toISOString(),
+        sla_hours: slaHours,
+        policy_id: policy?.policyId || null,
+        policy_version_id: policy?.policyVersionId || null,
+        policy_ref: policy?.policyRef || null,
+        required_docs: requiredDocs,
+        missing_docs: params.type !== 'question' ? requiredDocs : [],
+        grade: profile.grade,
+        department: profile.department,
+        location: profile.work_location,
+        employee_context_json: {
+          grade: contextSnapshot.grade,
+          department: contextSnapshot.department,
+          location: contextSnapshot.location,
+          contract_type: contextSnapshot.contract_type,
+          tenure_months: contextSnapshot.tenure_months,
+          probation_passed: contextSnapshot.probation_passed,
+        },
+        compliance_status: complianceStatus,
+        compliance_reasons_json: complianceReasons,
+        checklist_snapshot_json: checklistSnapshotJson,
+      };
+
+      const { data: request, error } = await supabase
+        .from('requests')
+        .insert(insertPayload as any)
         .select()
         .single();
-      
+
       if (error) throw error;
-      
-       // Create document checklist snapshot
-       if (params.type !== 'question' && policy?.requiredDocs.length) {
-         const applicableDocs = policy.requiredDocs
-           .filter(d => d.is_required && (d.transaction_type === (effectiveType || params.type) || d.transaction_type === 'both'));
 
-         const docEntries = applicableDocs.map((doc) => ({
-           request_id: request.id,
-           policy_version_id: policy.policyVersionId,
-           doc_type: doc.doc_type,
-           doc_name: doc.doc_name,
-           required_for: effectiveType || params.type,
-           is_required: true,
-           status: 'missing' as const,
-         }));
+      // Create document checklist from snapshot (Health uses request_documents)
+      if (checklistSnapshotJson && params.category === 'Health Insurance') {
+        const docRows = snapshotToRequestDocuments(request.id, checklistSnapshotJson);
+        if (docRows.length > 0) {
+          await supabase.from('request_documents').insert(docRows);
+        }
+      } else if (params.type !== 'question' && policy?.requiredDocs.length) {
+        // Legacy fallback for non-Health categories
+        const applicableDocs = policy.requiredDocs.filter(
+          (d) =>
+            d.is_required &&
+            (d.transaction_type === (effectiveType || params.type) || d.transaction_type === 'both')
+        );
+        const docEntries = applicableDocs.map((doc) => ({
+          request_id: request.id,
+          doc_type: doc.doc_type,
+          doc_name: doc.doc_name,
+          status: 'missing' as const,
+        }));
+        if (docEntries.length > 0) {
+          await supabase.from('claim_docs').insert(docEntries);
+        }
+      }
 
-         // Health vertical slice uses request_documents (new system of record)
-         if (params.category === 'Health Insurance' && docEntries.length > 0) {
-           await supabase.from('request_documents').insert(docEntries);
-         } else if (docEntries.length > 0) {
-           // Backward compatible fallback
-           await supabase.from('claim_docs').insert(
-             docEntries.map((d) => ({
-               request_id: d.request_id,
-               doc_type: d.doc_type,
-               doc_name: d.doc_name,
-               status: 'missing' as const,
-             }))
-           );
-         }
-       }
-      
       // Create initial event
-       await supabase.from('request_events').insert({
+      await supabase.from('request_events').insert({
         request_id: request.id,
         actor_user_id: user.id,
         from_status: null,
         to_status: initialStatus,
         action: 'submitted',
         notes_employee_visible: 'Request submitted successfully',
-        meta: policy ? {
-          policy_ref: policy.policyRef,
-          policy_title: policy.policyTitle,
-          transaction_model: policy.transactionModel,
-        } : null,
+        meta: policy
+          ? {
+              policy_ref: policy.policyRef,
+              policy_title: policy.policyTitle,
+              transaction_model: policy.transactionModel,
+              enforcement_mode: enforcementMode,
+              compliance_status: complianceStatus,
+            }
+          : null,
       });
-      
-      return request;
+
+      return { ...request, complianceStatus, complianceReasons };
     },
-    onSuccess: (request: any) => {
+    onSuccess: (result: any) => {
       queryClient.invalidateQueries({ queryKey: ['employee_requests'] });
 
-      const missingDocs = Array.isArray(request?.missing_docs) ? request.missing_docs : [];
+      const missingDocs = Array.isArray(result?.missing_docs) ? result.missing_docs : [];
       const hasMissingDocs = missingDocs.length > 0;
+      const isNonCompliant = result?.complianceStatus === 'non_compliant';
 
-      toast({
-        title: hasMissingDocs ? 'Submitted — documents required' : 'Request submitted',
-        description: hasMissingDocs
-          ? `Upload: ${missingDocs.slice(0, 3).join(', ')}${missingDocs.length > 3 ? '…' : ''}`
-          : 'Your request has been submitted and is now pending review.',
-      });
+      if (isNonCompliant && hasMissingDocs) {
+        toast({
+          title: 'Submitted — review needed',
+          description: `Your request was submitted but flagged for review. Upload: ${missingDocs.slice(0, 2).join(', ')}${missingDocs.length > 2 ? '…' : ''}`,
+        });
+      } else if (isNonCompliant) {
+        toast({
+          title: 'Submitted — flagged for review',
+          description: "Your request was submitted but doesn't fully meet policy requirements. HR will review.",
+        });
+      } else if (hasMissingDocs) {
+        toast({
+          title: 'Submitted — documents required',
+          description: `Upload: ${missingDocs.slice(0, 3).join(', ')}${missingDocs.length > 3 ? '…' : ''}`,
+        });
+      } else {
+        toast({
+          title: 'Request submitted',
+          description: 'Your request is now pending review.',
+        });
+      }
     },
     onError: (error) => {
       toast({
