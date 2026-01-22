@@ -379,7 +379,11 @@ export async function archiveOrDeletePolicy(
 }
 
 // =============================================================================
-// ORG POLICY SETTINGS
+// ORG POLICY GOVERNANCE SETTINGS (SINGLE SOURCE OF TRUTH)
+// =============================================================================
+// IMPORTANT: org_policy_governance_settings is the ONLY source of truth for 
+// policy approval workflows. The legacy table org_policy_settings is DEPRECATED 
+// and should NOT be used for any governance logic.
 // =============================================================================
 
 export interface OrgPolicySettings {
@@ -390,7 +394,8 @@ export interface OrgPolicySettings {
 }
 
 /**
- * Fetch org policy settings
+ * Fetch org policy governance settings (single source of truth)
+ * DEPRECATED: org_policy_settings - do NOT read from it
  */
 export async function getOrgPolicySettings(
   orgId: string
@@ -423,6 +428,35 @@ export async function getOrgPolicySettings(
     approval_sla_days: data.approval_sla_days ?? 3,
     allow_hr_ops_draft: data.allow_hr_ops_draft ?? true,
   };
+}
+
+/**
+ * Update org policy governance settings (admin only)
+ * Creates settings if they don't exist (upsert)
+ */
+export async function updateOrgPolicyGovernanceSettings(
+  orgId: string,
+  settings: Partial<OrgPolicySettings>
+): Promise<{ success: boolean; error?: string }> {
+  // Upsert pattern: insert with ON CONFLICT
+  const { error } = await (supabase
+    .from('org_policy_governance_settings' as any)
+    .upsert({
+      organization_id: orgId,
+      require_policy_approval: settings.require_policy_approval,
+      approver_role: settings.approver_role,
+      approval_sla_days: settings.approval_sla_days,
+      updated_at: new Date().toISOString(),
+    }, {
+      onConflict: 'organization_id',
+    })) as any;
+
+  if (error) {
+    console.error('Failed to update org policy governance settings:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
 }
 
 // =============================================================================
