@@ -426,6 +426,67 @@ export async function getOrgPolicySettings(
 }
 
 // =============================================================================
+// DUPLICATE POLICY
+// =============================================================================
+
+export interface DuplicatePolicyParams {
+  sourcePolicyId: string;
+  sourceVersionId?: string;
+  newTitle?: string;
+  clientRequestId?: string;
+}
+
+export interface DuplicatePolicyResult {
+  success: boolean;
+  policy_id?: string;
+  policy_version_id?: string;
+  policy_ref?: string;
+  title?: string;
+  already_exists?: boolean;
+  error?: string;
+}
+
+/**
+ * Duplicate a policy with idempotency support
+ */
+export async function duplicatePolicyVersion(
+  params: DuplicatePolicyParams
+): Promise<DuplicatePolicyResult> {
+  const { data, error } = await supabase.rpc('duplicate_policy_version', {
+    p_source_policy_id: params.sourcePolicyId,
+    p_source_version_id: params.sourceVersionId || null,
+    p_new_title: params.newTitle || null,
+    p_client_request_id: params.clientRequestId || null,
+  });
+
+  if (error) {
+    console.error('RPC duplicate_policy_version error:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to duplicate policy',
+    };
+  }
+
+  if (data && typeof data === 'object' && !Array.isArray(data)) {
+    const result = data as Record<string, unknown>;
+    return {
+      success: Boolean(result.success),
+      policy_id: result.policy_id as string | undefined,
+      policy_version_id: result.policy_version_id as string | undefined,
+      policy_ref: result.policy_ref as string | undefined,
+      title: result.title as string | undefined,
+      already_exists: Boolean(result.already_exists),
+      error: result.error as string | undefined,
+    };
+  }
+
+  return {
+    success: false,
+    error: 'Invalid response from duplicate policy',
+  };
+}
+
+// =============================================================================
 // PENDING APPROVALS
 // =============================================================================
 

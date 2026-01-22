@@ -3128,6 +3128,15 @@ export type Database = {
         }
         Returns: Json
       }
+      duplicate_policy_version: {
+        Args: {
+          p_client_request_id?: string
+          p_new_title?: string
+          p_source_policy_id: string
+          p_source_version_id?: string
+        }
+        Returns: Json
+      }
       ensure_demo_user_role: {
         Args: {
           p_email: string
