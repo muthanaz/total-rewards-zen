@@ -1,15 +1,17 @@
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Info } from 'lucide-react';
+import { Info, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   LIFE_AREA_METADATA,
   BENEFIT_PILLAR_METADATA,
   normalizeToLifeArea,
-  getLifeAreaLabel,
+  getLifeAreaLabel as taxonomyGetLifeAreaLabel,
+  getBenefitPillarLabel,
   type CanonicalLifeArea,
   type BenefitPillar,
   CANONICAL_LIFE_AREAS,
+  BENEFIT_PILLARS,
 } from '@/lib/taxonomy';
 
 // Build color map from taxonomy metadata
@@ -20,15 +22,15 @@ const LIFE_AREA_COLORS: Record<string, string> = Object.fromEntries(
   ])
 );
 
-// Benefit Type color mapping
-const BENEFIT_TYPE_CHIP_COLORS: Record<string, string> = {
-  cash_allowances: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400',
-  health_protection: 'bg-red-500/10 text-red-600 border-red-500/20 dark:text-red-400',
-  time_off_flex: 'bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400',
-  growth_career: 'bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-400',
-  wealth_ownership: 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400',
-  wellbeing: 'bg-pink-500/10 text-pink-600 border-pink-500/20 dark:text-pink-400',
-};
+// Build icon map from taxonomy metadata
+const LIFE_AREA_ICONS: Record<string, LucideIcon> = Object.fromEntries(
+  CANONICAL_LIFE_AREAS.map(area => [area, LIFE_AREA_METADATA[area].icon])
+);
+
+// Benefit Type color mapping from taxonomy
+const BENEFIT_TYPE_CHIP_COLORS: Record<string, string> = Object.fromEntries(
+  BENEFIT_PILLARS.map(pillar => [pillar, BENEFIT_PILLAR_METADATA[pillar].color])
+);
 
 interface LifeAreaChipProps {
   value: string;
@@ -48,9 +50,11 @@ export function LifeAreaChip({
   size = 'default',
   className 
 }: LifeAreaChipProps) {
-  const label = LIFE_AREA_LABELS[value] || formatEnumLabel(value);
-  const Icon = LIFE_AREA_ICONS[value] || Sparkles;
-  const colorClass = LIFE_AREA_COLORS[value] || 'bg-muted text-muted-foreground';
+  const normalizedArea = normalizeToLifeArea(value);
+  const metadata = LIFE_AREA_METADATA[normalizedArea];
+  const label = metadata.label;
+  const Icon = metadata.icon;
+  const colorClass = LIFE_AREA_COLORS[normalizedArea] || 'bg-muted text-muted-foreground';
 
   const chip = (
     <Badge 
@@ -82,18 +86,19 @@ export function LifeAreaChip({
             Benefits are categorized by life areas to help employees find relevant support:
           </p>
           <div className="grid grid-cols-2 gap-1 text-xs">
-            {Object.entries(LIFE_AREA_LABELS).map(([key, lbl]) => {
-              const AreaIcon = LIFE_AREA_ICONS[key] || Sparkles;
+            {CANONICAL_LIFE_AREAS.filter(area => area !== 'other').map((areaKey) => {
+              const areaMeta = LIFE_AREA_METADATA[areaKey];
+              const AreaIcon = areaMeta.icon;
               return (
                 <div 
-                  key={key} 
+                  key={areaKey} 
                   className={cn(
                     'flex items-center gap-1 px-1.5 py-0.5 rounded',
-                    key === value && 'bg-accent/20 font-medium'
+                    areaKey === normalizedArea && 'bg-accent/20 font-medium'
                   )}
                 >
                   <AreaIcon className="w-3 h-3" />
-                  <span>{lbl}</span>
+                  <span>{areaMeta.label}</span>
                 </div>
               );
             })}
@@ -120,7 +125,8 @@ export function BenefitTypeChip({
   size = 'default',
   className 
 }: BenefitTypeChipProps) {
-  const label = BENEFIT_TYPE_LABELS[value] || formatEnumLabel(value);
+  const pillarMeta = BENEFIT_PILLAR_METADATA[value as BenefitPillar];
+  const label = pillarMeta?.label || formatEnumLabel(value);
   const colorClass = BENEFIT_TYPE_CHIP_COLORS[value] || 'bg-muted text-muted-foreground';
 
   const chip = (
@@ -167,10 +173,11 @@ export function formatEnumLabel(value: string): string {
 
 /**
  * Get the human-readable label for a life_area enum
+ * @deprecated Use getLifeAreaLabel from taxonomy.ts
  */
 export function getLifeAreaLabel(value: string | null | undefined): string {
   if (!value) return '—';
-  return LIFE_AREA_LABELS[value] || formatEnumLabel(value);
+  return taxonomyGetLifeAreaLabel(value);
 }
 
 /**
@@ -178,5 +185,5 @@ export function getLifeAreaLabel(value: string | null | undefined): string {
  */
 export function getBenefitTypeLabel(value: string | null | undefined): string {
   if (!value) return '—';
-  return BENEFIT_TYPE_LABELS[value] || formatEnumLabel(value);
+  return getBenefitPillarLabel(value);
 }
