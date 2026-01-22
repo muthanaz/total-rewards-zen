@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, Building2, Users, DollarSign } from 'lucide-react';
-import { cn, DIRHAM_SYMBOL } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   LineChart, 
@@ -58,11 +58,11 @@ const seriesConfig: Record<SeriesKey, {
     format: (v) => `${(v / 1000).toFixed(1)}K`,
   },
   gmv: { 
-    label: `GMV (${DIRHAM_SYMBOL})`, 
-    labelAr: `القيمة (${DIRHAM_SYMBOL})`, 
+    label: 'GMV (AED)', 
+    labelAr: 'القيمة (AED)', 
     color: 'hsl(var(--success))',
     icon: DollarSign,
-    format: (v) => `${DIRHAM_SYMBOL} ${v.toFixed(1)}M`,
+    format: (v) => `AED ${v.toFixed(1)}M`,
   },
 };
 

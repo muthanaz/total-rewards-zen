@@ -330,7 +330,7 @@ export default function BenefitsAnalysis() {
   }, []);
 
   const formatCurrency = (value: number) =>
-    `${isRTL ? '' : 'AED '}${value.toLocaleString(isRTL ? 'ar-AE' : 'en-AE')}${isRTL ? ' درهم' : ''}`;
+    `AED ${value.toLocaleString('en-AE')}`;
 
   // Component for rendering benefit cards
   const BenefitCard = ({ benefit, index }: { benefit: BenefitItem; index: number }) => {

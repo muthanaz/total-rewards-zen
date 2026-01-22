@@ -154,7 +154,7 @@ export default function VendorEarnings() {
                   data={monthlyEarnings}
                   height={280}
                   showSecondary={false}
-                  primaryLabel={t('Earnings (AED)', 'الأرباح (درهم)')}
+                  primaryLabel={t('Earnings (AED)', 'الأرباح (AED)')}
                 />
               </CardContent>
             </Card>

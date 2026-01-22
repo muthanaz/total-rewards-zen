@@ -1,14 +1,9 @@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { DirhamSymbolIcon } from '@/components/icons/DirhamSymbolIcon';
-import { cn, formatCurrencyNumber } from '@/lib/utils';
+import { cn, formatCurrencyNumber, CURRENCY_LABEL } from '@/lib/utils';
 
 export interface CurrencyProps {
   /** The amount to display */
   amount: number | null | undefined;
-  /** Show "AED" ISO code as a secondary label (for clarity). */
-  showCode?: boolean;
-  /** Show the Dirham symbol icon (default: true). */
-  showSymbol?: boolean;
   /** Use abbreviated format for large numbers (K/M) */
   abbreviate?: boolean;
   /** Force specific decimal places */
@@ -17,6 +12,8 @@ export interface CurrencyProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   /** Additional className */
   className?: string;
+  /** Show full value in tooltip (default: true) */
+  showTooltip?: boolean;
 }
 
 const SIZE_CLASSES = {
@@ -29,65 +26,68 @@ const SIZE_CLASSES = {
 
 /**
  * Currency
- * System-wide Dirham display: symbol + formatted amount (Western digits enforced).
+ * System-wide AED currency display component.
+ * 
+ * IMPORTANT: Uses "AED" as the ONLY currency label across the platform.
+ * Never uses د.إ, Dirham symbols, or any other representation.
  * 
  * Usage:
- *   <Currency amount={45000} />              // → د.إ 45K
- *   <Currency amount={1234} abbreviate={false} /> // → د.إ 1,234
+ *   <Currency amount={45000} />              // → AED 45K
+ *   <Currency amount={1234} abbreviate={false} /> // → AED 1,234
  *   <Currency amount={null} />               // → —
  */
 export function Currency({
   amount,
-  showCode = false,
-  showSymbol = true,
   abbreviate = true,
   decimals,
   size = 'md',
   className,
+  showTooltip = true,
 }: CurrencyProps) {
   // Handle null/undefined
   if (amount === null || amount === undefined || isNaN(amount)) {
     return <span className={cn('text-muted-foreground', SIZE_CLASSES[size], className)}>—</span>;
   }
 
-  // Format the number without currency symbol
+  // Format the number without currency prefix
   const value = formatCurrencyNumber(amount, { abbreviate, decimals });
 
   const content = (
-    <span className={cn('inline-flex items-baseline gap-0.5 whitespace-nowrap tabular-nums', SIZE_CLASSES[size], className)}>
-      {showSymbol && <DirhamSymbolIcon className="opacity-90 shrink-0" />}
+    <span className={cn('inline-flex items-baseline gap-1 whitespace-nowrap tabular-nums', SIZE_CLASSES[size], className)}>
+      <span className="font-medium">{CURRENCY_LABEL}</span>
       <span>{value}</span>
-      {showCode && (
-        <span className="text-muted-foreground text-[0.75em] ms-0.5">AED</span>
-      )}
     </span>
   );
 
-  // Hover hint for ISO code clarity (when showCode=false)
-  if (showCode) return content;
+  // Show full value tooltip for abbreviated numbers
+  if (showTooltip && abbreviate && (amount >= 10000 || amount <= -10000)) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>{content}</TooltipTrigger>
+          <TooltipContent className="text-xs tabular-nums">
+            {CURRENCY_LABEL} {formatCurrencyNumber(amount, { abbreviate: false })}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
 
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>{content}</TooltipTrigger>
-        <TooltipContent className="text-xs">AED {formatCurrencyNumber(amount, { abbreviate: false })}</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
+  return content;
 }
 
 /**
  * CurrencyCompact - For chart labels and tight spaces
  */
 export function CurrencyCompact({ amount, className }: { amount: number | null | undefined; className?: string }) {
-  return <Currency amount={amount} abbreviate size="xs" className={className} />;
+  return <Currency amount={amount} abbreviate size="xs" showTooltip={false} className={className} />;
 }
 
 /**
  * CurrencyFull - For forms and detailed displays
  */
 export function CurrencyFull({ amount, className }: { amount: number | null | undefined; className?: string }) {
-  return <Currency amount={amount} abbreviate={false} showCode className={className} />;
+  return <Currency amount={amount} abbreviate={false} showTooltip={false} className={className} />;
 }
 
 export default Currency;

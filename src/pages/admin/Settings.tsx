@@ -600,7 +600,7 @@ export default function AdminSettings() {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label>{t('Minimum Payout (AED)', 'الحد الأدنى للدفع (درهم)')}</Label>
+                  <Label>{t('Minimum Payout (AED)', 'الحد الأدنى للدفع (AED)')}</Label>
                   <Input
                     type="number"
                     value={settings.minPayoutAmount}

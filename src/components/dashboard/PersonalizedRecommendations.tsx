@@ -68,7 +68,7 @@ export function PersonalizedRecommendations({ benefits, className }: Personalize
       urgency = 'high';
     } else {
       tip = isRTL
-        ? `لديك ${benefit.remaining.toLocaleString('ar-AE')} درهم متبقي`
+        ? `لديك ${formatCurrencyAED(benefit.remaining, { abbreviate: false })} متبقي`
         : `You have ${formatCurrencyAED(benefit.remaining, { abbreviate: false })} remaining`;
     }
 
@@ -102,7 +102,7 @@ export function PersonalizedRecommendations({ benefits, className }: Personalize
               </CardTitle>
               <p className={cn("text-xs text-muted-foreground", isRTL && "text-right")}>
                 {isRTL 
-                  ? `${totalUnused.toLocaleString('ar-AE')} درهم من المزايا غير مستخدمة`
+                  ? `AED ${totalUnused.toLocaleString()} من المزايا غير مستخدمة`
                   : `AED ${totalUnused.toLocaleString()} in benefits waiting to be used`
                 }
               </p>
