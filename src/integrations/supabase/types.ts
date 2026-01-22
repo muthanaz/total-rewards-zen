@@ -2965,6 +2965,23 @@ export type Database = {
         Args: { p_action: string; p_policy_id: string; p_reason?: string }
         Returns: Json
       }
+      create_policy_with_draft_version: {
+        Args: {
+          p_benefit_type?: string
+          p_client_request_id?: string
+          p_content_json?: Json
+          p_created_by: string
+          p_effective_from?: string
+          p_effective_to?: string
+          p_life_area: string
+          p_logic_json?: Json
+          p_org_id: string
+          p_policy_name: string
+          p_template_id?: string
+          p_transaction_model?: string
+        }
+        Returns: Json
+      }
       create_policy_with_version: {
         Args: {
           p_benefit_type?: string
@@ -3074,14 +3091,19 @@ export type Database = {
         }
         Returns: string
       }
-      publish_policy_version: {
-        Args: {
-          p_effective_from?: string
-          p_policy_id: string
-          p_version_id: string
-        }
-        Returns: Json
-      }
+      publish_policy_version:
+        | {
+            Args: {
+              p_effective_from?: string
+              p_policy_id: string
+              p_version_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: { p_effective_from?: string; p_policy_version_id: string }
+            Returns: Json
+          }
       reject_policy_version: {
         Args: { p_approval_id: string; p_reason: string }
         Returns: Json
