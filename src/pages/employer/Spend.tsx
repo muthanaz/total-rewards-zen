@@ -53,7 +53,7 @@ import {
   Legend,
   ReferenceLine 
 } from 'recharts';
-import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
+import { formatCurrencyAED, formatPercent, formatInteger, cn } from '@/lib/utils';
 import { calculateUtilization } from '@/lib/crossPortalContract';
 import { 
   EmployerGlobalFiltersBar, 
@@ -69,6 +69,10 @@ import {
   generateSpendInsights,
   generateSpendRecommendedActions,
 } from '@/components/employer';
+import { UtilizationFunnel, generateFunnelData } from '@/components/employer/UtilizationFunnel';
+import { TopDriversTable } from '@/components/employer/TopDriversTable';
+import { ExecModeToggle } from '@/components/employer/ExecModeToggle';
+import { useExecMode } from '@/components/employer/ExecModeContext';
 import { DrillDownSheet, DrillDownSummaryGrid, PageLayout } from '@/components/shared';
 import { CategoryWaterfallChart } from '@/components/charts';
 import { toast } from 'sonner';

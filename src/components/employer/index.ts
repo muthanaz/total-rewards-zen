@@ -145,6 +145,15 @@ export { OptimizationKPIGrid } from './OptimizationKPIGrid';
 export { OptimizationInsights, generateOptimizationInsights } from './OptimizationInsights';
 export type { OptimizationInsight, OptimizationDataForInsights } from './OptimizationInsights';
 
+// Executive Mode components
+export { ExecModeProvider, useExecMode } from './ExecModeContext';
+export type { ExecModeType } from './ExecModeContext';
+export { ExecModeToggle } from './ExecModeToggle';
+export { ExecKPIScorecard } from './ExecKPIScorecard';
+export { TopDriversTable } from './TopDriversTable';
+export { OpportunitiesRanking, generateOpportunities } from './OpportunitiesRanking';
+export { UtilizationFunnel, generateFunnelData } from './UtilizationFunnel';
+
 // Demo Pack components
 export { ExecutiveSummaryCard } from './ExecutiveSummaryCard';
 export { BenefitsActionPlanSummary, generateSampleActionPlan } from './BenefitsActionPlanSummary';
