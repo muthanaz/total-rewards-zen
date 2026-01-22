@@ -60,6 +60,7 @@ const navigationGroups: NavGroup[] = [
     titleAr: 'إدارة المنصة',
     items: [
       { label: 'Organizations', labelAr: 'المنظمات', path: '/admin/organizations', icon: Building2 },
+      { label: 'New Organization', labelAr: 'مؤسسة جديدة', path: '/admin/onboarding', icon: Building2 },
       { label: 'Users & Roles', labelAr: 'المستخدمون والأدوار', path: '/admin/users', icon: Users },
       { label: 'Plans & Invoices', labelAr: 'الخطط والفواتير', path: '/admin/billing', icon: CreditCard },
     ],
@@ -78,7 +79,8 @@ const navigationGroups: NavGroup[] = [
     titleAr: 'البيانات والتكاملات',
     items: [
       { label: 'Data Sources', labelAr: 'مصادر البيانات', path: '/admin/data-sources', icon: Database },
-      { label: 'Data Quality Rules', labelAr: 'قواعد جودة البيانات', path: '/admin/data-quality-rules', icon: ShieldCheck },
+      { label: 'Integration Readiness', labelAr: 'جاهزية التكامل', path: '/admin/integration-readiness', icon: Link2 },
+      { label: 'Data Migration', labelAr: 'ترحيل البيانات', path: '/admin/data-migration', icon: Database },
       { label: 'Sync Monitor', labelAr: 'مراقبة المزامنة', path: '/admin/sync-monitor', icon: Server },
     ],
   },
