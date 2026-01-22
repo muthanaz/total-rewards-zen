@@ -1,29 +1,31 @@
 /**
- * Benefit Type Labels
- * Maps database enum values to human-readable labels for display
+ * Constants - Re-exports canonical labels from taxonomy.ts
+ * 
+ * NOTE: taxonomy.ts is the single source of truth for benefit taxonomy.
+ * These exports maintain backward compatibility.
  */
-export const BENEFIT_TYPE_LABELS: Record<string, string> = {
-  cash_allowances: 'Cash Entitlements',
-  health_protection: 'Health & Protection',
-  time_off_flex: 'Leave & Flexibility',
-  growth_career: 'Career Development',
-  wealth_ownership: 'Wealth & Equity',
-  wellbeing: 'Wellbeing',
-};
+
+import { 
+  BENEFIT_TYPE_LABELS_SIMPLE,
+  LIFE_AREA_LABELS_SIMPLE,
+  LEGACY_DB_LIFE_AREA_LABELS,
+} from '@/lib/taxonomy';
 
 /**
- * Life Area Labels
- * Maps database enum values to human-readable labels for display
- * These categorize benefits by the life domain they support
+ * Benefit Type Labels (Pillar labels)
+ * @see taxonomy.ts BENEFIT_PILLAR_METADATA for full metadata
+ */
+export const BENEFIT_TYPE_LABELS: Record<string, string> = BENEFIT_TYPE_LABELS_SIMPLE;
+
+/**
+ * Life Area Labels - Canonical labels
+ * For legacy DB enum labels, use LEGACY_DB_LIFE_AREA_LABELS
+ * @see taxonomy.ts LIFE_AREA_METADATA for full metadata
  */
 export const LIFE_AREA_LABELS: Record<string, string> = {
-  home_living: 'Home & Living',
-  family_parenting: 'Family & Parenting',
-  health: 'Health',
-  money: 'Money',
-  career: 'Career',
-  lifestyle: 'Lifestyle',
-  mobility: 'Mobility',
+  ...LIFE_AREA_LABELS_SIMPLE,
+  // Include legacy DB enum values for backward compatibility
+  ...LEGACY_DB_LIFE_AREA_LABELS,
 };
 
 export const BENEFIT_TYPE_COLORS: Record<string, string> = {

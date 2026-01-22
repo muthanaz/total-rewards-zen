@@ -6,35 +6,55 @@
  * 2. Strict validation with detailed error messages
  * 3. Safe defaults that prevent rendering crashes
  * 4. Category-agnostic normalization
+ * 
+ * NOTE: Core types are imported from taxonomy.ts (single source of truth)
  */
 
 import { 
   TransactionModel, 
-  BenefitPolicyType, 
   EligibilityRules, 
   LimitsCaps, 
   WorkflowRules,
   PolicyRequiredDoc,
 } from '@/lib/policyEngine';
 
-// =============================================================================
-// CORE TYPES
-// =============================================================================
+// Re-export canonical types from taxonomy
+export { 
+  type CanonicalLifeArea,
+  type LifeArea,
+  type BenefitMechanism,
+  type BenefitPolicyType,
+  type BenefitPillar,
+  CANONICAL_LIFE_AREAS,
+  BENEFIT_MECHANISMS,
+  BENEFIT_PILLARS,
+  normalizeToLifeArea,
+  isValidLifeArea,
+  isValidBenefitMechanism,
+  getLifeAreaLabel,
+  getLifeAreaFullLabel,
+  getLifeAreaIcon,
+  getLifeAreaColors,
+  getLifeAreaRoute,
+  getBenefitPillarLabel,
+  getBenefitMechanismLabel,
+  LIFE_AREA_METADATA,
+  BENEFIT_PILLAR_METADATA,
+  BENEFIT_MECHANISM_METADATA,
+} from '@/lib/taxonomy';
 
-export type LifeArea = 
-  | 'housing'
-  | 'education' 
-  | 'health'
-  | 'transport'
-  | 'wellbeing'
-  | 'financial'
-  | 'learning'
-  | 'leave'
-  | 'bonus'
-  | 'equity'
-  | 'perks'
-  | 'documents'
-  | 'other';
+import { 
+  type CanonicalLifeArea as LifeArea,
+  type BenefitMechanism as BenefitPolicyType,
+  CANONICAL_LIFE_AREAS,
+  BENEFIT_MECHANISMS,
+  normalizeToLifeArea,
+  LIFE_AREA_METADATA,
+} from '@/lib/taxonomy';
+
+// =============================================================================
+// ADDITIONAL SCHEMA TYPES
+// =============================================================================
 
 export interface ReimbursementRules {
   reimbursement_percent: number;
@@ -220,26 +240,9 @@ export interface ValidationResult {
   normalized: UniversalPolicyLogic;
 }
 
-const VALID_LIFE_AREAS: LifeArea[] = [
-  'housing', 'education', 'health', 'transport', 'wellbeing', 
-  'financial', 'learning', 'leave', 'bonus', 'equity', 'perks', 'documents', 'other'
-];
-
-const VALID_BENEFIT_TYPES: BenefitPolicyType[] = [
-  'allowance', 'reimbursement', 'program', 'leave', 'insurance', 'other'
-];
-
 const VALID_TRANSACTION_MODELS: TransactionModel[] = [
   'request_only', 'claim_only', 'request_and_claim'
 ];
-
-function isValidLifeArea(value: unknown): value is LifeArea {
-  return typeof value === 'string' && VALID_LIFE_AREAS.includes(value as LifeArea);
-}
-
-function isValidBenefitType(value: unknown): value is BenefitPolicyType {
-  return typeof value === 'string' && VALID_BENEFIT_TYPES.includes(value as BenefitPolicyType);
-}
 
 function isValidTransactionModel(value: unknown): value is TransactionModel {
   return typeof value === 'string' && VALID_TRANSACTION_MODELS.includes(value as TransactionModel);
@@ -379,21 +382,23 @@ export function validateAndNormalizePolicyLogic(logic: unknown): ValidationResul
   
   const raw = (logic || {}) as Partial<UniversalPolicyLogic>;
   
-  // Validate and normalize life_area
+  // Validate and normalize life_area using taxonomy
   let life_area: LifeArea = 'other';
   if (!raw.life_area) {
     warnings.push('life_area missing, defaulting to "other"');
-  } else if (!isValidLifeArea(raw.life_area)) {
-    warnings.push(`Invalid life_area "${raw.life_area}", defaulting to "other"`);
   } else {
-    life_area = raw.life_area;
+    const normalized = normalizeToLifeArea(raw.life_area as string);
+    if (normalized === 'other' && raw.life_area !== 'other') {
+      warnings.push(`Unknown life_area "${raw.life_area}", defaulting to "other"`);
+    }
+    life_area = normalized;
   }
   
-  // Validate and normalize benefit_type
+  // Validate and normalize benefit_type using taxonomy
   let benefit_type: BenefitPolicyType = 'allowance';
   if (!raw.benefit_type) {
     warnings.push('benefit_type missing, defaulting to "allowance"');
-  } else if (!isValidBenefitType(raw.benefit_type)) {
+  } else if (!BENEFIT_MECHANISMS.includes(raw.benefit_type as BenefitPolicyType)) {
     warnings.push(`Invalid benefit_type "${raw.benefit_type}", defaulting to "allowance"`);
   } else {
     benefit_type = raw.benefit_type;
@@ -473,24 +478,19 @@ export function validateAndNormalizePolicyContent(content: unknown): UniversalPo
 }
 
 // =============================================================================
-// DISPLAY HELPERS
+// DISPLAY HELPERS (using taxonomy)
 // =============================================================================
 
-export const LIFE_AREA_LABELS: Record<LifeArea, { en: string; ar: string }> = {
-  housing: { en: 'Housing', ar: 'السكن' },
-  education: { en: 'Education', ar: 'التعليم' },
-  health: { en: 'Health', ar: 'الصحة' },
-  transport: { en: 'Transport', ar: 'النقل' },
-  wellbeing: { en: 'Wellbeing', ar: 'الرفاهية' },
-  financial: { en: 'Financial', ar: 'المالية' },
-  learning: { en: 'Learning', ar: 'التعلم' },
-  leave: { en: 'Leave', ar: 'الإجازات' },
-  bonus: { en: 'Bonus', ar: 'المكافآت' },
-  equity: { en: 'Equity', ar: 'الأسهم' },
-  perks: { en: 'Perks', ar: 'المزايا' },
-  documents: { en: 'Documents', ar: 'المستندات' },
-  other: { en: 'Other', ar: 'أخرى' },
-};
+/**
+ * @deprecated Use getLifeAreaLabel from taxonomy.ts
+ * Kept for backward compatibility
+ */
+export const LIFE_AREA_LABELS: Record<LifeArea, { en: string; ar: string }> = Object.fromEntries(
+  CANONICAL_LIFE_AREAS.map(area => [
+    area, 
+    { en: LIFE_AREA_METADATA[area].label, ar: LIFE_AREA_METADATA[area].labelAr }
+  ])
+) as Record<LifeArea, { en: string; ar: string }>;
 
 export const TRANSACTION_MODEL_LABELS: Record<TransactionModel, { en: string; ar: string; description: string; action: string }> = {
   request_only: { 
@@ -513,10 +513,6 @@ export const TRANSACTION_MODEL_LABELS: Record<TransactionModel, { en: string; ar
   },
 };
 
-export function getLifeAreaLabel(area: LifeArea, language: 'en' | 'ar' = 'en'): string {
-  return LIFE_AREA_LABELS[area]?.[language] || LIFE_AREA_LABELS.other[language];
-}
-
 export function getTransactionModelLabel(model: TransactionModel, language: 'en' | 'ar' = 'en'): string {
   return TRANSACTION_MODEL_LABELS[model]?.[language] || TRANSACTION_MODEL_LABELS.claim_only[language];
 }
@@ -532,40 +528,20 @@ export function getMonthName(month: number): string {
 }
 
 // =============================================================================
-// CATEGORY MAPPING
+// CATEGORY MAPPING (using taxonomy)
 // =============================================================================
 
-export const CATEGORY_TO_LIFE_AREA: Record<string, LifeArea> = {
-  'Housing': 'housing',
-  'Housing Allowance': 'housing',
-  'Education': 'education',
-  'Education Allowance': 'education',
-  'Schooling': 'education',
-  'Health': 'health',
-  'Health Insurance': 'health',
-  'Medical': 'health',
-  'Transport': 'transport',
-  'Transport & Mobility': 'transport',
-  'Wellbeing': 'wellbeing',
-  'Wellbeing Program': 'wellbeing',
-  'Financial': 'financial',
-  'Financial Planning': 'financial',
-  'Learning': 'learning',
-  'Learning & Development': 'learning',
-  'Leave': 'leave',
-  'Leave Management': 'leave',
-  'Bonus': 'bonus',
-  'Annual Bonus': 'bonus',
-  'Equity': 'equity',
-  'Equity & Options': 'equity',
-  'Per Diem': 'transport',
-  'Perks': 'perks',
-  'Marketplace': 'perks',
-  'Documents': 'documents',
-  'HR Documents': 'documents',
-  'Other': 'other',
-};
+import { STRING_TO_LIFE_AREA } from '@/lib/taxonomy';
 
+/**
+ * @deprecated Use normalizeToLifeArea from taxonomy.ts
+ * Kept for backward compatibility
+ */
+export const CATEGORY_TO_LIFE_AREA: Record<string, LifeArea> = STRING_TO_LIFE_AREA;
+
+/**
+ * @deprecated Use normalizeToLifeArea from taxonomy.ts
+ */
 export function categoryToLifeArea(category: string): LifeArea {
-  return CATEGORY_TO_LIFE_AREA[category] || CATEGORY_TO_LIFE_AREA[category.toLowerCase()] || 'other';
+  return normalizeToLifeArea(category);
 }
