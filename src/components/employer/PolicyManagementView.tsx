@@ -115,6 +115,10 @@ export function PolicyManagementView() {
   const [archiveDeleteOpen, setArchiveDeleteOpen] = useState(false);
   const [archiveDeleteAction, setArchiveDeleteAction] = useState<'archive' | 'delete'>('archive');
   const [archiveDeleteHint, setArchiveDeleteHint] = useState<string | null>(null);
+  const [archiveDeleteFlags, setArchiveDeleteFlags] = useState<{
+    hasPublishedVersion?: boolean;
+    hasLinkedRequests?: boolean;
+  } | null>(null);
   const [archiveDeleteSubmitting, setArchiveDeleteSubmitting] = useState(false);
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
   const [approvalDialogMode, setApprovalDialogMode] = useState<'submit' | 'reject'>('submit');
@@ -239,6 +243,8 @@ export function PolicyManagementView() {
   const filteredPolicies = useMemo(() => {
     const query = searchQuery.toLowerCase();
     return policies.filter(policy => {
+      // Soft-delete should disappear immediately
+      if ((policy as any).is_deleted) return false;
       if (!policy.is_active) return false;
       const nameMatch = policy.title.toLowerCase().includes(query);
       const lifeAreaLabel = getLifeAreaLabel(policy.category).toLowerCase();
@@ -339,6 +345,7 @@ export function PolicyManagementView() {
     setSelectedPolicy(policy);
     setArchiveDeleteAction(action);
     setArchiveDeleteHint(null);
+    setArchiveDeleteFlags(null);
     setArchiveDeleteOpen(true);
   };
 
@@ -355,6 +362,10 @@ export function PolicyManagementView() {
 
       if (!res.success) {
         setArchiveDeleteHint(res.error || 'Action not allowed');
+        setArchiveDeleteFlags({
+          hasPublishedVersion: Boolean(res.has_published_version),
+          hasLinkedRequests: Boolean(res.has_linked_claims),
+        });
         toast.error('Action blocked', { description: res.error || 'Please try archiving instead.' });
         await logEvent({
           action: 'ARCHIVE_POLICY',
@@ -392,7 +403,7 @@ export function PolicyManagementView() {
 
       setArchiveDeleteOpen(false);
     } catch (err: any) {
-      toast.error('Failed to archive policy', { description: err?.message || 'Unexpected error' });
+      toast.error('Failed to update policy', { description: err?.message || 'Unexpected error' });
       await logEvent({
         action: 'ARCHIVE_POLICY',
         resourceType: 'policy',
@@ -408,6 +419,42 @@ export function PolicyManagementView() {
       });
     } finally {
       setArchiveDeleteSubmitting(false);
+    }
+  };
+
+  const handlePublishDraftDirect = async (policy: PolicyRow) => {
+    if (!policy.draftVersion?.id) return;
+    try {
+      const res = await publishPolicyVersion({ versionId: policy.draftVersion.id });
+      if (!res.success) {
+        if (res.requires_approval) {
+          toast.error('Approvals are enabled. Submit for approval first.', {
+            description: 'This draft must be reviewed before it can be published.',
+          });
+          return;
+        }
+        toast.error('Failed to publish policy', { description: res.error || 'Unexpected error' });
+        return;
+      }
+
+      toast.success(`Published v${res.version_number ?? policy.draftVersion.version_number}`);
+      await queryClient.invalidateQueries({ queryKey: ['policies_management'] });
+      await logEvent({
+        action: 'PUBLISH_POLICY',
+        resourceType: 'policy',
+        resourceId: policy.id,
+        details: {
+          outcome: 'success',
+          policy_id: policy.id,
+          organization_id: policy.organization_id,
+          previous_status: 'draft',
+          new_status: 'published',
+          version_id: policy.draftVersion.id,
+          version_number: res.version_number,
+        },
+      });
+    } catch (e: any) {
+      toast.error('Failed to publish policy', { description: e?.message || 'Unexpected error' });
     }
   };
 
@@ -906,13 +953,28 @@ export function PolicyManagementView() {
                                     </>
                                   )}
 
-                                  <DropdownMenuItem 
-                                    className="text-destructive"
-                                    onClick={() => openArchiveDelete(policy, 'archive')}
-                                  >
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Archive
-                                  </DropdownMenuItem>
+                                   {!approvalsEnabled && policy.draftVersion?.status === 'draft' && (
+                                     <DropdownMenuItem
+                                       onClick={() => void handlePublishDraftDirect(policy)}
+                                       disabled={approvalSubmitting}
+                                     >
+                                       <CheckCircle className="w-4 h-4 mr-2" />
+                                       Publish
+                                     </DropdownMenuItem>
+                                   )}
+
+                                   <DropdownMenuItem onClick={() => openArchiveDelete(policy, 'archive')}>
+                                     <Archive className="w-4 h-4 mr-2" />
+                                     Archive
+                                   </DropdownMenuItem>
+
+                                   <DropdownMenuItem
+                                     className="text-destructive"
+                                     onClick={() => openArchiveDelete(policy, 'delete')}
+                                   >
+                                     <Trash2 className="w-4 h-4 mr-2" />
+                                     Delete
+                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </PermissionGate>
@@ -1088,6 +1150,7 @@ export function PolicyManagementView() {
         action={archiveDeleteAction}
         isSubmitting={archiveDeleteSubmitting}
         serverHint={archiveDeleteHint}
+        serverFlags={archiveDeleteFlags}
         onConfirm={handleArchiveDeleteConfirm}
       />
 

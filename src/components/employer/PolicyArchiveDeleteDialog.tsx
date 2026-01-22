@@ -28,6 +28,10 @@ interface PolicyArchiveDeleteDialogProps {
   action: PolicyArchiveDeleteAction;
   isSubmitting?: boolean;
   serverHint?: string | null;
+  serverFlags?: {
+    hasPublishedVersion?: boolean;
+    hasLinkedRequests?: boolean;
+  } | null;
   onConfirm: (args: { action: PolicyArchiveDeleteAction; reason: string }) => void;
 }
 
@@ -38,6 +42,7 @@ export function PolicyArchiveDeleteDialog({
   action,
   isSubmitting = false,
   serverHint,
+  serverFlags,
   onConfirm,
 }: PolicyArchiveDeleteDialogProps) {
   const [reason, setReason] = useState('');
@@ -46,7 +51,11 @@ export function PolicyArchiveDeleteDialog({
     if (!open) setReason('');
   }, [open]);
 
-  const isDeleteBlockedByPublished = Boolean(policy?.hasPublishedVersion) && action === 'delete';
+  const hasPublishedVersion = Boolean(policy?.hasPublishedVersion || serverFlags?.hasPublishedVersion);
+  const hasLinkedRequests = Boolean(serverFlags?.hasLinkedRequests);
+
+  const isDeleteBlocked =
+    action === 'delete' && (hasPublishedVersion || hasLinkedRequests);
 
   const title = useMemo(() => {
     if (action === 'archive') return 'Archive Policy';
@@ -72,11 +81,21 @@ export function PolicyArchiveDeleteDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {(isDeleteBlockedByPublished || serverHint) && (
+        {(isDeleteBlocked || serverHint) && (
           <Alert className="border-amber-500/30 bg-amber-500/5">
             <AlertTriangle className="w-4 h-4 text-amber-600" />
             <AlertDescription className="text-sm text-amber-700">
-              {serverHint || 'This policy has a published version and cannot be deleted. Archive it instead.'}
+              {serverHint ? (
+                serverHint
+              ) : isDeleteBlocked ? (
+                <div className="space-y-1">
+                  <p className="font-medium">Delete is blocked for this policy.</p>
+                  <ul className="list-disc list-inside">
+                    {hasPublishedVersion && <li>It has a published version. Archive it instead.</li>}
+                    {hasLinkedRequests && <li>It is linked to existing requests/claims. Archive it to preserve history.</li>}
+                  </ul>
+                </div>
+              ) : null}
             </AlertDescription>
           </Alert>
         )}
@@ -99,7 +118,7 @@ export function PolicyArchiveDeleteDialog({
           <Button
             variant={action === 'delete' ? 'destructive' : 'default'}
             onClick={() => onConfirm({ action, reason: reason.trim() })}
-            disabled={isSubmitting || !reason.trim() || !policy || isDeleteBlockedByPublished}
+            disabled={isSubmitting || !reason.trim() || !policy || isDeleteBlocked}
           >
             {action === 'archive' ? 'Archive' : 'Delete'}
           </Button>

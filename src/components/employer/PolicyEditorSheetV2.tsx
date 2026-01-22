@@ -41,7 +41,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { PolicyLogicEditor } from './PolicyLogicEditor';
 import { useAuditLog } from '@/hooks/useAuditLog';
-import { publishPolicyVersion } from '@/hooks/usePolicyRPC';
+import { publishPolicyVersion, submitPolicyForApproval } from '@/hooks/usePolicyRPC';
 import {
   PolicyContent,
   PolicyLogic,
@@ -69,6 +69,8 @@ export function PolicyEditorSheetV2({
   const [activeTab, setActiveTab] = useState('summary');
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isSubmittingForApproval, setIsSubmittingForApproval] = useState(false);
+  const [publishBlockedRequiresApproval, setPublishBlockedRequiresApproval] = useState(false);
   const [effectiveFrom, setEffectiveFrom] = useState(new Date().toISOString().split('T')[0]);
   
   // Content state
@@ -182,6 +184,7 @@ export function PolicyEditorSheetV2({
     if (open) {
       setStep('edit');
       setActiveTab('summary');
+      setPublishBlockedRequiresApproval(false);
     }
   }, [open]);
 
@@ -282,9 +285,15 @@ export function PolicyEditorSheetV2({
         effectiveFrom,
       });
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to publish policy');
+      if (!result.success && result.requires_approval) {
+        setPublishBlockedRequiresApproval(true);
+        toast.error('Approvals are enabled. Submit for approval first.', {
+          description: 'This draft must be reviewed before it can be published.',
+        });
+        return;
       }
+
+      if (!result.success) throw new Error(result.error || 'Failed to publish policy');
 
       const publishedVersionNumber = result.version_number || currentVersionNumber;
 
@@ -329,6 +338,57 @@ export function PolicyEditorSheetV2({
       });
     } finally {
       setIsPublishing(false);
+    }
+  };
+
+  const handleSubmitForApproval = async () => {
+    if (!versionId || !policyId) return;
+    setIsSubmittingForApproval(true);
+    try {
+      const res = await submitPolicyForApproval({ versionId });
+      if (!res.success) {
+        toast.error('Failed to submit for approval', { description: res.error || 'Unexpected error' });
+        await logEvent({
+          action: 'SUBMIT_POLICY_APPROVAL',
+          resourceType: 'policy',
+          resourceId: policyId,
+          details: {
+            outcome: 'failure',
+            organization_id: organizationId,
+            version_id: versionId,
+            error: res.error,
+          },
+        });
+        return;
+      }
+
+      toast.success('Submitted for approval', {
+        description: 'An approver will review this draft before it can be published.',
+      });
+      setPublishBlockedRequiresApproval(false);
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['policies_management'] }),
+        queryClient.invalidateQueries({ queryKey: ['policy_versions_list'] }),
+        queryClient.invalidateQueries({ queryKey: ['policy_version_edit'] }),
+      ]);
+      await refetchAllVersions();
+
+      await logEvent({
+        action: 'SUBMIT_POLICY_APPROVAL',
+        resourceType: 'policy',
+        resourceId: policyId,
+        details: {
+          outcome: 'success',
+          organization_id: organizationId,
+          version_id: versionId,
+          approval_id: res.approval_id,
+        },
+      });
+    } catch (e: any) {
+      toast.error('Failed to submit for approval', { description: e?.message || 'Unexpected error' });
+    } finally {
+      setIsSubmittingForApproval(false);
     }
   };
 
@@ -701,6 +761,28 @@ export function PolicyEditorSheetV2({
                     )}
                   </AlertDescription>
                 </Alert>
+
+                {publishBlockedRequiresApproval && (
+                  <Alert className="border-amber-500/30 bg-amber-500/5">
+                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                    <AlertDescription className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-amber-700">Approvals are enabled</p>
+                        <p className="text-sm text-amber-700/90">
+                          Submit this draft for approval before publishing.
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={handleSubmitForApproval}
+                        disabled={isSubmittingForApproval || isPublishing || isSaving}
+                      >
+                        {isSubmittingForApproval && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        Submit for approval
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                )}
 
                 <div className="space-y-4">
                   <div className="space-y-2">
