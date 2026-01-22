@@ -88,7 +88,7 @@ export function generateChecklistSnapshot(
     derivation_reason: doc.derivation_reason,
     source_doc_id: doc.id || null,
     was_conditionally_required: doc.was_conditionally_required,
-    condition_evaluation: doc.condition_evaluation as Record<string, unknown>,
+    condition_evaluation: doc.condition_evaluation as unknown as Record<string, unknown>,
   }));
 
   const hadConditionalDocs = documents.some(d => d.was_conditionally_required);
