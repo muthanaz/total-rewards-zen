@@ -118,10 +118,10 @@ const vendorPerformanceData: VendorMetric[] = [
 ];
 
 const commissionTierConfig = {
-  bronze: { label: 'Bronze', rate: '5%', threshold: 'AED 0-25K', color: 'bg-amber-600/10 text-amber-700' },
-  silver: { label: 'Silver', rate: '7%', threshold: 'AED 25-50K', color: 'bg-gray-400/10 text-gray-600' },
-  gold: { label: 'Gold', rate: '10%', threshold: 'AED 50-100K', color: 'bg-yellow-500/10 text-yellow-700' },
-  platinum: { label: 'Platinum', rate: '12%', threshold: 'AED 100K+', color: 'bg-purple-500/10 text-purple-700' },
+  bronze: { label: 'Bronze', rate: '5%', threshold: 'AED 0-25K', color: 'bg-chart-4/10 text-chart-4' },
+  silver: { label: 'Silver', rate: '7%', threshold: 'AED 25-50K', color: 'bg-muted text-muted-foreground' },
+  gold: { label: 'Gold', rate: '10%', threshold: 'AED 50-100K', color: 'bg-warning/10 text-warning' },
+  platinum: { label: 'Platinum', rate: '12%', threshold: 'AED 100K+', color: 'bg-chart-3/10 text-chart-3' },
 };
 
 const categoryEarningsData = [

@@ -155,10 +155,11 @@ export function formatCurrencyAED(
 
 /**
  * Format a number for currency display WITHOUT the symbol.
- * Use with <DirhamSymbolIcon> for consistent SVG-based currency display.
+ * Useful when the "AED" prefix is displayed separately.
  * 
  * @example
- * <DirhamSymbolIcon /> {formatCurrencyNumber(45000)} // → د.إ 45K
+ * formatCurrencyNumber(45000) // → "45K"
+ * formatCurrencyNumber(45000, { abbreviate: false }) // → "45,000"
  */
 export function formatCurrencyNumber(
   value: number | null | undefined,

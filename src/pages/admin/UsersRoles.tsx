@@ -261,25 +261,25 @@ export default function UsersRolesPage() {
           title={t('Admins', 'المسؤولون')}
           value={roleStats.admin.toString()}
           icon={Shield}
-          iconClassName="from-red-500 to-red-600"
+          iconClassName="from-destructive to-destructive/80"
         />
         <MetricCard
           title={t('Employers', 'أصحاب العمل')}
           value={roleStats.employer.toString()}
           icon={Building2}
-          iconClassName="from-purple-500 to-purple-600"
+          iconClassName="from-chart-3 to-chart-3/80"
         />
         <MetricCard
           title={t('Employees', 'الموظفون')}
           value={roleStats.employee.toString()}
           icon={Users}
-          iconClassName="from-blue-500 to-blue-600"
+          iconClassName="from-info to-info/80"
         />
         <MetricCard
           title={t('Vendors', 'البائعون')}
           value={roleStats.vendor.toString()}
           icon={UserCog}
-          iconClassName="from-amber-500 to-amber-600"
+          iconClassName="from-chart-4 to-chart-4/80"
         />
       </MetricGrid>
 

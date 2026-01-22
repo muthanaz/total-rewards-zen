@@ -104,38 +104,38 @@ function QueueCounters({ items }: QueueCountersProps) {
   
   return (
     <div className="grid grid-cols-4 gap-3">
-      <Card className="bg-blue-500/10 border-blue-500/20">
+      <Card className="bg-info/10 border-info/20">
         <CardContent className="p-3 flex items-center gap-3">
-          <Inbox className="w-5 h-5 text-blue-600" />
+          <Inbox className="w-5 h-5 text-info" />
           <div>
-            <p className="text-2xl font-bold text-blue-600">{counts.pending}</p>
+            <p className="text-2xl font-bold text-info">{counts.pending}</p>
             <p className="text-xs text-muted-foreground">Pending</p>
           </div>
         </CardContent>
       </Card>
-      <Card className="bg-amber-500/10 border-amber-500/20">
+      <Card className="bg-warning/10 border-warning/20">
         <CardContent className="p-3 flex items-center gap-3">
-          <Timer className="w-5 h-5 text-amber-600" />
+          <Timer className="w-5 h-5 text-warning" />
           <div>
-            <p className="text-2xl font-bold text-amber-600">{counts.inReview}</p>
+            <p className="text-2xl font-bold text-warning">{counts.inReview}</p>
             <p className="text-xs text-muted-foreground">In Review</p>
           </div>
         </CardContent>
       </Card>
-      <Card className="bg-purple-500/10 border-purple-500/20">
+      <Card className="bg-chart-3/10 border-chart-3/20">
         <CardContent className="p-3 flex items-center gap-3">
-          <AlertTriangle className="w-5 h-5 text-purple-600" />
+          <AlertTriangle className="w-5 h-5 text-chart-3" />
           <div>
-            <p className="text-2xl font-bold text-purple-600">{counts.actionRequired}</p>
+            <p className="text-2xl font-bold text-chart-3">{counts.actionRequired}</p>
             <p className="text-xs text-muted-foreground">Action Req.</p>
           </div>
         </CardContent>
       </Card>
-      <Card className="bg-red-500/10 border-red-500/20">
+      <Card className="bg-destructive/10 border-destructive/20">
         <CardContent className="p-3 flex items-center gap-3">
-          <Clock className="w-5 h-5 text-red-600" />
+          <Clock className="w-5 h-5 text-destructive" />
           <div>
-            <p className="text-2xl font-bold text-red-600">{counts.overdue}</p>
+            <p className="text-2xl font-bold text-destructive">{counts.overdue}</p>
             <p className="text-xs text-muted-foreground">Overdue</p>
           </div>
         </CardContent>
@@ -164,9 +164,9 @@ function QueueItemRow({ item, onSelect, showCategory }: QueueItemRowProps) {
   const getPriorityBadge = () => {
     if (!item.priority || item.priority === 'standard') return null;
     const colors = {
-      low: 'bg-slate-100 text-slate-600',
-      high: 'bg-amber-100 text-amber-700',
-      urgent: 'bg-red-100 text-red-700',
+      low: 'bg-muted text-muted-foreground',
+      high: 'bg-warning/10 text-warning',
+      urgent: 'bg-destructive/10 text-destructive',
     };
     return (
       <Badge className={cn('text-xs', colors[item.priority])}>
@@ -177,7 +177,7 @@ function QueueItemRow({ item, onSelect, showCategory }: QueueItemRowProps) {
   
   const getTypeBadge = () => {
     const colors = {
-      claim: 'bg-emerald-100 text-emerald-700',
+      claim: 'bg-success/10 text-success',
       request: 'bg-blue-100 text-blue-700',
       question: 'bg-purple-100 text-purple-700',
     };

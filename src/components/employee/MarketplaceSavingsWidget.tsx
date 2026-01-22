@@ -43,21 +43,21 @@ export function MarketplaceSavingsWidget({
           {/* Savings Highlight */}
           <div className={cn('flex-1 space-y-3', isRTL && 'text-right')}>
             <div className={cn('flex items-center gap-2', isRTL && 'flex-row-reverse')}>
-              <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20">
-                <PiggyBank className="w-4 h-4 text-emerald-600" />
+              <div className="p-2 rounded-lg bg-gradient-to-br from-success/20 to-accent/20">
+                <PiggyBank className="w-4 h-4 text-success" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">
                   {t('Your Savings to Date', 'مدخراتك حتى الآن')}
                 </p>
-                <p className="text-xl font-bold text-emerald-600">
+                <p className="text-xl font-bold text-success">
                   {formatCurrencyAED(totalSavings)}
                 </p>
               </div>
             </div>
 
             <div className={cn('flex items-center gap-2 text-xs text-muted-foreground', isRTL && 'flex-row-reverse')}>
-              <TrendingUp className="w-3 h-3 text-emerald-500" />
+              <TrendingUp className="w-3 h-3 text-success" />
               <span>
                 {t(`${totalActivations} offers activated`, `${totalActivations} عرض مفعل`)}
               </span>
