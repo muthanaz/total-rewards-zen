@@ -3239,6 +3239,92 @@ export type Database = {
           },
         ]
       }
+      safe_profile_view: {
+        Row: {
+          created_at: string | null
+          date_of_birth: string | null
+          department: string | null
+          email: string | null
+          emirates_id_masked: string | null
+          employment_date: string | null
+          first_name: string | null
+          grade: string | null
+          has_salary_data: boolean | null
+          home_location: string | null
+          id: string | null
+          last_name: string | null
+          manager_name: string | null
+          marital_status: string | null
+          nationality: string | null
+          organization_id: string | null
+          passport_number_masked: string | null
+          phone: string | null
+          position: string | null
+          preferred_language: string | null
+          updated_at: string | null
+          user_id: string | null
+          work_location: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date_of_birth?: string | null
+          department?: string | null
+          email?: string | null
+          emirates_id_masked?: never
+          employment_date?: string | null
+          first_name?: string | null
+          grade?: string | null
+          has_salary_data?: never
+          home_location?: string | null
+          id?: string | null
+          last_name?: string | null
+          manager_name?: string | null
+          marital_status?: string | null
+          nationality?: string | null
+          organization_id?: string | null
+          passport_number_masked?: never
+          phone?: string | null
+          position?: string | null
+          preferred_language?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          work_location?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date_of_birth?: string | null
+          department?: string | null
+          email?: string | null
+          emirates_id_masked?: never
+          employment_date?: string | null
+          first_name?: string | null
+          grade?: string | null
+          has_salary_data?: never
+          home_location?: string | null
+          id?: string | null
+          last_name?: string | null
+          manager_name?: string | null
+          marital_status?: string | null
+          nationality?: string | null
+          organization_id?: string | null
+          passport_number_masked?: never
+          phone?: string | null
+          position?: string | null
+          preferred_language?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          work_location?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       waiver_analytics: {
         Row: {
           conditional_waivers: number | null
@@ -3424,6 +3510,18 @@ export type Database = {
         Returns: boolean
       }
       log_audit_event: {
+        Args: {
+          p_action: string
+          p_details?: Json
+          p_ip_address?: string
+          p_resource_id?: string
+          p_resource_type: string
+          p_user_agent?: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      log_audit_event_sanitized: {
         Args: {
           p_action: string
           p_details?: Json
