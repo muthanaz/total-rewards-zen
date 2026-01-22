@@ -35,7 +35,7 @@ import { useClaimNotes, useAddClaimNote } from '@/hooks/useClaimNotes';
 import { useRequestTimeline } from '@/hooks/useSharedRequests';
 import { getStatusBadgeStyle, formatRelativeTime } from '@/lib/crossPortalContract';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED } from '@/lib/utils';
 
 interface EmployeeRequestDetailSheetProps {
   open: boolean;
@@ -88,7 +88,7 @@ export function EmployeeRequestDetailSheet({
   
   const formatMoney = (amount: number | null) => {
     if (!amount) return '—';
-    return `AED ${amount.toLocaleString()}`;
+    return formatCurrencyAED(amount, { abbreviate: false });
   };
   
   const getStatusIcon = (status: string | null) => {

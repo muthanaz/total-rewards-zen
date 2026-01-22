@@ -68,17 +68,23 @@ export function formatNullable<T>(
 
 // ============= CURRENCY FORMATTING =============
 
+/**
+ * UAE Dirham symbol (د.إ) for display.
+ * Use this constant for text-based currency display.
+ */
+export const DIRHAM_SYMBOL = 'د.إ';
+
 export interface CurrencyFormatOptions {
   abbreviate?: boolean;       // Use K/M abbreviations (default: true for values >= 10,000)
   decimals?: number;          // Force specific decimal places
-  showCurrency?: boolean;     // Show "AED" prefix (default: true)
+  showCurrency?: boolean;     // Show currency symbol (default: true)
 }
 
 /**
- * Format a number as AED currency with consistent abbreviation rules:
- * - >= 1,000,000: Use M with 1-2 decimals (e.g., "AED 6.15M")
- * - >= 10,000: Use K with 0-1 decimals (e.g., "AED 45.2K")
- * - < 10,000: Full number with commas (e.g., "AED 1,234")
+ * Format a number as AED currency with the official Dirham symbol (د.إ):
+ * - >= 1,000,000: Use M with 1-2 decimals (e.g., "د.إ 6.15M")
+ * - >= 10,000: Use K with 0-1 decimals (e.g., "د.إ 45.2K")
+ * - < 10,000: Full number with commas (e.g., "د.إ 1,234")
  * 
  * ALWAYS outputs Western digits (0-9), never Arabic-Indic.
  */
@@ -89,12 +95,12 @@ export function formatCurrencyAED(
   const { abbreviate = true, decimals, showCurrency = true } = options;
   
   if (value === null || value === undefined || isNaN(value)) {
-    return showCurrency ? 'AED 0' : '0';
+    return showCurrency ? `${DIRHAM_SYMBOL} 0` : '0';
   }
 
   const absValue = Math.abs(value);
   const sign = value < 0 ? '-' : '';
-  const prefix = showCurrency ? 'AED ' : '';
+  const prefix = showCurrency ? `${DIRHAM_SYMBOL} ` : '';
 
   if (!abbreviate) {
     // Full format with commas - use en-US for Western digits
@@ -125,6 +131,12 @@ export function formatCurrencyAED(
     : safeLocaleFormat(absValue);
   return `${sign}${prefix}${formatted}`;
 }
+
+/**
+ * Alias for formatCurrencyAED for backward compatibility and semantic clarity.
+ * Use this in new code for better readability.
+ */
+export const formatMoney = formatCurrencyAED;
 
 /**
  * Format a currency range with en-dash

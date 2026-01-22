@@ -26,7 +26,7 @@ import {
 import { useEmployeeRequests, useEmployeeRequestCounts, getEmployeeStatusLabel } from '@/hooks/useEmployeeRequests';
 import { EmployeeRequestDetailSheet } from './EmployeeRequestDetailSheet';
 import { getStatusBadgeStyle, formatRelativeTime } from '@/lib/crossPortalContract';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED } from '@/lib/utils';
 
 type StatusFilter = 'all' | 'pending' | 'in_review' | 'need_info' | 'approved' | 'rejected';
 
@@ -123,7 +123,7 @@ export function EmployeeRequestsList() {
   
   const formatMoney = (amount: number | null) => {
     if (!amount) return null;
-    return `AED ${amount.toLocaleString()}`;
+    return formatCurrencyAED(amount, { abbreviate: false });
   };
   
   if (isLoading) {

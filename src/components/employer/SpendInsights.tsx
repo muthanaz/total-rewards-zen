@@ -19,7 +19,7 @@ import {
   Ghost,
   FileText,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrencyAED } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 
 export interface SpendInsight {
@@ -170,7 +170,7 @@ export function generateSpendInsights(data: SpendDataForInsights): SpendInsight[
       id: 'utilization-gap',
       icon: data.overallUtilization < 60 ? 'alert' : 'trend-down',
       title: `Overall utilization at ${data.overallUtilization.toFixed(0)}% (target: 75%)`,
-      description: `${data.unusedEntitlement.toLocaleString('en-AE', { style: 'currency', currency: 'AED', maximumFractionDigits: 0 })} in entitled benefits remain unclaimed.`,
+      description: `${formatCurrencyAED(data.unusedEntitlement, { abbreviate: false, decimals: 0 })} in entitled benefits remain unclaimed.`,
       deepLink: {
         label: 'View Zombie Spend',
         path: '/employer/zombie-spend',
@@ -185,7 +185,7 @@ export function generateSpendInsights(data: SpendDataForInsights): SpendInsight[
       id: 'underutilized-category',
       icon: 'ghost',
       title: `${data.topUnderutilizedCategory.name} has lowest utilization`,
-      description: `Only ${data.topUnderutilizedCategory.utilization.toFixed(0)}% claimed — ${data.topUnderutilizedCategory.unused.toLocaleString('en-AE', { style: 'currency', currency: 'AED', maximumFractionDigits: 0 })} unused.`,
+      description: `Only ${data.topUnderutilizedCategory.utilization.toFixed(0)}% claimed — ${formatCurrencyAED(data.topUnderutilizedCategory.unused, { abbreviate: false, decimals: 0 })} unused.`,
       impact: 'High recovery potential',
       deepLink: {
         label: 'Drill down',
