@@ -86,6 +86,7 @@ const navigationGroups: NavGroup[] = [
     title: 'Content & Alerts',
     titleAr: 'المحتوى والتنبيهات',
     items: [
+      { label: 'Policy Templates', labelAr: 'قوالب السياسات', path: '/admin/policy-templates', icon: FileText },
       { label: 'Policy Library', labelAr: 'مكتبة السياسات', path: '/admin/policy-library', icon: FileText },
       { label: 'Alerts Center', labelAr: 'مركز التنبيهات', path: '/admin/alerts', icon: AlertTriangle, badge: 3 },
     ],
