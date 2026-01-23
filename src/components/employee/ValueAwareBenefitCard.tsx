@@ -4,7 +4,9 @@
  * Displays benefit information based on its value type:
  * - CASH: Shows remaining AED balance and utilization
  * - REIMBURSEMENT: Shows cap and claimed amount with disclaimer
+ * - BUDGET: Shows budget allocation and usage
  * - COVERAGE: Shows plan info without AED remaining
+ * - DEFERRED: Shows projected value without AED remaining
  * - ACCESS: Shows activation status without monetary values
  */
 
@@ -27,6 +29,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { BenefitValueTypeChip } from '@/components/shared/BenefitValueTypeChip';
 
 interface ValueAwareBenefitCardProps {
   name: string;
@@ -120,7 +123,7 @@ export function ValueAwareBenefitCard({
           </div>
           
           <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
-            <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse justify-end")}>
+            <div className={cn("flex items-center gap-2 flex-wrap", isRTL && "flex-row-reverse justify-end")}>
               <h3 className="font-semibold text-[15px] text-foreground group-hover:text-accent transition-colors leading-tight">
                 {name}
               </h3>
@@ -128,6 +131,10 @@ export function ValueAwareBenefitCard({
                 "w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0",
                 isRTL && "rotate-180 group-hover:-translate-x-0.5"
               )} />
+            </div>
+            {/* Benefit Type Chip */}
+            <div className="mt-1.5">
+              <BenefitValueTypeChip valueType={valueType} size="sm" showTooltip={false} />
             </div>
             <p className="text-[13px] text-muted-foreground mt-1.5 line-clamp-1">
               {description}

@@ -21,6 +21,8 @@ import {
   Receipt, 
   Shield, 
   Key, 
+  Briefcase,
+  Hourglass,
   type LucideIcon,
   AlertCircle,
   CheckCircle,
@@ -79,6 +81,19 @@ export const VALUE_TYPE_METADATA: Record<BenefitValueType, ValueTypeMetadata> = 
     amountLabelAr: 'الحد الأقصى للتعويض',
     colorClass: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
   },
+  budget: {
+    key: 'budget',
+    label: 'Budget Allocation',
+    labelAr: 'تخصيص الميزانية',
+    description: 'Organizational budget for programs or activities',
+    descriptionAr: 'ميزانية تنظيمية للبرامج أو الأنشطة',
+    icon: Briefcase,
+    showMonetaryRemaining: true,
+    showUtilizationPercent: true,
+    amountLabel: 'Annual Budget',
+    amountLabelAr: 'الميزانية السنوية',
+    colorClass: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20',
+  },
   coverage: {
     key: 'coverage',
     label: 'Coverage',
@@ -91,6 +106,19 @@ export const VALUE_TYPE_METADATA: Record<BenefitValueType, ValueTypeMetadata> = 
     amountLabel: 'Employer Investment',
     amountLabelAr: 'استثمار صاحب العمل',
     colorClass: 'bg-rose-500/10 text-rose-600 border-rose-500/20',
+  },
+  deferred: {
+    key: 'deferred',
+    label: 'Deferred Value',
+    labelAr: 'قيمة مؤجلة',
+    description: 'Future value like equity, gratuity, or pension',
+    descriptionAr: 'قيمة مستقبلية مثل الأسهم أو مكافأة نهاية الخدمة أو التقاعد',
+    icon: Hourglass,
+    showMonetaryRemaining: false,
+    showUtilizationPercent: false,
+    amountLabel: 'Projected Value',
+    amountLabelAr: 'القيمة المتوقعة',
+    colorClass: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
   },
   access: {
     key: 'access',
@@ -133,12 +161,12 @@ export const LIFE_AREA_DEFAULT_VALUE_TYPE: Record<CanonicalLifeArea, BenefitValu
   education: 'reimbursement',
   health: 'coverage',
   transport: 'cash',
-  wellbeing: 'reimbursement',
-  financial: 'cash',
+  wellbeing: 'budget',      // Wellbeing programs typically have org budget
+  financial: 'deferred',    // Savings/pension are deferred value
   learning: 'reimbursement',
   leave: 'access',
-  bonus: 'cash',
-  equity: 'access',
+  bonus: 'deferred',        // Bonus is performance-based future value
+  equity: 'deferred',       // Equity is future value
   perks: 'access',
   documents: 'access',
   other: 'access',
@@ -205,10 +233,10 @@ export function isSpendableMoney(valueType: BenefitValueType): boolean {
 
 /**
  * Check if showing "unused AED" makes sense for this benefit type
- * This prevents misleading "unused spend" for coverage/access benefits
+ * This prevents misleading "unused spend" for coverage/access/deferred benefits
  */
 export function canShowUnusedAmount(valueType: BenefitValueType): boolean {
-  return valueType === 'cash' || valueType === 'reimbursement';
+  return valueType === 'cash' || valueType === 'reimbursement' || valueType === 'budget';
 }
 
 // ============================================================================
@@ -340,6 +368,53 @@ export function getBenefitDisplayConfig(valueType: BenefitValueType): BenefitDis
           'احجز أو استخدم الخدمات حسب الحاجة',
         ],
       };
+    case 'budget':
+      return {
+        primaryValueLabel: 'Annual Budget',
+        primaryValueLabelAr: 'الميزانية السنوية',
+        showRemainingAed: true,
+        remainingLabel: 'Budget remaining',
+        remainingLabelAr: 'الميزانية المتبقية',
+        showProgressBar: true,
+        alternativeMetrics: [],
+        disclaimer: 'Organizational budget allocation - usage requires approval',
+        disclaimerAr: 'تخصيص ميزانية تنظيمية - الاستخدام يتطلب موافقة',
+        howToUse: [
+          'Request activities or programs from available budget',
+          'Submit requests for approval',
+          'Track budget usage throughout the year',
+        ],
+        howToUseAr: [
+          'اطلب الأنشطة أو البرامج من الميزانية المتاحة',
+          'قدم طلبات للموافقة',
+          'تتبع استخدام الميزانية على مدار العام',
+        ],
+      };
+    case 'deferred':
+      return {
+        primaryValueLabel: 'Projected Value',
+        primaryValueLabelAr: 'القيمة المتوقعة',
+        showRemainingAed: false,
+        remainingLabel: 'Vesting progress',
+        remainingLabelAr: 'تقدم الاستحقاق',
+        showProgressBar: false,
+        alternativeMetrics: [
+          { key: 'vested', label: 'Vested amount', labelAr: 'المبلغ المكتسب', icon: CheckCircle },
+          { key: 'timeline', label: 'Vesting timeline', labelAr: 'جدول الاستحقاق', icon: Clock },
+        ],
+        disclaimer: 'Future value subject to vesting schedule and conditions',
+        disclaimerAr: 'قيمة مستقبلية تخضع لجدول الاستحقاق والشروط',
+        howToUse: [
+          'Value accrues over time based on tenure/performance',
+          'Check vesting schedule for milestone dates',
+          'Review conditions for full entitlement',
+        ],
+        howToUseAr: [
+          'تتراكم القيمة بمرور الوقت بناءً على مدة الخدمة/الأداء',
+          'راجع جدول الاستحقاق لتواريخ المراحل',
+          'راجع الشروط للاستحقاق الكامل',
+        ],
+      };
   }
 }
 
@@ -364,10 +439,18 @@ export function getUtilizationTerminology(
       return isArabic
         ? { utilized: 'تم المطالبة', remaining: 'متاح للمطالبة', rate: 'معدل المطالبة' }
         : { utilized: 'Claimed', remaining: 'Available to claim', rate: 'Claim rate' };
+    case 'budget':
+      return isArabic
+        ? { utilized: 'مستخدم', remaining: 'متبقي من الميزانية', rate: 'استخدام الميزانية' }
+        : { utilized: 'Used', remaining: 'Budget remaining', rate: 'Budget utilization' };
     case 'coverage':
       return isArabic
         ? { utilized: 'تم الاستخدام', remaining: 'التغطية', rate: 'استخدام التغطية' }
         : { utilized: 'Used', remaining: 'Coverage', rate: 'Coverage utilization' };
+    case 'deferred':
+      return isArabic
+        ? { utilized: 'مكتسب', remaining: 'قيد الاستحقاق', rate: 'تقدم الاستحقاق' }
+        : { utilized: 'Vested', remaining: 'Vesting', rate: 'Vesting progress' };
     case 'access':
       return isArabic
         ? { utilized: 'تم الوصول', remaining: 'متاح', rate: 'استخدام البرنامج' }
@@ -383,7 +466,7 @@ export function getUtilizationTerminology(
  * Check if AED-based charts are appropriate for this value type
  */
 export function canShowAedChart(valueType: BenefitValueType): boolean {
-  return valueType === 'cash' || valueType === 'reimbursement';
+  return valueType === 'cash' || valueType === 'reimbursement' || valueType === 'budget';
 }
 
 /**
@@ -395,8 +478,12 @@ export function getRecommendedChartTypes(valueType: BenefitValueType): string[] 
       return ['bar', 'area', 'donut'];
     case 'reimbursement':
       return ['bar', 'area', 'donut'];
+    case 'budget':
+      return ['bar', 'area', 'donut'];
     case 'coverage':
       return ['count', 'timeline', 'status'];
+    case 'deferred':
+      return ['timeline', 'vesting', 'projection'];
     case 'access':
       return ['count', 'status', 'adoption'];
   }

@@ -47,10 +47,24 @@ export type CanonicalLifeArea =
  * 
  * - cash: Paid directly with salary (housing, transport allowances)
  * - reimbursement: Employee pays first, then gets reimbursed (schooling, learning)
+ * - budget: Organizational budget allocation (wellness program budget, team activities)
  * - coverage: Employer-paid insurance/program (health insurance, life insurance)
+ * - deferred: Future value, not current cash (equity, gratuity, pension)
  * - access: Entitlement to use a service/program (gym membership, EAP)
  */
-export type BenefitValueType = 'cash' | 'reimbursement' | 'coverage' | 'access';
+export type BenefitValueType = 'cash' | 'reimbursement' | 'budget' | 'coverage' | 'deferred' | 'access';
+
+/** All valid benefit value types */
+export const BENEFIT_VALUE_TYPES: BenefitValueType[] = [
+  'cash', 'reimbursement', 'budget', 'coverage', 'deferred', 'access'
+];
+
+/**
+ * Check if a string is a valid benefit value type
+ */
+export function isValidBenefitValueType(value: unknown): value is BenefitValueType {
+  return typeof value === 'string' && BENEFIT_VALUE_TYPES.includes(value as BenefitValueType);
+}
 
 /**
  * Benefit Mechanism - How the benefit is delivered/processed
