@@ -3,12 +3,75 @@
  * 
  * Consistent calculation logic for all platform metrics.
  * All functions return both raw values and formatted strings.
+ * 
+ * IMPORTANT: This is part of the Unified Metrics Layer.
+ * All hooks should use these functions for consistency.
  */
 
 import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
 import { ComputedMetric, MetricInputs, ConfidenceLevel } from './types';
 import { METRIC_DEFINITIONS } from './definitions';
 import { computeConfidence } from './confidence';
+
+// ============================================================================
+// UNIFIED DEMO FALLBACKS - THE SINGLE SOURCE OF TRUTH
+// ============================================================================
+
+/**
+ * Consolidated demo fallback values
+ * All hooks should use these values when real data is unavailable
+ * 
+ * These values are consistent with DEMO_ORG, DEMO_EXEC_METRICS, and DEMO_EMPLOYEE
+ * from src/lib/demoScenario.ts
+ */
+export const DEMO_FALLBACKS = {
+  // Organization
+  employeeCount: 312,
+  organizationName: 'Nexa Holdings',
+  currency: 'AED',
+  
+  // Investment & Budget
+  totalInvestment: 24600000, // AED 24.6M
+  budgetUtilized: 16728000, // AED 16.7M
+  
+  // Rates & Benchmarks
+  utilizationRate: 68,
+  targetUtilization: 80,
+  costPerEmployee: 78846, // AED 78.8K
+  industryBenchmark: 82000,
+  peerBenchmark: 79500,
+  
+  // ROI & Value
+  roi: 3.4,
+  roiBenchmark: 2.9,
+  zombieSpend: 2952000, // AED 2.95M
+  recoveryPotential: 1870000, // AED 1.87M
+  
+  // Satisfaction & Retention
+  esatScore: 76,
+  esatBenchmark: 72,
+  esatTrend: 4.2,
+  retentionRate: 91,
+  retentionBenchmark: 86,
+  turnoverRate: 9,
+  turnoverBenchmark: 14,
+  
+  // Claims SLA
+  claimsSlaCompliance: 87,
+  claimsSlaTarget: 95,
+  pendingClaims: 47,
+  urgentClaims: 8,
+  
+  // Employee-specific
+  employeeMonthlySalary: 28000,
+  employeeAnnualSalary: 336000, // 28000 * 12
+  employeeTotalBenefits: 224000,
+  employeeUtilized: 160300,
+  
+  // Data quality
+  dataConfidence: 'high' as const,
+  dataSources: ['Oracle HCM', 'Benefits Platform', 'Claims System'],
+} as const;
 
 /**
  * Compute Utilization Rate
