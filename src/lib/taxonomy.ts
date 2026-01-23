@@ -42,6 +42,17 @@ export type CanonicalLifeArea =
   | 'other';
 
 /**
+ * Benefit Value Type - How the benefit translates to employee value
+ * CRITICAL: This determines how the benefit is displayed and calculated
+ * 
+ * - cash: Paid directly with salary (housing, transport allowances)
+ * - reimbursement: Employee pays first, then gets reimbursed (schooling, learning)
+ * - coverage: Employer-paid insurance/program (health insurance, life insurance)
+ * - access: Entitlement to use a service/program (gym membership, EAP)
+ */
+export type BenefitValueType = 'cash' | 'reimbursement' | 'coverage' | 'access';
+
+/**
  * Benefit Mechanism - How the benefit is delivered/processed
  */
 export type BenefitMechanism = 

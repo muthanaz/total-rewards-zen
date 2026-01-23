@@ -26,6 +26,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
 import { BenefitCrossLinks } from '@/components/employee/BenefitCrossLinks';
 import { EmployeeCreateRequestSheet } from '@/components/employee/EmployeeCreateRequestSheet';
+import { HelpfulOptionsModule } from '@/components/employee/HelpfulOptionsModule';
 import { cn, formatCurrencyAED } from '@/lib/utils';
 import { 
   UniversalPolicyLogic, 
@@ -379,6 +380,9 @@ export function UniversalBenefitTemplate({
 
       {/* Category-specific content */}
       {children}
+
+      {/* Helpful Options Module - at the very bottom, collapsed by default */}
+      <HelpfulOptionsModule lifeArea={category?.lifeArea || 'other'} />
 
       {/* Request/Claim Sheet */}
       <EmployeeCreateRequestSheet
