@@ -20,8 +20,8 @@ import { AnimatedBarChart } from '@/components/charts/AnimatedBarChart';
 import { AnimatedRadarChart } from '@/components/charts/AnimatedRadarChart';
 import { AnimatedLineChart } from '@/components/charts/AnimatedLineChart';
 import { toast } from 'sonner';
-import { PageHeader } from '@/components/shared/PageHeader';
 import { MetricCard, MetricGrid } from '@/components/shared';
+import { InsightsLabBetaBanner } from '@/components/admin/InsightsLabBetaBanner';
 
 const regionalData = [
   { region: 'UAE', avgUtilization: 72, avgSpend: 185000, employees: 8500, organizations: 28, benefits: 12, marketShare: 35 },
@@ -84,36 +84,18 @@ export default function AdminBenchmarks() {
   }));
 
   return (
-    <div className={cn("space-y-6", isRTL && "text-right")}>
-      {/* Header */}
-      <PageHeader
-        title={t('Regional & Industry Benchmarks', 'المعايير الإقليمية والصناعية')}
-        description={t('Compare performance metrics across regions, industries, and company sizes', 'قارن مقاييس الأداء عبر المناطق والصناعات وأحجام الشركات')}
-        icon={Globe}
-        actions={
-          <div className={cn("flex items-center gap-2 flex-wrap", isRTL && "flex-row-reverse")}>
-            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder={t('Region', 'المنطقة')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('All Regions', 'جميع المناطق')}</SelectItem>
-                {regionalData.map(r => (
-                  <SelectItem key={r.region} value={r.region}>{r.region}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="sm" onClick={handleSaveReport}>
-              <Bookmark className="w-4 h-4 me-2" />
-              {t('Save Report', 'حفظ التقرير')}
-            </Button>
-            <Button size="sm">
-              <Download className="w-4 h-4 me-2" />
-              {t('Export', 'تصدير')}
-            </Button>
-          </div>
-        }
-      />
+    <InsightsLabBetaBanner
+      title={t('Regional & Industry Benchmarks', 'المعايير الإقليمية والصناعية')}
+      description={t('Compare performance metrics across regions, industries, and company sizes', 'قارن مقاييس الأداء عبر المناطق والصناعات وأحجام الشركات')}
+      dataRequirements={[
+        'At least 10 active organizations with 6+ months of data',
+        'Industry classification for each organization',
+        'Regional distribution across 3+ GCC countries',
+        'Consistent benefit category mapping',
+      ]}
+      hasRealData={false}
+    >
+      <div className={cn("space-y-6", isRTL && "text-right")}>
 
       {/* Key Benchmark Metrics */}
       <MetricGrid columns={4}>
@@ -391,6 +373,7 @@ export default function AdminBenchmarks() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </InsightsLabBetaBanner>
   );
 }

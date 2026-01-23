@@ -270,11 +270,7 @@ export default function AdminDashboard() {
             <Zap className="w-4 h-4" />
             {t('Action Center', 'مركز الإجراءات')}
           </TabsTrigger>
-          <TabsTrigger value="overview">{t('Overview', 'نظرة عامة')}</TabsTrigger>
-          <TabsTrigger value="benchmarks">{t('Benchmarks', 'المعايير')}</TabsTrigger>
-          <TabsTrigger value="market">{t('Market Intelligence', 'ذكاء السوق')}</TabsTrigger>
-          <TabsTrigger value="vendors">{t('Vendor Performance', 'أداء الموردين')}</TabsTrigger>
-          <TabsTrigger value="data-quality">{t('Data Quality', 'جودة البيانات')}</TabsTrigger>
+          <TabsTrigger value="overview">{t('Platform Overview', 'نظرة عامة على المنصة')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -322,125 +318,6 @@ export default function AdminDashboard() {
               <TopBenefitsTable benefits={filteredBenefits} />
             </div>
           </div>
-        </TabsContent>
-
-        <TabsContent value="benchmarks" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                <Globe className="w-5 h-5 text-primary" />
-                {t('Regional Benchmarks', 'المعايير الإقليمية')}
-              </CardTitle>
-              <CardDescription>
-                {t('Compare performance across GCC regions', 'قارن الأداء عبر مناطق الخليج')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className={cn("py-3 text-left font-medium", isRTL && "text-right")}>{t('Region', 'المنطقة')}</th>
-                      <th className={cn("py-3 text-left font-medium", isRTL && "text-right")}>{t('Organizations', 'المنظمات')}</th>
-                      <th className={cn("py-3 text-left font-medium", isRTL && "text-right")}>{t('Employees', 'الموظفون')}</th>
-                      <th className={cn("py-3 text-left font-medium", isRTL && "text-right")}>{t('Avg Spend', 'متوسط الإنفاق')}</th>
-                      <th className={cn("py-3 text-left font-medium", isRTL && "text-right")}>{t('Utilization', 'الاستخدام')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {regionalBenchmarks.map((region) => (
-                      <tr key={region.region} className="border-b last:border-0">
-                        <td className="py-4 font-medium">{region.region}</td>
-                        <td className="py-4">{region.organizations}</td>
-                        <td className="py-4">{formatInteger(region.employees)}</td>
-                        <td className="py-4">{formatCurrencyAED(region.avgSpend)}</td>
-                        <td className="py-4">
-                          <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                            <Progress value={region.avgUtilization} className="w-20 h-2" />
-                            <span className="text-sm">{region.avgUtilization}%</span>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('Utilization by Region', 'الاستخدام حسب المنطقة')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <AnimatedBarChart
-                  data={regionalBenchmarks.map(r => ({ name: r.region, value: r.avgUtilization }))}
-                  height={250}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('Average Spend by Region', 'متوسط الإنفاق حسب المنطقة')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <AnimatedBarChart
-                  data={regionalBenchmarks.map(r => ({ name: r.region, value: r.avgSpend / 1000 }))}
-                  height={250}
-                  formatValue={(v) => `${v}K`}
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="market" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-                <Users className="w-5 h-5 text-primary" />
-                {t('High-Intent User Segments', 'شرائح المستخدمين ذوي النوايا العالية')}
-              </CardTitle>
-              <CardDescription>
-                {t('Identify opportunities based on user behavior and intent signals', 'تحديد الفرص بناءً على سلوك المستخدم وإشارات النية')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {highIntentUsers.map((segment) => (
-                  <Card key={segment.segment} className="border-dashed">
-                    <CardContent className="p-4">
-                      <div className={cn("flex items-start justify-between", isRTL && "flex-row-reverse")}>
-                        <div>
-                          <h4 className="font-semibold">{segment.segment}</h4>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {t('Primary Intent:', 'النية الأساسية:')} {segment.intent}
-                          </p>
-                        </div>
-                        <Badge variant="secondary">{segment.percentage}%</Badge>
-                      </div>
-                      <div className="mt-3 pt-3 border-t">
-                        <p className="text-sm">
-                          <span className="text-muted-foreground">{t('Opportunity:', 'الفرصة:')}</span>{' '}
-                          <span className="font-medium text-primary">{segment.opportunity}</span>
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="vendors" className="space-y-6">
-          <VendorPerformanceTab />
-        </TabsContent>
-
-        <TabsContent value="data-quality" className="space-y-6">
-          <DataQualityDashboard />
         </TabsContent>
 
         <TabsContent value="actions" className="space-y-6">

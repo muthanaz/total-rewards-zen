@@ -9,25 +9,30 @@ import {
   Tag,
   ShieldCheck,
   FileText,
-  Settings,
   Menu,
   X,
   LogOut,
   Shield,
   ChevronDown,
   Database,
-  Activity,
   AlertTriangle,
   Sliders,
   ToggleLeft,
   CreditCard,
   ClipboardList,
   Server,
-  Link2,
+  FlaskConical,
+  BarChart3,
+  TrendingUp,
+  Wallet,
+  BookOpen,
+  Activity,
+  UserPlus,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
@@ -37,6 +42,8 @@ interface NavGroup {
   title: string;
   titleAr: string;
   items: NavItem[];
+  defaultExpanded?: boolean;
+  isBeta?: boolean;
 }
 
 interface NavItem {
@@ -45,68 +52,89 @@ interface NavItem {
   path: string;
   icon: React.ElementType;
   badge?: number;
+  isBeta?: boolean;
 }
 
 const navigationGroups: NavGroup[] = [
   {
-    title: 'Overview',
-    titleAr: 'نظرة عامة',
+    title: 'Command Center',
+    titleAr: 'مركز القيادة',
+    defaultExpanded: true,
     items: [
-      { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/admin', icon: LayoutDashboard },
+      { label: 'Action Center', labelAr: 'مركز الإجراءات', path: '/admin', icon: LayoutDashboard },
     ],
   },
   {
-    title: 'Platform Management',
-    titleAr: 'إدارة المنصة',
+    title: 'Clients',
+    titleAr: 'العملاء',
+    defaultExpanded: true,
     items: [
       { label: 'Organizations', labelAr: 'المنظمات', path: '/admin/organizations', icon: Building2 },
-      { label: 'New Organization', labelAr: 'مؤسسة جديدة', path: '/admin/onboarding', icon: Building2 },
+      { label: 'Onboarding', labelAr: 'الإعداد', path: '/admin/onboarding', icon: UserPlus },
       { label: 'Users & Roles', labelAr: 'المستخدمون والأدوار', path: '/admin/users', icon: Users },
-      { label: 'Plans & Invoices', labelAr: 'الخطط والفواتير', path: '/admin/billing', icon: CreditCard },
     ],
   },
   {
-    title: 'Marketplace Governance',
-    titleAr: 'حوكمة السوق',
+    title: 'Marketplace',
+    titleAr: 'السوق',
+    defaultExpanded: true,
     items: [
       { label: 'Vendors', labelAr: 'البائعون', path: '/admin/vendors', icon: Store },
-      { label: 'Offers & Vouchers', labelAr: 'العروض والقسائم', path: '/admin/offers', icon: Tag },
-      { label: 'Moderation Queue', labelAr: 'قائمة المراجعة', path: '/admin/moderation', icon: ClipboardList, badge: 3 },
+      { label: 'Offers', labelAr: 'العروض', path: '/admin/offers', icon: Tag },
+      { label: 'Moderation', labelAr: 'المراجعة', path: '/admin/moderation', icon: ClipboardList, badge: 3 },
     ],
   },
   {
-    title: 'Data & Integrations',
-    titleAr: 'البيانات والتكاملات',
+    title: 'Data',
+    titleAr: 'البيانات',
+    defaultExpanded: true,
     items: [
       { label: 'Data Sources', labelAr: 'مصادر البيانات', path: '/admin/data-sources', icon: Database },
-      { label: 'Integration Readiness', labelAr: 'جاهزية التكامل', path: '/admin/integration-readiness', icon: Link2 },
-      { label: 'Data Migration', labelAr: 'ترحيل البيانات', path: '/admin/data-migration', icon: Database },
       { label: 'Sync Monitor', labelAr: 'مراقبة المزامنة', path: '/admin/sync-monitor', icon: Server },
+      { label: 'Data Quality Rules', labelAr: 'قواعد جودة البيانات', path: '/admin/data-quality-rules', icon: Activity },
     ],
   },
   {
-    title: 'Content & Alerts',
-    titleAr: 'المحتوى والتنبيهات',
+    title: 'Governance',
+    titleAr: 'الحوكمة',
+    defaultExpanded: false,
     items: [
-      { label: 'Policy Templates', labelAr: 'قوالب السياسات', path: '/admin/policy-templates', icon: FileText },
-      { label: 'Policy Library', labelAr: 'مكتبة السياسات', path: '/admin/policy-library', icon: FileText },
+      { label: 'Audit Log', labelAr: 'سجل التدقيق', path: '/admin/audit-log', icon: FileText },
+      { label: 'Security', labelAr: 'الأمان', path: '/admin/security', icon: ShieldCheck },
+      { label: 'Sessions', labelAr: 'الجلسات', path: '/admin/sessions', icon: Users },
+      { label: 'Feature Flags', labelAr: 'علامات الميزات', path: '/admin/feature-flags', icon: ToggleLeft },
+      { label: 'UI Config', labelAr: 'تكوين الواجهة', path: '/admin/ui-config', icon: Sliders },
+    ],
+  },
+  {
+    title: 'Commercial',
+    titleAr: 'التجارية',
+    defaultExpanded: false,
+    items: [
+      { label: 'Billing', labelAr: 'الفوترة', path: '/admin/billing', icon: CreditCard },
+    ],
+  },
+  {
+    title: 'Alerts',
+    titleAr: 'التنبيهات',
+    defaultExpanded: true,
+    items: [
       { label: 'Alerts Center', labelAr: 'مركز التنبيهات', path: '/admin/alerts', icon: AlertTriangle, badge: 3 },
     ],
   },
+  {
+    title: 'Insights Lab',
+    titleAr: 'مختبر الرؤى',
+    defaultExpanded: false,
+    isBeta: true,
+    items: [
+      { label: 'Benchmarks', labelAr: 'المعايير', path: '/admin/benchmarks', icon: BarChart3, isBeta: true },
+      { label: 'Market Intelligence', labelAr: 'ذكاء السوق', path: '/admin/market', icon: TrendingUp, isBeta: true },
+      { label: 'Spending Patterns', labelAr: 'أنماط الإنفاق', path: '/admin/spending', icon: Wallet, isBeta: true },
+      { label: 'Saved Reports', labelAr: 'التقارير المحفوظة', path: '/admin/reports', icon: BookOpen, isBeta: true },
+    ],
+  },
 ];
-
-// System group is collapsed by default
-const systemGroup: NavGroup = {
-  title: 'System',
-  titleAr: 'النظام',
-  items: [
-    { label: 'Audit Log', labelAr: 'سجل التدقيق', path: '/admin/audit-log', icon: FileText },
-    { label: 'Security Settings', labelAr: 'إعدادات الأمان', path: '/admin/security', icon: ShieldCheck },
-    { label: 'Sessions', labelAr: 'الجلسات', path: '/admin/sessions', icon: Users },
-    { label: 'UI Configuration', labelAr: 'تكوين الواجهة', path: '/admin/ui-config', icon: Sliders },
-    { label: 'Feature Flags', labelAr: 'علامات الميزات', path: '/admin/feature-flags', icon: ToggleLeft },
-  ],
-};
 
 export function AdminSidebar() {
   const location = useLocation();
@@ -114,11 +142,12 @@ export function AdminSidebar() {
   const { signOut } = useAuth();
   const { language, direction } = useLanguage();
   const [mobileOpen, setMobileOpen] = useState(false);
-  // Primary groups are expanded by default, System group is collapsed
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(navigationGroups.map(g => g.title));
   
-  // Combine all groups for rendering
-  const allGroups = [...navigationGroups, systemGroup];
+  // Initialize expanded groups based on defaultExpanded
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(
+    navigationGroups.filter(g => g.defaultExpanded).map(g => g.title)
+  );
+  
   const isRTL = direction === 'rtl';
 
   const handleSignOut = async () => {
@@ -177,7 +206,7 @@ export function AdminSidebar() {
         "flex-1 overflow-y-auto py-4 px-3",
         isRTL && "text-right"
       )}>
-        {allGroups.map((group) => (
+        {navigationGroups.map((group) => (
           <div key={group.title} className="mb-3">
             <button
               onClick={() => toggleGroup(group.title)}
@@ -186,7 +215,14 @@ export function AdminSidebar() {
                 isRTL && "flex-row-reverse"
               )}
             >
-              <span>{language === 'ar' ? group.titleAr : group.title}</span>
+              <span className="flex items-center gap-1.5">
+                {language === 'ar' ? group.titleAr : group.title}
+                {group.isBeta && (
+                  <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-amber-500/10 text-amber-500 border-amber-500/30">
+                    Beta
+                  </Badge>
+                )}
+              </span>
               <ChevronDown className={cn(
                 "w-3 h-3 transition-transform",
                 expandedGroups.includes(group.title) ? "rotate-180" : ""
@@ -214,6 +250,9 @@ export function AdminSidebar() {
                       <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-destructive text-destructive-foreground">
                         {item.badge}
                       </span>
+                    )}
+                    {item.isBeta && (
+                      <FlaskConical className="w-3 h-3 text-amber-500" />
                     )}
                   </Link>
                 ))}
