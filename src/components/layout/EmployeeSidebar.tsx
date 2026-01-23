@@ -132,26 +132,8 @@ const helpItems: NavItem[] = [
   { label: 'Government Services', labelAr: 'الخدمات الحكومية', path: '/employee/gov-connect', icon: Building2, badge: 'Soon' },
 ];
 
-// ============================================================================
-// LIFE AREA LABEL (non-clickable separator)
-// ============================================================================
-
-function LifeAreaLabel({ label, labelAr }: { label: string; labelAr: string }) {
-  const { language, direction } = useLanguage();
-  const isRTL = direction === 'rtl';
-  const displayLabel = language === 'ar' ? labelAr : label;
-
-  return (
-    <div
-      className={cn(
-        'px-3 py-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground',
-        isRTL && 'text-right'
-      )}
-    >
-      {displayLabel}
-    </div>
-  );
-}
+// Flatten all benefit items for direct rendering
+const allBenefitItems: NavItem[] = LIFE_AREA_GROUPS.flatMap((group) => group.items);
 
 // ============================================================================
 // MAIN COMPONENT
@@ -211,22 +193,18 @@ export function EmployeeSidebar() {
             icon={benefitsOverview.icon}
           />
           
-          {/* All benefit links grouped by Life Area - NO accordion, just labels + direct links */}
-          <div className="mt-2 space-y-2 border-t border-sidebar-border/30 pt-2">
-            {LIFE_AREA_GROUPS.map((lifeArea) => (
-              <div key={lifeArea.id} className="space-y-0.5">
-                <LifeAreaLabel label={lifeArea.label} labelAr={lifeArea.labelAr} />
-                {lifeArea.items.map((item) => (
-                  <SidebarItem
-                    key={item.path}
-                    path={item.path}
-                    label={item.label}
-                    labelAr={item.labelAr}
-                    icon={item.icon}
-                    badge={item.badge}
-                  />
-                ))}
-              </div>
+          {/* All benefit links - flat list, slightly indented to show hierarchy */}
+          <div className="mt-1.5 space-y-0.5">
+            {allBenefitItems.map((item) => (
+              <SidebarItem
+                key={item.path}
+                path={item.path}
+                label={item.label}
+                labelAr={item.labelAr}
+                icon={item.icon}
+                badge={item.badge}
+                indent={1}
+              />
             ))}
           </div>
         </SidebarSection>
