@@ -87,6 +87,7 @@ export default function LearningPage() {
         description="Courses, certifications, and professional development"
         icon={BookOpen}
         iconClassName="from-chart-3 to-chart-3/80 shadow-chart-3/25"
+        partnerOffersCategory="Learning & Development"
       />
 
       {/* 1. Summary Cards */}
@@ -184,8 +185,8 @@ export default function LearningPage() {
         </CardContent>
       </Card>
 
-      {/* Cross-links */}
-      <BenefitCrossLinks benefitCategory="Learning & Development" showClaimLink={false} />
+      {/* Cross-links - only show claim link */}
+      <BenefitCrossLinks benefitCategory="Learning & Development" showClaimLink={true} />
 
       {/* Your Learning */}
       <Card>

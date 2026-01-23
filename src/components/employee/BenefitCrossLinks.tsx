@@ -32,8 +32,8 @@ const BENEFIT_TO_MARKETPLACE_MAP: Record<string, string> = {
 export function BenefitCrossLinks({
   benefitCategory,
   showClaimLink = true,
-  showPolicyLink = true,
-  showMarketplaceLink = true,
+  showPolicyLink = false, // Changed to false by default - policy link is in PolicyHighlightsCard
+  showMarketplaceLink = false, // Changed to false by default - moved to PageHeader
   className,
   compact = false,
 }: BenefitCrossLinksProps) {

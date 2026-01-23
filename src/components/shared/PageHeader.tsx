@@ -1,7 +1,9 @@
 import { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, ShoppingBag, ArrowRight } from 'lucide-react';
 
 interface PageHeaderProps {
   title: string;
@@ -19,7 +21,23 @@ interface PageHeaderProps {
   className?: string;
   // Compact mode for nested sections
   compact?: boolean;
+  // Partner offers button for benefit pages
+  partnerOffersCategory?: string;
 }
+
+// Maps benefit categories to marketplace filter categories
+const BENEFIT_TO_MARKETPLACE_MAP: Record<string, string> = {
+  'Housing': 'Home & Living',
+  'Schooling': 'Learning',
+  'Health Insurance': 'Wellness',
+  'Health': 'Wellness',
+  'Transport': 'Transport',
+  'Wellbeing': 'Fitness',
+  'Learning & Development': 'Learning',
+  'Learning': 'Learning',
+  'Financial Planning': 'Financial',
+  'Long-Term Financials': 'Financial',
+};
 
 const badgeVariants = {
   default: 'bg-muted text-muted-foreground border-border',
@@ -38,7 +56,12 @@ export function PageHeader({
   actions,
   className,
   compact = false,
+  partnerOffersCategory,
 }: PageHeaderProps) {
+  const marketplaceCategory = partnerOffersCategory 
+    ? BENEFIT_TO_MARKETPLACE_MAP[partnerOffersCategory] || 'All' 
+    : null;
+
   return (
     <div className={cn(
       'flex flex-col md:flex-row md:items-center justify-between gap-4',
@@ -84,11 +107,23 @@ export function PageHeader({
           )}
         </div>
       </div>
-      {actions && (
-        <div className="flex items-center gap-2 shrink-0">
-          {actions}
-        </div>
-      )}
+      <div className="flex items-center gap-2 shrink-0">
+        {partnerOffersCategory && marketplaceCategory && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2 bg-success/5 border-success/30 text-success hover:bg-success/10 hover:text-success"
+            asChild
+          >
+            <Link to={`/employee/marketplace?category=${encodeURIComponent(marketplaceCategory)}`}>
+              <ShoppingBag className="w-4 h-4" />
+              Partner Offers
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </Button>
+        )}
+        {actions}
+      </div>
     </div>
   );
 }

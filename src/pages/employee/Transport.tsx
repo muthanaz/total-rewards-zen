@@ -83,6 +83,7 @@ export default function TransportPage() {
         description="Fuel, car allowance, and annual flight tickets"
         icon={Car}
         iconClassName="from-chart-2 to-chart-2/80 shadow-chart-2/25"
+        partnerOffersCategory="Transport"
       />
 
       {/* 1. Summary Cards */}
@@ -176,8 +177,8 @@ export default function TransportPage() {
         </CardContent>
       </Card>
 
-      {/* Cross-links */}
-      <BenefitCrossLinks benefitCategory="Transport" showClaimLink={false} />
+      {/* Cross-links - only show claim link */}
+      <BenefitCrossLinks benefitCategory="Transport" showClaimLink={true} />
 
       {/* Allowance Cards with Submit Claim buttons */}
       <div className="grid md:grid-cols-3 gap-6">
