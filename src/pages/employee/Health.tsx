@@ -172,75 +172,19 @@ export default function HealthPage() {
         />
       </div>
 
-      {/* 2. Policy Highlights with Action Buttons */}
+      {/* 2. Policy Highlights with Action Buttons - Tips integrated */}
       <PolicyHighlightsCard
         title="Insurance Policy Highlights"
-        policies={healthPolicies}
+        policies={[
+          ...healthPolicies,
+          '💡 In-network = no upfront cost (show insurance card)',
+          '📋 Pre-auth required 48hrs before planned surgeries',
+          '⏱️ Claims processed in 5-7 business days',
+        ]}
         category="Health Insurance"
         actionLabel="Submit Claim"
         policyLabel="View Full Policy"
       />
-
-      {/* Cross-links */}
-      <BenefitCrossLinks benefitCategory="Health Insurance" showClaimLink={false} />
-
-      {/* Quick Tips - meaningful insights */}
-      <Card className="border-muted">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <HelpCircle className="w-4 h-4 text-muted-foreground" />
-            Quick Tips & What to Know
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-accent/10 border border-accent/20">
-              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
-                <CheckCircle className="w-4 h-4 text-accent" />
-              </div>
-              <div>
-                <p className="font-medium text-sm">In-Network = No Upfront Cost</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Visit any provider in the directory below for direct billing. Just show your insurance card.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
-              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
-                <Heart className="w-4 h-4 text-warning" />
-              </div>
-              <div>
-                <p className="font-medium text-sm">Pre-Authorization Required</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  For planned surgeries and hospitalizations, submit a pre-auth request 48 hours in advance.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-chart-3/10 border border-chart-3/20">
-              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
-                <FileText className="w-4 h-4 text-chart-3" />
-              </div>
-              <div>
-                <p className="font-medium text-sm">Out-of-Network Claims</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Submit: Original receipt + prescription + lab reports within 60 days. Expect 50% reimbursement.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-chart-2/10 border border-chart-2/20">
-              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
-                <Clock className="w-4 h-4 text-chart-2" />
-              </div>
-              <div>
-                <p className="font-medium text-sm">Processing Timeline</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Claims are typically processed in 5-7 business days. Complex claims may take up to 14 days.
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* 3. How It Works */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
@@ -282,6 +226,9 @@ export default function HealthPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Cross-links */}
+      <BenefitCrossLinks benefitCategory="Health Insurance" showClaimLink={false} />
 
       {/* Coverage Categories */}
       <Card>
