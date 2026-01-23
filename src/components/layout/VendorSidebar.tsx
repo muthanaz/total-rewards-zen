@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
   Tag,
@@ -9,54 +7,62 @@ import {
   TrendingUp,
   Wallet,
   FileText,
-  Settings,
-  Menu,
-  X,
-  LogOut,
   Store,
-  ChevronDown,
-  Users,
   Shield,
+  Users,
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Button } from '@/components/ui/button';
-import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
-import { LanguageSwitcher } from '@/components/ui/language-switcher';
-import { NotificationCenter } from '@/components/notifications/NotificationCenter';
+import {
+  SidebarShell,
+  SidebarHeader,
+  SidebarNav,
+  SidebarSection,
+  SidebarItem,
+  SidebarFooter,
+} from './sidebar';
 
-interface NavGroup {
-  title: string;
-  titleAr: string;
-  items: NavItem[];
-}
+// ============================================================================
+// NAVIGATION DATA
+// ============================================================================
 
 interface NavItem {
   label: string;
   labelAr: string;
   path: string;
   icon: React.ElementType;
+  isBeta?: boolean;
+}
+
+interface NavGroup {
+  id: string;
+  label: string;
+  labelAr: string;
+  items: NavItem[];
+  isBeta?: boolean;
 }
 
 const navigationGroups: NavGroup[] = [
   {
-    title: 'Overview',
-    titleAr: 'نظرة عامة',
+    id: 'overview',
+    label: 'Overview',
+    labelAr: 'نظرة عامة',
     items: [
       { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/vendor', icon: LayoutDashboard },
     ],
   },
   {
-    title: 'Offers',
-    titleAr: 'العروض',
+    id: 'offers',
+    label: 'Offers',
+    labelAr: 'العروض',
     items: [
       { label: 'My Offers', labelAr: 'عروضي', path: '/vendor/offers', icon: Tag },
       { label: 'Create Offer', labelAr: 'إنشاء عرض', path: '/vendor/offers/new', icon: PlusCircle },
     ],
   },
   {
-    title: 'Revenue',
-    titleAr: 'الإيرادات',
+    id: 'revenue',
+    label: 'Revenue',
+    labelAr: 'الإيرادات',
     items: [
       { label: 'Redemptions', labelAr: 'الاستردادات', path: '/vendor/redemptions', icon: Receipt },
       { label: 'Earnings', labelAr: 'الأرباح', path: '/vendor/earnings', icon: Wallet },
@@ -64,15 +70,18 @@ const navigationGroups: NavGroup[] = [
     ],
   },
   {
-    title: 'Insights (Beta)',
-    titleAr: 'الرؤى (تجريبي)',
+    id: 'insights',
+    label: 'Insights',
+    labelAr: 'الرؤى',
+    isBeta: true,
     items: [
-      { label: 'Analytics', labelAr: 'التحليلات', path: '/vendor/analytics', icon: TrendingUp },
+      { label: 'Analytics', labelAr: 'التحليلات', path: '/vendor/analytics', icon: TrendingUp, isBeta: true },
     ],
   },
   {
-    title: 'Account',
-    titleAr: 'الحساب',
+    id: 'account',
+    label: 'Account',
+    labelAr: 'الحساب',
     items: [
       { label: 'Profile', labelAr: 'الملف الشخصي', path: '/vendor/profile', icon: Shield },
       { label: 'Settings', labelAr: 'الإعدادات', path: '/vendor/settings', icon: Users },
@@ -80,158 +89,65 @@ const navigationGroups: NavGroup[] = [
   },
 ];
 
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 export function VendorSidebar() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { signOut } = useAuth();
-  const { language, direction } = useLanguage();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(navigationGroups.map(g => g.title));
-  const isRTL = direction === 'rtl';
+  const { language } = useLanguage();
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
-  };
+  // All sections expanded by default
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(
+    navigationGroups.map((g) => g.id)
+  );
 
-  const isActive = (path: string) => location.pathname === path;
-  
-  const toggleGroup = (groupTitle: string) => {
-    setExpandedGroups(prev => 
-      prev.includes(groupTitle) 
-        ? prev.filter(g => g !== groupTitle)
-        : [...prev, groupTitle]
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups((prev) =>
+      prev.includes(groupId) ? prev.filter((g) => g !== groupId) : [...prev, groupId]
     );
   };
 
-  const sidebarContent = (
-    <>
-      {/* Logo */}
-      <div className="px-4 py-5 border-b border-sidebar-border">
-        <div className={cn(
-          "flex items-center justify-between",
-          isRTL && "flex-row-reverse"
-        )}>
-          <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-primary flex items-center justify-center shrink-0">
-              <Store className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-display text-xl font-bold text-sidebar-foreground">bnft.</span>
-            <span className={cn(
-              "px-2 py-0.5 text-xs font-medium rounded-full bg-accent/20 text-accent-foreground shrink-0",
-              isRTL ? "mr-1" : "ml-1"
-            )}>
-              {language === 'ar' ? 'بائع' : 'Vendor'}
-            </span>
-          </div>
-        </div>
-        {/* Theme & Language Controls */}
-        <div className={cn(
-          "flex items-center gap-1 mt-3 pt-3 border-t border-sidebar-border/50",
-          isRTL && "flex-row-reverse"
-        )}>
-          <NotificationCenter />
-          <LanguageSwitcher />
-          <DarkModeToggle />
-        </div>
-      </div>
-
-      {/* Navigation Groups */}
-      <nav className={cn(
-        "flex-1 overflow-y-auto py-4 px-3",
-        isRTL && "text-right"
-      )}>
-        {navigationGroups.map((group) => (
-          <div key={group.title} className="mb-4">
-            <button
-              onClick={() => toggleGroup(group.title)}
-              className={cn(
-                "flex items-center justify-between w-full px-2 py-2 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider hover:text-sidebar-foreground/70 transition-colors",
-                isRTL && "flex-row-reverse"
-              )}
-            >
-              <span>{language === 'ar' ? group.titleAr : group.title}</span>
-              <ChevronDown className={cn(
-                "w-3 h-3 transition-transform",
-                expandedGroups.includes(group.title) ? "rotate-180" : ""
-              )} />
-            </button>
-            
-            {expandedGroups.includes(group.title) && (
-              <div className="space-y-0.5 mt-1">
-                {group.items.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      'nav-item',
-                      isActive(item.path) && 'nav-item-active',
-                      isRTL && 'flex-row-reverse text-right'
-                    )}
-                  >
-                    <item.icon className="w-4 h-4 shrink-0" />
-                    <span className={cn("text-sm flex-1", isRTL && "text-right")}>
-                      {language === 'ar' ? item.labelAr : item.label}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </nav>
-
-      {/* Sign Out */}
-      <div className={cn("p-4 border-t border-sidebar-border", isRTL && "text-right")}>
-        <Button
-          variant="ghost"
-          onClick={handleSignOut}
-          className={cn(
-            "w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent",
-            isRTL ? "justify-start flex-row-reverse" : "justify-start"
-          )}
-        >
-          <LogOut className={cn("w-4 h-4 shrink-0", isRTL ? "ml-3" : "mr-3")} />
-          <span>{language === 'ar' ? 'تسجيل الخروج' : 'Sign Out'}</span>
-        </Button>
-      </div>
-    </>
+  // Custom vendor logo
+  const vendorLogo = (
+    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-primary flex items-center justify-center shrink-0">
+      <Store className="w-4 h-4 text-primary-foreground" />
+    </div>
   );
 
   return (
-    <>
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setMobileOpen(!mobileOpen)}
-        className={cn(
-          "fixed top-4 z-50 p-2 rounded-lg bg-sidebar text-sidebar-foreground lg:hidden",
-          isRTL ? "right-4" : "left-4"
-        )}
-      >
-        {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-      </button>
+    <SidebarShell>
+      <SidebarHeader
+        roleBadge={language === 'ar' ? 'بائع' : 'Vendor'}
+        roleBadgeClass="bg-accent/20 text-accent-foreground"
+        logoIcon={vendorLogo}
+      />
 
-      {/* Mobile Overlay */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 bg-foreground/50 z-40 lg:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
+      <SidebarNav>
+        {navigationGroups.map((group) => (
+          <SidebarSection
+            key={group.id}
+            id={group.id}
+            label={group.label}
+            labelAr={group.labelAr}
+            isBeta={group.isBeta}
+            isOpen={expandedGroups.includes(group.id)}
+            onToggle={() => toggleGroup(group.id)}
+          >
+            {group.items.map((item) => (
+              <SidebarItem
+                key={item.path}
+                path={item.path}
+                label={item.label}
+                labelAr={item.labelAr}
+                icon={item.icon}
+                isBeta={item.isBeta}
+              />
+            ))}
+          </SidebarSection>
+        ))}
+      </SidebarNav>
 
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          'fixed top-0 z-40 h-screen w-64 flex flex-col bg-sidebar transition-transform duration-300',
-          isRTL ? 'right-0 lg:translate-x-0' : 'left-0 lg:translate-x-0',
-          isRTL 
-            ? (mobileOpen ? 'translate-x-0' : 'translate-x-full')
-            : (mobileOpen ? 'translate-x-0' : '-translate-x-full')
-        )}
-      >
-        {sidebarContent}
-      </aside>
-    </>
+      <SidebarFooter />
+    </SidebarShell>
   );
 }
