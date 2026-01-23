@@ -8,6 +8,7 @@
 import { useState, useMemo } from 'react';
 import { PageLayout } from '@/components/shared';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -286,9 +287,8 @@ export default function AdminPolicyTemplates() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-              Loading templates...
+            <div className="space-y-3 py-4">
+              {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-14 w-full rounded-lg" />)}
             </div>
           ) : filteredTemplates.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">

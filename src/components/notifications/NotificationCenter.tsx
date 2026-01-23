@@ -234,9 +234,12 @@ export function NotificationCenter() {
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-accent" />
             </div>
           ) : notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
-              <Bell className="w-8 h-8 mb-2 opacity-50" />
-              <p className="text-sm">{t('No notifications yet', 'لا توجد إشعارات بعد')}</p>
+            <div className="flex flex-col items-center justify-center h-40 text-muted-foreground px-4">
+              <Bell className="w-10 h-10 mb-3 opacity-30" />
+              <p className="text-sm font-medium mb-1">{t('All caught up!', 'أنت على اطلاع!')}</p>
+              <p className="text-xs text-center text-muted-foreground/70">
+                {t('We\'ll notify you about claims, benefits, and deadlines.', 'سنخطرك بالمطالبات والمزايا والمواعيد.')}
+              </p>
             </div>
           ) : (
             <div className="divide-y">
