@@ -8,13 +8,17 @@ import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile, Wallet, TrendingDown, Percent, FileText, Clock } from 'lucide-react';
+import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile, Shield, Users, Activity, FileText, Clock, AlertCircle } from 'lucide-react';
 import { useHealthProviders } from '@/hooks/useSupabaseData';
 import { BenefitCrossLinks } from '@/components/employee/BenefitCrossLinks';
-import { formatCurrencyAED, formatPercent } from '@/lib/utils';
+import { BenefitValueTypeChip } from '@/components/shared/BenefitValueTypeChip';
+import { formatCurrencyAED, formatInteger } from '@/lib/utils';
 
-const ANNUAL_VALUE = 45000;
-const UTILIZED = 12500;
+// Coverage-type benefit: Show plan/network info, NOT AED remaining
+const EMPLOYER_INVESTMENT = 45000; // What employer pays for coverage
+const CLAIMS_COUNT = 8;
+const NETWORK_PROVIDERS = 245;
+const DEPENDENTS_COVERED = 3;
 
 const policyCategories = [
   {
@@ -79,9 +83,6 @@ export default function HealthPage() {
   const [specialty, setSpecialty] = useState<string>('all');
   const [area, setArea] = useState<string>('all');
 
-  const remaining = ANNUAL_VALUE - UTILIZED;
-  const utilizationPercent = Math.round((UTILIZED / ANNUAL_VALUE) * 100);
-
   const providerTypes = useMemo(() => {
     const unique = [...new Set(providers.map(p => p.provider_type))];
     return unique.sort();
@@ -123,8 +124,6 @@ export default function HealthPage() {
     return filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
   }, [providers, searchTerm, providerType, specialty, area]);
 
-  const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
-
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header - Using PageHeader pattern */}
@@ -136,40 +135,60 @@ export default function HealthPage() {
         partnerOffersCategory="Health Insurance"
       />
 
-      {/* 1. Summary Cards */}
+      {/* Coverage Type Banner - This is NOT cash/reimbursement */}
+      <Card className="border-rose-500/20 bg-rose-500/5">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-rose-500/10">
+              <AlertCircle className="w-5 h-5 text-rose-600" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-medium text-sm">This is a Coverage benefit</span>
+                <BenefitValueTypeChip valueType="coverage" size="sm" showTooltip={false} />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Your employer invests {formatCurrencyAED(EMPLOYER_INVESTMENT)} annually for your health coverage. 
+                This is <strong>not cash you can spend</strong> — it's insurance that covers your medical expenses when you need care.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 1. Coverage Summary Cards - Service metrics, NOT AED balances */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <SummaryStatsCard
-          icon={Heart}
-          value={formatCurrency(ANNUAL_VALUE)}
-          label="Annual Value"
-          formula="Total annual premium value"
+          icon={Shield}
+          value="Active"
+          label="Coverage Status"
+          formula="Current policy status"
           dataSource="Insurance Provider"
           variant="primary"
         />
         <SummaryStatsCard
-          icon={Wallet}
-          value={formatCurrency(UTILIZED)}
-          label="Claims Paid"
-          formula="Sum of all claims YTD"
-          dataSource="Claims System"
+          icon={Users}
+          value={formatInteger(DEPENDENTS_COVERED)}
+          label="Dependents Covered"
+          formula="You + family members"
+          dataSource="Policy"
           variant="utilized"
         />
         <SummaryStatsCard
-          icon={TrendingDown}
-          value={formatCurrency(remaining)}
-          label="Coverage Available"
-          formula="Annual Value - Claims"
-          dataSource="System"
+          icon={Activity}
+          value={formatInteger(CLAIMS_COUNT)}
+          label="Claims This Year"
+          formula="Claims processed YTD"
+          dataSource="Claims System"
           variant="remaining"
         />
         <SummaryStatsCard
-          icon={Percent}
-          value={`${utilizationPercent}%`}
-          label="Utilization"
-          formula="(Claims / Value) × 100"
-          dataSource="System"
-          variant="utilization"
-          progress={utilizationPercent}
+          icon={Heart}
+          value={formatInteger(NETWORK_PROVIDERS)}
+          label="Network Providers"
+          formula="In-network facilities"
+          dataSource="Provider Directory"
+          variant="info"
         />
       </div>
 

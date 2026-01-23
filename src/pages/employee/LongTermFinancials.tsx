@@ -12,12 +12,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Gift, TrendingUp, Target, Award, Star, Calendar, 
   CheckCircle, Clock, Briefcase, DollarSign, Gem, Wallet,
-  Calculator, PiggyBank
+  Calculator, PiggyBank, AlertCircle, Hourglass
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn, formatCurrencyAED, formatPercent } from '@/lib/utils';
 import { BenefitCrossLinks } from '@/components/employee/BenefitCrossLinks';
 import { AnimatedBarChart } from '@/components/charts';
+import { BenefitValueTypeChip } from '@/components/shared/BenefitValueTypeChip';
 
 // Constants
 const MONTHLY_SALARY = 35000;
@@ -68,6 +69,24 @@ const vestingSchedule = [
   { date: 'Jul 2025', shares: 1250, status: 'future' },
 ];
 
+// Assumptions for projections (deferred value transparency)
+const projectionAssumptions = {
+  en: [
+    'Bonus projection assumes current performance rating continues',
+    'Gratuity based on UAE Labor Law (21 days/year for first 5 years)',
+    'Equity value uses latest board-approved valuation ($12.50/share)',
+    'All values are estimates until actual payout/vesting occurs',
+    'Subject to continued employment and policy conditions',
+  ],
+  ar: [
+    'توقع المكافأة يفترض استمرار تقييم الأداء الحالي',
+    'مكافأة نهاية الخدمة بناءً على قانون العمل الإماراتي',
+    'قيمة الأسهم تستخدم آخر تقييم معتمد من مجلس الإدارة',
+    'جميع القيم تقديرية حتى الدفع/الاستحقاق الفعلي',
+    'تخضع لاستمرار التوظيف وشروط السياسة',
+  ],
+};
+
 // Translations
 const pageTranslations = {
   en: {
@@ -76,7 +95,7 @@ const pageTranslations = {
     projectedBonus: 'Projected Bonus',
     gratuityAccrued: 'Gratuity Accrued',
     equityValue: 'Equity Value',
-    totalLongTerm: 'Total Long-Term',
+    totalLongTerm: 'Total Projected',
     formulaBonus: 'Base × 2 months × multiplier',
     formulaGratuity: 'UAE Labor Law calculation',
     formulaEquity: 'Vested shares × price',
@@ -247,30 +266,52 @@ export default function LongTermFinancialsPage() {
         <p className="text-muted-foreground mt-1">{t.subtitle}</p>
       </div>
 
-      {/* Summary Cards */}
+      {/* Deferred Value Banner - These are NOT available now */}
+      <Card className="border-amber-500/20 bg-amber-500/5">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-amber-500/10">
+              <Hourglass className="w-5 h-5 text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-medium text-sm">{isRTL ? 'قيمة مؤجلة' : 'Deferred Value'}</span>
+                <BenefitValueTypeChip valueType="deferred" size="sm" showTooltip={false} />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {isRTL 
+                  ? 'هذه القيم مستقبلية ومشروطة. ستتحقق عند تلبية شروط الاستحقاق والتوظيف.'
+                  : 'These values are future and conditional. They will be realized when vesting and employment conditions are met.'}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Summary Cards - Clearly labeled as PROJECTED */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <SummaryStatsCard
           icon={Gift}
           value={formatCurrency(projectedBonus)}
-          label={t.projectedBonus}
+          label={isRTL ? 'المكافأة المتوقعة' : 'Projected Bonus'}
           formula={t.formulaBonus}
-          dataSource="HR Policy"
+          dataSource="HR Policy (Projected)"
           variant="primary"
         />
         <SummaryStatsCard
           icon={Briefcase}
           value={formatCurrency(gratuityAccrued)}
-          label={t.gratuityAccrued}
+          label={isRTL ? 'المستحق حتى الآن' : 'Accrued to Date'}
           formula={t.formulaGratuity}
-          dataSource="Labor Law"
+          dataSource="Labor Law (Estimate)"
           variant="utilized"
         />
         <SummaryStatsCard
           icon={Gem}
           value={formatCurrency(vestedValue)}
-          label={t.equityValue}
+          label={isRTL ? 'القيمة المكتسبة' : 'Vested Value'}
           formula={t.formulaEquity}
-          dataSource="Equity System"
+          dataSource="Board Valuation"
           variant="remaining"
         />
         <SummaryStatsCard
@@ -278,10 +319,30 @@ export default function LongTermFinancialsPage() {
           value={formatCurrency(totalLongTerm)}
           label={t.totalLongTerm}
           formula={t.formulaTotal}
-          dataSource="Combined"
+          dataSource="Combined (Projected)"
           variant="info"
         />
       </div>
+
+      {/* Assumptions Panel - Transparency for deferred values */}
+      <Card className="border-muted">
+        <CardHeader className="pb-3">
+          <CardTitle className={cn("text-sm font-medium flex items-center gap-2", isRTL && "flex-row-reverse")}>
+            <AlertCircle className="w-4 h-4 text-muted-foreground" />
+            {isRTL ? 'افتراضات التوقعات' : 'Projection Assumptions'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {projectionAssumptions[language].map((assumption, idx) => (
+              <li key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
+                <span className="text-amber-500 mt-0.5">•</span>
+                {assumption}
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
 
       {/* Tabs for different components */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>

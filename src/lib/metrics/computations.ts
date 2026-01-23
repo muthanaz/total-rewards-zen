@@ -74,8 +74,32 @@ export const DEMO_FALLBACKS = {
   dataSources: ['Oracle HCM', 'Benefits Platform', 'Claims System'],
 } as const;
 
+// ============================================================================
+// TYPE-SPECIFIC UTILIZATION FUNCTIONS
+// ============================================================================
+// CRITICAL: These functions should only receive data for cap-based benefits
+// (cash, reimbursement, budget). Coverage and deferred are EXCLUDED.
+
+import { BenefitValueType, BENEFIT_VALUE_TYPES } from '@/lib/taxonomy';
+
+/**
+ * Value types that should be included in utilization/unused calculations
+ * Coverage, Deferred, and Access are EXCLUDED
+ */
+export const UTILIZATION_ELIGIBLE_TYPES: BenefitValueType[] = ['cash', 'reimbursement', 'budget'];
+
+/**
+ * Check if a benefit type should be included in utilization metrics
+ */
+export function isUtilizationEligible(valueType: BenefitValueType): boolean {
+  return UTILIZATION_ELIGIBLE_TYPES.includes(valueType);
+}
+
 /**
  * Compute Utilization Rate
+ * 
+ * IMPORTANT: This should only be called with data from cap-based benefits
+ * (cash, reimbursement, budget). Coverage/deferred/access are excluded.
  */
 export function computeUtilizationRate(
   utilized: number,
@@ -94,12 +118,15 @@ export function computeUtilizationRate(
     value: Math.round(value * 10) / 10,
     formattedValue: formatPercent(value),
     confidence: confidence.level,
-    confidenceReason: confidence.reason,
+    confidenceReason: confidence.reason + ' [cap-based benefits only]',
   };
 }
 
 /**
  * Compute Unused Entitlement
+ * 
+ * IMPORTANT: This should only be called with data from cap-based benefits.
+ * Coverage and deferred benefits do NOT have an "unused" concept.
  */
 export function computeUnusedEntitlement(
   total: number,
@@ -117,7 +144,7 @@ export function computeUnusedEntitlement(
     value,
     formattedValue: formatCurrencyAED(value),
     confidence: confidence.level,
-    confidenceReason: confidence.reason,
+    confidenceReason: confidence.reason + ' [excludes coverage/deferred]',
   };
 }
 

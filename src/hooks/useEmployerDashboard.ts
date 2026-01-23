@@ -118,22 +118,45 @@ export function useExecutiveMetrics(organizationId?: string) {
       }
       
       // Fetch real data from multiple sources
-      const [profilesResult, entitlementsResult, requestsResult, satisfactionResult] = await Promise.all([
+      // NOTE: Utilization metrics should ONLY include cap-based benefits (cash, reimbursement, budget)
+      // Coverage and deferred benefits are EXCLUDED from utilization/unused calculations
+      const [profilesResult, entitlementsResult, benefitsResult, requestsResult, satisfactionResult] = await Promise.all([
         supabase.from('profiles').select('id, monthly_salary, employment_date, organization_id'),
-        supabase.from('benefit_entitlements').select('annual_allowance, utilized_amount, user_id'),
+        supabase.from('benefit_entitlements').select('annual_allowance, utilized_amount, user_id, benefit_id'),
+        supabase.from('benefits').select('id, life_area, benefit_type'),
         supabase.from('requests').select('id, status, created_at, amount'),
         supabase.from('employee_satisfaction_ratings').select('rating, category, period_year, period_month'),
       ]);
 
       const profiles = profilesResult.data || [];
       const entitlements = entitlementsResult.data || [];
+      const benefits = benefitsResult.data || [];
       const requests = requestsResult.data || [];
       const satisfaction = satisfactionResult.data || [];
 
-      // Calculate metrics from real data
+      // Create a map of benefit_id -> life_area for filtering
+      const benefitLifeAreaMap = new Map(benefits.map(b => [b.id, b.life_area]));
+      
+      // Filter entitlements to only include cap-based benefits for utilization metrics
+      // Exclude: health (coverage), financial (deferred like equity), bonus (deferred)
+      const capBasedLifeAreas = ['home_living', 'family_parenting', 'mobility', 'career', 'lifestyle'];
+      const excludedLifeAreas = ['health', 'money']; // Coverage and deferred
+      
+      const capBasedEntitlements = entitlements.filter(e => {
+        const lifeArea = benefitLifeAreaMap.get(e.benefit_id);
+        return lifeArea && !excludedLifeAreas.includes(lifeArea);
+      });
+      
+      // ALL entitlements for total investment (employer invests in all benefits)
+      const allEntitlements = entitlements;
+
+      // Calculate metrics - Total investment includes ALL benefits
       const employeeCount = profiles.length || DEMO_FALLBACKS.employeeCount;
-      const totalAllowance = entitlements.reduce((sum, e) => sum + (e.annual_allowance || 0), 0);
-      const totalUtilized = entitlements.reduce((sum, e) => sum + (e.utilized_amount || 0), 0);
+      const totalInvestmentAll = allEntitlements.reduce((sum, e) => sum + (e.annual_allowance || 0), 0);
+      
+      // Utilization only for cap-based benefits
+      const capBasedAllowance = capBasedEntitlements.reduce((sum, e) => sum + (e.annual_allowance || 0), 0);
+      const capBasedUtilized = capBasedEntitlements.reduce((sum, e) => sum + (e.utilized_amount || 0), 0);
       
       // Calculate average satisfaction
       const recentSatisfaction = satisfaction.filter(s => s.period_year === 2024);
@@ -152,11 +175,20 @@ export function useExecutiveMetrics(organizationId?: string) {
       const dataConfidence = calculateConfidence(employeeCount, lastUpdated);
 
       // Use calculated values with sensible fallbacks from DEMO_FALLBACKS
-      const totalInvestment = totalAllowance > 0 ? totalAllowance : DEMO_FALLBACKS.totalInvestment;
-      const budgetUtilized = totalUtilized > 0 ? totalUtilized : DEMO_FALLBACKS.budgetUtilized;
-      const utilizationRate = totalAllowance > 0 
-        ? Math.round((totalUtilized / totalAllowance) * 100) 
+      const totalInvestment = totalInvestmentAll > 0 ? totalInvestmentAll : DEMO_FALLBACKS.totalInvestment;
+      const budgetUtilized = capBasedUtilized > 0 ? capBasedUtilized : DEMO_FALLBACKS.budgetUtilized;
+      
+      // Utilization rate is cap-based only (excludes coverage/deferred)
+      const utilizationRate = capBasedAllowance > 0 
+        ? Math.round((capBasedUtilized / capBasedAllowance) * 100) 
         : DEMO_FALLBACKS.utilizationRate;
+      
+      // Zombie spend only applies to cap-based benefits (where "unused" makes sense)
+      const capBasedUnused = Math.max(0, capBasedAllowance - capBasedUtilized);
+      const zombieSpend = capBasedAllowance > 0 
+        ? Math.round(capBasedUnused * 0.6) // 60% of unused is estimated as "zombie"
+        : DEMO_FALLBACKS.zombieSpend;
+      const recoveryPotential = Math.round(zombieSpend * 0.6); // 60% recovery estimate
 
       return {
         totalInvestment,
@@ -171,8 +203,8 @@ export function useExecutiveMetrics(organizationId?: string) {
         roiBenchmark: DEMO_FALLBACKS.roiBenchmark,
         retentionRate: retainedEmployees > 0 ? Math.round((retainedEmployees / employeeCount) * 100) : DEMO_FALLBACKS.retentionRate,
         retentionBenchmark: DEMO_FALLBACKS.retentionBenchmark,
-        zombieSpend: Math.round(totalInvestment * 0.137),
-        recoveryPotential: Math.round(totalInvestment * 0.082),
+        zombieSpend,
+        recoveryPotential,
         esatScore: Math.round(avgSatisfaction * 20), // Convert to 0-100 scale
         esatBenchmark: DEMO_FALLBACKS.esatBenchmark,
         esatTrend: DEMO_FALLBACKS.esatTrend,
