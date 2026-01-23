@@ -37,6 +37,7 @@ import { PersonalizedRecommendationsStrip } from '@/components/employee/Personal
 import { OfferDetailSheet } from '@/components/employee/OfferDetailSheet';
 import { MarketplaceOfferMedia, MarketplaceOfferSkeleton } from '@/components/employee/MarketplaceOfferMedia';
 import { MarketplaceEmptyState } from '@/components/employee/MarketplaceEmptyState';
+import { MarketplaceHowItWorks } from '@/components/employee/MarketplaceHowItWorks';
 import { 
   formatDiscountLabel, 
   getOfferMicrocopy, 
@@ -65,9 +66,9 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
   'Experiences': Plane,
 };
 
-// Simplified category tabs
+// Simplified category tabs - "All Perks" as first option
 const CATEGORY_TABS = [
-  'All',
+  'All Perks',
   'Wellness',
   'Food & Dining',
   'Fitness',
@@ -108,7 +109,7 @@ function MarketplaceContent() {
 
   // State
   const [searchTerm, setSearchTerm] = useState('');
-  const [category, setCategory] = useState<string>('All');
+  const [category, setCategory] = useState<string>('All Perks');
   const [sortBy, setSortBy] = useState<string>('recommended');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [savedOffers, setSavedOffers] = useState<Set<string>>(new Set());
@@ -166,7 +167,7 @@ function MarketplaceContent() {
     }
     
     // Category filter
-    if (category !== 'All') {
+    if (category !== 'All Perks') {
       const matchingCategories = categoryMapping[category] || [category];
       filtered = filtered.filter(o => matchingCategories.includes(o.category));
     }
@@ -204,7 +205,7 @@ function MarketplaceContent() {
 
   // Count offers per category tab
   const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { 'All': offers.length };
+    const counts: Record<string, number> = { 'All Perks': offers.length };
     CATEGORY_TABS.slice(1).forEach(cat => {
       const matchingCategories = categoryMapping[cat] || [cat];
       counts[cat] = offers.filter(o => matchingCategories.includes(o.category)).length;
@@ -311,84 +312,11 @@ function MarketplaceContent() {
         compact
       />
 
-      {/* Savings Widget + Sponsorship Legend */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <MarketplaceSavingsWidget
-          totalSavings={savingsData.totalSavings}
-          totalActivations={savingsData.totalActivations}
-          topCategories={savingsData.topCategories}
-        />
-
-        <Card>
-          <CardContent className="p-4">
-            <div className={cn('flex items-center gap-2 mb-3', isRTL && 'flex-row-reverse')}>
-              <p className="text-xs font-medium text-muted-foreground">
-                {t('Offer Types', 'أنواع العروض')}
-              </p>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-[250px]">
-                  <p className="text-xs">
-                    {t(
-                      'Offers are categorized by how they are funded. Sponsored offers are subsidized by your employer, while public offers are available to all employees at partner rates.',
-                      'يتم تصنيف العروض حسب طريقة تمويلها. العروض المدعومة يتم تمويلها من صاحب العمل، بينما العروض العامة متاحة لجميع الموظفين بأسعار الشركاء.'
-                    )}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-            <div className={cn('space-y-3', isRTL && 'text-right')}>
-              <div className={cn('flex items-start gap-3', isRTL && 'flex-row-reverse')}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge className={cn('gap-1 cursor-help shrink-0', SPONSORSHIP_CONFIG.employer.className)}>
-                      <Building2 className="w-3 h-3" />
-                      {t('Sponsored', 'برعاية صاحب العمل')}
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs max-w-[200px]">
-                      {t(SPONSORSHIP_CONFIG.employer.tooltip, SPONSORSHIP_CONFIG.employer.tooltipAr)}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-                <div className="space-y-0.5">
-                  <span className="text-xs text-foreground font-medium">
-                    {sponsoredCount} {t('offers', 'عرض')}
-                  </span>
-                  <p className="text-[11px] text-muted-foreground">
-                    {t('Subsidized by your employer', 'مدعومة من صاحب عملك')}
-                  </p>
-                </div>
-              </div>
-              <div className={cn('flex items-start gap-3', isRTL && 'flex-row-reverse')}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge variant="outline" className="gap-1 cursor-help shrink-0">
-                      {t('Public', 'عام')}
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs max-w-[200px]">
-                      {t(SPONSORSHIP_CONFIG.public.tooltip, SPONSORSHIP_CONFIG.public.tooltipAr)}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-                <div className="space-y-0.5">
-                  <span className="text-xs text-foreground font-medium">
-                    {publicCount} {t('offers', 'عرض')}
-                  </span>
-                  <p className="text-[11px] text-muted-foreground">
-                    {t('Available to all employees', 'متاح لجميع الموظفين')}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* How It Works + Offer Types */}
+      <MarketplaceHowItWorks 
+        sponsoredCount={sponsoredCount}
+        publicCount={publicCount}
+      />
 
       {/* Main Tabs */}
       <Tabs defaultValue="offers" className="space-y-5">
@@ -429,7 +357,7 @@ function MarketplaceContent() {
                 <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide flex-1">
                   {CATEGORY_TABS.map((cat) => {
                     const config = getCategoryConfig(cat);
-                    const Icon = cat === 'All' ? Grid3X3 : config.icon;
+                    const Icon = cat === 'All Perks' ? Grid3X3 : config.icon;
                     const count = categoryCounts[cat] || 0;
                     const isSelected = category === cat;
                     
@@ -441,7 +369,7 @@ function MarketplaceContent() {
                           "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs whitespace-nowrap transition-all",
                           "hover:shadow-sm",
                           isSelected 
-                            ? cat === 'All' 
+                            ? cat === 'All Perks' 
                               ? "bg-foreground text-background border-foreground"
                               : cn(config.solidBgClass, "text-white border-transparent")
                             : "bg-background border-border hover:border-foreground/30"
@@ -517,16 +445,16 @@ function MarketplaceContent() {
           <div className={cn('flex items-center justify-between', isRTL && 'flex-row-reverse')}>
             <div className={cn('flex items-center gap-3', isRTL && 'flex-row-reverse')}>
               <h3 className="font-semibold">
-                {category === 'All' ? t('All Offers', 'جميع العروض') : category}
+                {category === 'All Perks' ? t('All Perks', 'جميع الامتيازات') : category}
               </h3>
               <Badge variant="outline" className="font-normal text-xs">
                 {filteredOffers.length} {t('offers', 'عرض')}
               </Badge>
-              {(category !== 'All' || sponsorshipFilter !== 'all' || searchTerm) && (
+              {(category !== 'All Perks' || sponsorshipFilter !== 'all' || searchTerm) && (
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => { setCategory('All'); setSponsorshipFilter('all'); setSearchTerm(''); }} 
+                  onClick={() => { setCategory('All Perks'); setSponsorshipFilter('all'); setSearchTerm(''); }}
                   className="h-7 px-2 text-muted-foreground text-xs"
                 >
                   <X className="w-3 h-3 mr-1" />
@@ -740,7 +668,7 @@ function MarketplaceContent() {
           ) : (
             <NoSearchResults 
               query={searchTerm || category} 
-              onClear={() => { setSearchTerm(''); setCategory('All'); setSponsorshipFilter('all'); }} 
+              onClear={() => { setSearchTerm(''); setCategory('All Perks'); setSponsorshipFilter('all'); }} 
             />
           )}
         </TabsContent>

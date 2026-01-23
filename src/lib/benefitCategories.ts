@@ -42,7 +42,7 @@ export const BENEFIT_CATEGORIES = {
   },
   schooling: {
     key: 'schooling',
-    label: 'Schooling',
+    label: 'Schooling Allowance',
     fullLabel: 'Schooling Allowance',
     lifeArea: 'education',
     // Purple - wisdom, creativity, education
@@ -170,7 +170,7 @@ export const BENEFIT_CATEGORIES = {
   },
   timeoff: {
     key: 'timeoff',
-    label: 'Leave',
+    label: 'Leave Management',
     fullLabel: 'Leave Management',
     lifeArea: 'leave',
     // Cyan - freedom, clarity, refreshment

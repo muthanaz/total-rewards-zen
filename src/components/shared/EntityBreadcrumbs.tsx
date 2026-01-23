@@ -46,7 +46,7 @@ const routeLabels: Record<string, string> = {
   // Employee portal
   employee: 'Dashboard',
   housing: 'Housing Allowance',
-  schooling: 'Education Benefits',
+  schooling: 'Schooling Allowance',
   health: 'Health Insurance',
   transport: 'Transport & Mobility',
   wellbeing: 'Wellbeing',
