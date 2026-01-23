@@ -204,33 +204,13 @@
 
   /* Nav Item - Sidebar navigation */
   .nav-item {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg relative;
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg;
     @apply text-sidebar-foreground/70 hover:text-sidebar-foreground;
-    @apply hover:bg-sidebar-accent/60 transition-all duration-200;
+    @apply hover:bg-sidebar-accent transition-all duration-150;
   }
 
   .nav-item-active {
-    @apply bg-sidebar-accent/80 text-sidebar-foreground font-medium;
-  }
-
-  /* Active state left accent bar */
-  .nav-item-active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 3px;
-    height: 18px;
-    border-radius: 0 3px 3px 0;
-    background-color: hsl(var(--sidebar-primary));
-  }
-
-  /* RTL: flip accent bar to right side */
-  html.rtl .nav-item-active::before {
-    left: auto;
-    right: 0;
-    border-radius: 3px 0 0 3px;
+    @apply bg-sidebar-accent text-sidebar-foreground font-medium;
   }
 
   /* Tags / Chips - Semantic styling */

@@ -41,15 +41,14 @@ export function SidebarStandaloneLink({
         to={path}
         onClick={() => setMobileOpen(false)}
         className={cn(
-          'flex items-center gap-2 w-full px-3 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] transition-colors rounded-lg',
-          'hover:bg-sidebar-accent/40',
+          'flex items-center gap-2 w-full px-3 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors rounded-md',
+          'hover:bg-sidebar-primary/10',
           isActive
-            ? 'text-sidebar-primary bg-sidebar-accent/50'
-            : 'text-sidebar-foreground/60 hover:text-sidebar-foreground/80',
+            ? 'text-accent bg-accent/10'
+            : 'text-sidebar-primary hover:text-accent',
           isRTL && 'flex-row-reverse text-right'
         )}
       >
-        <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary/80" />
         <Icon className="w-4 h-4 shrink-0" />
         <span>{displayLabel}</span>
       </Link>

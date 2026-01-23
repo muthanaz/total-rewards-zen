@@ -97,7 +97,7 @@ const execNavigation: NavGroup[] = [
     label: 'Overview',
     labelAr: 'نظرة عامة',
     items: [
-      { label: 'Total Rewards Overview', labelAr: 'نظرة عامة على المكافآت', path: '/employer', icon: LayoutDashboard },
+      { label: 'Executive Dashboard', labelAr: 'لوحة التحكم التنفيذية', path: '/employer', icon: LayoutDashboard },
     ],
   },
   {

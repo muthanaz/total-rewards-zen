@@ -59,27 +59,27 @@ export function SidebarSection({
       <button
         onClick={handleToggle}
         className={cn(
-          'flex items-center justify-between w-full px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] transition-colors rounded-lg group',
-          'text-sidebar-foreground/60 hover:text-sidebar-foreground/80 hover:bg-sidebar-accent/40',
+          'flex items-center justify-between w-full px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors rounded-md group',
+          'text-sidebar-primary hover:bg-sidebar-primary/10',
           isRTL && 'flex-row-reverse text-right'
         )}
       >
         <div className={cn('flex items-center gap-2', isRTL && 'flex-row-reverse')}>
-          <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary/80" />
+          <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
           <span>{displayLabel}</span>
           {isBeta && (
             <Badge
               variant="outline"
-              className="text-[8px] px-1.5 py-0 h-4 bg-amber-500/10 text-amber-500 border-amber-500/30"
+              className="text-[9px] px-1 py-0 h-4 bg-amber-500/10 text-amber-500 border-amber-500/30"
             >
               Beta
             </Badge>
           )}
         </div>
         {isOpen ? (
-          <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-60 group-hover:opacity-80 transition-opacity" />
+          <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
         ) : (
-          <ChevronCollapsed className="w-3.5 h-3.5 shrink-0 opacity-60 group-hover:opacity-80 transition-opacity" />
+          <ChevronCollapsed className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
         )}
       </button>
 
