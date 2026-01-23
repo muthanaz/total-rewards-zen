@@ -36,21 +36,18 @@ export function SidebarStandaloneLink({
   const displayLabel = language === 'ar' && labelAr ? labelAr : label;
 
   return (
-    <div className="mb-1 mt-4 first:mt-0">
+    <div className="mb-1 mt-3 first:mt-0">
       <Link
         to={path}
         onClick={() => setMobileOpen(false)}
         className={cn(
-          'flex items-center gap-2 w-full px-3 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors rounded-md',
-          'hover:bg-sidebar-primary/10',
-          isActive
-            ? 'text-accent bg-accent/10'
-            : 'text-sidebar-primary hover:text-accent',
+          'nav-item',
+          isActive && 'nav-item-active',
           isRTL && 'flex-row-reverse text-right'
         )}
       >
         <Icon className="w-4 h-4 shrink-0" />
-        <span>{displayLabel}</span>
+        <span className="text-sm">{displayLabel}</span>
       </Link>
     </div>
   );

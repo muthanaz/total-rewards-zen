@@ -65,8 +65,12 @@ export function SidebarItem({
 
   const displayLabel = language === 'ar' && labelAr ? labelAr : label;
 
+  // Indent classes for sub-items
   const indentClass =
-    indent === 1 ? (isRTL ? 'pr-4' : 'pl-4') : indent === 2 ? (isRTL ? 'pr-8' : 'pl-8') : '';
+    indent === 1 ? (isRTL ? 'pr-3' : 'pl-3') : indent === 2 ? (isRTL ? 'pr-6' : 'pl-6') : '';
+
+  // Smaller text for indented items
+  const textClass = indent > 0 ? 'text-[13px]' : 'text-sm';
 
   return (
     <Link
@@ -79,8 +83,8 @@ export function SidebarItem({
         indentClass
       )}
     >
-      <Icon className="w-4 h-4 shrink-0" />
-      <span className={cn('text-sm flex-1', isRTL && 'text-right')}>{displayLabel}</span>
+      <Icon className={cn('shrink-0', indent > 0 ? 'w-3.5 h-3.5' : 'w-4 h-4')} />
+      <span className={cn(textClass, 'flex-1', isRTL && 'text-right')}>{displayLabel}</span>
       {badge && (
         <Badge
           variant="secondary"
