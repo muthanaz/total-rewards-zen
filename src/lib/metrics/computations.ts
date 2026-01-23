@@ -63,10 +63,11 @@ export const DEMO_FALLBACKS = {
   urgentClaims: 8,
   
   // Employee-specific
-  employeeMonthlySalary: 28000,
-  employeeAnnualSalary: 336000, // 28000 * 12
-  employeeTotalBenefits: 224000,
-  employeeUtilized: 160300,
+  employeeMonthlySalary: 35000, // Senior professional in UAE
+  employeeAnnualSalary: 420000, // 35000 * 12
+  employeeTotalBenefits: 282000, // Housing + Schooling + Transport + Health + Wellbeing + Learning
+  employeeGuaranteedBenefits: 219000, // Housing + Schooling + Transport (cash allowances)
+  employeeUtilized: 215200, // ~76% utilization
   
   // Data quality
   dataConfidence: 'high' as const,
