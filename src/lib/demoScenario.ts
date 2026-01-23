@@ -4,9 +4,15 @@
  * A cohesive 10-minute demo story that works across all portals.
  * Organization: Nexa Holdings (UAE)
  * Time Window: Last 90 days
+ * 
+ * IMPORTANT: This is the SINGLE SOURCE OF TRUTH for all demo data.
+ * All hooks should import from here for consistency.
  */
 
 import { formatCurrencyAED } from '@/lib/utils';
+
+// Re-export unified fallbacks for convenience
+// Use DEMO_FALLBACKS from src/lib/metrics/computations.ts for computed values
 
 // ============================================
 // ORGANIZATION & SEGMENTS

@@ -194,8 +194,9 @@ export function useEmployeeDashboard() {
       const totalUtilized = benefits.reduce((sum, b) => sum + b.utilizedAmount, 0);
       
       // Guaranteed benefits = cash allowances (housing, transport, education)
+      const guaranteedTypes = ['cash_allowances', 'guaranteed_allowance', 'housing', 'transport', 'education', 'schooling'];
       const guaranteedBenefits = benefits
-        .filter(b => ['cash_allowances'].includes(b.benefitType))
+        .filter(b => guaranteedTypes.includes(b.benefitType))
         .reduce((sum, b) => sum + b.annualAllowance, 0);
 
       return {

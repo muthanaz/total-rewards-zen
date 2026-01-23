@@ -3,6 +3,8 @@
  * 
  * This hook provides a unified interface for fetching and managing requests
  * that works identically across Employee, Employer, and Admin portals.
+ * 
+ * IMPORTANT: Status transitions are now validated by the state machine.
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -15,6 +17,7 @@ import {
   calculateSLA,
   getStatusDisplayLabel 
 } from '@/lib/crossPortalContract';
+import { canTransition } from '@/lib/workflow/stateMachine';
 import { Database } from '@/integrations/supabase/types';
 
 type RequestRow = Database['public']['Tables']['requests']['Row'];
@@ -233,6 +236,8 @@ export function useSharedRequest(requestId: string | null) {
 /**
  * Update request status - triggers audit trail via database trigger
  * Works identically from both Employee and Employer portals
+ * 
+ * IMPORTANT: Validates transitions using the state machine
  */
 export function useUpdateRequestStatus() {
   const queryClient = useQueryClient();
@@ -243,13 +248,37 @@ export function useUpdateRequestStatus() {
       requestId, 
       newStatus, 
       reviewerNotes,
-      internalNotes 
+      internalNotes,
+      skipValidation = false 
     }: { 
       requestId: string; 
       newStatus: RequestStatus;
       reviewerNotes?: string;
       internalNotes?: string;
+      skipValidation?: boolean;
     }) => {
+      // First, fetch current request to validate transition
+      const { data: currentRequest, error: fetchError } = await supabase
+        .from('requests')
+        .select('status, request_type')
+        .eq('id', requestId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      // Validate transition using state machine (unless skipped for admin overrides)
+      if (!skipValidation) {
+        const transitionResult = canTransition(
+          currentRequest.status,
+          newStatus,
+          currentRequest.request_type
+        );
+        
+        if (!transitionResult.valid) {
+          throw new Error(transitionResult.reason || `Invalid transition from ${currentRequest.status} to ${newStatus}`);
+        }
+      }
+      
       // Update the request
       const { data, error } = await supabase
         .from('requests')
@@ -260,6 +289,7 @@ export function useUpdateRequestStatus() {
             : undefined,
           reviewed_by: user?.id,
           reviewer_notes: reviewerNotes,
+          last_status_change_at: new Date().toISOString(),
         })
         .eq('id', requestId)
         .select()
@@ -278,6 +308,7 @@ export function useUpdateRequestStatus() {
       queryClient.invalidateQueries({ queryKey: ['shared_request'] });
       queryClient.invalidateQueries({ queryKey: ['requests'] }); // Legacy hook
       queryClient.invalidateQueries({ queryKey: ['all_requests'] }); // Legacy hook
+      queryClient.invalidateQueries({ queryKey: ['employee_requests'] });
     },
   });
 }

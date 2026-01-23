@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useProfile as useSupabaseProfile } from '@/hooks/useSupabaseData';
 import { useIsDemo } from '@/contexts/DemoModeContext';
 import { DEMO_EXEC_METRICS, DEMO_SPEND_ALLOCATION, DEMO_ORG } from '@/lib/demoScenario';
+import { DEMO_FALLBACKS } from '@/lib/metrics/computations';
 
 // Types for employer dashboard data
 export interface EmployerMetrics {
@@ -130,7 +131,7 @@ export function useExecutiveMetrics(organizationId?: string) {
       const satisfaction = satisfactionResult.data || [];
 
       // Calculate metrics from real data
-      const employeeCount = profiles.length || 156; // Fallback for demo
+      const employeeCount = profiles.length || DEMO_FALLBACKS.employeeCount;
       const totalAllowance = entitlements.reduce((sum, e) => sum + (e.annual_allowance || 0), 0);
       const totalUtilized = entitlements.reduce((sum, e) => sum + (e.utilized_amount || 0), 0);
       
@@ -150,33 +151,33 @@ export function useExecutiveMetrics(organizationId?: string) {
       const lastUpdated = new Date();
       const dataConfidence = calculateConfidence(employeeCount, lastUpdated);
 
-      // Use calculated values with sensible fallbacks for demo
-      const totalInvestment = totalAllowance > 0 ? totalAllowance : 62000000;
-      const budgetUtilized = totalUtilized > 0 ? totalUtilized : 39680000;
+      // Use calculated values with sensible fallbacks from DEMO_FALLBACKS
+      const totalInvestment = totalAllowance > 0 ? totalAllowance : DEMO_FALLBACKS.totalInvestment;
+      const budgetUtilized = totalUtilized > 0 ? totalUtilized : DEMO_FALLBACKS.budgetUtilized;
       const utilizationRate = totalAllowance > 0 
         ? Math.round((totalUtilized / totalAllowance) * 100) 
-        : 64;
+        : DEMO_FALLBACKS.utilizationRate;
 
       return {
         totalInvestment,
         budgetUtilized,
         utilizationRate,
-        targetUtilization: 75,
+        targetUtilization: DEMO_FALLBACKS.targetUtilization,
         employeeCount,
-        costPerEmployee: employeeCount > 0 ? Math.round(totalInvestment / employeeCount) : 397436,
-        industryBenchmark: 380000,
-        peerBenchmark: 395000,
-        roi: 3.2,
-        roiBenchmark: 2.8,
-        retentionRate: retainedEmployees > 0 ? Math.round((retainedEmployees / employeeCount) * 100) : 92,
-        retentionBenchmark: 88,
+        costPerEmployee: employeeCount > 0 ? Math.round(totalInvestment / employeeCount) : DEMO_FALLBACKS.costPerEmployee,
+        industryBenchmark: DEMO_FALLBACKS.industryBenchmark,
+        peerBenchmark: DEMO_FALLBACKS.peerBenchmark,
+        roi: DEMO_FALLBACKS.roi,
+        roiBenchmark: DEMO_FALLBACKS.roiBenchmark,
+        retentionRate: retainedEmployees > 0 ? Math.round((retainedEmployees / employeeCount) * 100) : DEMO_FALLBACKS.retentionRate,
+        retentionBenchmark: DEMO_FALLBACKS.retentionBenchmark,
         zombieSpend: Math.round(totalInvestment * 0.137),
         recoveryPotential: Math.round(totalInvestment * 0.082),
         esatScore: Math.round(avgSatisfaction * 20), // Convert to 0-100 scale
-        esatBenchmark: 78,
-        esatTrend: 3.2,
-        turnoverRate: 8,
-        turnoverBenchmark: 12,
+        esatBenchmark: DEMO_FALLBACKS.esatBenchmark,
+        esatTrend: DEMO_FALLBACKS.esatTrend,
+        turnoverRate: DEMO_FALLBACKS.turnoverRate,
+        turnoverBenchmark: DEMO_FALLBACKS.turnoverBenchmark,
         lastUpdated: lastUpdated.toISOString(),
         dataConfidence,
         dataSources: ['HRIS', 'Benefits Platform', 'Payroll'],
