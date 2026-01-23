@@ -6,9 +6,8 @@ import {
   FileCheck,
   Users,
   DollarSign,
-  Ghost,
-  FileText,
   Lightbulb,
+  FileText,
   ShoppingBag,
   Database,
   BookOpen,
@@ -16,129 +15,185 @@ import {
   X,
   LogOut,
   ChevronDown,
+  ChevronRight,
   Briefcase,
   Eye,
   TrendingUp,
   Shield,
+  AlertTriangle,
+  Settings,
+  HelpCircle,
+  BarChart3,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { useEmployerViewMode, ViewMode } from '@/contexts/EmployerViewModeContext';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 
-interface NavGroup {
-  id: string;
-  label: string;
-  items: NavItem[];
-  /** If set, only show in these view modes */
-  modes?: ViewMode[];
-  /** If true, the group is feature-flagged and may be hidden */
-  featureFlag?: keyof ReturnType<typeof useFeatureFlags>['flags'];
-}
+// ============================================================================
+// TYPES
+// ============================================================================
 
 interface NavItem {
   label: string;
   path: string;
   icon: React.ElementType;
-  /** If set, only show in these view modes */
-  modes?: ViewMode[];
+  badge?: string;
+  description?: string;
 }
 
-/**
- * HR Operations Navigation - Tactical, day-to-day tasks
- * ONLY: Ops Dashboard, Claims & Approvals, Policies, Knowledge Hub, Integrations & Data
- */
-const opsNavigationGroups: NavGroup[] = [
-  // 1) Overview
+interface NavSection {
+  id: string;
+  label: string;
+  items: NavItem[];
+  featureFlag?: keyof ReturnType<typeof useFeatureFlags>['flags'];
+}
+
+// ============================================================================
+// HR OPS NAVIGATION - Queue-first operational workbench
+// ============================================================================
+
+const opsNavigation: NavSection[] = [
+  // 1) QUEUE - Primary operational focus
   {
-    id: 'overview',
-    label: 'Overview',
+    id: 'queue',
+    label: 'Queue',
     items: [
-      { label: 'Ops Dashboard', path: '/employer', icon: LayoutDashboard },
+      { 
+        label: 'Claims & Approvals', 
+        path: '/employer/claims', 
+        icon: FileCheck,
+        description: 'Process pending requests',
+      },
     ],
   },
-  // 2) Operations
-  {
-    id: 'operations',
-    label: 'Operations',
-    items: [
-      { label: 'Claims & Approvals', path: '/employer/claims', icon: FileCheck },
-    ],
-  },
-  // 3) Policies & Knowledge
+  // 2) POLICIES
   {
     id: 'policies',
-    label: 'Policies & Knowledge',
+    label: 'Policies',
     items: [
-      { label: 'Policies', path: '/employer/policies', icon: FileText },
-      { label: 'Knowledge Hub', path: '/employer/knowledge', icon: BookOpen },
+      { label: 'Policy Management', path: '/employer/policies', icon: FileText },
+      { label: 'Policy Insights', path: '/employer/policy-insights', icon: TrendingUp, badge: 'HR Lead' },
     ],
   },
-  // 4) Data & Settings
+  // 3) DATA
   {
-    id: 'settings',
-    label: 'Data & Settings',
+    id: 'data',
+    label: 'Data',
     items: [
-      { label: 'Integrations & Data', path: '/employer/integrations', icon: Database },
+      { label: 'Integrations', path: '/employer/integrations', icon: Database },
+      { label: 'Data Quality Rules', path: '/employer/data-quality/rules', icon: Shield },
+      { label: 'Sync Status', path: '/employer/data-quality/sync', icon: AlertTriangle },
+    ],
+  },
+  // 4) SUPPORT
+  {
+    id: 'support',
+    label: 'Support',
+    items: [
+      { label: 'Knowledge Center', path: '/employer/knowledge', icon: HelpCircle },
     ],
   },
 ];
 
-/**
- * Executive Navigation - Strategic, high-level insights
- * DEMO-OPTIMIZED: 7 items max with action-oriented labels
- * Routes: /employer/dashboard, spend, zombie, segments, recommendations, policy-insights, integrations
- */
-const execNavigationGroups: NavGroup[] = [
-  // 1) Overview (single item, no group header needed in collapsed view)
+// ============================================================================
+// EXECUTIVE NAVIGATION - KPI → Drivers → Actions hierarchy
+// ============================================================================
+
+const execNavigation: NavSection[] = [
+  // 1) OVERVIEW
   {
     id: 'overview',
     label: 'Overview',
     items: [
-      { label: 'Dashboard', path: '/employer', icon: LayoutDashboard },
+      { label: 'Executive Dashboard', path: '/employer', icon: LayoutDashboard },
     ],
   },
-  // 2) Analytics & Insights
+  // 2) SPEND - "What happened?"
   {
-    id: 'analytics',
-    label: 'Analytics',
+    id: 'spend',
+    label: 'Spend',
     items: [
-      { label: 'Spend & Utilization', path: '/employer/spend', icon: DollarSign },
-      { label: 'Optimization Opportunities', path: '/employer/zombie', icon: Ghost },
-      { label: 'Employee Insights', path: '/employer/segments', icon: Users },
+      { 
+        label: 'Spend & Utilization', 
+        path: '/employer/spend', 
+        icon: DollarSign,
+        description: 'KPI trends, allocation, utilization',
+      },
     ],
   },
-  // 3) Strategy & Actions
+  // 3) OPPORTUNITIES - "Where is the opportunity?"
   {
-    id: 'strategy',
-    label: 'Strategy',
+    id: 'opportunities',
+    label: 'Opportunities',
     items: [
-      { label: 'Action Plan', path: '/employer/recommendations', icon: Lightbulb },
+      { 
+        label: 'Optimization', 
+        path: '/employer/zombie', 
+        icon: Lightbulb,
+        description: 'Unrealized value & root causes',
+      },
+      { 
+        label: 'Segments', 
+        path: '/employer/segments', 
+        icon: Users,
+        description: 'Employee cohort analysis',
+      },
+    ],
+  },
+  // 4) ACTION PLAN - "What should we do?"
+  {
+    id: 'action-plan',
+    label: 'Action Plan',
+    items: [
+      { 
+        label: 'Recommendations', 
+        path: '/employer/recommendations', 
+        icon: BarChart3,
+        description: 'Track & measure actions',
+      },
+    ],
+  },
+  // 5) GOVERNANCE
+  {
+    id: 'governance',
+    label: 'Governance',
+    items: [
       { label: 'Policy Impact', path: '/employer/policy-insights', icon: TrendingUp },
     ],
   },
-  // 4) Data Foundation
+  // 6) ECOSYSTEM
   {
-    id: 'data',
-    label: 'Data & Confidence',
-    items: [
-      { label: 'Data Sources', path: '/employer/integrations', icon: Database },
-    ],
-  },
-  // 5) Marketplace (Phase 2 - feature-flagged, exec read-only)
-  {
-    id: 'marketplace',
-    label: 'Marketplace',
+    id: 'ecosystem',
+    label: 'Ecosystem',
     featureFlag: 'marketplaceEnabled',
     items: [
       { label: 'Marketplace Impact', path: '/employer/marketplace', icon: ShoppingBag },
     ],
   },
+  // 7) TRUST - Read-only data framing
+  {
+    id: 'trust',
+    label: 'Trust',
+    items: [
+      { 
+        label: 'Data Sources', 
+        path: '/employer/integrations', 
+        icon: Database,
+        badge: 'Read-only',
+      },
+    ],
+  },
 ];
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
 
 export function EmployerSidebar() {
   const location = useLocation();
@@ -149,74 +204,64 @@ export function EmployerSidebar() {
   const { flags } = useFeatureFlags();
   const [mobileOpen, setMobileOpen] = useState(false);
   
-  // Get the appropriate navigation based on view mode
-  const baseGroups = isExecutive ? execNavigationGroups : opsNavigationGroups;
+  // Get the navigation based on mode
+  const baseNavigation = isExecutive ? execNavigation : opsNavigation;
   
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(
-    baseGroups.map((g) => g.id)
+  // Expanded sections - start with all expanded
+  const [expandedSections, setExpandedSections] = useState<string[]>(
+    baseNavigation.map((s) => s.id)
   );
   const isRTL = direction === 'rtl';
 
-  // Filter groups based on feature flags
-  const visibleGroups = useMemo(() => {
-    return baseGroups.filter((group) => {
-      if (group.featureFlag) {
-        return flags[group.featureFlag];
+  // Filter by feature flags
+  const visibleNavigation = useMemo(() => {
+    return baseNavigation.filter((section) => {
+      if (section.featureFlag) {
+        return flags[section.featureFlag];
       }
       return true;
     });
-  }, [baseGroups, flags]);
+  }, [baseNavigation, flags]);
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
   };
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    if (path === '/employer') return location.pathname === '/employer';
+    return location.pathname.startsWith(path);
+  };
 
-  const toggleGroup = (groupId: string) => {
-    setExpandedGroups((prev) =>
-      prev.includes(groupId)
-        ? prev.filter((g) => g !== groupId)
-        : [...prev, groupId]
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections((prev) =>
+      prev.includes(sectionId)
+        ? prev.filter((s) => s !== sectionId)
+        : [...prev, sectionId]
     );
   };
 
   const handleModeChange = (mode: ViewMode) => {
     setViewMode(mode);
-    // Reset expanded groups when mode changes
-    const newGroups = mode === 'executive' ? execNavigationGroups : opsNavigationGroups;
-    setExpandedGroups(newGroups.map((g) => g.id));
+    // Reset expanded sections when mode changes
+    const newNavigation = mode === 'executive' ? execNavigation : opsNavigation;
+    setExpandedSections(newNavigation.map((s) => s.id));
+    // Navigate to the appropriate dashboard
+    navigate('/employer');
   };
+
+  const ChevronIcon = isRTL ? ChevronRight : ChevronDown;
 
   const sidebarContent = (
     <>
       {/* Logo & Branding */}
       <div className="px-4 py-5 border-b border-sidebar-border">
-        <div
-          className={cn(
-            'flex items-center justify-between',
-            isRTL && 'flex-row-reverse'
-          )}
-        >
+        <div className={cn('flex items-center justify-between', isRTL && 'flex-row-reverse')}>
           <div className={cn('flex items-center gap-2', isRTL && 'flex-row-reverse')}>
             <div className="w-8 h-8 rounded-lg bg-gradient-accent flex items-center justify-center shrink-0">
               <span className="text-sidebar-background font-bold text-lg">b</span>
             </div>
-            <span className="font-display text-xl font-bold text-sidebar-foreground">
-              bnft.
-            </span>
-            <span
-              className={cn(
-                'px-2 py-0.5 text-xs font-medium rounded-full shrink-0',
-                isExecutive 
-                  ? 'bg-violet-500/20 text-violet-300' 
-                  : 'bg-sidebar-accent text-sidebar-primary',
-                isRTL ? 'mr-1' : 'ml-1'
-              )}
-            >
-              {isExecutive ? 'Executive' : 'HR Ops'}
-            </span>
+            <span className="font-display text-xl font-bold text-sidebar-foreground">bnft.</span>
           </div>
         </div>
 
@@ -250,56 +295,77 @@ export function EmployerSidebar() {
           </div>
         </div>
 
+        {/* Mode indicator */}
+        <div className={cn(
+          'mt-3 px-3 py-2 rounded-lg text-xs',
+          isExecutive 
+            ? 'bg-violet-500/10 text-violet-300 border border-violet-500/20' 
+            : 'bg-blue-500/10 text-blue-300 border border-blue-500/20'
+        )}>
+          {isExecutive 
+            ? '📊 KPI → Drivers → Actions → Narrative'
+            : '📋 Queue-first operational workbench'
+          }
+        </div>
+
         {/* Theme & Language Controls */}
-        <div
-          className={cn(
-            'flex items-center gap-1 mt-3 pt-3 border-t border-sidebar-border/50',
-            isRTL && 'flex-row-reverse'
-          )}
-        >
+        <div className={cn(
+          'flex items-center gap-1 mt-3 pt-3 border-t border-sidebar-border/50',
+          isRTL && 'flex-row-reverse'
+        )}>
           <NotificationCenter />
           <LanguageSwitcher />
           <DarkModeToggle />
         </div>
       </div>
 
-      {/* Navigation Groups */}
+      {/* Navigation */}
       <nav className={cn('flex-1 overflow-y-auto py-4 px-3', isRTL && 'text-right')}>
-        {visibleGroups.map((group) => (
-          <div key={group.id} className="mb-3">
+        {visibleNavigation.map((section) => (
+          <div key={section.id} className="mb-3">
             <button
-              onClick={() => toggleGroup(group.id)}
+              onClick={() => toggleSection(section.id)}
               className={cn(
-                'flex items-center justify-between w-full px-2 py-2 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider hover:text-sidebar-foreground/70 transition-colors',
+                'flex items-center justify-between w-full px-2 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-sidebar-foreground/50 hover:text-sidebar-foreground/70 transition-colors rounded-md',
                 isRTL && 'flex-row-reverse'
               )}
             >
-              <span>{group.label}</span>
-              <ChevronDown
-                className={cn(
-                  'w-3 h-3 transition-transform',
-                  expandedGroups.includes(group.id) ? 'rotate-180' : ''
-                )}
-              />
+              <span>{section.label}</span>
+              <ChevronDown className={cn(
+                'w-3 h-3 transition-transform',
+                expandedSections.includes(section.id) ? 'rotate-0' : '-rotate-90'
+              )} />
             </button>
 
-            {expandedGroups.includes(group.id) && (
-              <div className="space-y-0.5 mt-1">
-                {group.items.map((item) => (
+            {expandedSections.includes(section.id) && (
+              <div className="space-y-0.5 mt-1 animate-fade-in">
+                {section.items.map((item) => (
                   <Link
                     key={item.path + item.label}
                     to={item.path}
                     onClick={() => setMobileOpen(false)}
                     className={cn(
-                      'nav-item',
+                      'nav-item group',
                       isActive(item.path) && 'nav-item-active',
                       isRTL && 'flex-row-reverse text-right'
                     )}
                   >
                     <item.icon className="w-4 h-4 shrink-0" />
-                    <span className={cn('text-sm flex-1', isRTL && 'text-right')}>
-                      {item.label}
-                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={cn('text-sm truncate', isRTL && 'text-right')}>
+                          {item.label}
+                        </span>
+                        {item.badge && (
+                          <Badge 
+                            variant="secondary" 
+                            className="text-[9px] px-1.5 py-0 h-4 bg-muted/50 shrink-0"
+                          >
+                            {item.badge}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
                   </Link>
                 ))}
               </div>
@@ -352,12 +418,8 @@ export function EmployerSidebar() {
           'fixed top-0 z-40 h-screen w-64 flex flex-col bg-sidebar transition-transform duration-300',
           isRTL ? 'right-0 lg:translate-x-0' : 'left-0 lg:translate-x-0',
           isRTL
-            ? mobileOpen
-              ? 'translate-x-0'
-              : 'translate-x-full'
-            : mobileOpen
-              ? 'translate-x-0'
-              : '-translate-x-full'
+            ? mobileOpen ? 'translate-x-0' : 'translate-x-full'
+            : mobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         {sidebarContent}

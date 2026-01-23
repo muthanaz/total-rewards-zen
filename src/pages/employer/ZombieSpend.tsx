@@ -36,8 +36,6 @@ import {
   OptimizationKPIGrid,
   OptimizationInsights,
   generateOptimizationInsights,
-  BenefitsActionPlanSummary,
-  generateSampleActionPlan,
 } from '@/components/employer';
 import { PageLayout } from '@/components/shared';
 import { ZombieCategoryDrawer } from '@/components/employer/ZombieCategoryDrawer';
@@ -132,17 +130,6 @@ export default function ZombieSpendPage() {
     });
   }, [categories]);
   
-  // Generate action plan items
-  const actionPlanItems = useMemo(() => {
-    const topCategory = categories[0];
-    if (!topCategory) return [];
-    
-    return generateSampleActionPlan({
-      topCategory: { name: topCategory.name, unused: topCategory.unusedEntitlement },
-      processFriction: { missingDocsRate: 22, pendingCount: 18 },
-      lowSegment: { name: 'New Joiners', dimension: 'Tenure' },
-    });
-  }, [categories]);
   
   const handleOpenPlaybook = (playbook: RecoveryPlaybook) => {
     setSelectedPlaybook(playbook);
@@ -550,17 +537,34 @@ export default function ZombieSpendPage() {
           </TabsContent>
         </Tabs>
         
-        {/* 5. Benefits Action Plan */}
-        <BenefitsActionPlanSummary
-          actions={actionPlanItems}
-          onCreateAction={() => navigate('/employer/recommendations?create=true')}
-          onUpdateStatus={(actionId, newStatus) => {
-            toast.info(`Demo: Action ${actionId} marked as ${newStatus}`);
-          }}
-          onSendToHROps={(action) => {
-            toast.info(`Demo: Sent "${action.title}" to HR Ops queue`);
-          }}
-        />
+        {/* 5. Link to Action Plan - NOT duplicating dashboard */}
+        <Card className="border-accent/20 bg-gradient-to-r from-accent/5 to-transparent">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-accent/10">
+                  <Target className="w-5 h-5 text-accent" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">
+                    Turn opportunities into tracked actions
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Create, assign, and measure recovery initiatives in the Action Plan
+                  </p>
+                </div>
+              </div>
+              <Button 
+                size="sm"
+                onClick={() => navigate('/employer/recommendations?source=optimization')}
+                className="gap-1"
+              >
+                View Action Plan
+                <ArrowRight className="w-3 h-3" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
         
         {/* Drawers & Modals */}
         <ZombieCategoryDrawer
