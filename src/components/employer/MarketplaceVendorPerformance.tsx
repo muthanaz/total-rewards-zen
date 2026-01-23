@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { formatCurrencyAED, formatPercent, formatInteger, cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { DemoDataGate, DemoModeBadge } from '@/components/shared/DemoDataGate';
+import { useDemoMode } from '@/contexts/DemoModeContext';
 
 interface VendorMetric {
   id: string;
@@ -37,9 +39,12 @@ interface VendorMetric {
 
 interface MarketplaceVendorPerformanceProps {
   vendors?: VendorMetric[];
+  /** Pass true if real vendor data is available */
+  hasRealData?: boolean;
 }
 
-const MOCK_VENDORS: VendorMetric[] = [
+// Demo vendors (only shown in demo mode)
+const DEMO_VENDORS: VendorMetric[] = [
   {
     id: 'v1',
     name: 'Starbucks',
@@ -126,19 +131,38 @@ const flagLabels: Record<string, { label: string; color: string }> = {
   stale_content: { label: 'Stale content', color: 'text-muted-foreground' },
 };
 
-export function MarketplaceVendorPerformance({ vendors = MOCK_VENDORS }: MarketplaceVendorPerformanceProps) {
+export function MarketplaceVendorPerformance({ vendors, hasRealData = false }: MarketplaceVendorPerformanceProps) {
+  const { isDemoMode } = useDemoMode();
+  
+  // Use demo vendors if in demo mode and no real data provided
+  const effectiveVendors = hasRealData && vendors ? vendors : (isDemoMode ? DEMO_VENDORS : []);
   const navigate = useNavigate();
   const [sortBySavings, setSortBySavings] = useState(true);
   const [scorecardOpen, setScorecardsOpen] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState<VendorMetric | null>(null);
   
   const sortedVendors = useMemo(() => {
-    return [...vendors].sort((a, b) => 
+    return [...effectiveVendors].sort((a, b) => 
       sortBySavings 
         ? b.totalSavings - a.totalSavings 
         : b.activations - a.activations
     ).slice(0, 5);
-  }, [vendors, sortBySavings]);
+  }, [effectiveVendors, sortBySavings]);
+  
+  // Show zero state if no vendors
+  if (effectiveVendors.length === 0) {
+    return (
+      <DemoDataGate 
+        dataType="vendors"
+        action={{
+          label: 'Configure Marketplace',
+          onClick: () => navigate('/employer/marketplace'),
+        }}
+      >
+        <div />
+      </DemoDataGate>
+    );
+  }
   
   const handleOpenScorecard = (vendor: VendorMetric) => {
     setSelectedVendor(vendor);
@@ -159,6 +183,7 @@ export function MarketplaceVendorPerformance({ vendors = MOCK_VENDORS }: Marketp
               <CardTitle className="text-base flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-muted-foreground" />
                 Top Vendors
+                <DemoModeBadge />
               </CardTitle>
               <CardDescription>Ranked by performance and value delivered</CardDescription>
             </div>
@@ -374,7 +399,7 @@ export function MarketplaceVendorPerformance({ vendors = MOCK_VENDORS }: Marketp
             </div>
           ) : (
             <div className="space-y-2">
-              {vendors.map((vendor) => (
+              {effectiveVendors.map((vendor) => (
                 <div 
                   key={vendor.id}
                   className="flex items-center gap-4 p-3 rounded-lg border hover:bg-muted/30 transition-colors cursor-pointer"

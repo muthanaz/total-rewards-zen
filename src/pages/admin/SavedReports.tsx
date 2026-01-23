@@ -46,6 +46,10 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { DemoDataGate, DemoModeBadge } from '@/components/shared/DemoDataGate';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SavedReport {
   id: string;
@@ -59,7 +63,8 @@ interface SavedReport {
   dataSnapshot: string;
 }
 
-const mockReports: SavedReport[] = [
+// Demo reports (only shown in demo mode)
+const DEMO_REPORTS: SavedReport[] = [
   {
     id: '1',
     name: 'Q4 2024 GCC Benchmark Analysis',
@@ -138,7 +143,37 @@ const reportTypeConfig = {
 export default function AdminSavedReports() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
-  const [reports, setReports] = useState<SavedReport[]>(mockReports);
+  const { isDemoMode } = useDemoMode();
+  
+  // Fetch real reports from database
+  const { data: realReports = [] } = useQuery({
+    queryKey: ['admin_saved_reports'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('admin_saved_reports')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data?.map(r => ({
+        id: r.id,
+        name: r.report_name,
+        type: r.report_type as SavedReport['type'],
+        description: '',
+        createdAt: r.created_at?.split('T')[0] || '',
+        lastViewed: r.updated_at?.split('T')[0] || '',
+        starred: false,
+        filters: (r.filters as Record<string, string>) || {},
+        dataSnapshot: 'Saved report',
+      })) || [];
+    },
+  });
+  
+  const hasRealReports = realReports.length > 0;
+  
+  // Use demo reports in demo mode when no real reports exist
+  const initialReports = hasRealReports ? realReports : (isDemoMode ? DEMO_REPORTS : []);
+  
+  const [reports, setReports] = useState<SavedReport[]>(initialReports);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);

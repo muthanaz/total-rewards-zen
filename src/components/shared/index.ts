@@ -164,3 +164,6 @@ export {
   formatSensitiveValue,
 } from './SensitiveDataDisplay';
 export type { SensitiveDataType } from './SensitiveDataDisplay';
+
+// Demo Data Gating
+export { DemoDataGate, DemoModeBadge, useDemoData } from './DemoDataGate';
