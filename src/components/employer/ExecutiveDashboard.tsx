@@ -1,12 +1,13 @@
 /**
  * Executive Dashboard
  * 
- * Structure: Signal → Drivers → Actions (Narrative LAST)
+ * Structure: Trust Strip → KPI Row → Drivers → Actions → Narrative (collapsed)
  * 
- * 1. At-a-glance KPI scorecard (4-6 KPIs with trends + tooltips)
- * 2. Allocation view (Spend by Life Area + Top 5 drivers)
- * 3. Where to act (Ranked Opportunities)
- * 4. Narrative insights LAST (max 3 bullets)
+ * 1. TRUST STRIP: Always-visible confidence + last sync + data sources
+ * 2. KPI SCORECARD: At-a-glance metrics (4-6 KPIs with trends + tooltips)
+ * 3. DRIVERS: Top spending categories and trends
+ * 4. RANKED ACTIONS: Where to act (prioritized opportunities)
+ * 5. NARRATIVE: Collapsed insights (max 3 bullets, expand to see)
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -14,12 +15,16 @@ import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   TrendingUp, 
   DollarSign, 
   AlertTriangle,
   CheckCircle2,
   ArrowRight,
+  ChevronDown,
+  ChevronRight,
+  Lightbulb,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ChartWrapper, CHART_EXPLANATIONS, AnimatedDonutChart, AnimatedLineChart } from '@/components/charts';
@@ -37,8 +42,9 @@ import {
 import { cn, formatCurrencyAED } from '@/lib/utils';
 import { EmployerGlobalFiltersBar } from './EmployerGlobalFiltersBar';
 import { DemoTip, DEMO_TIPS } from '@/components/demo';
-import { MetricTooltip, KPIDrilldownSheet, KPIMetricData } from '@/components/shared';
+import { MetricTooltip, KPIDrilldownSheet, KPIMetricData, TrustStrip } from '@/components/shared';
 import { METRIC_DEFINITIONS } from '@/lib/metrics';
+import { DEMO_FALLBACKS } from '@/lib/metrics/computations';
 
 // New components
 import { ExecKPIScorecard } from './ExecKPIScorecard';
@@ -177,6 +183,9 @@ export function ExecutiveDashboard() {
     );
   }
 
+  // State for collapsible narrative
+  const [narrativeOpen, setNarrativeOpen] = useState(false);
+
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
       <div className="space-y-6">
@@ -193,7 +202,6 @@ export function ExecutiveDashboard() {
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <ExecModeToggle />
-            <DataConfidenceBadge metrics={coverageMetrics} />
             <Badge variant="outline" className={cn(
               "gap-1.5 px-3 py-1.5",
               metrics.utilizationRate >= metrics.targetUtilization 
@@ -211,6 +219,23 @@ export function ExecutiveDashboard() {
             </Badge>
           </div>
         </div>
+
+        {/* 0. TRUST STRIP - Always Visible */}
+        <Card className="border-dashed bg-muted/30">
+          <CardContent className="py-3 px-4">
+            <TrustStrip
+              confidence={
+                ((coverageMetrics.employeeCoverage + coverageMetrics.entitlementCoverage + coverageMetrics.policyCoverage + coverageMetrics.claimsCoverage) / 4) >= 85 
+                  ? 'high' 
+                  : ((coverageMetrics.employeeCoverage + coverageMetrics.entitlementCoverage) / 2) >= 60 
+                    ? 'medium' 
+                    : 'low'
+              }
+              lastSync={coverageMetrics.lastSyncTime}
+              dataSources={['Oracle HCM', 'Benefits Platform', 'Claims System']}
+            />
+          </CardContent>
+        </Card>
 
         {/* Global Filters */}
         <EmployerGlobalFiltersBar />
