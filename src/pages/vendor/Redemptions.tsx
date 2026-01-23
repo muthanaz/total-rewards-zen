@@ -7,18 +7,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Receipt, Search, Download, CheckCircle, Clock, XCircle, Eye, TrendingUp, Users, Ticket } from 'lucide-react';
+import { Receipt, Search, Download, CheckCircle, Clock, XCircle, TrendingUp, Ticket, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useVendorAnalytics, useVendorOffers } from '@/hooks/useVendorData';
 import { formatCurrencyAED, formatPercent, formatInteger, cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 
+// Redemption data structure - NO PII, only aggregated/anonymized data
 interface Redemption {
   id: string;
   code: string;
   offerTitle: string;
-  employeeName: string;
+  // Organization name is allowed (not individual PII)
   organization: string;
   redeemedAt: string;
   amount: number;
@@ -26,13 +27,13 @@ interface Redemption {
   status: 'verified' | 'pending' | 'disputed';
 }
 
-// Demo data - in production this would come from perk_activations/vendor_transactions
+// Demo data - AGGREGATED ONLY, no employee names/emails/IDs
 const demoRedemptions: Redemption[] = [
-  { id: 'R001', code: 'FIT-2024-001', offerTitle: 'Gym Membership 30% Off', employeeName: 'Ahmed M.', organization: 'bnft.demo (AD)', redeemedAt: '2024-01-15T10:30:00', amount: 2800, commission: 280, status: 'verified' },
-  { id: 'R002', code: 'FIT-2024-002', offerTitle: 'Personal Training Sessions', employeeName: 'Sara K.', organization: 'bnft.demo (DXB)', redeemedAt: '2024-01-14T14:15:00', amount: 1500, commission: 150, status: 'verified' },
-  { id: 'R003', code: 'SPA-2024-001', offerTitle: 'Spa Package 25% Off', employeeName: 'Mohammed A.', organization: 'bnft.demo (AD)', redeemedAt: '2024-01-14T09:45:00', amount: 950, commission: 95, status: 'pending' },
-  { id: 'R004', code: 'FIT-2024-003', offerTitle: 'Gym Membership 30% Off', employeeName: 'Fatima H.', organization: 'bnft.demo (AD)', redeemedAt: '2024-01-13T16:20:00', amount: 2800, commission: 280, status: 'verified' },
-  { id: 'R005', code: 'YOGA-2024-001', offerTitle: 'Yoga Classes Bundle', employeeName: 'Ali R.', organization: 'bnft.demo (DXB)', redeemedAt: '2024-01-12T11:00:00', amount: 600, commission: 60, status: 'disputed' },
+  { id: 'R001', code: 'FIT-2024-001', offerTitle: 'Gym Membership 30% Off', organization: 'bnft.demo (AD)', redeemedAt: '2024-01-15T10:30:00', amount: 2800, commission: 280, status: 'verified' },
+  { id: 'R002', code: 'FIT-2024-002', offerTitle: 'Personal Training Sessions', organization: 'bnft.demo (DXB)', redeemedAt: '2024-01-14T14:15:00', amount: 1500, commission: 150, status: 'verified' },
+  { id: 'R003', code: 'SPA-2024-001', offerTitle: 'Spa Package 25% Off', organization: 'bnft.demo (AD)', redeemedAt: '2024-01-14T09:45:00', amount: 950, commission: 95, status: 'pending' },
+  { id: 'R004', code: 'FIT-2024-003', offerTitle: 'Gym Membership 30% Off', organization: 'bnft.demo (AD)', redeemedAt: '2024-01-13T16:20:00', amount: 2800, commission: 280, status: 'verified' },
+  { id: 'R005', code: 'YOGA-2024-001', offerTitle: 'Yoga Classes Bundle', organization: 'bnft.demo (DXB)', redeemedAt: '2024-01-12T11:00:00', amount: 600, commission: 60, status: 'disputed' },
 ];
 
 const STATUS_CONFIG = {
@@ -55,7 +56,7 @@ export default function VendorRedemptions() {
   const filteredRedemptions = demoRedemptions.filter(r => {
     const matchesSearch = r.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
       r.offerTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.employeeName.toLowerCase().includes(searchTerm.toLowerCase());
+      r.organization.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || r.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -88,7 +89,7 @@ export default function VendorRedemptions() {
   return (
     <PageLayout
       title={t('Voucher Redemptions', 'استرداد القسائم')}
-      description={t('Track and verify voucher redemptions from employees', 'تتبع والتحقق من استردادات القسائم من الموظفين')}
+      description={t('Track and verify voucher redemptions', 'تتبع والتحقق من استردادات القسائم')}
       icon={Receipt}
       iconClassName="text-primary"
     >
@@ -157,13 +158,11 @@ export default function VendorRedemptions() {
                 <TableRow>
                   <TableHead>{t('Code', 'الرمز')}</TableHead>
                   <TableHead>{t('Offer', 'العرض')}</TableHead>
-                  <TableHead>{t('Employee', 'الموظف')}</TableHead>
                   <TableHead>{t('Organization', 'المنظمة')}</TableHead>
                   <TableHead className="text-right">{t('Amount', 'المبلغ')}</TableHead>
                   <TableHead className="text-right">{t('Commission', 'العمولة')}</TableHead>
                   <TableHead>{t('Status', 'الحالة')}</TableHead>
                   <TableHead>{t('Date', 'التاريخ')}</TableHead>
-                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -174,7 +173,6 @@ export default function VendorRedemptions() {
                     <TableRow key={redemption.id}>
                       <TableCell className="font-mono text-sm">{redemption.code}</TableCell>
                       <TableCell className="font-medium">{redemption.offerTitle}</TableCell>
-                      <TableCell>{redemption.employeeName}</TableCell>
                       <TableCell className="text-muted-foreground">{redemption.organization}</TableCell>
                       <TableCell className="text-right font-medium">{formatCurrencyAED(redemption.amount)}</TableCell>
                       <TableCell className="text-right text-success font-medium">{formatCurrencyAED(redemption.commission)}</TableCell>
@@ -187,11 +185,6 @@ export default function VendorRedemptions() {
                       <TableCell className="text-muted-foreground">
                         {new Date(redemption.redeemedAt).toLocaleDateString(language === 'ar' ? 'ar-AE' : 'en-AE')}
                       </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="icon">
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -201,21 +194,21 @@ export default function VendorRedemptions() {
         </CardContent>
       </Card>
 
-      {/* Info Card */}
+      {/* Privacy Notice */}
       <Card className="mt-6 border-primary/20 bg-primary/5">
         <CardContent className="pt-6">
           <div className={cn("flex items-start gap-4", isRTL && "flex-row-reverse text-right")}>
             <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-              <Receipt className="w-5 h-5 text-primary" />
+              <ShieldCheck className="w-5 h-5 text-primary" />
             </div>
             <div>
               <h4 className="font-semibold text-foreground">
-                {t('How Redemptions Work', 'كيف تعمل الاستردادات')}
+                {t('Privacy Protected Data', 'بيانات محمية الخصوصية')}
               </h4>
               <p className="text-sm text-muted-foreground mt-1">
                 {t(
-                  'When employees use your voucher codes, redemptions appear here for verification. Verified redemptions are automatically added to your next payout. Disputed redemptions require additional documentation.',
-                  'عندما يستخدم الموظفون رموز القسائم الخاصة بك، تظهر الاستردادات هنا للتحقق. يتم إضافة الاستردادات المُتحقق منها تلقائيًا إلى دفعتك التالية. تتطلب الاستردادات المتنازع عليها وثائق إضافية.'
+                  'Employee identities are protected. You can only see aggregated redemption data by offer and organization. Verified redemptions are automatically added to your next payout.',
+                  'هويات الموظفين محمية. يمكنك فقط رؤية بيانات الاسترداد المجمعة حسب العرض والمنظمة. يتم إضافة الاستردادات المُتحقق منها تلقائيًا إلى دفعتك التالية.'
                 )}
               </p>
             </div>

@@ -21,11 +21,11 @@ import {
 import { 
   Search,
   Download,
-  ArrowUpDown,
   CheckCircle2,
   Clock,
   XCircle,
   Receipt,
+  ShieldCheck,
 } from 'lucide-react';
 import { cn, formatCurrencyAED, formatInteger } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -33,10 +33,12 @@ import { toast } from 'sonner';
 import { PageLayout, MetricCard, MetricGrid } from '@/components/shared';
 import { EmptyState } from '@/components/ui/empty-state';
 
+// Transaction structure - NO PII, aggregated data only
 interface Transaction {
   id: string;
   offerTitle: string;
-  employeeId: string;
+  // Organization is allowed (not individual PII)
+  organization: string;
   originalAmount: number;
   discountAmount: number;
   commissionAmount: number;
@@ -45,15 +47,16 @@ interface Transaction {
   redeemedAt: string;
 }
 
+// Demo data - AGGREGATED ONLY, no employee names/emails/IDs
 const transactions: Transaction[] = [
-  { id: 'TXN001', offerTitle: '20% Off Premium Gym', employeeId: 'EMP-4521', originalAmount: 500, discountAmount: 100, commissionAmount: 35, codeUsed: 'BNFT-GYM-2024', status: 'completed', redeemedAt: '2026-01-12 14:32' },
-  { id: 'TXN002', offerTitle: 'Free Trial - Wellness App', employeeId: 'EMP-3892', originalAmount: 0, discountAmount: 0, commissionAmount: 25, codeUsed: 'BNFT-WELL-FREE', status: 'completed', redeemedAt: '2026-01-12 11:15' },
-  { id: 'TXN003', offerTitle: '15% Off Health Checkup', employeeId: 'EMP-2156', originalAmount: 800, discountAmount: 120, commissionAmount: 45, codeUsed: 'BNFT-HEALTH-15', status: 'completed', redeemedAt: '2026-01-11 16:45' },
-  { id: 'TXN004', offerTitle: '20% Off Premium Gym', employeeId: 'EMP-5678', originalAmount: 500, discountAmount: 100, commissionAmount: 35, codeUsed: 'BNFT-GYM-2024', status: 'pending', redeemedAt: '2026-01-11 10:20' },
-  { id: 'TXN005', offerTitle: 'Buy 1 Get 1 - Spa Treatment', employeeId: 'EMP-1234', originalAmount: 400, discountAmount: 200, commissionAmount: 30, codeUsed: 'BNFT-SPA-BOGO', status: 'completed', redeemedAt: '2026-01-10 13:55' },
-  { id: 'TXN006', offerTitle: '30% Off Dental Plan', employeeId: 'EMP-9012', originalAmount: 1200, discountAmount: 360, commissionAmount: 55, codeUsed: 'BNFT-DENTAL-30', status: 'failed', redeemedAt: '2026-01-10 09:30' },
-  { id: 'TXN007', offerTitle: '20% Off Premium Gym', employeeId: 'EMP-7890', originalAmount: 500, discountAmount: 100, commissionAmount: 35, codeUsed: 'BNFT-GYM-2024', status: 'completed', redeemedAt: '2026-01-09 15:10' },
-  { id: 'TXN008', offerTitle: 'Free Trial - Wellness App', employeeId: 'EMP-6543', originalAmount: 0, discountAmount: 0, commissionAmount: 25, codeUsed: 'BNFT-WELL-FREE', status: 'completed', redeemedAt: '2026-01-09 11:25' },
+  { id: 'TXN001', offerTitle: '20% Off Premium Gym', organization: 'bnft.demo (AD)', originalAmount: 500, discountAmount: 100, commissionAmount: 35, codeUsed: 'BNFT-GYM-2024', status: 'completed', redeemedAt: '2026-01-12 14:32' },
+  { id: 'TXN002', offerTitle: 'Free Trial - Wellness App', organization: 'bnft.demo (DXB)', originalAmount: 0, discountAmount: 0, commissionAmount: 25, codeUsed: 'BNFT-WELL-FREE', status: 'completed', redeemedAt: '2026-01-12 11:15' },
+  { id: 'TXN003', offerTitle: '15% Off Health Checkup', organization: 'bnft.demo (AD)', originalAmount: 800, discountAmount: 120, commissionAmount: 45, codeUsed: 'BNFT-HEALTH-15', status: 'completed', redeemedAt: '2026-01-11 16:45' },
+  { id: 'TXN004', offerTitle: '20% Off Premium Gym', organization: 'bnft.demo (AD)', originalAmount: 500, discountAmount: 100, commissionAmount: 35, codeUsed: 'BNFT-GYM-2024', status: 'pending', redeemedAt: '2026-01-11 10:20' },
+  { id: 'TXN005', offerTitle: 'Buy 1 Get 1 - Spa Treatment', organization: 'bnft.demo (DXB)', originalAmount: 400, discountAmount: 200, commissionAmount: 30, codeUsed: 'BNFT-SPA-BOGO', status: 'completed', redeemedAt: '2026-01-10 13:55' },
+  { id: 'TXN006', offerTitle: '30% Off Dental Plan', organization: 'bnft.demo (AD)', originalAmount: 1200, discountAmount: 360, commissionAmount: 55, codeUsed: 'BNFT-DENTAL-30', status: 'failed', redeemedAt: '2026-01-10 09:30' },
+  { id: 'TXN007', offerTitle: '20% Off Premium Gym', organization: 'bnft.demo (DXB)', originalAmount: 500, discountAmount: 100, commissionAmount: 35, codeUsed: 'BNFT-GYM-2024', status: 'completed', redeemedAt: '2026-01-09 15:10' },
+  { id: 'TXN008', offerTitle: 'Free Trial - Wellness App', organization: 'bnft.demo (AD)', originalAmount: 0, discountAmount: 0, commissionAmount: 25, codeUsed: 'BNFT-WELL-FREE', status: 'completed', redeemedAt: '2026-01-09 11:25' },
 ];
 
 const STATUS_CONFIG = {
@@ -73,7 +76,7 @@ export default function VendorTransactions() {
   const filteredTransactions = transactions.filter(txn => {
     const matchesSearch = txn.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           txn.offerTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          txn.employeeId.toLowerCase().includes(searchQuery.toLowerCase());
+                          txn.organization.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || txn.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -95,7 +98,7 @@ export default function VendorTransactions() {
   return (
     <PageLayout
       title={t('Transactions', 'المعاملات')}
-      description={t('Track all redemptions and commissions', 'تتبع جميع عمليات الاسترداد والعمولات')}
+      description={t('Track all redemptions and commissions by offer', 'تتبع جميع عمليات الاسترداد والعمولات حسب العرض')}
       icon={Receipt}
       iconClassName="text-primary"
       actions={
@@ -119,7 +122,7 @@ export default function VendorTransactions() {
             <div className="relative flex-1">
               <Search className={cn("absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground", isRTL ? "right-3" : "left-3")} />
               <Input 
-                placeholder={t('Search by ID, offer, or employee...', 'البحث بالمعرف أو العرض أو الموظف...')}
+                placeholder={t('Search by ID, offer, or organization...', 'البحث بالمعرف أو العرض أو المنظمة...')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={cn(isRTL ? "pr-10" : "pl-10")}
@@ -157,7 +160,7 @@ export default function VendorTransactions() {
                 <TableRow>
                   <TableHead className={cn(isRTL && "text-right")}>{t('Transaction ID', 'معرف المعاملة')}</TableHead>
                   <TableHead className={cn(isRTL && "text-right")}>{t('Offer', 'العرض')}</TableHead>
-                  <TableHead className={cn(isRTL && "text-right")}>{t('Employee', 'الموظف')}</TableHead>
+                  <TableHead className={cn(isRTL && "text-right")}>{t('Organization', 'المنظمة')}</TableHead>
                   <TableHead className={cn("text-right", isRTL && "text-left")}>{t('Original', 'الأصلي')}</TableHead>
                   <TableHead className={cn("text-right", isRTL && "text-left")}>{t('Discount', 'الخصم')}</TableHead>
                   <TableHead className={cn("text-right", isRTL && "text-left")}>{t('Commission', 'العمولة')}</TableHead>
@@ -172,7 +175,7 @@ export default function VendorTransactions() {
                     <TableRow key={txn.id}>
                       <TableCell className="font-mono text-sm">{txn.id}</TableCell>
                       <TableCell className="font-medium">{txn.offerTitle}</TableCell>
-                      <TableCell className="text-muted-foreground">{txn.employeeId}</TableCell>
+                      <TableCell className="text-muted-foreground">{txn.organization}</TableCell>
                       <TableCell className="text-right">{formatCurrencyAED(txn.originalAmount)}</TableCell>
                       <TableCell className="text-right text-warning">-{formatCurrencyAED(txn.discountAmount)}</TableCell>
                       <TableCell className="text-right font-semibold text-primary">{formatCurrencyAED(txn.commissionAmount)}</TableCell>
@@ -189,6 +192,28 @@ export default function VendorTransactions() {
               </TableBody>
             </Table>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Privacy Notice */}
+      <Card className="mt-6 border-primary/20 bg-primary/5">
+        <CardContent className="pt-6">
+          <div className={cn("flex items-start gap-4", isRTL && "flex-row-reverse text-right")}>
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-foreground">
+                {t('Aggregated Transaction Data', 'بيانات المعاملات المجمعة')}
+              </h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                {t(
+                  'For privacy, employee identities are not disclosed. Transactions are shown by offer and organization only. Commission is calculated automatically based on your tier.',
+                  'لأغراض الخصوصية، لا يتم الكشف عن هويات الموظفين. تُعرض المعاملات حسب العرض والمنظمة فقط. يتم احتساب العمولة تلقائيًا بناءً على مستواك.'
+                )}
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </PageLayout>
