@@ -13,11 +13,13 @@ import {
   ArrowRight,
   Eye
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { formatCurrencyAED, formatInteger } from '@/lib/utils';
+import { DemoDataGate, DemoModeBadge } from '@/components/shared/DemoDataGate';
+import { useDemoMode } from '@/contexts/DemoModeContext';
 
-// Mock data for executive summary
-const claimsSummary = {
+// Demo data for executive summary (only shown in demo mode)
+const DEMO_CLAIMS_SUMMARY = {
   totalPending: 12,
   avgProcessingDays: 2.3,
   slaCompliance: 94,
@@ -26,7 +28,7 @@ const claimsSummary = {
   rejectionRate: 13,
 };
 
-const categoryBreakdown = [
+const DEMO_CATEGORY_BREAKDOWN = [
   { category: 'Health Insurance', count: 45, value: 125000, trend: 12 },
   { category: 'Learning & Development', count: 32, value: 89000, trend: -5 },
   { category: 'Transport', count: 28, value: 42000, trend: 8 },
@@ -34,20 +36,52 @@ const categoryBreakdown = [
   { category: 'Housing', count: 18, value: 156000, trend: 3 },
 ];
 
-const bottlenecks = [
+const DEMO_BOTTLENECKS = [
   { issue: 'Missing documentation', count: 5, avgDelay: 3.2 },
   { issue: 'Awaiting manager approval', count: 4, avgDelay: 2.1 },
   { issue: 'Policy clarification needed', count: 3, avgDelay: 4.5 },
 ];
 
 export function ClaimsExecView() {
+  const navigate = useNavigate();
+  const { isDemoMode } = useDemoMode();
+  
+  // In non-demo mode with no real data, show zero state
+  const claimsSummary = isDemoMode ? DEMO_CLAIMS_SUMMARY : null;
+  const categoryBreakdown = isDemoMode ? DEMO_CATEGORY_BREAKDOWN : [];
+  const bottlenecks = isDemoMode ? DEMO_BOTTLENECKS : [];
+  
+  if (!claimsSummary) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-display font-bold text-foreground">Claims Overview</h1>
+            <p className="text-muted-foreground">Strategic view of claims processing and bottlenecks</p>
+          </div>
+        </div>
+        <DemoDataGate 
+          dataType="claims"
+          action={{
+            label: 'Configure Claims Integration',
+            onClick: () => navigate('/employer/integrations?tab=connections'),
+          }}
+        >
+          <div />
+        </DemoDataGate>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">Claims Overview</h1>
-          <p className="text-muted-foreground">Strategic view of claims processing and bottlenecks</p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-display font-bold text-foreground">Claims Overview</h1>
+            <p className="text-muted-foreground">Strategic view of claims processing and bottlenecks</p>
+          </div>
+          <DemoModeBadge />
         </div>
         <Button variant="outline" asChild className="gap-2">
           <Link to="/employer/claims?view=ops">

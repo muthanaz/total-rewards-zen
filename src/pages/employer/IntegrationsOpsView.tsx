@@ -55,6 +55,8 @@ import { formatInteger, cn } from '@/lib/utils';
 import type { SyncRecord } from '@/components/employer/SyncHistoryDrawer';
 import type { CSVPreviewData } from '@/components/employer/CSVImportPreview';
 import { toast } from 'sonner';
+import { DemoModeBadge } from '@/components/shared/DemoDataGate';
+import { useDemoMode } from '@/contexts/DemoModeContext';
 
 // Issue category types
 type IssueCategory = 'auth' | 'mapping' | 'quality' | 'sync' | 'coverage';
@@ -76,8 +78,8 @@ const generateSparkline = (status: IntegrationStatus) => {
   }));
 };
 
-// Mock sync history data
-const MOCK_SYNC_HISTORY: SyncRecord[] = [
+// Demo sync history data (only shown in demo mode)
+const DEMO_SYNC_HISTORY: SyncRecord[] = [
   {
     id: 'sync-1',
     source: 'HRIS System (SAP)',
@@ -154,6 +156,10 @@ export function IntegrationsOpsView() {
   const { toast: showToast } = useToast();
   const { hasPermission } = useEmployerPermissions();
   const canManageIntegrations = hasPermission('can_manage_integrations');
+  const { isDemoMode } = useDemoMode();
+  
+  // Use demo data only in demo mode
+  const syncHistoryData = isDemoMode ? DEMO_SYNC_HISTORY : [];
   
   const {
     integrations,
@@ -243,7 +249,7 @@ export function IntegrationsOpsView() {
 
   // Filtered sync history
   const filteredSyncHistory = useMemo(() => {
-    return MOCK_SYNC_HISTORY.filter(sync => {
+    return syncHistoryData.filter(sync => {
       if (searchQuery && !sync.source.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false;
       }
@@ -255,7 +261,7 @@ export function IntegrationsOpsView() {
       }
       return true;
     });
-  }, [searchQuery, statusFilter, sourceFilter]);
+  }, [searchQuery, statusFilter, sourceFilter, syncHistoryData]);
 
   const handleSync = async (source: IntegrationSource) => {
     await syncIntegration(source.id);
@@ -429,9 +435,12 @@ export function IntegrationsOpsView() {
               <ArrowLeft className="w-4 h-4" />
             </Link>
           </Button>
-          <div>
-            <h1 className="text-2xl font-display font-bold text-foreground">Manage Integrations</h1>
-            <p className="text-muted-foreground">Connect data sources, map fields, and manage syncs</p>
+          <div className="flex items-center gap-3">
+            <div>
+              <h1 className="text-2xl font-display font-bold text-foreground">Manage Integrations</h1>
+              <p className="text-muted-foreground">Connect data sources, map fields, and manage syncs</p>
+            </div>
+            <DemoModeBadge />
           </div>
         </div>
         <PermissionGate 
