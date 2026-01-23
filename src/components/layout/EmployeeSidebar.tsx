@@ -98,23 +98,22 @@ const navigation: NavGroup[] = [
     label: 'Benefit Categories',
     labelAr: 'فئات المزايا',
     items: [
-      { label: 'Housing', labelAr: 'السكن', path: '/employee/housing', icon: Home },
-      { label: 'Schooling', labelAr: 'التعليم', path: '/employee/schooling', icon: GraduationCap },
+      { label: 'Housing Allowance', labelAr: 'بدل السكن', path: '/employee/housing', icon: Home },
+      { label: 'Schooling Allowance', labelAr: 'بدل التعليم', path: '/employee/schooling', icon: GraduationCap },
       { label: 'Health Insurance', labelAr: 'التأمين الصحي', path: '/employee/health', icon: Heart },
       { label: 'Transport & Mobility', labelAr: 'النقل والتنقل', path: '/employee/transport', icon: Car },
       { label: 'Wellbeing', labelAr: 'الرفاهية', path: '/employee/wellbeing', icon: Dumbbell },
       { label: 'Long-Term Financials', labelAr: 'الماليات طويلة الأجل', path: '/employee/long-term-financials', icon: Wallet },
       { label: 'Learning & Development', labelAr: 'التعلم والتطوير', path: '/employee/learning', icon: BookOpen },
-      { label: 'End of Service', labelAr: 'نهاية الخدمة', path: '/employee/long-term-financials?tab=gratuity', icon: Landmark },
     ],
   },
-  // TIME OFF
+  // LEAVE MANAGEMENT
   {
-    id: 'time-off',
-    label: 'Time Off',
-    labelAr: 'الإجازات',
+    id: 'leave-management',
+    label: 'Leave Management',
+    labelAr: 'إدارة الإجازات',
     items: [
-      { label: 'Leave', labelAr: 'الإجازات', path: '/employee/leave', icon: Calendar },
+      { label: 'Leave Management', labelAr: 'إدارة الإجازات', path: '/employee/leave', icon: Calendar },
     ],
   },
   // HR & SERVICES
@@ -133,12 +132,11 @@ const navigation: NavGroup[] = [
   // MARKETPLACE - Always visible and expanded by default
   {
     id: 'marketplace',
-    label: 'Marketplace',
-    labelAr: 'السوق',
+    label: 'Perks & Partners',
+    labelAr: 'الامتيازات والشراكات',
     defaultOpen: true,
-    // NOTE: Removed featureFlag to make marketplace always visible
     items: [
-      { label: 'Offers & Vouchers', labelAr: 'العروض والقسائم', path: '/employee/marketplace', icon: ShoppingBag },
+      { label: 'Perks & Partners', labelAr: 'الامتيازات والشراكات', path: '/employee/marketplace', icon: ShoppingBag },
     ],
   },
 ];

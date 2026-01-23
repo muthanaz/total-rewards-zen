@@ -10,8 +10,8 @@ interface BreadcrumbItem {
 const routeLabels: Record<string, string> = {
   employee: 'Dashboard',
   employer: 'Dashboard',
-  housing: 'Housing',
-  schooling: 'Schooling',
+  housing: 'Housing Allowance',
+  schooling: 'Schooling Allowance',
   health: 'Health Insurance',
   transport: 'Transport & Mobility',
   wellbeing: 'Wellbeing',
