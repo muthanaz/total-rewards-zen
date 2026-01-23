@@ -28,6 +28,7 @@ export const BENEFIT_CATEGORIES = {
     key: 'housing',
     label: 'Housing',
     fullLabel: 'Housing Allowance',
+    lifeArea: 'housing',
     // Sky blue - trust, stability, security
     color: 'hsl(200, 95%, 48%)',
     bgClass: 'bg-sky-500',
@@ -43,6 +44,7 @@ export const BENEFIT_CATEGORIES = {
     key: 'schooling',
     label: 'Schooling',
     fullLabel: 'Schooling Allowance',
+    lifeArea: 'education',
     // Purple - wisdom, creativity, education
     color: 'hsl(270, 70%, 55%)',
     bgClass: 'bg-purple-500',
@@ -58,6 +60,7 @@ export const BENEFIT_CATEGORIES = {
     key: 'health',
     label: 'Health Insurance',
     fullLabel: 'Health Insurance',
+    lifeArea: 'health',
     // Rose - care, compassion, heart
     color: 'hsl(350, 80%, 55%)',
     bgClass: 'bg-rose-500',
@@ -73,6 +76,7 @@ export const BENEFIT_CATEGORIES = {
     key: 'transport',
     label: 'Transport',
     fullLabel: 'Transport & Mobility',
+    lifeArea: 'transport',
     // Amber - energy, movement, warmth
     color: 'hsl(35, 95%, 50%)',
     bgClass: 'bg-amber-500',
@@ -88,6 +92,7 @@ export const BENEFIT_CATEGORIES = {
     key: 'wellbeing',
     label: 'Wellbeing',
     fullLabel: 'Wellbeing Program',
+    lifeArea: 'wellbeing',
     // Teal - balance, calm, wellness (brand accent)
     color: 'hsl(174, 60%, 45%)',
     bgClass: 'bg-teal-500',
@@ -103,6 +108,7 @@ export const BENEFIT_CATEGORIES = {
     key: 'financial',
     label: 'Financial',
     fullLabel: 'Financial Planning',
+    lifeArea: 'financial',
     // Emerald - growth, prosperity, money
     color: 'hsl(155, 75%, 40%)',
     bgClass: 'bg-emerald-500',
@@ -118,6 +124,7 @@ export const BENEFIT_CATEGORIES = {
     key: 'learning',
     label: 'Learning',
     fullLabel: 'Learning & Development',
+    lifeArea: 'learning',
     // Indigo - knowledge, depth, wisdom
     color: 'hsl(235, 75%, 58%)',
     bgClass: 'bg-indigo-500',
@@ -133,6 +140,7 @@ export const BENEFIT_CATEGORIES = {
     key: 'rewards',
     label: 'Bonus',
     fullLabel: 'Annual Bonus',
+    lifeArea: 'bonus',
     // Orange - enthusiasm, success, achievement
     color: 'hsl(25, 95%, 55%)',
     bgClass: 'bg-orange-500',
@@ -148,6 +156,7 @@ export const BENEFIT_CATEGORIES = {
     key: 'equity',
     label: 'Equity',
     fullLabel: 'Equity & Options',
+    lifeArea: 'equity',
     // Violet - premium, luxury, ownership
     color: 'hsl(280, 70%, 55%)',
     bgClass: 'bg-violet-500',
@@ -163,6 +172,7 @@ export const BENEFIT_CATEGORIES = {
     key: 'timeoff',
     label: 'Leave',
     fullLabel: 'Leave Management',
+    lifeArea: 'leave',
     // Cyan - freedom, clarity, refreshment
     color: 'hsl(190, 90%, 45%)',
     bgClass: 'bg-cyan-500',
