@@ -40,8 +40,10 @@ export function SidebarShell({ children }: SidebarShellProps) {
       {/* Sidebar Container */}
       <aside
         className={cn(
-          'fixed top-0 z-40 h-screen w-64 flex flex-col bg-sidebar transition-transform duration-300',
-          isRTL ? 'right-0 lg:translate-x-0' : 'left-0 lg:translate-x-0',
+          'fixed top-0 z-40 h-screen w-64 flex flex-col bg-sidebar transition-transform duration-300 shadow-xl',
+          isRTL 
+            ? 'right-0 lg:translate-x-0 border-l border-sidebar-border' 
+            : 'left-0 lg:translate-x-0 border-r border-sidebar-border',
           isRTL
             ? mobileOpen
               ? 'translate-x-0'
