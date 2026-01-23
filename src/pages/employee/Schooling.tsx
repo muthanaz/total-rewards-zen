@@ -273,8 +273,6 @@ export default function SchoolingPage() {
         </CardContent>
       </Card>
 
-      {/* Cross-links - only show claim link */}
-      <BenefitCrossLinks benefitCategory="Schooling" showClaimLink={true} />
 
       {/* Children Allocation Cards */}
       <div>

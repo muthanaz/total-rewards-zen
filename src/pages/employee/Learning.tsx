@@ -185,8 +185,6 @@ export default function LearningPage() {
         </CardContent>
       </Card>
 
-      {/* Cross-links - only show claim link */}
-      <BenefitCrossLinks benefitCategory="Learning & Development" showClaimLink={true} />
 
       {/* Your Learning */}
       <Card>

@@ -203,8 +203,6 @@ export default function HousingPage() {
         </CardContent>
       </Card>
 
-      {/* Cross-links - only show claim link */}
-      <BenefitCrossLinks benefitCategory="Housing" showClaimLink={true} />
 
       {/* Recommended Vendors */}
       <RecommendedVendorsModule benefitCategory="Housing" title="Housing & Home Partners" />
