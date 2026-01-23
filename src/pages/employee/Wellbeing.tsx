@@ -74,6 +74,7 @@ export default function WellbeingPage() {
         description="Your health and wellness benefits for mind and body"
         icon={Dumbbell}
         iconClassName="from-chart-6 to-chart-6/80 shadow-chart-6/25"
+        partnerOffersCategory="Wellbeing"
       />
 
       {/* 1. Summary Cards */}
@@ -167,8 +168,8 @@ export default function WellbeingPage() {
         </CardContent>
       </Card>
 
-      {/* Cross-links */}
-      <BenefitCrossLinks benefitCategory="Wellbeing" showClaimLink={false} />
+      {/* Cross-links - only show claim link */}
+      <BenefitCrossLinks benefitCategory="Wellbeing" showClaimLink={true} />
 
       {/* Programs Grid */}
       <div className="grid md:grid-cols-2 gap-6">

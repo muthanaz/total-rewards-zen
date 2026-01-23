@@ -104,6 +104,7 @@ export default function HousingPage() {
         description="Find the perfect home within your allowance or calculate your top-up"
         icon={Home}
         iconClassName="from-accent to-accent/80 shadow-accent/25"
+        partnerOffersCategory="Housing"
         badge={{
           label: `${utilizationPercent}% ${rag.label}`,
           icon: CheckCircle2,
@@ -202,8 +203,8 @@ export default function HousingPage() {
         </CardContent>
       </Card>
 
-      {/* Cross-links */}
-      <BenefitCrossLinks benefitCategory="Housing" showClaimLink={false} />
+      {/* Cross-links - only show claim link */}
+      <BenefitCrossLinks benefitCategory="Housing" showClaimLink={true} />
 
       {/* Recommended Vendors */}
       <RecommendedVendorsModule benefitCategory="Housing" title="Housing & Home Partners" />

@@ -133,6 +133,7 @@ export default function HealthPage() {
         description="Comprehensive coverage for you and your family"
         icon={Heart}
         iconClassName="from-chart-5 to-chart-5/80 shadow-chart-5/25"
+        partnerOffersCategory="Health Insurance"
       />
 
       {/* 1. Summary Cards */}
@@ -227,8 +228,8 @@ export default function HealthPage() {
         </CardContent>
       </Card>
 
-      {/* Cross-links */}
-      <BenefitCrossLinks benefitCategory="Health Insurance" showClaimLink={false} />
+      {/* Cross-links - only show claim link */}
+      <BenefitCrossLinks benefitCategory="Health Insurance" showClaimLink={true} />
 
       {/* Coverage Categories */}
       <Card>

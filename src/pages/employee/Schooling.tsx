@@ -160,6 +160,7 @@ export default function SchoolingPage() {
         description="Configure education for each child individually — each child gets their own AED 30,000 allowance"
         icon={GraduationCap}
         iconClassName="from-chart-4 to-chart-4/80 shadow-chart-4/25"
+        partnerOffersCategory="Schooling"
       />
 
       {/* Summary Cards */}
@@ -272,8 +273,8 @@ export default function SchoolingPage() {
         </CardContent>
       </Card>
 
-      {/* Cross-links */}
-      <BenefitCrossLinks benefitCategory="Schooling" showClaimLink={false} />
+      {/* Cross-links - only show claim link */}
+      <BenefitCrossLinks benefitCategory="Schooling" showClaimLink={true} />
 
       {/* Children Allocation Cards */}
       <div>
