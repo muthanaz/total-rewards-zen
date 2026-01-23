@@ -48,6 +48,8 @@ interface NavGroup {
   showOnlyIfOnboardingIncomplete?: boolean;
   /** Optional path to make the group heading clickable */
   path?: string;
+  /** Optional icon for standalone clickable headings */
+  icon?: React.ElementType;
 }
 
 interface NavItem {
@@ -109,15 +111,14 @@ const navigation: NavGroup[] = [
       { label: 'Learning & Development', labelAr: 'التعلم والتطوير', path: '/employee/learning', icon: BookOpen },
     ],
   },
-  // LEAVE MANAGEMENT - Clickable heading
+  // LEAVE MANAGEMENT - Standalone clickable heading (no subitems)
   {
     id: 'leave-management',
     label: 'Leave Management',
     labelAr: 'إدارة الإجازات',
-    path: '/employee/leave', // Clickable heading
-    items: [
-      { label: 'Leave Dashboard', labelAr: 'لوحة الإجازات', path: '/employee/leave', icon: Calendar },
-    ],
+    path: '/employee/leave',
+    icon: Calendar,
+    items: [], // No subitems - heading is clickable
   },
   // HR & SERVICES
   {
@@ -132,16 +133,14 @@ const navigation: NavGroup[] = [
       { label: 'Gov Connect', labelAr: 'الخدمات الحكومية', path: '/employee/gov-connect', icon: Building2 },
     ],
   },
-  // MARKETPLACE - Clickable heading
+  // MARKETPLACE - Standalone clickable heading (no subitems)
   {
     id: 'marketplace',
     label: 'Marketplace',
     labelAr: 'السوق',
-    path: '/employee/marketplace', // Clickable heading
-    defaultOpen: true,
-    items: [
-      { label: 'Perks & Partners', labelAr: 'الامتيازات والشراكات', path: '/employee/marketplace', icon: ShoppingBag },
-    ],
+    path: '/employee/marketplace',
+    icon: ShoppingBag,
+    items: [], // No subitems - heading is clickable
   },
 ];
 
@@ -247,60 +246,89 @@ export function EmployeeSidebar() {
         'scroll-shadow',
         isRTL && 'text-right'
       )}>
-        {visibleNavigation.map((group, index) => (
-          <div key={group.id} className={cn('mb-1', index > 0 && 'mt-5')}>
-            {/* Group heading - clickable if path provided, otherwise just toggle */}
-            <div className="flex items-center">
-              <button
-                onClick={() => {
-                  if (group.path) {
-                    navigate(group.path);
-                    setMobileOpen(false);
-                  }
-                  toggleGroup(group.id);
-                }}
-                className={cn(
-                  'flex items-center justify-between w-full px-3 py-2 text-[11px] font-bold uppercase tracking-[0.15em] transition-colors rounded-md group',
-                  'text-sidebar-primary hover:bg-sidebar-primary/10',
-                  group.path && 'cursor-pointer hover:text-accent',
-                  isRTL && 'flex-row-reverse text-right'
-                )}
-              >
-                <div className={cn('flex items-center gap-2', isRTL && 'flex-row-reverse')}>
-                  <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
+        {visibleNavigation.map((group, index) => {
+          // Standalone clickable heading (no subitems)
+          const isStandaloneLink = group.path && group.items.length === 0;
+          
+          if (isStandaloneLink) {
+            const GroupIcon = group.icon;
+            return (
+              <div key={group.id} className={cn('mb-1', index > 0 && 'mt-5')}>
+                <Link
+                  to={group.path!}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    'flex items-center gap-2 w-full px-3 py-2.5 text-[11px] font-bold uppercase tracking-[0.15em] transition-colors rounded-md',
+                    'hover:bg-sidebar-primary/10',
+                    isActive(group.path!) 
+                      ? 'text-accent bg-accent/10' 
+                      : 'text-sidebar-primary hover:text-accent',
+                    isRTL && 'flex-row-reverse text-right'
+                  )}
+                >
+                  {GroupIcon && <GroupIcon className="w-4 h-4 shrink-0" />}
                   <span>{getLabel(group)}</span>
-                </div>
-                {expandedGroups.includes(group.id) ? (
-                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
-                ) : (
-                  <ChevronCollapsed className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
-                )}
-              </button>
-            </div>
-
-            {expandedGroups.includes(group.id) && (
-              <div className="mt-1 space-y-0.5 animate-fade-in">
-                {group.items.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      'nav-item',
-                      isActive(item.path) && 'nav-item-active',
-                      isRTL && 'flex-row-reverse text-right'
-                    )}
-                  >
-                    <item.icon className="w-4 h-4 shrink-0" />
-                    <span className={cn('text-sm flex-1', isRTL && 'text-right')}>
-                      {getLabel(item)}
-                    </span>
-                  </Link>
-                ))}
+                </Link>
               </div>
-            )}
-          </div>
-        ))}
+            );
+          }
+          
+          // Regular group with subitems
+          return (
+            <div key={group.id} className={cn('mb-1', index > 0 && 'mt-5')}>
+              {/* Group heading - clickable if path provided, otherwise just toggle */}
+              <div className="flex items-center">
+                <button
+                  onClick={() => {
+                    if (group.path) {
+                      navigate(group.path);
+                      setMobileOpen(false);
+                    }
+                    toggleGroup(group.id);
+                  }}
+                  className={cn(
+                    'flex items-center justify-between w-full px-3 py-2 text-[11px] font-bold uppercase tracking-[0.15em] transition-colors rounded-md group',
+                    'text-sidebar-primary hover:bg-sidebar-primary/10',
+                    group.path && 'cursor-pointer hover:text-accent',
+                    isRTL && 'flex-row-reverse text-right'
+                  )}
+                >
+                  <div className={cn('flex items-center gap-2', isRTL && 'flex-row-reverse')}>
+                    <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
+                    <span>{getLabel(group)}</span>
+                  </div>
+                  {expandedGroups.includes(group.id) ? (
+                    <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+                  ) : (
+                    <ChevronCollapsed className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+                  )}
+                </button>
+              </div>
+
+              {expandedGroups.includes(group.id) && (
+                <div className="mt-1 space-y-0.5 animate-fade-in">
+                  {group.items.map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(
+                        'nav-item',
+                        isActive(item.path) && 'nav-item-active',
+                        isRTL && 'flex-row-reverse text-right'
+                      )}
+                    >
+                      <item.icon className="w-4 h-4 shrink-0" />
+                      <span className={cn('text-sm flex-1', isRTL && 'text-right')}>
+                        {getLabel(item)}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </nav>
 
       {/* Smart Profile - Distinguished Section */}
