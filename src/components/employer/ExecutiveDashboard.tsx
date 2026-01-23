@@ -57,6 +57,7 @@ export function ExecutiveDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [drilldownMetric, setDrilldownMetric] = useState<KPIMetricData | null>(null);
   const [isDrilldownOpen, setIsDrilldownOpen] = useState(false);
+  const [narrativeOpen, setNarrativeOpen] = useState(false);
   const { isBoard, isCFO } = useExecMode();
   
   // Fetch data
@@ -182,9 +183,6 @@ export function ExecutiveDashboard() {
       </div>
     );
   }
-
-  // State for collapsible narrative
-  const [narrativeOpen, setNarrativeOpen] = useState(false);
 
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
