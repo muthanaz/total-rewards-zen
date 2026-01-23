@@ -83,6 +83,7 @@ export {
 export type { MetricEvidenceData } from './MetricEvidenceDrawer';
 
 // Trust Layer Components
+export { TrustStrip, TrustStripCompact } from './TrustStrip';
 export { DataProvenanceTooltip, ProvenanceInline } from './DataProvenanceTooltip';
 export { 
   EstimateDisclaimer, 

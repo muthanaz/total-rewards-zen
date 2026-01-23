@@ -405,6 +405,127 @@ export function computeSLACompliance(
   };
 }
 
+// ============================================================================
+// FORECAST CONSTRAINT LOGIC
+// ============================================================================
+
+/**
+ * Forecast constraint: Cap-based benefits can never exceed 100% utilization
+ * This prevents impossible states in year-end forecasts.
+ */
+export interface ForecastResult {
+  forecastedUtilization: number;
+  forecastedAmount: number;
+  maxPossible: number;
+  isConstrained: boolean;
+  constraintReason?: string;
+}
+
+/**
+ * Compute constrained forecast for cap-based benefits
+ * 
+ * CRITICAL: Ensures forecasted utilization never exceeds 100% for cap-based types.
+ * Coverage/deferred benefits don't have a cap so they're excluded from this logic.
+ */
+export function computeConstrainedForecast(
+  currentUtilized: number,
+  totalEntitlement: number,
+  monthsElapsed: number,
+  totalMonths: number = 12,
+  valueType?: string
+): ForecastResult {
+  // Coverage and deferred don't have utilization caps
+  if (valueType === 'coverage' || valueType === 'deferred' || valueType === 'access') {
+    return {
+      forecastedUtilization: 0,
+      forecastedAmount: 0,
+      maxPossible: 0,
+      isConstrained: false,
+      constraintReason: 'N/A for coverage/deferred benefits',
+    };
+  }
+
+  if (totalEntitlement <= 0 || monthsElapsed <= 0) {
+    return {
+      forecastedUtilization: 0,
+      forecastedAmount: 0,
+      maxPossible: totalEntitlement,
+      isConstrained: false,
+    };
+  }
+
+  // Calculate run-rate
+  const monthlyRunRate = currentUtilized / monthsElapsed;
+  const remainingMonths = Math.max(0, totalMonths - monthsElapsed);
+  const projectedAdditional = monthlyRunRate * remainingMonths;
+  
+  // Raw forecast
+  const rawForecast = currentUtilized + projectedAdditional;
+  const rawUtilization = (rawForecast / totalEntitlement) * 100;
+  
+  // CONSTRAINT: Cannot exceed 100% for cap-based benefits
+  const maxPossible = totalEntitlement;
+  const isConstrained = rawForecast > maxPossible;
+  
+  const constrainedForecast = Math.min(rawForecast, maxPossible);
+  const constrainedUtilization = Math.min(100, rawUtilization);
+  
+  return {
+    forecastedUtilization: Math.round(constrainedUtilization * 10) / 10,
+    forecastedAmount: Math.round(constrainedForecast),
+    maxPossible,
+    isConstrained,
+    constraintReason: isConstrained 
+      ? `Capped at 100% entitlement (would have been ${Math.round(rawUtilization)}%)`
+      : undefined,
+  };
+}
+
+/**
+ * Generate year-end forecast with constraints
+ */
+export function generateYearEndForecast(
+  currentData: {
+    utilized: number;
+    entitled: number;
+    monthsElapsed: number;
+  },
+  benefitValueType?: string
+): {
+  forecast: ForecastResult;
+  confidence: ConfidenceLevel;
+  confidenceReason: string;
+} {
+  const forecast = computeConstrainedForecast(
+    currentData.utilized,
+    currentData.entitled,
+    currentData.monthsElapsed,
+    12,
+    benefitValueType
+  );
+  
+  // Confidence based on how much of the year has passed
+  let confidence: ConfidenceLevel = 'estimated';
+  let confidenceReason = 'Linear projection based on current run-rate';
+  
+  if (currentData.monthsElapsed >= 9) {
+    confidence = 'high' as ConfidenceLevel;
+    confidenceReason = `Based on ${currentData.monthsElapsed} months of actuals`;
+  } else if (currentData.monthsElapsed >= 6) {
+    confidence = 'medium' as ConfidenceLevel;
+    confidenceReason = `Based on ${currentData.monthsElapsed} months; may vary`;
+  } else {
+    confidence = 'low' as ConfidenceLevel;
+    confidenceReason = `Early forecast with only ${currentData.monthsElapsed} months of data`;
+  }
+  
+  if (forecast.isConstrained) {
+    confidenceReason += ' [capped at entitlement limit]';
+  }
+  
+  return { forecast, confidence, confidenceReason };
+}
+
 /**
  * Compute all metrics from a unified input object
  */
