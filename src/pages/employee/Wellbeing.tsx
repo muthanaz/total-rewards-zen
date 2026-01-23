@@ -168,8 +168,6 @@ export default function WellbeingPage() {
         </CardContent>
       </Card>
 
-      {/* Cross-links - only show claim link */}
-      <BenefitCrossLinks benefitCategory="Wellbeing" showClaimLink={true} />
 
       {/* Programs Grid */}
       <div className="grid md:grid-cols-2 gap-6">

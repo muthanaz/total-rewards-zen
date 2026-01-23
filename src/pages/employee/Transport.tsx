@@ -177,8 +177,6 @@ export default function TransportPage() {
         </CardContent>
       </Card>
 
-      {/* Cross-links - only show claim link */}
-      <BenefitCrossLinks benefitCategory="Transport" showClaimLink={true} />
 
       {/* Allowance Cards with Submit Claim buttons */}
       <div className="grid md:grid-cols-3 gap-6">

@@ -228,8 +228,6 @@ export default function HealthPage() {
         </CardContent>
       </Card>
 
-      {/* Cross-links - only show claim link */}
-      <BenefitCrossLinks benefitCategory="Health Insurance" showClaimLink={true} />
 
       {/* Coverage Categories */}
       <Card>
