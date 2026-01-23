@@ -3245,7 +3245,9 @@ export type Database = {
           date_of_birth: string | null
           department: string | null
           email: string | null
+          emirates_id: string | null
           emirates_id_masked: string | null
+          employer_view_mode: string | null
           employment_date: string | null
           first_name: string | null
           grade: string | null
@@ -3255,8 +3257,10 @@ export type Database = {
           last_name: string | null
           manager_name: string | null
           marital_status: string | null
+          monthly_salary: number | null
           nationality: string | null
           organization_id: string | null
+          passport_number: string | null
           passport_number_masked: string | null
           phone: string | null
           position: string | null
@@ -3270,7 +3274,9 @@ export type Database = {
           date_of_birth?: string | null
           department?: string | null
           email?: string | null
+          emirates_id?: never
           emirates_id_masked?: never
+          employer_view_mode?: string | null
           employment_date?: string | null
           first_name?: string | null
           grade?: string | null
@@ -3280,8 +3286,10 @@ export type Database = {
           last_name?: string | null
           manager_name?: string | null
           marital_status?: string | null
+          monthly_salary?: never
           nationality?: string | null
           organization_id?: string | null
+          passport_number?: never
           passport_number_masked?: never
           phone?: string | null
           position?: string | null
@@ -3295,7 +3303,9 @@ export type Database = {
           date_of_birth?: string | null
           department?: string | null
           email?: string | null
+          emirates_id?: never
           emirates_id_masked?: never
+          employer_view_mode?: string | null
           employment_date?: string | null
           first_name?: string | null
           grade?: string | null
@@ -3305,8 +3315,10 @@ export type Database = {
           last_name?: string | null
           manager_name?: string | null
           marital_status?: string | null
+          monthly_salary?: never
           nationality?: string | null
           organization_id?: string | null
+          passport_number?: never
           passport_number_masked?: never
           phone?: string | null
           position?: string | null
@@ -3445,6 +3457,14 @@ export type Database = {
         }
         Returns: Json
       }
+      get_employee_sensitive_data_with_audit: {
+        Args: { p_employee_user_id: string; p_reason: string }
+        Returns: {
+          emirates_id: string
+          monthly_salary: number
+          passport_number: string
+        }[]
+      }
       get_employer_dashboard_metrics: {
         Args: {
           p_org_id: string
@@ -3505,6 +3525,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_own_profile: { Args: { target_user_id: string }; Returns: boolean }
       is_same_organization: {
         Args: { _target_user_id: string }
         Returns: boolean
@@ -3530,6 +3551,15 @@ export type Database = {
           p_resource_type: string
           p_user_agent?: string
           p_user_id: string
+        }
+        Returns: string
+      }
+      log_sensitive_data_access: {
+        Args: {
+          p_data_type: string
+          p_reason?: string
+          p_resource_id: string
+          p_resource_type: string
         }
         Returns: string
       }
