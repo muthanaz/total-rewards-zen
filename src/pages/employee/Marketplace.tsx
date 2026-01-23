@@ -38,6 +38,15 @@ import { OfferDetailSheet } from '@/components/employee/OfferDetailSheet';
 import { MarketplaceOfferMedia, MarketplaceOfferSkeleton } from '@/components/employee/MarketplaceOfferMedia';
 import { MarketplaceEmptyState } from '@/components/employee/MarketplaceEmptyState';
 import { MarketplaceHowItWorks } from '@/components/employee/MarketplaceHowItWorks';
+import { MarketplaceBankCardBanner } from '@/components/employee/MarketplaceBankCardBanner';
+import { MarketplaceCategoryTiles } from '@/components/employee/MarketplaceCategoryTiles';
+import { MarketplaceCuratedSection } from '@/components/employee/MarketplaceCuratedSection';
+import { 
+  DEMO_MARKETPLACE_OFFERS, 
+  getDemoCuratedOffers,
+  MARKETPLACE_CATEGORY_TILES,
+  type DemoMarketplaceOffer 
+} from '@/lib/marketplaceDemoData';
 import { 
   formatDiscountLabel, 
   getOfferMicrocopy, 
@@ -98,14 +107,67 @@ interface VoucherData {
 }
 
 function MarketplaceContent() {
-  const { data: offers = [], isLoading } = useMarketplaceOffers();
+  const { data: dbOffers = [], isLoading } = useMarketplaceOffers();
   const { data: activations = [], refetch: refetchActivations } = usePerkActivations();
   const { mutate: activateOffer, isPending: isActivating } = useActivateOffer();
   const { bankCards, profile, children } = useProfile();
+  const { isDemoMode } = useDemoMode();
   const { language, direction } = useLanguage();
   const { toast } = useToast();
   const isRTL = direction === 'rtl';
   const t = (en: string, ar: string) => (language === 'ar' ? ar : en);
+
+  // Use demo data if in demo mode or no real offers
+  const offers = useMemo(() => {
+    if (isDemoMode || dbOffers.length === 0) {
+      return DEMO_MARKETPLACE_OFFERS.map(o => ({
+        id: o.id,
+        title: o.title,
+        merchant: o.merchant,
+        description: o.description,
+        category: o.category,
+        discount_percent: o.discount_percent,
+        rating: o.rating,
+        image_url: o.image_url,
+        is_public: o.is_public,
+        sponsored: o.sponsored,
+        tags: o.tags,
+        terms: o.terms,
+        valid_from: o.valid_from,
+        valid_to: o.valid_to,
+        created_at: o.created_at,
+        is_active: true,
+        status: 'active',
+      }));
+    }
+    return dbOffers;
+  }, [dbOffers, isDemoMode]);
+
+  // Curated offers for "Curated for You" section
+  const curatedOffers = useMemo(() => {
+    return getDemoCuratedOffers(children.length > 0, bankCards.length > 0);
+  }, [children.length, bankCards.length]);
+
+  // Category tiles with counts
+  const categoryTilesWithCounts = useMemo(() => {
+    return MARKETPLACE_CATEGORY_TILES.map(cat => ({
+      ...cat,
+      count: offers.filter(o => {
+        const catMapping: Record<string, string[]> = {
+          'Wellness': ['Health & Fitness', 'Lifestyle & Shopping'],
+          'Food & Dining': ['Food & Coffee', 'Everyday Essentials'],
+          'Fitness': ['Health & Fitness'],
+          'Learning': ['Learning & Skills'],
+          'Family': ['Family & Parenting'],
+          'Transport': ['Mobility'],
+          'Home & Living': ['Home & Living'],
+          'Experiences': ['Travel & Experiences'],
+        };
+        const matching = catMapping[cat.name] || [cat.name];
+        return matching.includes(o.category);
+      }).length,
+    }));
+  }, [offers]);
 
   // State
   const [searchTerm, setSearchTerm] = useState('');
@@ -312,6 +374,15 @@ function MarketplaceContent() {
         compact
       />
 
+      {/* Bank Card Integration Banner */}
+      <MarketplaceBankCardBanner />
+
+      {/* Trust line */}
+      <p className="text-xs text-muted-foreground text-center">
+        {t('Offers shown are based on your profile, eligibility, and linked cards', 'العروض المعروضة بناءً على ملفك الشخصي وأهليتك والبطاقات المربوطة')}
+        {isDemoMode && <Badge variant="outline" className="ml-2 text-[9px]">Demo</Badge>}
+      </p>
+
       {/* How It Works + Offer Types */}
       <MarketplaceHowItWorks 
         sponsoredCount={sponsoredCount}
@@ -341,12 +412,18 @@ function MarketplaceContent() {
         </TabsList>
 
         {/* Offers Tab */}
-        <TabsContent value="offers" className="space-y-5">
-          {/* Smart Personalization Strip */}
-          <PersonalizedRecommendationsStrip
-            offers={offers}
-            onSelectOffer={setSelectedOffer}
-            onActivate={handleActivate}
+        <TabsContent value="offers" className="space-y-6">
+          {/* Section 1: Curated for You */}
+          <MarketplaceCuratedSection
+            offers={curatedOffers}
+            onSelectOffer={(o) => setSelectedOffer(o as any)}
+            onActivate={(o) => handleActivate(o as any)}
+          />
+
+          {/* Section 2: Browse Categories */}
+          <MarketplaceCategoryTiles
+            categories={categoryTilesWithCounts}
+            onCategorySelect={(cat) => setCategory(cat)}
           />
 
           {/* Filters Section */}
