@@ -142,14 +142,22 @@ export function useEmployeeDashboard() {
         ? calculateProfileCompleteness(profile)
         : { percent: 0, missing: [] };
 
-      // Transform benefits
+      // Transform benefits - normalize names to match UI expectations
+      const benefitNameMapping: Record<string, string> = {
+        'Transport Allowance': 'Transport & Mobility',
+        'Education Allowance': 'Schooling Allowance',
+      };
+      
       const benefits: EmployeeBenefit[] = entitlements.map(e => {
         const benefit = e.benefits as any;
         const utilized = e.utilized_amount || 0;
         const annual = e.annual_allowance || 0;
+        const rawName = benefit?.name || 'Unknown Benefit';
+        const displayName = benefitNameMapping[rawName] || rawName;
+        
         return {
           id: e.id,
-          name: benefit?.name || 'Unknown Benefit',
+          name: displayName,
           benefitType: benefit?.benefit_type || 'other',
           annualAllowance: annual,
           utilizedAmount: utilized,
