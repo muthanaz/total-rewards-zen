@@ -199,19 +199,6 @@ function ViewModeToggle() {
         </div>
       </div>
 
-      {/* Mode indicator */}
-      <div
-        className={cn(
-          'mt-3 px-3 py-2 rounded-lg text-xs',
-          isExecutive
-            ? 'bg-violet-500/10 text-violet-300 border border-violet-500/20'
-            : 'bg-blue-500/10 text-blue-300 border border-blue-500/20'
-        )}
-      >
-        {isExecutive
-          ? '📊 KPI → Drivers → Actions → Narrative'
-          : '📋 Queue-first operational workbench'}
-      </div>
     </>
   );
 }

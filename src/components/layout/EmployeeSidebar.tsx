@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -15,16 +14,12 @@ import {
   FileText,
   Building2,
   User,
-  ChevronDown,
-  ChevronRight,
-  ChevronLeft,
   ShoppingBag,
   Receipt,
   Zap,
   HelpCircle,
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Badge } from '@/components/ui/badge';
 import {
   SidebarShell,
   SidebarHeader,
@@ -33,7 +28,6 @@ import {
   SidebarItem,
   SidebarStandaloneLink,
   SidebarFooter,
-  useSidebarShell,
 } from './sidebar';
 
 // ============================================================================
@@ -56,7 +50,7 @@ interface LifeAreaGroup {
 }
 
 // ============================================================================
-// LIFE AREA GROUPINGS
+// LIFE AREA GROUPINGS (for visual separators only, no accordion)
 // ============================================================================
 
 const LIFE_AREA_GROUPS: LifeAreaGroup[] = [
@@ -139,78 +133,22 @@ const helpItems: NavItem[] = [
 ];
 
 // ============================================================================
-// LIFE AREA SUB-GROUP COMPONENT
+// LIFE AREA LABEL (non-clickable separator)
 // ============================================================================
 
-function LifeAreaSubGroup({ lifeArea }: { lifeArea: LifeAreaGroup }) {
-  const location = useLocation();
+function LifeAreaLabel({ label, labelAr }: { label: string; labelAr: string }) {
   const { language, direction } = useLanguage();
-  const { setMobileOpen } = useSidebarShell();
-  const [isExpanded, setIsExpanded] = useState(false);
   const isRTL = direction === 'rtl';
-
-  const isLifeAreaActive = lifeArea.items.some(
-    (item) => location.pathname === item.path || location.pathname.startsWith(item.path + '/')
-  );
-
-  const isOpen = isExpanded || isLifeAreaActive;
-  const ChevronCollapsed = isRTL ? ChevronLeft : ChevronRight;
-  const displayLabel = language === 'ar' ? lifeArea.labelAr : lifeArea.label;
+  const displayLabel = language === 'ar' ? labelAr : label;
 
   return (
-    <div className="space-y-0.5">
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className={cn(
-          'flex items-center justify-between w-full px-3 py-1.5 text-[10px] font-medium uppercase tracking-wide transition-colors rounded-md',
-          'text-muted-foreground hover:text-foreground hover:bg-muted/50',
-          isLifeAreaActive && 'text-accent',
-          isRTL && 'flex-row-reverse text-right'
-        )}
-      >
-        <span>{displayLabel}</span>
-        {isOpen ? (
-          <ChevronDown className="w-3 h-3 shrink-0 opacity-60" />
-        ) : (
-          <ChevronCollapsed className="w-3 h-3 shrink-0 opacity-60" />
-        )}
-      </button>
-
-      {isOpen && (
-        <div className="space-y-0.5 animate-fade-in">
-          {lifeArea.items.map((item) => {
-            const isActive =
-              location.pathname === item.path ||
-              location.pathname.startsWith(item.path + '/');
-            const label = language === 'ar' && item.labelAr ? item.labelAr : item.label;
-
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  'nav-item',
-                  isActive && 'nav-item-active',
-                  isRTL && 'flex-row-reverse text-right',
-                  isRTL ? 'pr-4' : 'pl-4'
-                )}
-              >
-                <item.icon className="w-4 h-4 shrink-0" />
-                <span className={cn('text-sm flex-1', isRTL && 'text-right')}>{label}</span>
-                {item.badge && (
-                  <Badge
-                    variant="secondary"
-                    className="text-[9px] px-1.5 py-0 h-4 bg-accent/10 text-accent border-accent/20"
-                  >
-                    {item.badge}
-                  </Badge>
-                )}
-              </Link>
-            );
-          })}
-        </div>
+    <div
+      className={cn(
+        'px-3 py-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground',
+        isRTL && 'text-right'
       )}
+    >
+      {displayLabel}
     </div>
   );
 }
@@ -257,7 +195,7 @@ export function EmployeeSidebar() {
           ))}
         </SidebarSection>
 
-        {/* My Benefits Section */}
+        {/* My Benefits Section - Always shows all benefit links directly */}
         <SidebarSection
           id="my-benefits"
           label="My Benefits"
@@ -265,16 +203,30 @@ export function EmployeeSidebar() {
           isOpen={expandedSections.includes('my-benefits')}
           onToggle={() => toggleSection('my-benefits')}
         >
+          {/* Benefits Overview link */}
           <SidebarItem
             path={benefitsOverview.path}
             label={benefitsOverview.label}
             labelAr={benefitsOverview.labelAr}
             icon={benefitsOverview.icon}
           />
-          {/* Life Area Sub-groups */}
-          <div className="mt-2 space-y-1 border-t border-sidebar-border/30 pt-2">
+          
+          {/* All benefit links grouped by Life Area - NO accordion, just labels + direct links */}
+          <div className="mt-2 space-y-2 border-t border-sidebar-border/30 pt-2">
             {LIFE_AREA_GROUPS.map((lifeArea) => (
-              <LifeAreaSubGroup key={lifeArea.id} lifeArea={lifeArea} />
+              <div key={lifeArea.id} className="space-y-0.5">
+                <LifeAreaLabel label={lifeArea.label} labelAr={lifeArea.labelAr} />
+                {lifeArea.items.map((item) => (
+                  <SidebarItem
+                    key={item.path}
+                    path={item.path}
+                    label={item.label}
+                    labelAr={item.labelAr}
+                    icon={item.icon}
+                    badge={item.badge}
+                  />
+                ))}
+              </div>
             ))}
           </div>
         </SidebarSection>
