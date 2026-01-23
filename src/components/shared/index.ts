@@ -71,6 +71,7 @@ export {
 } from './EnumChip';
 
 // Benefit Value Type Chip (the 6-type classification)
+export { WaitingOnBadge, SLAPausedBadge } from './WaitingOnBadge';
 export { BenefitValueTypeChip } from './BenefitValueTypeChip';
 
 // Metric Evidence Drawer (comprehensive metric explainer)
