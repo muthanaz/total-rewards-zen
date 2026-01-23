@@ -261,7 +261,7 @@ export default function EmployeeDashboard() {
         </section>
       )}
 
-      {/* 4. Your Benefits Grid */}
+      {/* 4. Your Benefits Grid - Max 6 items */}
       {showYourBenefits && (
         <section>
           <div className={cn("flex items-center justify-between mb-4", isRTL && "flex-row-reverse")}>
@@ -280,7 +280,7 @@ export default function EmployeeDashboard() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {benefits.map((benefit, index) => (
+            {benefits.slice(0, 6).map((benefit, index) => (
               <BenefitCard
                 key={benefit.name}
                 name={t(getBenefitNameKey(benefit.name))}

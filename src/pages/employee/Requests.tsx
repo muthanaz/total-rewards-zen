@@ -15,7 +15,7 @@ import {
   FileText,
   HelpCircle,
   ArrowRight,
-  Plane,
+  ChevronDown,
 } from "lucide-react";
 import PerDiemWidget from "@/components/employee/PerDiemWidget";
 import { EmployeeRequestsList } from "@/components/employee/EmployeeRequestsList";
@@ -84,10 +84,11 @@ const benefitShortcuts: BenefitShortcut[] = [
   },
 ];
 
-const requestTypeCopy: Record<RequestType, { title: string; desc: string; icon: any }> = {
-  claim: { title: "Submit a Claim", desc: "Reimbursement for eligible expenses (attach receipts/invoices).", icon: Receipt },
-  request: { title: "Make a Request", desc: "Approvals/changes (e.g., allowance advance, benefit change, exceptions).", icon: FileText },
-  question: { title: "Ask a Question", desc: "Clarify policy/eligibility with a tracked answer trail.", icon: HelpCircle },
+// Grouped request type labels (Reimbursement / Pre-Approval / Support)
+const requestTypeCopy: Record<RequestType, { title: string; desc: string; icon: any; group: string }> = {
+  claim: { title: "Reimbursement", desc: "Get reimbursed for eligible expenses", icon: Receipt, group: "Reimbursement" },
+  request: { title: "Pre-Approval", desc: "Request approval before incurring expense", icon: FileText, group: "Pre-Approval" },
+  question: { title: "Support", desc: "Get help with policy or eligibility questions", icon: HelpCircle, group: "Support" },
 };
 
 export default function Requests() {
@@ -153,61 +154,42 @@ export default function Requests() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold tracking-tight">Claims, Requests & Travel</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Claims & Requests</h1>
         <p className="text-muted-foreground">
-          Benefits-first submissions with clear status, next actions, and SLA expectations.
+          Submit reimbursements, pre-approvals, and support requests.
         </p>
       </div>
 
-      {/* Per Diem Section */}
-      <div className="grid lg:grid-cols-2 gap-4">
-        <PerDiemWidget />
-        <Card className="border-dashed">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Plane className="w-5 h-5 text-accent" />
-              Travel & Per Diem Info
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-muted-foreground">
-            <p>Per diem rates are calculated based on your grade and destination region.</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Domestic (UAE): Standard local rates</li>
-              <li>GCC: Regional travel rates</li>
-              <li>International: Region-specific rates (Europe, Americas, Asia)</li>
-            </ul>
-            <p className="text-xs">All per diem claims require trip purpose and dates. Approval typically takes 3-5 business days.</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Benefit Shortcuts */}
-      <Card className="border-dashed">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Start from a benefit (recommended)</CardTitle>
-          <CardDescription>Pick a scenario — we'll prefill the correct wording and category.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {benefitShortcuts.map((s) => (
-            <Button key={s.key} variant="outline" className="justify-between h-auto py-3" onClick={() => applyShortcut(s)}>
-              <span className="text-left">
-                <span className="block font-medium">{s.label}</span>
-                <span className="block text-xs text-muted-foreground">
-                  Creates a {s.suggestedType} • {s.category}
-                </span>
-              </span>
-              <ArrowRight className="w-4 h-4 text-muted-foreground" />
-            </Button>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Quick Action Cards */}
+      {/* Quick Action Cards - Grouped by type */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <QuickCard type="claim" />
         <QuickCard type="request" />
         <QuickCard type="question" />
       </div>
+
+      {/* Benefit Shortcuts (collapsed by default - expand on click) */}
+      <details className="group">
+        <summary className="flex items-center justify-between cursor-pointer list-none p-4 bg-muted/30 rounded-lg border border-dashed border-border/50 hover:border-accent/30 transition-colors">
+          <div>
+            <h3 className="font-medium text-sm">Start from a benefit scenario</h3>
+            <p className="text-xs text-muted-foreground">Pre-filled templates for common requests</p>
+          </div>
+          <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+          {benefitShortcuts.map((s) => (
+            <Button key={s.key} variant="outline" className="justify-between h-auto py-3" onClick={() => applyShortcut(s)}>
+              <span className="text-left">
+                <span className="block font-medium">{s.label}</span>
+                <span className="block text-xs text-muted-foreground">
+                  Creates a {requestTypeCopy[s.suggestedType].group} • {s.category}
+                </span>
+              </span>
+              <ArrowRight className="w-4 h-4 text-muted-foreground" />
+            </Button>
+          ))}
+        </div>
+      </details>
 
       {/* Requests List */}
       <EmployeeRequestsList />
