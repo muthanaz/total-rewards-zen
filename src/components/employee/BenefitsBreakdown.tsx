@@ -69,16 +69,20 @@ export function BenefitsBreakdown({
     const groups: Record<BenefitValueType, CategorySummary> = {
       cash: { valueType: 'cash', totalValue: 0, totalUtilized: 0, count: 0, benefits: [] },
       reimbursement: { valueType: 'reimbursement', totalValue: 0, totalUtilized: 0, count: 0, benefits: [] },
+      budget: { valueType: 'budget', totalValue: 0, totalUtilized: 0, count: 0, benefits: [] },
       coverage: { valueType: 'coverage', totalValue: 0, totalUtilized: 0, count: 0, benefits: [] },
+      deferred: { valueType: 'deferred', totalValue: 0, totalUtilized: 0, count: 0, benefits: [] },
       access: { valueType: 'access', totalValue: 0, totalUtilized: 0, count: 0, benefits: [] },
     };
     
     benefits.forEach(benefit => {
       const group = groups[benefit.valueType];
-      group.totalValue += benefit.annualValue;
-      group.totalUtilized += benefit.utilized;
-      group.count += 1;
-      group.benefits.push(benefit);
+      if (group) {
+        group.totalValue += benefit.annualValue;
+        group.totalUtilized += benefit.utilized;
+        group.count += 1;
+        group.benefits.push(benefit);
+      }
     });
     
     return groups;
@@ -86,13 +90,18 @@ export function BenefitsBreakdown({
   
   const cashTotal = breakdown.cash.totalValue;
   const reimbursementTotal = breakdown.reimbursement.totalValue;
-  const nonMonetaryCount = breakdown.coverage.count + breakdown.access.count;
+  const budgetTotal = breakdown.budget.totalValue;
+  const deferredTotal = breakdown.deferred.totalValue;
+  const nonMonetaryCount = breakdown.coverage.count + breakdown.access.count + breakdown.deferred.count;
   
   const cashUtilization = cashTotal > 0 
     ? Math.round((breakdown.cash.totalUtilized / cashTotal) * 100) 
     : 0;
   const reimbursementUtilization = reimbursementTotal > 0 
     ? Math.round((breakdown.reimbursement.totalUtilized / reimbursementTotal) * 100) 
+    : 0;
+  const budgetUtilization = budgetTotal > 0
+    ? Math.round((breakdown.budget.totalUtilized / budgetTotal) * 100)
     : 0;
   
   return (
@@ -150,8 +159,28 @@ export function BenefitsBreakdown({
             }
           />
         )}
+
+        {/* Budget Allocations */}
+        {budgetTotal > 0 && (
+          <BreakdownRow
+            icon={Receipt}
+            label={isRTL ? 'تخصيصات الميزانية' : 'Budget Allocations'}
+            sublabel={isRTL ? 'ميزانية برامج تنظيمية' : 'Organizational program budgets'}
+            amount={budgetTotal}
+            utilized={breakdown.budget.totalUtilized}
+            utilization={budgetUtilization}
+            showProgress
+            colorClass="text-cyan-600"
+            badgeClass="bg-cyan-500/10 text-cyan-600 border-cyan-500/20"
+            isRTL={isRTL}
+            disclaimer={isRTL 
+              ? 'الاستخدام يتطلب موافقة'
+              : 'Usage requires approval'
+            }
+          />
+        )}
         
-        {/* Coverage & Access */}
+        {/* Coverage, Deferred & Access - Non-monetary types */}
         {nonMonetaryCount > 0 && (
           <div className={cn(
             "flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-dashed",
@@ -163,12 +192,12 @@ export function BenefitsBreakdown({
               </div>
               <div className={isRTL ? "text-right" : ""}>
                 <p className="font-medium text-sm">
-                  {isRTL ? 'التغطية والوصول' : 'Coverage & Access'}
+                  {isRTL ? 'التغطية والقيمة المؤجلة والوصول' : 'Coverage, Deferred & Access'}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {isRTL 
-                    ? 'برامج مدفوعة من صاحب العمل (ليست قيمة نقدية للموظف)'
-                    : 'Employer-paid programs (not employee cash value)'
+                    ? 'برامج مدفوعة من صاحب العمل (ليست قيمة نقدية متاحة)'
+                    : 'Employer investment (not spendable cash)'
                   }
                 </p>
               </div>
@@ -190,8 +219,8 @@ export function BenefitsBreakdown({
                 <TooltipContent className="max-w-xs">
                   <p className="text-xs">
                     {isRTL 
-                      ? 'التغطية والوصول هي برامج يدفعها صاحب العمل نيابة عنك. هذه ليست قيمة نقدية يمكنك إنفاقها.'
-                      : 'Coverage and access are programs your employer pays for on your behalf. These are not cash values you can spend.'
+                      ? 'التغطية والقيمة المؤجلة والوصول هي استثمارات صاحب العمل نيابة عنك. القيمة المؤجلة مثل الأسهم والمكافآت تستحق في المستقبل.'
+                      : 'Coverage, deferred value, and access are employer investments on your behalf. Deferred items like equity and bonuses vest over time.'
                     }
                   </p>
                 </TooltipContent>
