@@ -311,19 +311,66 @@ export function isPolicyVersionActive(policy: PolicyVersion): boolean {
 }
 
 // ============================================================================
-// SLA CALCULATION CONTRACT
+// SLA CALCULATION CONTRACT (with pause logic)
 // ============================================================================
+
+/**
+ * Statuses where SLA clock is paused (waiting on employee action)
+ */
+export const SLA_PAUSED_STATUSES = [
+  REQUEST_STATUSES.DRAFT,
+  REQUEST_STATUSES.PENDING_EMPLOYEE,
+  REQUEST_STATUSES.INFO_REQUESTED,
+] as const;
+
+/**
+ * Check if SLA should be paused for the given status
+ * SLA is paused when we are waiting on the employee to take action
+ */
+export function isSlaPaused(status: RequestStatus | string | null): boolean {
+  return SLA_PAUSED_STATUSES.includes(status as RequestStatus);
+}
+
+/**
+ * Get who the request is currently waiting on
+ */
+export function getWaitingOnActor(status: RequestStatus | string | null): 'employee' | 'hr' | 'system' | 'none' {
+  if (!status) return 'none';
+  
+  // Waiting on employee
+  if (['draft', 'pending_employee', 'info_requested'].includes(status)) {
+    return 'employee';
+  }
+  
+  // Waiting on HR
+  if (['submitted', 'pending', 'in_review', 'escalated'].includes(status)) {
+    return 'hr';
+  }
+  
+  // Processing by system
+  if (status === 'approved') {
+    return 'system';
+  }
+  
+  // Terminal states - not waiting on anyone
+  return 'none';
+}
 
 export interface SLAResult {
   hoursRemaining: number;
   daysRemaining: number;
   isOverdue: boolean;
   isUrgent: boolean; // < 24 hours
-  status: 'on_track' | 'urgent' | 'overdue';
+  isPaused: boolean; // SLA clock paused (waiting on employee)
+  status: 'on_track' | 'urgent' | 'overdue' | 'paused';
+  waitingOn: 'employee' | 'hr' | 'system' | 'none';
 }
 
 /**
  * Calculate SLA status - consistent across portals
+ * 
+ * CRITICAL: SLA is paused when waiting on employee (pending_employee, info_requested)
+ * This ensures HR is never shown as "overdue" while waiting on employee docs
  */
 export function calculateSLA(slaDueAt: string | null, currentStatus: RequestStatus | string | null): SLAResult | null {
   // No SLA for completed statuses
@@ -331,17 +378,22 @@ export function calculateSLA(slaDueAt: string | null, currentStatus: RequestStat
     return null;
   }
   
+  const waitingOn = getWaitingOnActor(currentStatus);
+  const isPaused = isSlaPaused(currentStatus);
+  
   const now = new Date();
   const dueDate = new Date(slaDueAt);
   const diffMs = dueDate.getTime() - now.getTime();
   const hoursRemaining = diffMs / (1000 * 60 * 60);
   const daysRemaining = hoursRemaining / 24;
   
-  const isOverdue = hoursRemaining < 0;
-  const isUrgent = !isOverdue && hoursRemaining < 24;
+  // If SLA is paused, we don't mark as overdue
+  const isOverdue = !isPaused && hoursRemaining < 0;
+  const isUrgent = !isPaused && !isOverdue && hoursRemaining < 24;
   
   let status: SLAResult['status'];
-  if (isOverdue) status = 'overdue';
+  if (isPaused) status = 'paused';
+  else if (isOverdue) status = 'overdue';
   else if (isUrgent) status = 'urgent';
   else status = 'on_track';
   
@@ -350,7 +402,9 @@ export function calculateSLA(slaDueAt: string | null, currentStatus: RequestStat
     daysRemaining: Math.round(daysRemaining * 10) / 10,
     isOverdue,
     isUrgent,
+    isPaused,
     status,
+    waitingOn,
   };
 }
 

@@ -158,6 +158,28 @@ export function isEmployerActionableStatus(status: RequestStatus | string | null
   return status === 'pending' || status === 'submitted' || status === 'in_review' || status === 'escalated';
 }
 
+/**
+ * Statuses where SLA is paused (waiting on employee)
+ */
+export const SLA_PAUSED_STATUSES: RequestStatus[] = ['draft', 'pending_employee', 'info_requested'];
+
+/**
+ * Check if SLA clock should be paused for this status
+ */
+export function isSlaPausedStatus(status: RequestStatus | string | null): boolean {
+  return SLA_PAUSED_STATUSES.includes(status as RequestStatus);
+}
+
+/**
+ * Get who is currently responsible for action on this request
+ */
+export function getWaitingOnActor(status: RequestStatus | string | null): 'employee' | 'hr' | 'system' | 'none' {
+  if (isEmployeeActionableStatus(status)) return 'employee';
+  if (isEmployerActionableStatus(status)) return 'hr';
+  if (status === 'approved') return 'system'; // Approved awaiting payment processing
+  return 'none';
+}
+
 // ============================================================================
 // TRANSITION ACTIONS
 // ============================================================================

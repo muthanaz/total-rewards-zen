@@ -22,10 +22,12 @@ import {
   XCircle,
   ArrowUpRight,
   Eye,
+  Pause,
 } from 'lucide-react';
 import { useEmployeeRequests, useEmployeeRequestCounts, getEmployeeStatusLabel } from '@/hooks/useEmployeeRequests';
 import { EmployeeRequestDetailSheet } from './EmployeeRequestDetailSheet';
 import { getStatusBadgeStyle, formatRelativeTime } from '@/lib/crossPortalContract';
+import { WaitingOnBadge } from '@/components/shared/WaitingOnBadge';
 import { cn } from '@/lib/utils';
 import { Currency } from '@/components/ui/Currency';
 
@@ -101,7 +103,17 @@ export function EmployeeRequestsList() {
   const getSLABadge = (request: typeof requests[0]) => {
     if (!request.slaStatus) return null;
     
-    const { isOverdue, isUrgent, hoursRemaining } = request.slaStatus;
+    const { isOverdue, isUrgent, isPaused, hoursRemaining } = request.slaStatus;
+    
+    // SLA paused - waiting on employee, don't show overdue
+    if (isPaused) {
+      return (
+        <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/20 text-[10px] px-1.5 gap-1">
+          <Pause className="w-3 h-3" />
+          SLA Paused
+        </Badge>
+      );
+    }
     
     if (isOverdue) {
       return (
@@ -266,6 +278,13 @@ export function EmployeeRequestsList() {
                             <Badge variant="outline" className="text-xs capitalize">
                               {request.priority || 'Standard'}
                             </Badge>
+                            
+                            {/* Waiting On indicator */}
+                            <WaitingOnBadge 
+                              status={request.status} 
+                              variant="compact" 
+                              perspective="employee" 
+                            />
                           </div>
                         </div>
                         
