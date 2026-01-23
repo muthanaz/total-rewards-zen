@@ -36,6 +36,7 @@ import {
   Target,
   Download,
   Calendar,
+  Lightbulb,
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -60,14 +61,10 @@ import {
   DataConfidenceBadge, 
   PageConfidenceGate, 
   useDataCoverageMetrics, 
-  ZombieSpendCandidates,
-  detectZombieCandidates,
   ForecastWidget,
   SpendKPIGrid,
   SpendInsights,
-  SpendRecommendedActions,
   generateSpendInsights,
-  generateSpendRecommendedActions,
 } from '@/components/employer';
 import { UtilizationFunnel, generateFunnelData } from '@/components/employer/UtilizationFunnel';
 import { TopDriversTable } from '@/components/employer/TopDriversTable';
@@ -416,13 +413,6 @@ export function Spend() {
     yoySpendChange: 8.2,
   }), [overallUtilization, topUnderutilized]);
 
-  // Generate recommended actions
-  const recommendedActions = useMemo(() => generateSpendRecommendedActions({
-    unusedEntitlement: overallUtilization.remaining,
-    topUnderutilizedCategory: topUnderutilized,
-    lowAwarenessCategories: ['Learning', 'Wellbeing'],
-    pendingClaimsCount: 24,
-  }), [overallUtilization.remaining, topUnderutilized]);
 
   // Combine monthly data for comparison
   const comparisonData = monthlyTrendCurrent.map((curr, idx) => ({
@@ -515,30 +505,35 @@ export function Spend() {
           />
         </div>
 
-        {/* 5. Zombie Spend Candidates */}
-        <ZombieSpendCandidates
-          candidates={detectZombieCandidates(spendByBenefitType.map(b => ({
-            id: b.id,
-            name: b.name,
-            category: b.category,
-            allocated: b.budget,
-            entitled: b.entitled,
-            claimed: b.spend,
-            employees: b.employees,
-            faqViews: b.faqViews,
-            claimVelocity: b.claimVelocity,
-            awarenessScore: b.awarenessScore,
-          })))}
-          totalZombieSpend={overallUtilization.remaining}
-          yearEndProjection={overallUtilization.remaining * 1.15}
-          onViewDetails={(candidate) => toast.info(`Viewing ${candidate.benefit} details`)}
-          onCreateAction={(candidate) => {
-            window.location.href = `/employer/recommendations?create=true&benefit=${candidate.id}`;
-          }}
-          onDrilldown={(candidate, dimension, value) => {
-            toast.info(`Drilling down: ${candidate.benefit} → ${dimension} → ${value}`);
-          }}
-        />
+        {/* 5. Link to Optimization - NOT duplicating action cards */}
+        <Card className="border-warning/20 bg-gradient-to-r from-warning/5 to-transparent">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-warning/10">
+                  <Lightbulb className="w-5 h-5 text-warning" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">
+                    {formatCurrencyAED(overallUtilization.remaining, { abbreviate: true })} in unrealized value identified
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    View root causes and recovery playbooks in Optimization
+                  </p>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.location.href = '/employer/zombie'}
+                className="gap-1"
+              >
+                View Opportunities
+                <ArrowRight className="w-3 h-3" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* 6. Tabs: Breakdown Views */}
         <Tabs defaultValue="benefit-type" className="space-y-4">
@@ -833,13 +828,34 @@ export function Spend() {
           </TabsContent>
         </Tabs>
 
-        {/* 7. Recommended Actions */}
-        <SpendRecommendedActions
-          actions={recommendedActions}
-          onCreateAction={(action) => {
-            toast.info(`Demo: Creating action "${action.title}"...`);
-          }}
-        />
+        {/* 7. Link to Action Plan - NOT duplicating action cards */}
+        <Card className="border-accent/20 bg-gradient-to-r from-accent/5 to-transparent">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-accent/10">
+                  <Target className="w-5 h-5 text-accent" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">
+                    Ready to take action on these insights?
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Track recommendations and measure impact in the Action Plan
+                  </p>
+                </div>
+              </div>
+              <Button 
+                size="sm"
+                onClick={() => window.location.href = '/employer/recommendations'}
+                className="gap-1"
+              >
+                View Action Plan
+                <ArrowRight className="w-3 h-3" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Drilldown Sheet */}
         <BenefitDrilldownSheet 
