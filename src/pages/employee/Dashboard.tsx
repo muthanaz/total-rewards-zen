@@ -11,6 +11,7 @@ import { useUIVisibility } from '@/contexts/UIVisibilityContext';
 import { cn, formatCurrencyAED } from '@/lib/utils';
 import { useEmployeeDashboard } from '@/hooks/useEmployeeDashboard';
 import { DemoTip, DEMO_TIPS } from '@/components/demo';
+import { DEMO_FALLBACKS } from '@/lib/metrics/computations';
 
 // Dashboard components matching the reference design
 import { ProfileCompleteness } from '@/components/employee/ProfileCompleteness';
@@ -58,22 +59,27 @@ export default function EmployeeDashboard() {
   const showYourBenefits = isElementVisible('employee', 'dashboard', 'your_benefits');
   const showSatisfactionSurvey = isElementVisible('employee', 'dashboard', 'satisfaction_survey');
 
-  // Use real data or fallback to demo
-  const profileData = dashboardData?.profile || {
-    firstName: 'Demo',
-    lastName: '',
-    monthlySalary: 35000,
-    profileCompleteness: 22,
-    missingFields: ['Phone Number', 'Emirates ID'],
+  // CRITICAL: Always use realistic values from centralized fallbacks - never show 0 for salary
+  // Use real data if available with meaningful values, otherwise fallback to demo
+  const hasValidSalary = dashboardData?.profile?.monthlySalary && dashboardData.profile.monthlySalary > 0;
+  const hasValidBenefits = dashboardData?.totals?.guaranteedBenefits && dashboardData.totals.guaranteedBenefits > 0;
+  
+  const profileData = {
+    firstName: dashboardData?.profile?.firstName || 'Demo',
+    lastName: dashboardData?.profile?.lastName || '',
+    monthlySalary: hasValidSalary ? dashboardData.profile.monthlySalary : DEMO_FALLBACKS.employeeMonthlySalary,
+    profileCompleteness: dashboardData?.profile?.profileCompleteness ?? 22,
+    missingFields: dashboardData?.profile?.missingFields || ['Phone Number', 'Emirates ID'],
   };
 
-  const totals = dashboardData?.totals || {
-    annualSalary: 420000,
-    guaranteedBenefits: 219000,
-    totalBenefitsValue: 282000,
-    totalUtilized: 215200,
-    utilizationPercent: 76,
-    totalCompensation: 639000,
+  const totals = {
+    annualSalary: hasValidSalary ? dashboardData.totals.annualSalary : DEMO_FALLBACKS.employeeAnnualSalary,
+    guaranteedBenefits: hasValidBenefits ? dashboardData.totals.guaranteedBenefits : DEMO_FALLBACKS.employeeGuaranteedBenefits,
+    totalBenefitsValue: dashboardData?.totals?.totalBenefitsValue || DEMO_FALLBACKS.employeeTotalBenefits,
+    totalUtilized: dashboardData?.totals?.totalUtilized || DEMO_FALLBACKS.employeeUtilized,
+    utilizationPercent: dashboardData?.totals?.utilizationPercent || 76,
+    totalCompensation: (hasValidSalary ? dashboardData.totals.annualSalary : DEMO_FALLBACKS.employeeAnnualSalary) + 
+                       (hasValidBenefits ? dashboardData.totals.guaranteedBenefits : DEMO_FALLBACKS.employeeGuaranteedBenefits),
   };
 
   const payroll = dashboardData?.payroll || {

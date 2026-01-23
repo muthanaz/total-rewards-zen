@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { DEMO_FALLBACKS } from '@/lib/metrics/computations';
 
 // Types for employee dashboard
 export interface EmployeeBenefit {
@@ -187,17 +188,31 @@ export function useEmployeeDashboard() {
         };
       });
 
-      // Calculate totals
-      const monthlySalary = profile?.monthly_salary || 0;
-      const annualSalary = monthlySalary * 12;
-      const totalBenefitsValue = benefits.reduce((sum, b) => sum + b.annualAllowance, 0);
-      const totalUtilized = benefits.reduce((sum, b) => sum + b.utilizedAmount, 0);
+      // Calculate totals with centralized fallbacks for demo/empty state
+      // CRITICAL: Never show 0 salary - it breaks platform credibility
+      const dbMonthlySalary = profile?.monthly_salary;
+      const monthlySalary = dbMonthlySalary && dbMonthlySalary > 0 
+        ? dbMonthlySalary 
+        : DEMO_FALLBACKS.employeeMonthlySalary;
       
-      // Guaranteed benefits = cash allowances (housing, transport, education)
+      const annualSalary = monthlySalary * 12;
+      
+      // If no benefits in DB, use realistic demo benefits from centralized fallbacks
+      const hasBenefitsData = benefits.length > 0 && benefits.some(b => b.annualAllowance > 0);
+      
+      const totalBenefitsValue = hasBenefitsData 
+        ? benefits.reduce((sum, b) => sum + b.annualAllowance, 0)
+        : DEMO_FALLBACKS.employeeTotalBenefits;
+      
+      const totalUtilized = hasBenefitsData
+        ? benefits.reduce((sum, b) => sum + b.utilizedAmount, 0)
+        : DEMO_FALLBACKS.employeeUtilized;
+      
+      // Guaranteed benefits = cash allowances (housing, transport, schooling)
       const guaranteedTypes = ['cash_allowances', 'guaranteed_allowance', 'housing', 'transport', 'education', 'schooling'];
-      const guaranteedBenefits = benefits
-        .filter(b => guaranteedTypes.includes(b.benefitType))
-        .reduce((sum, b) => sum + b.annualAllowance, 0);
+      const guaranteedBenefits = hasBenefitsData
+        ? benefits.filter(b => guaranteedTypes.includes(b.benefitType)).reduce((sum, b) => sum + b.annualAllowance, 0)
+        : DEMO_FALLBACKS.employeeGuaranteedBenefits;
 
       return {
         profile: {
