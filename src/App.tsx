@@ -12,6 +12,7 @@ import { UIVisibilityProvider } from "@/contexts/UIVisibilityContext";
 import { PrivacyProvider } from "@/components/ui/privacy-toggle";
 import { DemoModeProvider } from "@/contexts/DemoModeContext";
 import { DemoModeBadge } from "@/components/demo";
+import { CommandPalette } from "@/components/ui/command-palette";
 import { GlobalErrorBoundary } from "@/components/shared/GlobalErrorBoundary";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -336,6 +337,7 @@ const App = () => (
                       <TooltipProvider>
                         <Toaster />
                         <Sonner />
+                        <CommandPalette />
                         <AppRoutes />
                         <DemoModeBadge />
                       </TooltipProvider>
