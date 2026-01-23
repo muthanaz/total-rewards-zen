@@ -55,27 +55,27 @@ const navigationGroups: NavGroup[] = [
     ],
   },
   {
-    title: 'Redemptions',
-    titleAr: 'الاستردادات',
+    title: 'Revenue',
+    titleAr: 'الإيرادات',
     items: [
-      { label: 'Voucher Redemptions', labelAr: 'استرداد القسائم', path: '/vendor/redemptions', icon: Receipt },
-      { label: 'Usage Analytics', labelAr: 'تحليلات الاستخدام', path: '/vendor/analytics', icon: TrendingUp },
+      { label: 'Redemptions', labelAr: 'الاستردادات', path: '/vendor/redemptions', icon: Receipt },
+      { label: 'Earnings', labelAr: 'الأرباح', path: '/vendor/earnings', icon: Wallet },
+      { label: 'Transactions', labelAr: 'المعاملات', path: '/vendor/transactions', icon: FileText },
     ],
   },
   {
-    title: 'Payouts',
-    titleAr: 'المدفوعات',
+    title: 'Insights (Beta)',
+    titleAr: 'الرؤى (تجريبي)',
     items: [
-      { label: 'Payout Summary', labelAr: 'ملخص المدفوعات', path: '/vendor/earnings', icon: Wallet },
-      { label: 'Invoices & Statements', labelAr: 'الفواتير والكشوفات', path: '/vendor/transactions', icon: FileText },
+      { label: 'Analytics', labelAr: 'التحليلات', path: '/vendor/analytics', icon: TrendingUp },
     ],
   },
   {
-    title: 'Settings',
-    titleAr: 'الإعدادات',
+    title: 'Account',
+    titleAr: 'الحساب',
     items: [
-      { label: 'Profile & Verification', labelAr: 'الملف الشخصي والتحقق', path: '/vendor/profile', icon: Shield },
-      { label: 'Team & Access', labelAr: 'الفريق والصلاحيات', path: '/vendor/settings', icon: Users },
+      { label: 'Profile', labelAr: 'الملف الشخصي', path: '/vendor/profile', icon: Shield },
+      { label: 'Settings', labelAr: 'الإعدادات', path: '/vendor/settings', icon: Users },
     ],
   },
 ];
