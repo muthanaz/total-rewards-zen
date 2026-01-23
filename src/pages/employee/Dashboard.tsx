@@ -33,13 +33,32 @@ const benefitIcons: Record<string, LucideIcon> = {
 };
 
 // Demo benefits data (used as fallback)
+// Mapping from benefit names to translation keys (ensures proper display names)
+const BENEFIT_NAME_TO_KEY: Record<string, string> = {
+  'Housing Allowance': 'benefit.housing',
+  'Schooling Allowance': 'benefit.education',
+  'Health Insurance': 'benefit.health',
+  'Transport & Mobility': 'benefit.transport',
+  'Wellbeing Program': 'benefit.wellbeing',
+  'Learning & Development': 'benefit.learning',
+  'Annual Bonus': 'benefit.bonus',
+  'Financial Planning': 'benefit.financial',
+  'Equity & Options': 'benefit.equity',
+  'Leave Management': 'benefit.leave',
+};
+
+// Get proper translation key for a benefit name
+const getBenefitNameKey = (name: string): string => {
+  return BENEFIT_NAME_TO_KEY[name] || name; // Fallback to display name directly if no key found
+};
+
 const demoBenefits = [
-  { name: 'Housing Allowance', nameKey: 'benefit.housing', icon: Home, value: 120000, utilized: 120000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'home_living', route: '/employee/housing', category: 'housing', claimable: true, description: 'Monthly housing allowance paid with salary' },
-  { name: 'Schooling Allowance', nameKey: 'benefit.education', icon: GraduationCap, value: 60000, utilized: 42000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'family_parenting', route: '/employee/schooling', category: 'education', claimable: true, description: 'School fee coverage for dependents' },
-  { name: 'Health Insurance', nameKey: 'benefit.health', icon: Heart, value: 45000, utilized: 12500, type: 'health_protection', valueType: 'employer_cost' as BenefitValueType, area: 'health', route: '/employee/health', category: 'health', claimable: true, description: 'Comprehensive health coverage for family' },
-  { name: 'Transport & Mobility', nameKey: 'benefit.transport', icon: Car, value: 39000, utilized: 33000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'mobility', route: '/employee/transport', category: 'transport', claimable: true, description: 'Monthly transport and flight tickets' },
-  { name: 'Wellbeing Program', nameKey: 'benefit.wellbeing', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', valueType: 'budget' as BenefitValueType, area: 'health', route: '/employee/wellbeing', category: 'wellbeing', claimable: true, description: 'Gym membership and wellness apps' },
-  { name: 'Learning & Development', nameKey: 'benefit.learning', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', valueType: 'budget' as BenefitValueType, area: 'career', route: '/employee/learning', category: 'learning', claimable: true, description: 'Professional courses and certifications' },
+  { name: 'Housing Allowance', icon: Home, value: 120000, utilized: 120000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'home_living', route: '/employee/housing', category: 'housing', claimable: true, description: 'Monthly housing allowance paid with salary' },
+  { name: 'Schooling Allowance', icon: GraduationCap, value: 60000, utilized: 42000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'family_parenting', route: '/employee/schooling', category: 'education', claimable: true, description: 'School fee coverage for dependents' },
+  { name: 'Health Insurance', icon: Heart, value: 45000, utilized: 12500, type: 'health_protection', valueType: 'employer_cost' as BenefitValueType, area: 'health', route: '/employee/health', category: 'health', claimable: true, description: 'Comprehensive health coverage for family' },
+  { name: 'Transport & Mobility', icon: Car, value: 39000, utilized: 33000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'mobility', route: '/employee/transport', category: 'transport', claimable: true, description: 'Monthly transport and flight tickets' },
+  { name: 'Wellbeing Program', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', valueType: 'budget' as BenefitValueType, area: 'health', route: '/employee/wellbeing', category: 'wellbeing', claimable: true, description: 'Gym membership and wellness apps' },
+  { name: 'Learning & Development', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', valueType: 'budget' as BenefitValueType, area: 'career', route: '/employee/learning', category: 'learning', claimable: true, description: 'Professional courses and certifications' },
 ];
 
 export default function EmployeeDashboard() {
@@ -98,7 +117,6 @@ export default function EmployeeDashboard() {
         const IconComponent = benefitIcons[b.name] ?? Gift;
         return {
           name: b.name,
-          nameKey: `benefit.${b.name.toLowerCase().replace(/\s+/g, '')}`,
           icon: IconComponent,
           value: b.annualAllowance,
           utilized: b.utilizedAmount,
@@ -265,7 +283,7 @@ export default function EmployeeDashboard() {
             {benefits.map((benefit, index) => (
               <BenefitCard
                 key={benefit.name}
-                name={t(benefit.nameKey)}
+                name={t(getBenefitNameKey(benefit.name))}
                 icon={benefit.icon}
                 value={benefit.value}
                 utilized={benefit.utilized}
