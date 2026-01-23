@@ -46,6 +46,8 @@ interface NavGroup {
   featureFlag?: keyof ReturnType<typeof useFeatureFlags>['flags'];
   /** If true, show only when onboarding is incomplete */
   showOnlyIfOnboardingIncomplete?: boolean;
+  /** Optional path to make the group heading clickable */
+  path?: string;
 }
 
 interface NavItem {
@@ -107,13 +109,14 @@ const navigation: NavGroup[] = [
       { label: 'Learning & Development', labelAr: 'التعلم والتطوير', path: '/employee/learning', icon: BookOpen },
     ],
   },
-  // LEAVE MANAGEMENT
+  // LEAVE MANAGEMENT - Clickable heading
   {
     id: 'leave-management',
     label: 'Leave Management',
     labelAr: 'إدارة الإجازات',
+    path: '/employee/leave', // Clickable heading
     items: [
-      { label: 'Leave Management', labelAr: 'إدارة الإجازات', path: '/employee/leave', icon: Calendar },
+      { label: 'Leave Dashboard', labelAr: 'لوحة الإجازات', path: '/employee/leave', icon: Calendar },
     ],
   },
   // HR & SERVICES
@@ -129,11 +132,12 @@ const navigation: NavGroup[] = [
       { label: 'Gov Connect', labelAr: 'الخدمات الحكومية', path: '/employee/gov-connect', icon: Building2 },
     ],
   },
-  // MARKETPLACE - Always visible and expanded by default
+  // MARKETPLACE - Clickable heading
   {
     id: 'marketplace',
-    label: 'Perks & Partners',
-    labelAr: 'الامتيازات والشراكات',
+    label: 'Marketplace',
+    labelAr: 'السوق',
+    path: '/employee/marketplace', // Clickable heading
     defaultOpen: true,
     items: [
       { label: 'Perks & Partners', labelAr: 'الامتيازات والشراكات', path: '/employee/marketplace', icon: ShoppingBag },
@@ -245,24 +249,34 @@ export function EmployeeSidebar() {
       )}>
         {visibleNavigation.map((group, index) => (
           <div key={group.id} className={cn('mb-1', index > 0 && 'mt-5')}>
-            <button
-              onClick={() => toggleGroup(group.id)}
-              className={cn(
-                'flex items-center justify-between w-full px-3 py-2 text-[11px] font-bold uppercase tracking-[0.15em] transition-colors rounded-md group',
-                'text-sidebar-primary hover:bg-sidebar-primary/10',
-                isRTL && 'flex-row-reverse text-right'
-              )}
-            >
-              <div className={cn('flex items-center gap-2', isRTL && 'flex-row-reverse')}>
-                <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
-                <span>{getLabel(group)}</span>
-              </div>
-              {expandedGroups.includes(group.id) ? (
-                <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
-              ) : (
-                <ChevronCollapsed className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
-              )}
-            </button>
+            {/* Group heading - clickable if path provided, otherwise just toggle */}
+            <div className="flex items-center">
+              <button
+                onClick={() => {
+                  if (group.path) {
+                    navigate(group.path);
+                    setMobileOpen(false);
+                  }
+                  toggleGroup(group.id);
+                }}
+                className={cn(
+                  'flex items-center justify-between w-full px-3 py-2 text-[11px] font-bold uppercase tracking-[0.15em] transition-colors rounded-md group',
+                  'text-sidebar-primary hover:bg-sidebar-primary/10',
+                  group.path && 'cursor-pointer hover:text-accent',
+                  isRTL && 'flex-row-reverse text-right'
+                )}
+              >
+                <div className={cn('flex items-center gap-2', isRTL && 'flex-row-reverse')}>
+                  <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
+                  <span>{getLabel(group)}</span>
+                </div>
+                {expandedGroups.includes(group.id) ? (
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+                ) : (
+                  <ChevronCollapsed className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+                )}
+              </button>
+            </div>
 
             {expandedGroups.includes(group.id) && (
               <div className="mt-1 space-y-0.5 animate-fade-in">

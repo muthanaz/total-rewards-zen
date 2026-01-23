@@ -130,75 +130,18 @@ export default function LearningPage() {
         />
       </div>
 
-      {/* 2. Policy Highlights with Action Buttons */}
+      {/* 2. Policy Highlights - Tips integrated */}
       <PolicyHighlightsCard
         title="L&D Policy Highlights"
-        policies={learningPolicies}
+        policies={[
+          ...learningPolicies,
+          '💡 Courses under AED 2,000 are usually auto-approved',
+          '📋 Submit: Payment receipt + completion certificate',
+        ]}
         category="Learning & Development"
         actionLabel="Submit Claim"
         policyLabel="View Full Policy"
       />
-
-      {/* Cross-links */}
-      <BenefitCrossLinks benefitCategory="Learning & Development" showClaimLink={false} />
-
-      {/* Quick Tips - meaningful insights */}
-      <Card className="border-muted">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-muted-foreground" />
-            Quick Tips & What to Know
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-success/10 border border-success/20">
-              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
-                <CheckCircle className="w-4 h-4 text-success" />
-              </div>
-              <div>
-                <p className="font-medium text-sm">Auto-Approved Under AED 2,000</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Courses under AED 2,000 are usually auto-approved. Just submit and start learning!
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
-              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
-                <Clock className="w-4 h-4 text-warning" />
-              </div>
-              <div>
-                <p className="font-medium text-sm">Study Leave Available</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Up to 5 days paid study leave for professional certifications. Request through Leave page.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-chart-3/10 border border-chart-3/20">
-              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
-                <Award className="w-4 h-4 text-chart-3" />
-              </div>
-              <div>
-                <p className="font-medium text-sm">What to Submit</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Payment receipt + course completion certificate. Reimbursement in 30 days.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-accent/10 border border-accent/20">
-              <div className="p-1.5 rounded-md bg-background/50 shrink-0">
-                <Plus className="w-4 h-4 text-accent" />
-              </div>
-              <div>
-                <p className="font-medium text-sm">Conferences Count</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Industry conferences and workshops are eligible too. Pre-approval required for travel.
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* 3. How It Works */}
       <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
@@ -240,6 +183,9 @@ export default function LearningPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Cross-links */}
+      <BenefitCrossLinks benefitCategory="Learning & Development" showClaimLink={false} />
 
       {/* Your Learning */}
       <Card>

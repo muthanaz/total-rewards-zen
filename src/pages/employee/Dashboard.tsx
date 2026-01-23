@@ -161,7 +161,7 @@ export default function EmployeeDashboard() {
         label: isRTL ? 'نسبة المزايا' : 'BENEFITS % OF PACKAGE',
         formula: isRTL ? 'المزايا ÷ إجمالي التعويضات' : 'Benefits ÷ Total Compensation',
         dataSource: 'Benefits System',
-        variant: 'primary' as const,
+        variant: 'benefits' as const, // Match guaranteed benefits color
         isSensitive: false,
       },
     ];
