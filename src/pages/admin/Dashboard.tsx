@@ -16,6 +16,7 @@ import {
   RefreshCw,
   Calendar,
   Filter,
+  Zap,
 } from 'lucide-react';
 import { cn, formatCurrencyAED, formatInteger } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -23,6 +24,7 @@ import { AnimatedBarChart } from '@/components/charts';
 import { VendorPerformanceTab } from '@/components/admin/VendorPerformanceTab';
 import { DataQualityDashboard } from '@/components/admin/DataQualityDashboard';
 import { AdminActionCenter } from '@/components/admin/AdminActionCenter';
+import { AdminActionCenterDashboard } from '@/components/admin/AdminActionCenterDashboard';
 import { CommandCenterKPICard } from '@/components/admin/CommandCenterKPICard';
 import { InsightsActionsStrip } from '@/components/admin/InsightsActionsStrip';
 import { AnomaliesWidget } from '@/components/admin/AnomaliesWidget';
@@ -261,15 +263,18 @@ export default function AdminDashboard() {
         actions={recommendedActions}
       />
 
-      {/* Main Analytics Tabs */}
-      <Tabs defaultValue="overview" className="space-y-6">
+      {/* Main Analytics Tabs - Action Center is default */}
+      <Tabs defaultValue="actions" className="space-y-6">
         <TabsList className="w-full justify-start flex-wrap bg-muted/50 p-1">
+          <TabsTrigger value="actions" className="gap-1.5">
+            <Zap className="w-4 h-4" />
+            {t('Action Center', 'مركز الإجراءات')}
+          </TabsTrigger>
           <TabsTrigger value="overview">{t('Overview', 'نظرة عامة')}</TabsTrigger>
           <TabsTrigger value="benchmarks">{t('Benchmarks', 'المعايير')}</TabsTrigger>
           <TabsTrigger value="market">{t('Market Intelligence', 'ذكاء السوق')}</TabsTrigger>
           <TabsTrigger value="vendors">{t('Vendor Performance', 'أداء الموردين')}</TabsTrigger>
           <TabsTrigger value="data-quality">{t('Data Quality', 'جودة البيانات')}</TabsTrigger>
-          <TabsTrigger value="actions">{t('Action Center', 'مركز الإجراءات')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -439,7 +444,7 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="actions" className="space-y-6">
-          <AdminActionCenter />
+          <AdminActionCenterDashboard />
         </TabsContent>
       </Tabs>
     </PageLayout>
