@@ -53,58 +53,16 @@ interface LifeAreaGroup {
 // LIFE AREA GROUPINGS (for visual separators only, no accordion)
 // ============================================================================
 
-const LIFE_AREA_GROUPS: LifeAreaGroup[] = [
-  {
-    id: 'home-living',
-    label: 'Home & Living',
-    labelAr: 'المنزل والمعيشة',
-    items: [
-      { label: 'Housing', labelAr: 'السكن', path: '/employee/housing', icon: Home },
-    ],
-  },
-  {
-    id: 'family-parenting',
-    label: 'Family & Parenting',
-    labelAr: 'الأسرة والأبوة',
-    items: [
-      { label: 'Schooling', labelAr: 'التعليم', path: '/employee/schooling', icon: GraduationCap },
-    ],
-  },
-  {
-    id: 'health',
-    label: 'Health',
-    labelAr: 'الصحة',
-    items: [
-      { label: 'Health Insurance', labelAr: 'التأمين الصحي', path: '/employee/health', icon: Heart },
-      { label: 'Wellbeing', labelAr: 'الرفاهية', path: '/employee/wellbeing', icon: Dumbbell },
-    ],
-  },
-  {
-    id: 'mobility',
-    label: 'Mobility',
-    labelAr: 'التنقل',
-    items: [
-      { label: 'Transport', labelAr: 'النقل', path: '/employee/transport', icon: Car },
-    ],
-  },
-  {
-    id: 'career',
-    label: 'Career',
-    labelAr: 'المسار المهني',
-    items: [
-      { label: 'Learning & Development', labelAr: 'التعلم والتطوير', path: '/employee/learning', icon: BookOpen },
-    ],
-  },
-  {
-    id: 'money',
-    label: 'Money',
-    labelAr: 'المال',
-    items: [
-      { label: 'Long-Term Financials', labelAr: 'الماليات طويلة الأجل', path: '/employee/long-term-financials', icon: Wallet },
-    ],
-  },
+// All benefit navigation items - names match dashboard exactly
+const allBenefitItems: NavItem[] = [
+  { label: 'Housing', labelAr: 'السكن', path: '/employee/housing', icon: Home },
+  { label: 'Schooling', labelAr: 'التعليم', path: '/employee/schooling', icon: GraduationCap },
+  { label: 'Health Insurance', labelAr: 'التأمين الصحي', path: '/employee/health', icon: Heart },
+  { label: 'Transport', labelAr: 'النقل', path: '/employee/transport', icon: Car },
+  { label: 'Wellbeing', labelAr: 'الرفاهية', path: '/employee/wellbeing', icon: Dumbbell },
+  { label: 'Learning & Development', labelAr: 'التعلم والتطوير', path: '/employee/learning', icon: BookOpen },
+  { label: 'Long-Term Financials', labelAr: 'الماليات طويلة الأجل', path: '/employee/long-term-financials', icon: Wallet },
 ];
-
 // ============================================================================
 // NAVIGATION DATA
 // ============================================================================
@@ -132,8 +90,6 @@ const helpItems: NavItem[] = [
   { label: 'Government Services', labelAr: 'الخدمات الحكومية', path: '/employee/gov-connect', icon: Building2, badge: 'Soon' },
 ];
 
-// Flatten all benefit items for direct rendering
-const allBenefitItems: NavItem[] = LIFE_AREA_GROUPS.flatMap((group) => group.items);
 
 // ============================================================================
 // MAIN COMPONENT
