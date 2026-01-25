@@ -555,6 +555,59 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_budget_items: {
+        Row: {
+          amount: number
+          category: string
+          confidence: string
+          created_at: string
+          id: string
+          item_type: string
+          month: string
+          notes: string | null
+          organization_id: string
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          confidence?: string
+          created_at?: string
+          id?: string
+          item_type: string
+          month: string
+          notes?: string | null
+          organization_id: string
+          source?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          confidence?: string
+          created_at?: string
+          id?: string
+          item_type?: string
+          month?: string
+          notes?: string | null
+          organization_id?: string
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_budget_items_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_satisfaction_ratings: {
         Row: {
           category: string
