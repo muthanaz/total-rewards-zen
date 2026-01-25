@@ -22,43 +22,39 @@ import { BenefitCard } from '@/components/employee/BenefitCard';
 // Benefit value types
 type BenefitValueType = 'guaranteed' | 'employer_cost' | 'performance' | 'budget';
 
-// Icon mapping for benefits
-const benefitIcons: Record<string, LucideIcon> = {
-  'Housing Allowance': Home,
-  'Schooling Allowance': GraduationCap,
-  'Health Insurance': Heart,
-  'Transport & Mobility': Car,
-  'Wellbeing Program': Dumbbell,
-  'Learning & Development': BookOpen,
+// Benefit configuration: maps internal names to sidebar-consistent display names, icons, and routes
+const BENEFIT_CONFIG: Record<string, { displayName: string; icon: LucideIcon; route: string }> = {
+  'Housing': { displayName: 'Housing', icon: Home, route: '/employee/housing' },
+  'Housing Allowance': { displayName: 'Housing', icon: Home, route: '/employee/housing' },
+  'Schooling': { displayName: 'Schooling', icon: GraduationCap, route: '/employee/schooling' },
+  'Schooling Allowance': { displayName: 'Schooling', icon: GraduationCap, route: '/employee/schooling' },
+  'Health Insurance': { displayName: 'Health Insurance', icon: Heart, route: '/employee/health' },
+  'Health': { displayName: 'Health Insurance', icon: Heart, route: '/employee/health' },
+  'Transport': { displayName: 'Transport', icon: Car, route: '/employee/transport' },
+  'Transport & Mobility': { displayName: 'Transport', icon: Car, route: '/employee/transport' },
+  'Wellbeing': { displayName: 'Wellbeing', icon: Dumbbell, route: '/employee/wellbeing' },
+  'Wellbeing Program': { displayName: 'Wellbeing', icon: Dumbbell, route: '/employee/wellbeing' },
+  'Learning & Development': { displayName: 'Learning & Development', icon: BookOpen, route: '/employee/learning' },
+  'Learning': { displayName: 'Learning & Development', icon: BookOpen, route: '/employee/learning' },
+  'Long-Term Financials': { displayName: 'Long-Term Financials', icon: Wallet, route: '/employee/long-term-financials' },
 };
 
-// Demo benefits data (used as fallback)
-// Mapping from benefit names to translation keys (ensures proper display names)
-const BENEFIT_NAME_TO_KEY: Record<string, string> = {
-  'Housing Allowance': 'benefit.housing',
-  'Schooling Allowance': 'benefit.education',
-  'Health Insurance': 'benefit.health',
-  'Transport & Mobility': 'benefit.transport',
-  'Wellbeing Program': 'benefit.wellbeing',
-  'Learning & Development': 'benefit.learning',
-  'Annual Bonus': 'benefit.bonus',
-  'Financial Planning': 'benefit.financial',
-  'Equity & Options': 'benefit.equity',
-  'Leave Management': 'benefit.leave',
-};
-
-// Get proper translation key for a benefit name
-const getBenefitNameKey = (name: string): string => {
-  return BENEFIT_NAME_TO_KEY[name] || name; // Fallback to display name directly if no key found
+// Get benefit config with fallback
+const getBenefitConfig = (name: string) => {
+  return BENEFIT_CONFIG[name] || { 
+    displayName: name, 
+    icon: Gift, 
+    route: `/employee/${name.toLowerCase().replace(/\s+/g, '-')}` 
+  };
 };
 
 const demoBenefits = [
-  { name: 'Housing Allowance', icon: Home, value: 120000, utilized: 120000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'home_living', route: '/employee/housing', category: 'housing', claimable: true, description: 'Monthly housing allowance paid with salary' },
-  { name: 'Schooling Allowance', icon: GraduationCap, value: 60000, utilized: 42000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'family_parenting', route: '/employee/schooling', category: 'education', claimable: true, description: 'School fee coverage for dependents' },
-  { name: 'Health Insurance', icon: Heart, value: 45000, utilized: 12500, type: 'health_protection', valueType: 'employer_cost' as BenefitValueType, area: 'health', route: '/employee/health', category: 'health', claimable: true, description: 'Comprehensive health coverage for family' },
-  { name: 'Transport & Mobility', icon: Car, value: 39000, utilized: 33000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'mobility', route: '/employee/transport', category: 'transport', claimable: true, description: 'Monthly transport and flight tickets' },
-  { name: 'Wellbeing Program', icon: Dumbbell, value: 6000, utilized: 3200, type: 'wellbeing', valueType: 'budget' as BenefitValueType, area: 'health', route: '/employee/wellbeing', category: 'wellbeing', claimable: true, description: 'Gym membership and wellness apps' },
-  { name: 'Learning & Development', icon: BookOpen, value: 12000, utilized: 4500, type: 'growth_career', valueType: 'budget' as BenefitValueType, area: 'career', route: '/employee/learning', category: 'learning', claimable: true, description: 'Professional courses and certifications' },
+  { name: 'Housing', value: 120000, utilized: 120000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'home_living', category: 'housing', claimable: true, description: 'Monthly housing allowance paid with salary' },
+  { name: 'Schooling', value: 60000, utilized: 42000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'family_parenting', category: 'education', claimable: true, description: 'School fee coverage for dependents' },
+  { name: 'Health Insurance', value: 45000, utilized: 12500, type: 'health_protection', valueType: 'employer_cost' as BenefitValueType, area: 'health', category: 'health', claimable: true, description: 'Comprehensive health coverage for family' },
+  { name: 'Transport', value: 39000, utilized: 33000, type: 'cash_allowances', valueType: 'guaranteed' as BenefitValueType, area: 'mobility', category: 'transport', claimable: true, description: 'Monthly transport and flight tickets' },
+  { name: 'Wellbeing', value: 6000, utilized: 3200, type: 'wellbeing', valueType: 'budget' as BenefitValueType, area: 'health', category: 'wellbeing', claimable: true, description: 'Gym membership and wellness apps' },
+  { name: 'Learning & Development', value: 12000, utilized: 4500, type: 'growth_career', valueType: 'budget' as BenefitValueType, area: 'career', category: 'learning', claimable: true, description: 'Professional courses and certifications' },
 ];
 
 export default function EmployeeDashboard() {
@@ -110,27 +106,36 @@ export default function EmployeeDashboard() {
   const pendingCount = pendingRequests.length;
   const urgentCount = pendingRequests.filter(r => r.isUrgent).length;
 
-  // Map real benefits to display format or use demo
+  // Map real benefits to display format or use demo - ensures routes match sidebar
   const benefits = useMemo(() => {
     if (dashboardData?.benefits && dashboardData.benefits.length > 0) {
       return dashboardData.benefits.map(b => {
-        const IconComponent = benefitIcons[b.name] ?? Gift;
+        const config = getBenefitConfig(b.name);
         return {
-          name: b.name,
-          icon: IconComponent,
+          name: config.displayName,
+          icon: config.icon,
           value: b.annualAllowance,
           utilized: b.utilizedAmount,
           type: b.benefitType,
           valueType: b.benefitType === 'cash_allowances' ? 'guaranteed' as BenefitValueType : 'budget' as BenefitValueType,
           area: b.lifeArea,
-          route: `/employee/${b.name.toLowerCase().replace(/\s+/g, '-')}`,
+          route: config.route,
           category: b.name.toLowerCase(),
           claimable: true,
           description: b.description || '',
         };
       });
     }
-    return demoBenefits;
+    // Use demo benefits with config lookup
+    return demoBenefits.map(b => {
+      const config = getBenefitConfig(b.name);
+      return {
+        ...b,
+        name: config.displayName,
+        icon: config.icon,
+        route: config.route,
+      };
+    });
   }, [dashboardData?.benefits]);
 
   // Build compensation metrics for the grid
@@ -283,7 +288,7 @@ export default function EmployeeDashboard() {
             {benefits.slice(0, 6).map((benefit, index) => (
               <BenefitCard
                 key={benefit.name}
-                name={t(getBenefitNameKey(benefit.name))}
+                name={benefit.name}
                 icon={benefit.icon}
                 value={benefit.value}
                 utilized={benefit.utilized}
