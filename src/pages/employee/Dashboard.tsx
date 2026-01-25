@@ -18,6 +18,7 @@ import { ProfileCompleteness } from '@/components/employee/ProfileCompleteness';
 import { QuickActionsStrip } from '@/components/employee/QuickActionsStrip';
 import { CompensationGrid } from '@/components/ui/compensation-summary-card';
 import { BenefitCard } from '@/components/employee/BenefitCard';
+import { MoneySnapshotCard } from '@/components/employee/MoneySnapshotCard';
 
 // Benefit value types
 type BenefitValueType = 'guaranteed' | 'employer_cost' | 'performance' | 'budget';
@@ -266,7 +267,7 @@ export default function EmployeeDashboard() {
         </section>
       )}
 
-      {/* 4. Your Benefits Grid - Max 6 items */}
+      {/* 4. Your Benefits Grid - Max 6 items + Money Snapshot */}
       {showYourBenefits && (
         <section>
           <div className={cn("flex items-center justify-between mb-4", isRTL && "flex-row-reverse")}>
@@ -285,7 +286,7 @@ export default function EmployeeDashboard() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {benefits.slice(0, 6).map((benefit, index) => (
+            {benefits.slice(0, 5).map((benefit, index) => (
               <BenefitCard
                 key={benefit.name}
                 name={benefit.name}
@@ -299,6 +300,12 @@ export default function EmployeeDashboard() {
                 isRTL={isRTL}
               />
             ))}
+            {/* Money Snapshot Card - fits in the 6th slot */}
+            <MoneySnapshotCard 
+              monthlySalary={profileData.monthlySalary}
+              isDemo={!hasValidSalary}
+              isRTL={isRTL}
+            />
           </div>
         </section>
       )}
