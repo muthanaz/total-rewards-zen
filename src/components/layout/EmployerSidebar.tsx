@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -8,30 +8,24 @@ import {
   DollarSign,
   Lightbulb,
   FileText,
-  ShoppingBag,
   Database,
-  BookOpen,
   Briefcase,
   Eye,
   TrendingUp,
   Shield,
-  AlertTriangle,
   HelpCircle,
   BarChart3,
-  GitBranch,
-  Settings,
+  ClipboardList,
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useEmployerViewMode, ViewMode } from '@/contexts/EmployerViewModeContext';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { useActionApprovals } from '@/hooks/useActionApprovals';
-import { PendingApprovalsBadge } from '@/components/employer/PendingApprovalsBadge';
+import { BoardPackExportButton } from '@/components/employer/BoardPackExportButton';
 import {
   SidebarShell,
   SidebarHeader,
   SidebarNav,
-  SidebarSection,
-  SidebarItem,
   SidebarFooter,
 } from './sidebar';
 
@@ -45,6 +39,7 @@ interface NavItem {
   path: string;
   icon: React.ElementType;
   badge?: string;
+  showPendingBadge?: boolean;
 }
 
 interface NavGroup {
@@ -56,10 +51,10 @@ interface NavGroup {
 }
 
 // ============================================================================
-// NAVIGATION GROUPINGS (3 clear categories per prompt)
+// NAVIGATION GROUPINGS
 // ============================================================================
 
-// 1. RUN OPERATIONS (HR Ops - day-to-day processing)
+// HR OPS NAVIGATION (operational workbench)
 const opsNavigation: NavGroup[] = [
   {
     id: 'run-operations',
@@ -86,62 +81,55 @@ const opsNavigation: NavGroup[] = [
     items: [
       { label: 'Integrations', labelAr: 'التكاملات', path: '/employer/integrations', icon: Database },
       { label: 'Data Quality', labelAr: 'جودة البيانات', path: '/employer/data-quality/rules', icon: Shield },
-      { label: 'Sync Status', labelAr: 'حالة المزامنة', path: '/employer/data-quality/sync', icon: AlertTriangle },
     ],
   },
 ];
 
-// 2. EXECUTIVE NAVIGATION (CFO/CEO decision flow - Simplified 5-item structure)
-const execNavigation: NavGroup[] = [
-  // 1. EXECUTIVE SUMMARY
-  {
-    id: 'executive-summary',
-    label: 'Executive Summary',
-    labelAr: 'الملخص التنفيذي',
-    items: [
-      { label: 'Total Rewards Overview', labelAr: 'نظرة عامة على المكافآت', path: '/employer', icon: LayoutDashboard },
-    ],
-  },
-  // 2. SPEND & VALUE ANALYSIS (merged: Spend, Zombie, Segments)
-  {
-    id: 'spend-value',
-    label: 'Spend & Value Analysis',
-    labelAr: 'تحليل الإنفاق والقيمة',
-    items: [
-      { label: 'Spend & Utilization', labelAr: 'الإنفاق والاستخدام', path: '/employer/spend', icon: DollarSign },
-      { label: 'Unrealized Value', labelAr: 'القيمة غير المحققة', path: '/employer/zombie', icon: Lightbulb },
-      { label: 'Employee Segments', labelAr: 'شرائح الموظفين', path: '/employer/segments', icon: Users },
-    ],
-  },
-  // 3. DECISIONS & ACTIONS
-  {
-    id: 'decisions-actions',
-    label: 'Decisions & Actions',
-    labelAr: 'القرارات والإجراءات',
-    items: [
-      { label: 'Action Plan', labelAr: 'خطة العمل', path: '/employer/recommendations', icon: BarChart3 },
-    ],
-  },
-  // 4. GOVERNANCE & CONTROLS
-  {
-    id: 'governance-controls',
-    label: 'Governance & Controls',
-    labelAr: 'الحوكمة والضوابط',
-    items: [
-      { label: 'Policy Impact', labelAr: 'تأثير السياسات', path: '/employer/policy-insights', icon: TrendingUp },
-      { label: 'Workflow Settings', labelAr: 'إعدادات سير العمل', path: '/employer/settings/workflows', icon: GitBranch },
-    ],
-  },
-  // 5. DATA SOURCES
-  {
-    id: 'data-sources',
-    label: 'Data Sources',
-    labelAr: 'مصادر البيانات',
-    items: [
-      { label: 'Integrations', labelAr: 'التكاملات', path: '/employer/integrations', icon: Database },
-    ],
-  },
+// CEO-OPTIMIZED EXECUTIVE NAVIGATION (5 flat items - no collapsible sections)
+const execNavItems: NavItem[] = [
+  { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/employer', icon: LayoutDashboard },
+  { label: 'Investment Analysis', labelAr: 'تحليل الاستثمار', path: '/employer/spend', icon: DollarSign },
+  { label: 'Recovery Opportunities', labelAr: 'فرص الاسترداد', path: '/employer/zombie', icon: Lightbulb },
+  { label: 'Action Plan', labelAr: 'خطة العمل', path: '/employer/recommendations', icon: ClipboardList, showPendingBadge: true },
+  { label: 'Risk & Compliance', labelAr: 'المخاطر والامتثال', path: '/employer/policy-insights', icon: Shield },
 ];
+
+// ============================================================================
+// EXECUTIVE NAV ITEM COMPONENT (flat, no sections)
+// ============================================================================
+
+function ExecNavItem({ item, pendingCount }: { item: NavItem; pendingCount: number }) {
+  const location = useLocation();
+  const { language, direction } = useLanguage();
+  const isRTL = direction === 'rtl';
+  
+  const isActive = item.path === location.pathname || 
+    (item.path !== '/employer' && location.pathname.startsWith(item.path + '/'));
+  const isDashboard = item.path === '/employer';
+  const finalActive = isDashboard ? location.pathname === '/employer' : isActive;
+  
+  const displayLabel = language === 'ar' && item.labelAr ? item.labelAr : item.label;
+  const Icon = item.icon;
+  
+  return (
+    <Link
+      to={item.path}
+      className={cn(
+        'nav-item',
+        finalActive && 'nav-item-active',
+        isRTL && 'flex-row-reverse text-right'
+      )}
+    >
+      <Icon className="w-4 h-4 shrink-0" />
+      <span className={cn('text-sm flex-1', isRTL && 'text-right')}>{displayLabel}</span>
+      {item.showPendingBadge && pendingCount > 0 && (
+        <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-warning text-warning-foreground">
+          {pendingCount}
+        </span>
+      )}
+    </Link>
+  );
+}
 
 // ============================================================================
 // VIEW MODE TOGGLE COMPONENT
@@ -151,12 +139,10 @@ function ViewModeToggle() {
   const navigate = useNavigate();
   const { direction } = useLanguage();
   const { viewMode, setViewMode, isExecutive } = useEmployerViewMode();
-  const { pendingApprovals } = useActionApprovals();
   const isRTL = direction === 'rtl';
 
   const handleModeChange = (mode: ViewMode) => {
     setViewMode(mode);
-    // Navigate to appropriate landing page for each mode
     if (mode === 'operational') {
       navigate('/employer/claims');
     } else {
@@ -164,47 +150,81 @@ function ViewModeToggle() {
     }
   };
 
-  const pendingCount = pendingApprovals?.length || 0;
+  return (
+    <div className="mt-3 p-1 bg-sidebar-accent/50 rounded-xl">
+      <div className="grid grid-cols-2 gap-1">
+        <button
+          onClick={() => handleModeChange('operational')}
+          className={cn(
+            'flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200',
+            !isExecutive
+              ? 'bg-sidebar-background text-sidebar-foreground shadow-sm'
+              : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+          )}
+        >
+          <Briefcase className="w-3.5 h-3.5" />
+          <span>HR Ops</span>
+        </button>
+        <button
+          onClick={() => handleModeChange('executive')}
+          className={cn(
+            'flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200',
+            isExecutive
+              ? 'bg-sidebar-background text-sidebar-foreground shadow-sm'
+              : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+          )}
+        >
+          <Eye className="w-3.5 h-3.5" />
+          <span>Executive</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// EXECUTIVE FOOTER WITH BOARD PACK
+// ============================================================================
+
+function ExecSidebarFooter() {
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+  const { language, direction } = useLanguage();
+  const isRTL = direction === 'rtl';
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  // Mock metrics for board pack - in production, fetch from context/API
+  const boardPackMetrics = {
+    totalInvestment: 2450000,
+    utilizationRate: 73,
+    unrealizedValue: 485000,
+    satisfactionScore: 82,
+  };
 
   return (
-    <>
-      {/* Pending Approvals Badge (Executive mode only) */}
-      {isExecutive && pendingCount > 0 && (
-        <div className="mt-3">
-          <PendingApprovalsBadge count={pendingCount} className="w-full justify-center" />
-        </div>
-      )}
-
-      {/* View Mode Toggle */}
-      <div className="mt-3 p-1 bg-sidebar-accent/50 rounded-xl">
-        <div className="grid grid-cols-2 gap-1">
-          <button
-            onClick={() => handleModeChange('operational')}
-            className={cn(
-              'flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200',
-              !isExecutive
-                ? 'bg-sidebar-background text-sidebar-foreground shadow-sm'
-                : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
-            )}
-          >
-            <Briefcase className="w-3.5 h-3.5" />
-            <span>HR Ops</span>
-          </button>
-          <button
-            onClick={() => handleModeChange('executive')}
-            className={cn(
-              'flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200',
-              isExecutive
-                ? 'bg-sidebar-background text-sidebar-foreground shadow-sm'
-                : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
-            )}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            <span>Executive</span>
-          </button>
-        </div>
-      </div>
-    </>
+    <div className={cn('p-4 border-t border-sidebar-border space-y-3', isRTL && 'text-right')}>
+      {/* Board Pack Export */}
+      <BoardPackExportButton metrics={boardPackMetrics} />
+      
+      {/* Sign Out */}
+      <Button
+        variant="ghost"
+        onClick={handleSignOut}
+        className={cn(
+          'w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent',
+          isRTL ? 'justify-start flex-row-reverse' : 'justify-start'
+        )}
+      >
+        <LogOut className={cn('w-4 h-4 shrink-0', isRTL ? 'ml-3' : 'mr-3')} />
+        <span className={isRTL ? 'text-right' : 'text-left'}>
+          {language === 'ar' ? 'تسجيل الخروج' : 'Sign Out'}
+        </span>
+      </Button>
+    </div>
   );
 }
 
@@ -212,32 +232,30 @@ function ViewModeToggle() {
 // MAIN COMPONENT
 // ============================================================================
 
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { LogOut } from 'lucide-react';
+import { SidebarSection, SidebarItem } from './sidebar';
+
 export function EmployerSidebar() {
   const { flags } = useFeatureFlags();
   const { isExecutive } = useEmployerViewMode();
+  const { pendingApprovals } = useActionApprovals();
+  const pendingCount = pendingApprovals?.length || 0;
 
-  // Get the navigation based on mode
-  const baseNavigation = isExecutive ? execNavigation : opsNavigation;
-
-  // All sections expanded by default
+  // HR Ops mode uses collapsible sections
   const [expandedSections, setExpandedSections] = useState<string[]>(
-    baseNavigation.map((s) => s.id)
+    opsNavigation.map((s) => s.id)
   );
 
-  // Filter by feature flags
-  const visibleNavigation = useMemo(() => {
-    return baseNavigation.filter((section) => {
+  const visibleOpsNavigation = useMemo(() => {
+    return opsNavigation.filter((section) => {
       if (section.featureFlag) {
         return flags[section.featureFlag];
       }
       return true;
     });
-  }, [baseNavigation, flags]);
-
-  // Reset sections when mode changes
-  useMemo(() => {
-    setExpandedSections(baseNavigation.map((s) => s.id));
-  }, [isExecutive]);
+  }, [flags]);
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) =>
@@ -252,30 +270,45 @@ export function EmployerSidebar() {
       <SidebarHeader extraContent={<ViewModeToggle />} />
 
       <SidebarNav>
-        {visibleNavigation.map((group) => (
-          <SidebarSection
-            key={group.id}
-            id={group.id}
-            label={group.label}
-            labelAr={group.labelAr}
-            isOpen={expandedSections.includes(group.id)}
-            onToggle={() => toggleSection(group.id)}
-          >
-            {group.items.map((item) => (
-              <SidebarItem
-                key={item.path + item.label}
-                path={item.path}
-                label={item.label}
-                labelAr={item.labelAr}
-                icon={item.icon}
-                badge={item.badge}
+        {isExecutive ? (
+          // EXECUTIVE MODE: Flat 5-item navigation (CEO-optimized)
+          <div className="space-y-1">
+            {execNavItems.map((item) => (
+              <ExecNavItem 
+                key={item.path} 
+                item={item} 
+                pendingCount={pendingCount}
               />
             ))}
-          </SidebarSection>
-        ))}
+          </div>
+        ) : (
+          // HR OPS MODE: Collapsible sections
+          visibleOpsNavigation.map((group) => (
+            <SidebarSection
+              key={group.id}
+              id={group.id}
+              label={group.label}
+              labelAr={group.labelAr}
+              isOpen={expandedSections.includes(group.id)}
+              onToggle={() => toggleSection(group.id)}
+            >
+              {group.items.map((item) => (
+                <SidebarItem
+                  key={item.path + item.label}
+                  path={item.path}
+                  label={item.label}
+                  labelAr={item.labelAr}
+                  icon={item.icon}
+                  badge={item.badge}
+                />
+              ))}
+            </SidebarSection>
+          ))
+        )}
       </SidebarNav>
 
-      <SidebarFooter />
+      {/* Executive mode gets special footer with Board Pack export */}
+      {isExecutive ? <ExecSidebarFooter /> : <SidebarFooter />}
     </SidebarShell>
   );
 }
