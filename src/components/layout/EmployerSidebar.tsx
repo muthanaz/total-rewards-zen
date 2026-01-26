@@ -1,26 +1,27 @@
-/**
- * EmployerSidebar (HR Ops Mode)
- * 
- * Sidebar for HR Operations mode. Uses shared sidebar components.
- * Executive mode uses EmployerExecutiveSidebar instead.
- */
-
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
+  LayoutDashboard,
   FileCheck,
+  Users,
+  DollarSign,
+  Lightbulb,
   FileText,
+  ShoppingBag,
   Database,
+  BookOpen,
   Briefcase,
   Eye,
   TrendingUp,
   Shield,
   AlertTriangle,
   HelpCircle,
+  BarChart3,
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useEmployerViewMode, ViewMode } from '@/contexts/EmployerViewModeContext';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import {
   SidebarShell,
   SidebarHeader,
@@ -31,7 +32,7 @@ import {
 } from './sidebar';
 
 // ============================================================================
-// HR OPS NAVIGATION
+// NAVIGATION DATA
 // ============================================================================
 
 interface NavItem {
@@ -47,8 +48,14 @@ interface NavGroup {
   label: string;
   labelAr?: string;
   items: NavItem[];
+  featureFlag?: keyof ReturnType<typeof useFeatureFlags>['flags'];
 }
 
+// ============================================================================
+// NAVIGATION GROUPINGS (3 clear categories per prompt)
+// ============================================================================
+
+// 1. RUN OPERATIONS (HR Ops - day-to-day processing)
 const opsNavigation: NavGroup[] = [
   {
     id: 'run-operations',
@@ -80,54 +87,112 @@ const opsNavigation: NavGroup[] = [
   },
 ];
 
+// 2. EXECUTIVE NAVIGATION (3 clear groupings)
+const execNavigation: NavGroup[] = [
+  // GROUP 1: Optimize Investment (Executive/Finance focus)
+  {
+    id: 'optimize-investment',
+    label: 'Optimize Investment',
+    labelAr: 'تحسين الاستثمار',
+    items: [
+      { label: 'Executive Dashboard', labelAr: 'لوحة التحكم', path: '/employer', icon: LayoutDashboard },
+      { label: 'Spend & Utilization', labelAr: 'الإنفاق والاستخدام', path: '/employer/spend', icon: DollarSign },
+      { label: 'Unrealized Value', labelAr: 'القيمة غير المحققة', path: '/employer/zombie', icon: Lightbulb },
+      { label: 'Segments', labelAr: 'الشرائح', path: '/employer/segments', icon: Users },
+    ],
+  },
+  // GROUP 2: Action Plan (Track execution)
+  {
+    id: 'action-plan',
+    label: 'Action Plan',
+    labelAr: 'خطة العمل',
+    items: [
+      { label: 'Recommendations', labelAr: 'التوصيات', path: '/employer/recommendations', icon: BarChart3 },
+    ],
+  },
+  // GROUP 3: Governance (Policy owners/Comp & Ben)
+  {
+    id: 'governance',
+    label: 'Governance',
+    labelAr: 'الحوكمة',
+    items: [
+      { label: 'Policy Impact', labelAr: 'تأثير السياسات', path: '/employer/policy-insights', icon: TrendingUp },
+    ],
+  },
+  // Ecosystem (optional based on feature flag)
+  {
+    id: 'ecosystem',
+    label: 'Ecosystem',
+    labelAr: 'النظام البيئي',
+    featureFlag: 'marketplaceEnabled',
+    items: [
+      { label: 'Marketplace Impact', labelAr: 'تأثير السوق', path: '/employer/marketplace', icon: ShoppingBag },
+    ],
+  },
+  // Trust (data sources)
+  {
+    id: 'trust',
+    label: 'Trust',
+    labelAr: 'الثقة',
+    items: [
+      { label: 'Data Sources', labelAr: 'مصادر البيانات', path: '/employer/integrations', icon: Database, badge: 'Read-only' },
+    ],
+  },
+];
+
 // ============================================================================
-// VIEW MODE TOGGLE
+// VIEW MODE TOGGLE COMPONENT
 // ============================================================================
 
 function ViewModeToggle() {
   const navigate = useNavigate();
   const { direction } = useLanguage();
-  const { viewMode, setViewMode } = useEmployerViewMode();
+  const { viewMode, setViewMode, isExecutive } = useEmployerViewMode();
   const isRTL = direction === 'rtl';
 
   const handleModeChange = (mode: ViewMode) => {
     setViewMode(mode);
+    // Navigate to appropriate landing page for each mode
     if (mode === 'operational') {
       navigate('/employer/claims');
     } else {
-      navigate('/employer/executive-summary');
+      navigate('/employer');
     }
   };
 
   return (
-    <div className="mt-4 p-1 bg-sidebar-accent/50 rounded-xl">
-      <div className="grid grid-cols-2 gap-1">
-        <button
-          onClick={() => handleModeChange('operational')}
-          className={cn(
-            'flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200',
-            viewMode === 'operational'
-              ? 'bg-sidebar-background text-sidebar-foreground shadow-sm'
-              : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
-          )}
-        >
-          <Briefcase className="w-3.5 h-3.5" />
-          <span>HR Ops</span>
-        </button>
-        <button
-          onClick={() => handleModeChange('executive')}
-          className={cn(
-            'flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200',
-            viewMode === 'executive'
-              ? 'bg-sidebar-background text-sidebar-foreground shadow-sm'
-              : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
-          )}
-        >
-          <Eye className="w-3.5 h-3.5" />
-          <span>Executive</span>
-        </button>
+    <>
+      {/* View Mode Toggle */}
+      <div className="mt-4 p-1 bg-sidebar-accent/50 rounded-xl">
+        <div className="grid grid-cols-2 gap-1">
+          <button
+            onClick={() => handleModeChange('operational')}
+            className={cn(
+              'flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200',
+              !isExecutive
+                ? 'bg-sidebar-background text-sidebar-foreground shadow-sm'
+                : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+            )}
+          >
+            <Briefcase className="w-3.5 h-3.5" />
+            <span>HR Ops</span>
+          </button>
+          <button
+            onClick={() => handleModeChange('executive')}
+            className={cn(
+              'flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200',
+              isExecutive
+                ? 'bg-sidebar-background text-sidebar-foreground shadow-sm'
+                : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+            )}
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>Executive</span>
+          </button>
+        </div>
       </div>
-    </div>
+
+    </>
   );
 }
 
@@ -136,9 +201,31 @@ function ViewModeToggle() {
 // ============================================================================
 
 export function EmployerSidebar() {
+  const { flags } = useFeatureFlags();
+  const { isExecutive } = useEmployerViewMode();
+
+  // Get the navigation based on mode
+  const baseNavigation = isExecutive ? execNavigation : opsNavigation;
+
+  // All sections expanded by default
   const [expandedSections, setExpandedSections] = useState<string[]>(
-    opsNavigation.map((s) => s.id)
+    baseNavigation.map((s) => s.id)
   );
+
+  // Filter by feature flags
+  const visibleNavigation = useMemo(() => {
+    return baseNavigation.filter((section) => {
+      if (section.featureFlag) {
+        return flags[section.featureFlag];
+      }
+      return true;
+    });
+  }, [baseNavigation, flags]);
+
+  // Reset sections when mode changes
+  useMemo(() => {
+    setExpandedSections(baseNavigation.map((s) => s.id));
+  }, [isExecutive]);
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) =>
@@ -153,7 +240,7 @@ export function EmployerSidebar() {
       <SidebarHeader extraContent={<ViewModeToggle />} />
 
       <SidebarNav>
-        {opsNavigation.map((group) => (
+        {visibleNavigation.map((group) => (
           <SidebarSection
             key={group.id}
             id={group.id}

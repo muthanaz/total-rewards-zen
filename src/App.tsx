@@ -23,7 +23,6 @@ import OrgSuspended from "./pages/OrgSuspended";
 
 import { EmployeeLayout } from "./components/layout/EmployeeLayout";
 import { EmployerLayout } from "./components/layout/EmployerLayout";
-import { EmployerExecutiveLayout } from "./components/layout/EmployerExecutiveLayout";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import { VendorLayout } from "./components/layout/VendorLayout";
 
@@ -64,7 +63,6 @@ import KnowledgeCenterPage from "./pages/employer/KnowledgeCenter";
 import RecommendationsPage from "./pages/employer/Recommendations";
 import EmployerDataQualityRules from "./pages/employer/DataQualityRules";
 import EmployerSyncMonitor from "./pages/employer/SyncMonitor";
-import TrustControlsPage from "./pages/employer/TrustControls";
 
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminBenchmarks from "./pages/admin/Benchmarks";
@@ -237,7 +235,7 @@ function AppRoutes() {
         <Route path="security" element={<Navigate to="/employee/profile" replace />} />
       </Route>
 
-      {/* Employer HR Ops Routes */}
+      {/* Employer Routes */}
       <Route
         path="/employer"
         element={
@@ -246,34 +244,19 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        {/* Default redirect to executive summary */}
-        <Route index element={<Navigate to="/employer/executive-summary" replace />} />
-        
-        {/* HR Ops Routes */}
+        <Route index element={<EmployerDashboard />} />
+        <Route path="spend" element={<SpendPage />} />
+        <Route path="zombie" element={<ZombieSpendPage />} />
+        <Route path="segments" element={<SegmentsPage />} />
         <Route path="claims" element={<ClaimsPage />} />
+        <Route path="marketplace" element={<MarketplaceAnalyticsPage />} />
         <Route path="policies" element={<PoliciesPage />} />
         <Route path="policy-insights" element={<PolicyInsightsPage />} />
         <Route path="integrations" element={<IntegrationsPage />} />
         <Route path="knowledge" element={<KnowledgeCenterPage />} />
+        <Route path="recommendations" element={<RecommendationsPage />} />
         <Route path="data-quality/rules" element={<EmployerDataQualityRules />} />
         <Route path="data-quality/sync" element={<EmployerSyncMonitor />} />
-        
-        {/* Executive Routes (new canonical paths) */}
-        <Route path="executive-summary" element={<EmployerDashboard />} />
-        <Route path="spend-efficiency" element={<SpendPage />} />
-        <Route path="recoverable-value" element={<ZombieSpendPage />} />
-        <Route path="segment-insights" element={<SegmentsPage />} />
-        <Route path="actions-decisions" element={<RecommendationsPage />} />
-        <Route path="trust-controls" element={<TrustControlsPage />} />
-        
-        {/* Legacy routes - redirect to new paths */}
-        <Route path="spend" element={<Navigate to="/employer/spend-efficiency" replace />} />
-        <Route path="zombie" element={<Navigate to="/employer/recoverable-value" replace />} />
-        <Route path="segments" element={<Navigate to="/employer/segment-insights" replace />} />
-        <Route path="recommendations" element={<Navigate to="/employer/actions-decisions" replace />} />
-        
-        {/* Other employer routes */}
-        <Route path="marketplace" element={<MarketplaceAnalyticsPage />} />
       </Route>
 
       {/* Admin Routes - Platform owner only */}
