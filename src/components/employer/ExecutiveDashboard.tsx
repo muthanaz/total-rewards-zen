@@ -5,11 +5,12 @@
  * "Are we spending wisely? Where is waste? What are the top drivers? What decisions do I make now?"
  * 
  * Layout (top-to-bottom):
- * 1. Page header with toggles
- * 2. Executive Highlights strip (confidence + freshness + sources)
- * 3. KPI row (exactly 4 cards)
- * 4. "Where the money goes" section (allocation + drivers)
- * 5. "Decisions & Actions" section
+ * 1. Page header with toggles + Board Pack Export
+ * 2. Executive Summary strip (one-line headline)
+ * 3. Executive Highlights strip (confidence + freshness + sources)
+ * 4. KPI row (exactly 4 cards)
+ * 5. Two-column: "Where the money goes" + At-Risk Segments
+ * 6. "Decisions & Actions" section
  */
 
 import { useState, useMemo } from 'react';
@@ -41,10 +42,13 @@ import { addDays } from 'date-fns';
 import { ExecModeToggle } from './ExecModeToggle';
 import { useExecMode } from './ExecModeContext';
 import { ExecHighlightsStrip, ConfidenceLevel } from './ExecHighlightsStrip';
+import { ExecSummaryStrip } from './ExecSummaryStrip';
 import { ExecKPICards } from './ExecKPICards';
 import { InvestmentAllocationTable } from './InvestmentAllocationTable';
 import { TopDriversList, DriverType } from './TopDriversList';
 import { DecisionsActionsCard, ActionStatus } from './DecisionsActionsCard';
+import { AtRiskSegmentsCard, AtRiskSegment } from './AtRiskSegmentsCard';
+import { BoardPackExportButton } from './BoardPackExportButton';
 
 export function ExecutiveDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -134,6 +138,51 @@ export function ExecutiveDashboard() {
       }));
   }, [filteredActions]);
 
+  // At-risk segments data
+  const atRiskSegments: AtRiskSegment[] = useMemo(() => [
+    {
+      id: 'grade-a',
+      name: 'Grade A (Executives)',
+      dimension: 'grade',
+      headcount: 45,
+      utilizationRate: 52,
+      unusedEntitlement: 890000,
+      retentionRisk: 'high',
+      topDriver: 'Awareness Gap',
+    },
+    {
+      id: 'dept-tech',
+      name: 'Technology',
+      dimension: 'department',
+      headcount: 120,
+      utilizationRate: 58,
+      unusedEntitlement: 720000,
+      retentionRisk: 'high',
+      topDriver: 'Process Friction',
+    },
+    {
+      id: 'tenure-new',
+      name: 'New Joiners (<1 year)',
+      dimension: 'joiner_cohort',
+      headcount: 85,
+      utilizationRate: 45,
+      unusedEntitlement: 480000,
+      retentionRisk: 'medium',
+      topDriver: 'Eligibility Confusion',
+    },
+  ], []);
+
+  // Priority actions count (P0 = critical, P1 = high priority)
+  const priorityActionsCount = useMemo(() => 
+    filteredActions.filter(a => 
+      (a.priority === 'P0' || a.priority === 'P1') && 
+      !['completed', 'cancelled'].includes(a.status)
+    ).length,
+  [filteredActions]);
+
+  // Satisfaction score (from metrics or default)
+  const satisfactionScore = metrics?.esatScore || 78;
+
   // Drilldown handlers
   const openDrilldown = (metricKey: string) => {
     // Create metric data for drilldown
@@ -169,15 +218,15 @@ export function ExecutiveDashboard() {
         formula: 'Total Entitled - Total Claimed (for cap-based benefits)',
         dataSource: 'benefit_entitlements',
       },
-      slaCompliance: {
-        key: 'slaCompliance',
-        name: 'SLA Compliance',
-        value: claimMetrics?.slaCompliance || 94,
-        formattedValue: `${claimMetrics?.slaCompliance || 94}%`,
+      satisfactionScore: {
+        key: 'satisfactionScore',
+        name: 'Employee Satisfaction',
+        value: satisfactionScore,
+        formattedValue: `${satisfactionScore}%`,
         unit: 'percent',
-        trend: { value: 2.1, higherIsBetter: true, period: 'vs last month' },
-        formula: '(Claims processed within SLA / Total claims) × 100',
-        dataSource: 'requests table',
+        trend: { value: 3.2, higherIsBetter: true, period: 'vs last month' },
+        formula: '(Average Rating ÷ 5) × 100',
+        dataSource: 'employee_satisfaction_ratings table',
       },
     };
     const metric = metricData[metricKey];
@@ -217,7 +266,7 @@ export function ExecutiveDashboard() {
 
   // Calculate metrics
   const unrealizedValue = metrics.zombieSpend || (metrics.totalInvestment * (1 - metrics.utilizationRate / 100));
-  const slaCompliance = claimMetrics?.slaCompliance || 94;
+  const budgetAllocated = metrics.totalInvestment * 0.95; // Assume 5% variance for demo
 
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
@@ -236,10 +285,19 @@ export function ExecutiveDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
+            {/* Board Pack Export */}
+            <BoardPackExportButton 
+              metrics={{
+                totalInvestment: metrics.totalInvestment,
+                utilizationRate: metrics.utilizationRate,
+                unrealizedValue,
+                satisfactionScore,
+                budgetVariance: metrics.totalInvestment - budgetAllocated,
+              }}
+            />
+            
             {/* Board-ready toggle */}
             <ExecModeToggle />
-            
-            {/* CFO Detail toggle (via ExecModeToggle) */}
             
             {/* Needs Attention pill */}
             <Badge variant="outline" className={cn(
@@ -260,23 +318,37 @@ export function ExecutiveDashboard() {
           </div>
         </div>
 
-        {/* 2. EXECUTIVE HIGHLIGHTS STRIP */}
+        {/* 2. EXECUTIVE SUMMARY STRIP */}
+        <ExecSummaryStrip
+          totalInvestment={metrics.totalInvestment}
+          budgetAllocated={budgetAllocated}
+          utilizationRate={metrics.utilizationRate}
+          targetUtilization={metrics.targetUtilization}
+          recoverableValue={unrealizedValue}
+          priorityActionsCount={priorityActionsCount}
+          satisfactionScore={satisfactionScore}
+        />
+
+        {/* 3. EXECUTIVE HIGHLIGHTS STRIP */}
         <ExecHighlightsStrip
           confidence={confidenceLevel}
           lastSync={coverageMetrics.lastSyncTime}
           sourcesCount={3}
         />
 
-        {/* 3. KPI ROW (exactly 4 cards) */}
+        {/* 4. KPI ROW (exactly 4 cards) */}
         <ExecKPICards
           totalInvestment={metrics.totalInvestment}
           utilizationRate={metrics.utilizationRate}
           unrealizedValue={unrealizedValue}
-          slaCompliance={slaCompliance}
+          satisfactionScore={satisfactionScore}
+          budgetAllocated={budgetAllocated}
+          utilizationTarget={metrics.targetUtilization}
+          satisfactionBenchmark={metrics.esatBenchmark || 80}
           onKPIClick={openDrilldown}
         />
 
-        {/* 4. WHERE THE MONEY GOES (2 columns) */}
+        {/* 5. WHERE THE MONEY GOES + AT-RISK SEGMENTS (2 columns) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left: Investment Allocation donut + table */}
           <div className="space-y-4">
@@ -299,11 +371,18 @@ export function ExecutiveDashboard() {
             )}
           </div>
 
-          {/* Right: Top 5 Drivers */}
-          <TopDriversList drivers={topDrivers} />
+          {/* Right: At-Risk Segments (replaces Top Drivers in board mode) */}
+          {isBoard ? (
+            <AtRiskSegmentsCard segments={atRiskSegments} />
+          ) : (
+            <div className="space-y-4">
+              <TopDriversList drivers={topDrivers} />
+              <AtRiskSegmentsCard segments={atRiskSegments} />
+            </div>
+          )}
         </div>
 
-        {/* 5. DECISIONS & ACTIONS (Next 30 days) */}
+        {/* 6. DECISIONS & ACTIONS (Next 30 days) */}
         <DecisionsActionsCard actions={upcomingActions} />
 
         {/* KPI Drilldown Sheet */}
