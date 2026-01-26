@@ -143,20 +143,23 @@ export default function RolesAccessPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {assignments?.map((assignment) => {
+              {assignments?.map((assignment) => {
                   const roleConfig = ROLE_LABELS[assignment.employer_role];
+                  // User info would be from a join - for now show user_id
+                  const userInitials = 'U';
                   return (
                     <TableRow key={assignment.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
                             <AvatarFallback className="text-xs">
-                              {assignment.user_name?.split(' ').map(n => n[0]).join('') || 'U'}
+                              {userInitials}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium text-sm">{assignment.user_name || 'Unknown'}</p>
-                            <p className="text-xs text-muted-foreground">{assignment.user_email}</p>
+                            <p className="font-medium text-sm text-muted-foreground text-xs truncate max-w-[200px]">
+                              {assignment.user_id}
+                            </p>
                           </div>
                         </div>
                       </TableCell>

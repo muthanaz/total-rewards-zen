@@ -27,10 +27,16 @@ export function useWorkflowDefinitions(workflowType: string) {
   });
 
   const createWorkflow = useMutation({
-    mutationFn: async (workflow: Record<string, any>) => {
+    mutationFn: async (workflow: { name: string; description?: string; is_default?: boolean }) => {
       const { data, error } = await supabase
         .from('workflow_definitions')
-        .insert({ ...workflow, workflow_type: workflowType, created_by: user?.id })
+        .insert({
+          name: workflow.name,
+          description: workflow.description,
+          workflow_type: workflowType,
+          is_default: workflow.is_default || false,
+          created_by: user?.id,
+        })
         .select()
         .single();
       
