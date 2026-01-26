@@ -3,17 +3,14 @@
  * 
  * Exactly 4 KPI cards for CEO/CFO dashboard:
  * 1. Total Investment (AED) - with budget variance
- * 2. Utilization Rate (%) - with benchmark band
- * 3. Unrealized Value (AED) - with root cause mini-breakdown
- * 4. Employee Satisfaction (%) - replaces SLA (more executive-relevant)
+ * 2. Utilization Rate (%) - with target
+ * 3. Unrealized Value (AED) - with top driver
+ * 4. Employee Satisfaction (%) - with benchmark
  * 
- * Each card shows: value, delta vs last period, "Why it moved" tooltip
+ * Each card shows: value, delta vs last period, "Why it moved" as visible subtitle
  */
 
 import { Card, CardContent } from '@/components/ui/card';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { 
   DollarSign, 
   Target, 
@@ -22,8 +19,6 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
-  Info,
-  PieChart,
 } from 'lucide-react';
 import { cn, formatCurrencyAED, formatPercent } from '@/lib/utils';
 
@@ -43,34 +38,25 @@ interface KPICardData {
     value: string;
     status: 'success' | 'warning' | 'destructive' | 'muted';
   };
-  miniBreakdown?: Array<{
-    label: string;
-    percent: number;
-    color: string;
-  }>;
+  topDriver?: string;
 }
 
 interface ExecKPICardsProps {
   totalInvestment: number;
   utilizationRate: number;
   unrealizedValue: number;
-  satisfactionScore: number; // Replaces SLA
-  // Budget context
+  satisfactionScore: number;
   budgetAllocated?: number;
-  // Deltas (vs last period)
   investmentDelta?: number;
   utilizationDelta?: number;
   unrealizedDelta?: number;
   satisfactionDelta?: number;
-  // Targets/benchmarks
   utilizationTarget?: number;
   satisfactionBenchmark?: number;
-  // Why it moved explanations
   investmentWhy?: string;
   utilizationWhy?: string;
   unrealizedWhy?: string;
   satisfactionWhy?: string;
-  // Unrealized value breakdown
   unrealizedBreakdown?: Array<{
     cause: string;
     percent: number;
@@ -84,22 +70,22 @@ export function ExecKPICards({
   utilizationRate,
   unrealizedValue,
   satisfactionScore,
-  budgetAllocated = totalInvestment * 0.95, // Default 5% over budget
+  budgetAllocated = totalInvestment * 0.95,
   investmentDelta = 8.2,
   utilizationDelta = 5.3,
   unrealizedDelta = -12.4,
   satisfactionDelta = 3.2,
   utilizationTarget = 75,
   satisfactionBenchmark = 80,
-  investmentWhy = 'Annual budget increased by 8% due to headcount growth and new L&D programs.',
-  utilizationWhy = 'Q4 utilization improved with education claims during school enrollment period.',
-  unrealizedWhy = 'Reduced unrealized value through targeted awareness campaigns for unused benefits.',
-  satisfactionWhy = 'Satisfaction improved due to streamlined claims process and faster approvals.',
+  investmentWhy = 'Headcount growth + L&D expansion',
+  utilizationWhy = 'Q4 education claims spike',
+  unrealizedWhy = 'Awareness campaigns working',
+  satisfactionWhy = 'Faster claims approval',
   unrealizedBreakdown = [
-    { cause: 'Awareness', percent: 35 },
-    { cause: 'Friction', percent: 28 },
-    { cause: 'Eligibility', percent: 22 },
-    { cause: 'Policy', percent: 15 },
+    { cause: 'Awareness Gap', percent: 35 },
+    { cause: 'Process Friction', percent: 28 },
+    { cause: 'Eligibility Confusion', percent: 22 },
+    { cause: 'Policy Design', percent: 15 },
   ],
   onKPIClick,
   className,
@@ -108,13 +94,16 @@ export function ExecKPICards({
   const isOverBudget = budgetVariance > 0;
   const variancePercent = budgetAllocated > 0 ? Math.abs((budgetVariance / budgetAllocated) * 100) : 0;
 
-  const breakdownColors = ['hsl(var(--info))', 'hsl(var(--warning))', 'hsl(var(--chart-3))', 'hsl(var(--destructive))'];
+  // Find top driver for unrealized value
+  const topDriver = unrealizedBreakdown.length > 0 
+    ? unrealizedBreakdown.reduce((a, b) => a.percent > b.percent ? a : b)
+    : null;
 
   const kpis: KPICardData[] = [
     {
       id: 'totalInvestment',
       label: 'Total Investment',
-      value: formatCurrencyAED(totalInvestment),
+      value: formatCurrencyAED(totalInvestment, { abbreviate: true }),
       delta: investmentDelta,
       deltaLabel: 'vs last year',
       higherIsBetter: true,
@@ -123,14 +112,16 @@ export function ExecKPICards({
       iconColor: 'text-primary',
       iconBg: 'bg-primary/10',
       subMetric: {
-        label: 'vs Budget',
-        value: `${isOverBudget ? '+' : '-'}${formatCurrencyAED(Math.abs(budgetVariance), { abbreviate: true })} (${variancePercent.toFixed(1)}%)`,
+        label: 'Budget',
+        value: variancePercent < 1 
+          ? 'On budget' 
+          : `${Math.round(variancePercent)}% ${isOverBudget ? 'over' : 'under'} budget`,
         status: variancePercent < 5 ? 'success' : isOverBudget ? 'warning' : 'success',
       },
     },
     {
       id: 'utilizationRate',
-      label: 'Utilization Rate',
+      label: 'Usage Rate',
       value: formatPercent(utilizationRate),
       delta: utilizationDelta,
       deltaLabel: 'vs last quarter',
@@ -147,20 +138,16 @@ export function ExecKPICards({
     },
     {
       id: 'unrealizedValue',
-      label: 'Unrealized Value',
-      value: formatCurrencyAED(unrealizedValue),
+      label: 'Unused Value',
+      value: formatCurrencyAED(unrealizedValue, { abbreviate: true }),
       delta: unrealizedDelta,
       deltaLabel: 'vs last quarter',
-      higherIsBetter: false, // Lower is better
+      higherIsBetter: false,
       whyMoved: unrealizedWhy,
       icon: AlertTriangle,
       iconColor: unrealizedValue > totalInvestment * 0.3 ? 'text-destructive' : 'text-warning',
       iconBg: unrealizedValue > totalInvestment * 0.3 ? 'bg-destructive/10' : 'bg-warning/10',
-      miniBreakdown: unrealizedBreakdown.map((item, idx) => ({
-        label: item.cause,
-        percent: item.percent,
-        color: breakdownColors[idx % breakdownColors.length],
-      })),
+      topDriver: topDriver ? `Top driver: ${topDriver.cause} (${topDriver.percent}%)` : undefined,
     },
     {
       id: 'satisfactionScore',
@@ -200,22 +187,18 @@ export function ExecKPICards({
             onClick={() => onKPIClick?.(kpi.id)}
           >
             <CardContent className="p-5">
-              {/* Header */}
+              {/* Header with icon */}
               <div className="flex items-start justify-between mb-3">
                 <div className={cn('rounded-xl p-2.5', kpi.iconBg)}>
                   <Icon className={cn('w-5 h-5', kpi.iconColor)} />
                 </div>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button className="p-1 hover:bg-muted rounded">
-                      <Info className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-xs">
-                    <p className="text-xs font-medium mb-1">Why it moved</p>
-                    <p className="text-xs text-muted-foreground">{kpi.whyMoved}</p>
-                  </TooltipContent>
-                </Tooltip>
+                {/* Delta indicator */}
+                <div className={cn('flex items-center gap-1 text-xs', trendColor)}>
+                  <TrendIcon className="w-3 h-3" />
+                  <span className="tabular-nums">
+                    {kpi.delta > 0 ? '+' : ''}{kpi.delta}%
+                  </span>
+                </div>
               </div>
 
               {/* Value */}
@@ -226,55 +209,28 @@ export function ExecKPICards({
               {/* Label */}
               <p className="text-sm text-muted-foreground mt-1">{kpi.label}</p>
 
-              {/* Sub-metric (budget variance, target, benchmark) */}
-              {kpi.subMetric && (
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">{kpi.subMetric.label}:</span>
-                  <span className={cn(
-                    'text-xs font-medium',
-                    kpi.subMetric.status === 'success' ? 'text-success' :
-                    kpi.subMetric.status === 'warning' ? 'text-warning' :
-                    kpi.subMetric.status === 'destructive' ? 'text-destructive' : 'text-muted-foreground'
-                  )}>
-                    {kpi.subMetric.value}
-                  </span>
-                </div>
-              )}
+              {/* Why it moved - visible subtitle */}
+              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                <TrendIcon className={cn("w-3 h-3", trendColor)} />
+                {kpi.whyMoved}
+              </p>
 
-              {/* Mini breakdown for Unrealized Value */}
-              {kpi.miniBreakdown && (
-                <div className="mt-2">
-                  <div className="flex h-1.5 rounded-full overflow-hidden bg-muted">
-                    {kpi.miniBreakdown.map((item, idx) => (
-                      <div 
-                        key={item.label}
-                        className="h-full"
-                        style={{ 
-                          width: `${item.percent}%`,
-                          backgroundColor: item.color,
-                        }}
-                      />
-                    ))}
+              {/* Sub-metric OR top driver */}
+              <div className="mt-3 pt-3 border-t border-border/50">
+                {kpi.topDriver ? (
+                  <span className="text-xs text-warning">{kpi.topDriver}</span>
+                ) : kpi.subMetric ? (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">{kpi.subMetric.label} {kpi.subMetric.value}</span>
+                    <span className={cn(
+                      kpi.subMetric.status === 'success' ? 'text-success' :
+                      kpi.subMetric.status === 'warning' ? 'text-warning' :
+                      kpi.subMetric.status === 'destructive' ? 'text-destructive' : 'text-muted-foreground'
+                    )}>
+                      {kpi.subMetric.status === 'success' ? '✓' : kpi.subMetric.status === 'warning' ? '!' : ''}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                    {kpi.miniBreakdown.slice(0, 2).map((item) => (
-                      <span key={item.label} className="text-[10px] text-muted-foreground">
-                        {item.label} {item.percent}%
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Delta */}
-              <div className="mt-3 pt-3 border-t border-border/50 flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">{kpi.deltaLabel}</span>
-                <div className={cn('flex items-center gap-1 text-xs', trendColor)}>
-                  <TrendIcon className="w-3 h-3" />
-                  <span className="tabular-nums">
-                    {kpi.delta > 0 ? '+' : ''}{kpi.delta}%
-                  </span>
-                </div>
+                ) : null}
               </div>
             </CardContent>
           </Card>

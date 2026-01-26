@@ -97,7 +97,7 @@ export function BoardPackExportButton({ metrics, period = 'FY 2024' }: BoardPack
           ) : (
             <Download className="w-4 h-4" />
           )}
-          Board Pack
+          Export
           <ChevronDown className="w-3 h-3" />
         </Button>
       </DropdownMenuTrigger>

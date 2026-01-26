@@ -129,7 +129,7 @@ export function AtRiskSegmentsCard({ segments, className }: AtRiskSegmentsCardPr
                   <p className="text-sm font-semibold text-destructive tabular-nums">
                     {formatCurrencyAED(segment.unusedEntitlement, { abbreviate: true })}
                   </p>
-                  <p className="text-[10px] text-muted-foreground">unrealized</p>
+                  <p className="text-[10px] text-muted-foreground">Unrealized</p>
                 </div>
 
                 {/* Arrow */}

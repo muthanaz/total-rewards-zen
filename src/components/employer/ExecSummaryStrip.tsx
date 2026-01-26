@@ -4,18 +4,15 @@
  * One-line "executive headline" that answers:
  * "What do I need to know right now?"
  * 
- * Format: "AED X invested | Y% utilized | AED Z recoverable | N priority actions"
+ * Format: "AED X spent | Y% usage | AED Z unused | N actions needed"
  */
 
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { 
   DollarSign, 
   Target, 
   AlertTriangle, 
   Zap,
-  TrendingUp,
-  TrendingDown,
 } from 'lucide-react';
 import { cn, formatCurrencyAED } from '@/lib/utils';
 
@@ -37,40 +34,40 @@ export function ExecSummaryStrip({
   targetUtilization,
   recoverableValue,
   priorityActionsCount,
-  satisfactionScore,
   className,
 }: ExecSummaryStripProps) {
   const budgetVariance = totalInvestment - budgetAllocated;
   const isOverBudget = budgetVariance > 0;
+  const variancePercent = budgetAllocated > 0 ? Math.abs((budgetVariance / budgetAllocated) * 100) : 0;
   const isOnTrack = utilizationRate >= targetUtilization;
 
   const summaryItems = [
     {
       icon: DollarSign,
-      label: 'Invested',
+      label: 'Total Spend',
       value: formatCurrencyAED(totalInvestment, { abbreviate: true }),
-      sublabel: budgetVariance !== 0 
-        ? `${isOverBudget ? '+' : ''}${formatCurrencyAED(budgetVariance, { abbreviate: true })} vs budget`
-        : 'On budget',
-      status: Math.abs(budgetVariance) < budgetAllocated * 0.05 ? 'success' : isOverBudget ? 'warning' : 'success',
+      sublabel: variancePercent < 1 
+        ? 'On budget'
+        : `${Math.round(variancePercent)}% ${isOverBudget ? 'over' : 'under'} budget`,
+      status: variancePercent < 5 ? 'success' : isOverBudget ? 'warning' : 'success',
     },
     {
       icon: Target,
-      label: 'Utilized',
+      label: 'Usage Rate',
       value: `${utilizationRate}%`,
-      sublabel: `Target: ${targetUtilization}%`,
+      sublabel: `Target ${targetUtilization}%`,
       status: isOnTrack ? 'success' : 'warning',
     },
     {
       icon: AlertTriangle,
-      label: 'Recoverable',
+      label: 'Unused Value',
       value: formatCurrencyAED(recoverableValue, { abbreviate: true }),
-      sublabel: 'Unrealized value',
+      sublabel: 'Opportunity to recapture',
       status: recoverableValue > totalInvestment * 0.2 ? 'destructive' : 'warning',
     },
     {
       icon: Zap,
-      label: 'Priority Actions',
+      label: 'Actions Needed',
       value: priorityActionsCount.toString(),
       sublabel: 'Awaiting decision',
       status: priorityActionsCount > 0 ? 'warning' : 'success',
@@ -87,7 +84,7 @@ export function ExecSummaryStrip({
   return (
     <Card className={cn("border-accent/20 bg-gradient-to-r from-card via-accent/5 to-card", className)}>
       <CardContent className="py-3 px-4">
-        <div className="flex items-center justify-between gap-4 overflow-x-auto">
+        <div className="flex items-center gap-4 overflow-x-auto">
           <div className="flex items-center gap-6 flex-wrap">
             {summaryItems.map((item, index) => {
               const Icon = item.icon;
@@ -108,24 +105,6 @@ export function ExecSummaryStrip({
               );
             })}
           </div>
-
-          {/* Overall Status Badge */}
-          <Badge 
-            variant="outline" 
-            className={cn(
-              "shrink-0 gap-1",
-              isOnTrack 
-                ? "bg-success/10 text-success border-success/30" 
-                : "bg-warning/10 text-warning border-warning/30"
-            )}
-          >
-            {isOnTrack ? (
-              <TrendingUp className="w-3 h-3" />
-            ) : (
-              <TrendingDown className="w-3 h-3" />
-            )}
-            {isOnTrack ? 'On Track' : 'Action Needed'}
-          </Badge>
         </div>
       </CardContent>
     </Card>

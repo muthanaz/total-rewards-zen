@@ -274,14 +274,14 @@ export function ExecutiveDashboard() {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">
-              Total Rewards Overview
+              Benefits Investment Summary
             </h1>
             <p className="text-muted-foreground mt-1">
-              Strategic total rewards performance — FY 2024
+              FY 2024 · 312 employees · AED 78.8K per head
             </p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
-            {/* Board Pack Export */}
+            {/* Export Button */}
             <BoardPackExportButton 
               metrics={{
                 totalInvestment: metrics.totalInvestment,
@@ -292,25 +292,8 @@ export function ExecutiveDashboard() {
               }}
             />
             
-            {/* Board-ready toggle */}
+            {/* Summary/Detailed toggle */}
             <ExecModeToggle />
-            
-            {/* Needs Attention pill */}
-            <Badge variant="outline" className={cn(
-              "gap-1.5 px-3 py-1.5",
-              metrics.utilizationRate >= metrics.targetUtilization 
-                ? "bg-success/10 text-success border-success/30" 
-                : "bg-warning/10 text-warning border-warning/30"
-            )}>
-              {metrics.utilizationRate >= metrics.targetUtilization ? (
-                <CheckCircle2 className="w-4 h-4" />
-              ) : (
-                <AlertTriangle className="w-4 h-4" />
-              )}
-              <span className="font-medium">
-                {metrics.utilizationRate >= metrics.targetUtilization ? 'On Track' : 'Needs Attention'}
-              </span>
-            </Badge>
           </div>
         </div>
 
@@ -325,7 +308,7 @@ export function ExecutiveDashboard() {
           satisfactionScore={satisfactionScore}
         />
 
-        {/* 3. EXECUTIVE HIGHLIGHTS STRIP */}
+        {/* 3. DATA VERIFICATION STRIP */}
         <ExecHighlightsStrip
           confidence={confidenceLevel}
           lastSync={coverageMetrics.lastSyncTime}
@@ -344,13 +327,15 @@ export function ExecutiveDashboard() {
           onKPIClick={openDrilldown}
         />
 
-        {/* 5. WHERE THE MONEY GOES + AT-RISK SEGMENTS (2 columns) */}
+        {/* 5. ACTIONS REQUIRED (moved up for CEO priority) */}
+        <DecisionsActionsCard actions={upcomingActions} />
+
+        {/* 6. WHERE THE MONEY GOES + AT-RISK SEGMENTS (2 columns) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left: Investment Allocation donut + table */}
           <div className="space-y-4">
             <ChartWrapper 
-              title="Investment Allocation" 
-              subtitle="Budget distribution by benefit category"
+              title="Where Money Goes" 
               formula="Category Spend / Total Spend × 100"
               dataSource="Finance"
               explanation={CHART_EXPLANATIONS.spendDistribution}
@@ -358,6 +343,12 @@ export function ExecutiveDashboard() {
               <AnimatedDonutChart 
                 data={spendChartData} 
                 height={200}
+                centerContent={
+                  <div className="text-center">
+                    <p className="text-lg font-bold">{formatCurrencyAED(metrics.totalInvestment, { abbreviate: true })}</p>
+                    <p className="text-xs text-muted-foreground">Total</p>
+                  </div>
+                }
               />
             </ChartWrapper>
             
@@ -377,9 +368,6 @@ export function ExecutiveDashboard() {
             </div>
           )}
         </div>
-
-        {/* 6. DECISIONS & ACTIONS (Next 30 days) */}
-        <DecisionsActionsCard actions={upcomingActions} />
 
         {/* KPI Drilldown Sheet */}
         <KPIDrilldownSheet
