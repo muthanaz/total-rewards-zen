@@ -1,18 +1,96 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, AlertTriangle, TrendingUp, MessageSquare } from 'lucide-react';
-import { EmployerGlobalFiltersBar, DataConfidenceBadge, PageConfidenceGate, useDataCoverageMetrics } from '@/components/employer';
+import { Badge } from '@/components/ui/badge';
+import { 
+  FileText, 
+  MessageSquare, 
+  Zap,
+  ArrowRight
+} from 'lucide-react';
+import { 
+  EmployerGlobalFiltersBar, 
+  DataConfidenceBadge, 
+  PageConfidenceGate, 
+  useDataCoverageMetrics 
+} from '@/components/employer';
+import { PolicyInsightKPIGrid } from '@/components/employer/PolicyInsightKPIGrid';
+import { PolicyAreaCard, PolicyAreaData } from '@/components/employer/PolicyAreaCard';
+import { PolicyEvidenceDrawer, PolicyEvidence } from '@/components/employer/PolicyEvidenceDrawer';
+import { toast } from 'sonner';
 
-const policyInsights = [
-  { policy: 'Housing Allowance Policy', clarity: 85, complaints: 3, suggestions: ['Clarify top-up eligibility', 'Add area-specific guidance'], status: 'good' },
-  { policy: 'Health Insurance Policy', clarity: 72, complaints: 8, suggestions: ['Simplify pre-approval process', 'Add dental coverage FAQ'], status: 'warning' },
-  { policy: 'Learning & Development Policy', clarity: 58, complaints: 12, suggestions: ['Define eligible courses', 'Add budget calculator'], status: 'critical' },
-  { policy: 'Leave Policy', clarity: 90, complaints: 1, suggestions: ['Add carry-forward clarity'], status: 'good' },
-  { policy: 'Wellbeing Program Policy', clarity: 65, complaints: 6, suggestions: ['List eligible activities', 'Simplify redemption'], status: 'warning' },
+// Mock data for policy areas
+const policyAreas: PolicyAreaData[] = [
+  { 
+    id: 'pol-1',
+    policyName: 'Housing Allowance Policy', 
+    clarityScore: 85, 
+    targetScore: 90,
+    questionsThisMonth: 3, 
+    rejectionsThisMonth: 2,
+    missingDocsCount: 5,
+    unrealizedValue: 45000,
+    status: 'good',
+    topIssue: 'Top-up eligibility unclear',
+    suggestedFixes: ['Clarify top-up eligibility', 'Add area-specific guidance']
+  },
+  { 
+    id: 'pol-2',
+    policyName: 'Health Insurance Policy', 
+    clarityScore: 72, 
+    targetScore: 85,
+    questionsThisMonth: 8, 
+    rejectionsThisMonth: 12,
+    missingDocsCount: 18,
+    unrealizedValue: 85000,
+    status: 'warning',
+    topIssue: 'Pre-approval process confusion',
+    suggestedFixes: ['Simplify pre-approval process', 'Add dental coverage FAQ']
+  },
+  { 
+    id: 'pol-3',
+    policyName: 'Learning & Development Policy', 
+    clarityScore: 58, 
+    targetScore: 85,
+    questionsThisMonth: 12, 
+    rejectionsThisMonth: 15,
+    missingDocsCount: 22,
+    unrealizedValue: 130000,
+    status: 'critical',
+    topIssue: 'Eligible courses undefined',
+    suggestedFixes: ['Define eligible courses', 'Add budget calculator']
+  },
+  { 
+    id: 'pol-4',
+    policyName: 'Leave Policy', 
+    clarityScore: 90, 
+    targetScore: 90,
+    questionsThisMonth: 1, 
+    rejectionsThisMonth: 0,
+    missingDocsCount: 2,
+    unrealizedValue: 0,
+    status: 'good',
+    topIssue: 'Carry-forward rules',
+    suggestedFixes: ['Add carry-forward clarity']
+  },
+  { 
+    id: 'pol-5',
+    policyName: 'Wellbeing Program Policy', 
+    clarityScore: 65, 
+    targetScore: 80,
+    questionsThisMonth: 6, 
+    rejectionsThisMonth: 8,
+    missingDocsCount: 12,
+    unrealizedValue: 55000,
+    status: 'warning',
+    topIssue: 'Eligible activities unclear',
+    suggestedFixes: ['List eligible activities', 'Simplify redemption']
+  },
 ];
 
+// Mock data for common questions
 const commonQuestions = [
   { question: 'How do I claim dental expenses?', count: 45, category: 'Health' },
   { question: 'Can I top up my housing allowance?', count: 38, category: 'Housing' },
@@ -20,101 +98,125 @@ const commonQuestions = [
   { question: 'How does maternity leave work?', count: 28, category: 'Leave' },
 ];
 
-const policyMetrics = [
-  { label: 'Avg Policy Clarity', value: 74, target: 85 },
-  { label: 'Questions Resolved', value: 89, target: 95 },
-  { label: 'Employee Satisfaction', value: 78, target: 85 },
-  { label: 'Policy Compliance', value: 96, target: 98 },
-];
+// Generate evidence data for a policy
+const generateEvidenceForPolicy = (policy: PolicyAreaData): PolicyEvidence => ({
+  policyId: policy.id,
+  policyName: policy.policyName,
+  clarityScore: policy.clarityScore,
+  targetScore: policy.targetScore,
+  employeeQuestions: [
+    { question: `What exactly counts as ${policy.policyName.split(' ')[0].toLowerCase()} expenses?`, count: 23, category: policy.policyName.split(' ')[0] },
+    { question: `How long does ${policy.policyName.split(' ')[0].toLowerCase()} approval take?`, count: 18, category: policy.policyName.split(' ')[0] },
+    { question: `Can I claim for family members under ${policy.policyName.split(' ')[0].toLowerCase()}?`, count: 14, category: policy.policyName.split(' ')[0] },
+  ],
+  rejectionReasons: [
+    { reason: 'Missing supporting documents', count: Math.floor(policy.rejectionsThisMonth * 0.4), percentOfRejections: 40 },
+    { reason: 'Exceeded policy limits', count: Math.floor(policy.rejectionsThisMonth * 0.35), percentOfRejections: 35 },
+    { reason: 'Not eligible per policy terms', count: Math.floor(policy.rejectionsThisMonth * 0.25), percentOfRejections: 25 },
+  ],
+  missingDocs: [
+    { docType: 'Original receipts', count: Math.floor(policy.missingDocsCount * 0.5), percentOfClaims: 15 },
+    { docType: 'Pre-approval form', count: Math.floor(policy.missingDocsCount * 0.3), percentOfClaims: 9 },
+    { docType: 'Provider certification', count: Math.floor(policy.missingDocsCount * 0.2), percentOfClaims: 6 },
+  ],
+  suggestedFixes: {
+    policyText: {
+      title: `Clarify ${policy.policyName} eligibility criteria`,
+      description: `Update policy document to include clear examples, eligibility matrix, and FAQ section addressing top ${policy.questionsThisMonth} employee questions.`,
+      expectedImpact: 35,
+    },
+    processDoc: {
+      title: `Streamline ${policy.policyName} documentation process`,
+      description: `Create pre-filled templates, auto-validation checklist, and clear doc requirements to reduce rejection rate.`,
+      expectedImpact: 45,
+    },
+  },
+  unrealizedValue: policy.unrealizedValue,
+  affectedEmployees: Math.floor(policy.unrealizedValue / 5000),
+});
 
 export function PoliciesExecView() {
+  const navigate = useNavigate();
   const coverageMetrics = useDataCoverageMetrics();
+  const [selectedPolicy, setSelectedPolicy] = useState<PolicyAreaData | null>(null);
+  const [evidenceDrawerOpen, setEvidenceDrawerOpen] = useState(false);
+  const [evidenceData, setEvidenceData] = useState<PolicyEvidence | null>(null);
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'good': return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Good</Badge>;
-      case 'warning': return <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20">Needs Attention</Badge>;
-      case 'critical': return <Badge className="bg-red-500/10 text-red-600 border-red-500/20">Critical</Badge>;
-      default: return null;
-    }
+  const handleViewEvidence = (policy: PolicyAreaData) => {
+    const evidence = generateEvidenceForPolicy(policy);
+    setEvidenceData(evidence);
+    setSelectedPolicy(policy);
+    setEvidenceDrawerOpen(true);
   };
+
+  const handleQuickFix = (policy: PolicyAreaData) => {
+    // Navigate to recommendations with prefilled action
+    const prefillParams = new URLSearchParams({
+      prefill: 'policy_insight',
+      policyName: policy.policyName,
+      policyId: policy.id,
+      clarityScore: String(policy.clarityScore),
+      unrealizedValue: String(policy.unrealizedValue),
+    });
+    navigate(`/employer/recommendations?${prefillParams.toString()}`);
+    toast.success(`Creating action for ${policy.policyName}`);
+  };
+
+  const handleCreateActionFromEvidence = (fixType: 'policy_text' | 'process_doc', evidence: PolicyEvidence) => {
+    const prefillParams = new URLSearchParams({
+      prefill: 'policy_insight',
+      policyName: evidence.policyName,
+      policyId: evidence.policyId,
+      clarityScore: String(evidence.clarityScore),
+      unrealizedValue: String(evidence.unrealizedValue),
+      fixType,
+    });
+    navigate(`/employer/recommendations?${prefillParams.toString()}`);
+    setEvidenceDrawerOpen(false);
+    toast.success(`Creating ${fixType === 'policy_text' ? 'policy text' : 'process/docs'} action`);
+  };
+
+  // Sort policies by status priority (critical first)
+  const sortedPolicies = [...policyAreas].sort((a, b) => {
+    const priority = { critical: 0, warning: 1, good: 2 };
+    return priority[a.status] - priority[b.status];
+  });
 
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
       <div className="space-y-6">
+        {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-display font-bold text-foreground">Policy Insights</h1>
-            <p className="text-muted-foreground">Analyze policy clarity and employee understanding (read-only)</p>
+            <h1 className="text-2xl font-display font-bold text-foreground">Policy Risk & Clarity</h1>
+            <p className="text-muted-foreground">Executive view of policy understanding gaps and fix opportunities</p>
           </div>
           <DataConfidenceBadge metrics={coverageMetrics} />
         </div>
 
         <EmployerGlobalFiltersBar />
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {policyMetrics.map((metric, index) => (
-            <Card key={index} className="card-elevated">
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-start mb-2">
-                  <p className="text-sm text-muted-foreground">{metric.label}</p>
-                  <span className="text-xs text-muted-foreground">Target: {metric.target}%</span>
-                </div>
-                <p className={`text-2xl font-bold ${metric.value >= metric.target ? 'text-green-600' : metric.value >= metric.target * 0.9 ? 'text-amber-600' : 'text-red-500'}`}>
-                  {metric.value}%
-                </p>
-                <Progress value={metric.value} className="h-2 mt-2" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {/* KPI Grid - Single clarity score block with targets and deltas */}
+        <PolicyInsightKPIGrid />
 
-        <Tabs defaultValue="clarity" className="space-y-4">
+        {/* Tabs for Policy Areas and Common Questions */}
+        <Tabs defaultValue="areas" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="clarity">Policy Clarity</TabsTrigger>
+            <TabsTrigger value="areas">Top Confusing Policy Areas</TabsTrigger>
             <TabsTrigger value="questions">Common Questions</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="clarity" className="space-y-4">
-            {policyInsights.map((policy, index) => (
-              <Card key={index} className="card-elevated">
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <FileText className="h-5 w-5 text-primary" />
-                        <h3 className="font-semibold">{policy.policy}</h3>
-                        {getStatusBadge(policy.status)}
-                      </div>
-                      <div className="grid grid-cols-3 gap-4 mb-3">
-                        <div>
-                          <p className="text-sm text-muted-foreground">Clarity Score</p>
-                          <div className="flex items-center gap-2">
-                            <Progress value={policy.clarity} className="w-16 h-2" />
-                            <span className={`font-medium ${policy.clarity >= 80 ? 'text-green-600' : policy.clarity >= 65 ? 'text-amber-600' : 'text-red-500'}`}>
-                              {policy.clarity}%
-                            </span>
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Questions</p>
-                          <p className="font-medium">{policy.complaints} this month</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Improvements</p>
-                          <p className="font-medium">{policy.suggestions.length} suggested</p>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {policy.suggestions.map((s, i) => (
-                          <Badge key={i} variant="outline" className="text-xs">{s}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          <TabsContent value="areas" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {sortedPolicies.map((policy) => (
+                <PolicyAreaCard
+                  key={policy.id}
+                  policy={policy}
+                  onViewEvidence={handleViewEvidence}
+                  onQuickFix={handleQuickFix}
+                />
+              ))}
+            </div>
           </TabsContent>
 
           <TabsContent value="questions" className="space-y-4">
@@ -145,10 +247,38 @@ export function PoliciesExecView() {
                     </div>
                   ))}
                 </div>
+
+                {/* Quick Action */}
+                <div className="mt-4 pt-4 border-t">
+                  <Button 
+                    variant="outline" 
+                    className="w-full gap-2"
+                    onClick={() => {
+                      const prefillParams = new URLSearchParams({
+                        prefill: 'policy_insight',
+                        policyName: 'FAQ Response',
+                        type: 'comms',
+                      });
+                      navigate(`/employer/recommendations?${prefillParams.toString()}`);
+                    }}
+                  >
+                    <Zap className="h-4 w-4" />
+                    Create FAQ Response Action
+                    <ArrowRight className="h-4 w-4 ml-auto" />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Evidence Drawer */}
+        <PolicyEvidenceDrawer
+          open={evidenceDrawerOpen}
+          onOpenChange={setEvidenceDrawerOpen}
+          evidence={evidenceData}
+          onCreateAction={handleCreateActionFromEvidence}
+        />
       </div>
     </PageConfidenceGate>
   );
