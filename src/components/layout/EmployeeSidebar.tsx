@@ -18,7 +18,6 @@ import {
   Receipt,
   Zap,
   HelpCircle,
-  TrendingDown,
   Calculator,
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -67,10 +66,7 @@ const allBenefitItems: NavItem[] = [
   { label: 'Long-Term Financials', labelAr: 'الماليات طويلة الأجل', path: '/employee/long-term-financials', icon: Wallet },
 ];
 
-// Money section items
-const moneyItems: NavItem[] = [
-  { label: 'Optimizer', labelAr: 'محسّن التكاليف', path: '/employee/out-of-pocket', icon: Wallet },
-];
+// Money section items - Optimizer merged into My Actions
 // ============================================================================
 // NAVIGATION DATA
 // ============================================================================
@@ -209,13 +205,7 @@ export function EmployeeSidebar() {
           icon={ShoppingBag}
         />
 
-        {/* Optimizer - Standalone (under Money grouping conceptually) */}
-        <SidebarStandaloneLink
-          path="/employee/out-of-pocket"
-          label="Optimizer"
-          labelAr="محسّن التكاليف"
-          icon={TrendingDown}
-        />
+        {/* Optimizer merged into My Actions - no separate link needed */}
 
         {/* Money Planner - Only show if feature flag enabled */}
         {flags.moneyPlannerEnabled && (
