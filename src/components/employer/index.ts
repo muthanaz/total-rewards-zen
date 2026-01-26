@@ -146,6 +146,7 @@ export { ClaimsQueueCounters } from './ClaimsQueueCounters';
 
 // Spend & Utilization components
 export { SpendKPIGrid } from './SpendKPIGrid';
+export { CFOKPIGrid } from './CFOKPIGrid';
 export { SpendInsights, generateSpendInsights } from './SpendInsights';
 export type { SpendInsight, SpendDataForInsights } from './SpendInsights';
 export { SpendRecommendedActions, generateSpendRecommendedActions } from './SpendRecommendedActions';
