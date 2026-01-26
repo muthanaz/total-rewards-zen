@@ -7,6 +7,7 @@ export interface FeatureFlags {
   marketplaceEnabled: boolean;
   govConnectEnabled: boolean;
   advancedInsightsEnabled: boolean;
+  moneyPlannerEnabled: boolean;
   // Add more feature flags here as needed
 }
 
@@ -14,6 +15,7 @@ interface OrganizationSettings {
   marketplace_enabled?: boolean;
   gov_connect_enabled?: boolean;
   advanced_insights_enabled?: boolean;
+  money_planner_enabled?: boolean;
   // Add more settings as needed
 }
 
@@ -21,6 +23,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   marketplaceEnabled: true, // Default ON
   govConnectEnabled: true,
   advancedInsightsEnabled: true,
+  moneyPlannerEnabled: false, // Default OFF - future feature
 };
 
 // Map frontend flag names to DB setting keys
@@ -28,6 +31,7 @@ const FLAG_KEY_MAP: Record<keyof FeatureFlags, string> = {
   marketplaceEnabled: 'marketplace_enabled',
   govConnectEnabled: 'gov_connect_enabled',
   advancedInsightsEnabled: 'advanced_insights_enabled',
+  moneyPlannerEnabled: 'money_planner_enabled',
 };
 
 /**
@@ -95,6 +99,7 @@ export function useFeatureFlags(targetOrgId?: string): {
       marketplaceEnabled: data.settings.marketplace_enabled ?? DEFAULT_FLAGS.marketplaceEnabled,
       govConnectEnabled: data.settings.gov_connect_enabled ?? DEFAULT_FLAGS.govConnectEnabled,
       advancedInsightsEnabled: data.settings.advanced_insights_enabled ?? DEFAULT_FLAGS.advancedInsightsEnabled,
+      moneyPlannerEnabled: data.settings.money_planner_enabled ?? DEFAULT_FLAGS.moneyPlannerEnabled,
     };
   }, [data?.settings]);
 

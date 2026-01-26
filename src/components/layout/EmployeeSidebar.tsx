@@ -19,8 +19,10 @@ import {
   Zap,
   HelpCircle,
   TrendingDown,
+  Calculator,
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import {
   SidebarShell,
   SidebarHeader,
@@ -102,6 +104,7 @@ const helpItems: NavItem[] = [
 // ============================================================================
 
 export function EmployeeSidebar() {
+  const { flags } = useFeatureFlags();
   const [expandedSections, setExpandedSections] = useState<string[]>([
     'home',
     'my-benefits',
@@ -213,6 +216,16 @@ export function EmployeeSidebar() {
           labelAr="محسّن التكاليف"
           icon={TrendingDown}
         />
+
+        {/* Money Planner - Only show if feature flag enabled */}
+        {flags.moneyPlannerEnabled && (
+          <SidebarStandaloneLink
+            path="/employee/money-planner"
+            label="Money Planner"
+            labelAr="مخطط الأموال"
+            icon={Calculator}
+          />
+        )}
 
         {/* Help & Settings Section */}
         <SidebarSection
