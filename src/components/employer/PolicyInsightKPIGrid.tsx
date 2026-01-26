@@ -1,5 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -10,6 +11,10 @@ interface PolicyKPI {
   previousValue: number;
   unit: '%' | 'days' | 'count';
   higherIsBetter: boolean;
+  definition: {
+    formula: string;
+    dataSource: string;
+  };
 }
 
 const policyKPIs: PolicyKPI[] = [
@@ -19,7 +24,11 @@ const policyKPIs: PolicyKPI[] = [
     target: 85, 
     previousValue: 71,
     unit: '%',
-    higherIsBetter: true
+    higherIsBetter: true,
+    definition: {
+      formula: 'Avg. readability score from policy documents',
+      dataSource: 'Policy analysis engine',
+    },
   },
   { 
     label: 'Questions Resolved', 
@@ -27,7 +36,11 @@ const policyKPIs: PolicyKPI[] = [
     target: 95, 
     previousValue: 85,
     unit: '%',
-    higherIsBetter: true
+    higherIsBetter: true,
+    definition: {
+      formula: '(Resolved Tickets / Total Tickets) × 100',
+      dataSource: 'HR ticketing system',
+    },
   },
   { 
     label: 'Employee Satisfaction', 
@@ -35,7 +48,11 @@ const policyKPIs: PolicyKPI[] = [
     target: 85, 
     previousValue: 76,
     unit: '%',
-    higherIsBetter: true
+    higherIsBetter: true,
+    definition: {
+      formula: 'Avg. satisfaction rating from pulse surveys',
+      dataSource: 'Employee feedback surveys',
+    },
   },
   { 
     label: 'Policy Compliance', 
@@ -43,7 +60,11 @@ const policyKPIs: PolicyKPI[] = [
     target: 98, 
     previousValue: 97,
     unit: '%',
-    higherIsBetter: true
+    higherIsBetter: true,
+    definition: {
+      formula: '(Compliant Claims / Total Claims) × 100',
+      dataSource: 'Claims audit system',
+    },
   },
 ];
 
@@ -86,9 +107,15 @@ export function PolicyInsightKPIGrid() {
         return (
           <Card key={index} className="card-elevated">
             <CardContent className="pt-5 pb-4">
-              {/* Label + Target */}
+              {/* Label + Target + Info */}
               <div className="flex justify-between items-start mb-2">
-                <p className="text-sm text-muted-foreground font-medium">{kpi.label}</p>
+                <div className="flex items-center gap-1">
+                  <p className="text-sm text-muted-foreground font-medium">{kpi.label}</p>
+                  <InfoTooltip 
+                    formula={kpi.definition.formula}
+                    dataSource={kpi.definition.dataSource}
+                  />
+                </div>
                 <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                   Target: {kpi.target}{kpi.unit}
                 </span>

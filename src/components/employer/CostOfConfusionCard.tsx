@@ -55,11 +55,21 @@ export function CostOfConfusionCard({
                 <TooltipTrigger asChild>
                   <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
+                <TooltipContent className="max-w-xs p-3 space-y-2">
                   <p className="text-xs">
-                    Financial impact of policy unclear-ness: unrealized benefits from confusion, 
-                    HR time answering questions, and rejected claims from misunderstanding.
+                    Financial impact of policy confusion: unrealized benefits, 
+                    HR time answering questions, and rejected claims.
                   </p>
+                  <div className="border-t pt-2">
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Formula</p>
+                    <p className="text-xs font-mono bg-muted/50 px-2 py-1 rounded mt-0.5">
+                      Unrealized + (HR Hours × Hourly Rate) + Rejection Costs
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Data Source</p>
+                    <p className="text-xs">HR ticketing + requests + policy analysis</p>
+                  </div>
                 </TooltipContent>
               </Tooltip>
             </CardTitle>
