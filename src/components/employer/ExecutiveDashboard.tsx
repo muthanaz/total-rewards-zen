@@ -34,7 +34,6 @@ import {
 } from '@/hooks/useEmployerDashboard';
 import { useEmployerActions } from '@/hooks/useEmployerActions';
 import { cn, formatCurrencyAED } from '@/lib/utils';
-import { DemoTip, DEMO_TIPS } from '@/components/demo';
 import { KPIDrilldownSheet, KPIMetricData } from '@/components/shared';
 import { addDays } from 'date-fns';
 
@@ -271,9 +270,6 @@ export function ExecutiveDashboard() {
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
       <div className="space-y-6">
-        {/* Demo Tip */}
-        <DemoTip {...DEMO_TIPS.employerDashboard} variant="highlight" />
-        
         {/* 1. PAGE HEADER */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>

@@ -2,6 +2,7 @@
  * Employee Segments Page (Workforce Insights)
  * 
  * Executive-grade driver analysis tool with:
+ * - At-Risk Alert Banner (when any segment < 50% utilization)
  * - KPI row (Employees, Avg Utilization, Unused Entitlement, Available Segments)
  * - Segment tiles with driver explanations
  * - Segment Comparator panel (right-side)
@@ -10,7 +11,7 @@
  */
 
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,7 @@ import { SegmentCharts } from '@/components/employer/SegmentCharts';
 import { SegmentComparePanel } from '@/components/employer/SegmentComparePanel';
 import { SegmentComparatorPanel } from '@/components/employer/SegmentComparatorPanel';
 import { SegmentTileDrilldownModal } from '@/components/employer/SegmentTileDrilldownModal';
+import { AtRiskAlertBanner, AtRiskSegmentAlert } from '@/components/employer/AtRiskAlertBanner';
 import { useSegmentData, SegmentDimensionId, SegmentDimension } from '@/hooks/useSegmentData';
 import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -140,10 +142,34 @@ export default function SegmentsPage() {
   // Available (high-coverage) dimensions
   const availableDimensions = dimensions.filter(d => d.isAvailable);
   const lowCoverageDimensions = dimensions.filter(d => !d.isAvailable);
+
+  // Generate at-risk segment alerts from dimension values
+  const atRiskAlerts: AtRiskSegmentAlert[] = useMemo(() => {
+    const alerts: AtRiskSegmentAlert[] = [];
+    dimensions.forEach(dim => {
+      if (!dim.isAvailable) return;
+      dim.values.forEach(val => {
+        if (val.utilizationRate < 50) {
+          alerts.push({
+            segmentName: val.name,
+            dimension: dim.name,
+            headcount: val.headcount,
+            utilizationRate: val.utilizationRate,
+            unusedEntitlement: val.unusedEntitlement,
+          });
+        }
+      });
+    });
+    // Sort by utilization (lowest first) and take top 5
+    return alerts.sort((a, b) => a.utilizationRate - b.utilizationRate).slice(0, 5);
+  }, [dimensions]);
   
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
       <div className="space-y-6">
+        {/* At-Risk Alert Banner */}
+        <AtRiskAlertBanner segments={atRiskAlerts} utilizationThreshold={50} />
+
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>

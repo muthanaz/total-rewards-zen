@@ -19,6 +19,7 @@ import {
 import { PolicyInsightKPIGrid } from '@/components/employer/PolicyInsightKPIGrid';
 import { PolicyAreaCard, PolicyAreaData } from '@/components/employer/PolicyAreaCard';
 import { PolicyEvidenceDrawer, PolicyEvidence } from '@/components/employer/PolicyEvidenceDrawer';
+import { CostOfConfusionCard } from '@/components/employer/CostOfConfusionCard';
 import { toast } from 'sonner';
 
 // Mock data for policy areas
@@ -196,8 +197,36 @@ export function PoliciesExecView() {
 
         <EmployerGlobalFiltersBar />
 
-        {/* KPI Grid - Single clarity score block with targets and deltas */}
-        <PolicyInsightKPIGrid />
+        {/* Cost of Confusion - Executive-level financial impact */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <PolicyInsightKPIGrid />
+          </div>
+          <CostOfConfusionCard
+            totalCost={315000}
+            breakdown={[
+              { 
+                category: 'Unrealized Benefits', 
+                amount: 185000, 
+                percentOfTotal: 59, 
+                description: 'Value left on table due to policy confusion' 
+              },
+              { 
+                category: 'HR Time Spent', 
+                amount: 78000, 
+                percentOfTotal: 25, 
+                description: 'Staff hours answering policy questions' 
+              },
+              { 
+                category: 'Rejected Claims', 
+                amount: 52000, 
+                percentOfTotal: 16, 
+                description: 'Claims rejected due to misunderstanding' 
+              },
+            ]}
+            monthlyChange={-8.2}
+          />
+        </div>
 
         {/* Tabs for Policy Areas and Common Questions */}
         <Tabs defaultValue="areas" className="space-y-4">

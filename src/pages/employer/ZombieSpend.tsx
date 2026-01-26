@@ -42,6 +42,7 @@ import {
 import { RecoverableValueKPIGrid } from '@/components/employer/RecoverableValueKPIGrid';
 import { CauseBreakdownChart, CauseBreakdownData } from '@/components/employer/CauseBreakdownChart';
 import { TopRecoveryPlays, RecoveryPlay } from '@/components/employer/TopRecoveryPlays';
+import { QuickWinsCard, QuickWin } from '@/components/employer/QuickWinsCard';
 import { PageLayout } from '@/components/shared';
 import { ZombieCategoryDrawer } from '@/components/employer/ZombieCategoryDrawer';
 import { LaunchPlaybookModal } from '@/components/employer/LaunchPlaybookModal';
@@ -184,6 +185,26 @@ export default function ZombieSpendPage() {
       };
     });
   }, [playbooks, summaryMetrics, categories]);
+
+  // Generate quick wins from top categories with lowest effort
+  const quickWins: QuickWin[] = useMemo(() => {
+    return categories
+      .filter(c => c.confidence !== 'low')
+      .sort((a, b) => b.unusedEntitlement - a.unusedEntitlement)
+      .slice(0, 3)
+      .map(cat => {
+        const causeType = rootCauseToCauseType[cat.primaryRootCause] || 'awareness';
+        return {
+          id: cat.id,
+          title: `Recover ${cat.name} benefits`,
+          category: cat.name,
+          estimatedRecovery: cat.unusedEntitlement * 0.3, // 30% recovery estimate
+          effort: causeType === 'awareness' ? 'low' : causeType === 'friction' ? 'medium' : 'high',
+          timeToImpact: causeType === 'awareness' ? '2-4 weeks' : causeType === 'friction' ? '4-8 weeks' : '8-12 weeks',
+          cause: causeType,
+        } as QuickWin;
+      });
+  }, [categories]);
   
   const handleOpenPlaybook = (playbook: RecoveryPlaybook) => {
     setSelectedPlaybook(playbook);
@@ -273,12 +294,23 @@ export default function ZombieSpendPage() {
           onKPIClick={(kpiId) => toast.info(`Opening ${kpiId} drilldown...`)}
         />
         
-        {/* 3. Cause Breakdown Chart */}
-        <CauseBreakdownChart 
-          data={causeBreakdownData} 
-          totalUnrealized={summaryMetrics.totalUnused}
-          isDemo={true}
-        />
+        {/* 3. Top 3 Quick Wins + Cause Breakdown */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <QuickWinsCard 
+            wins={quickWins} 
+            onTakeAction={(winId) => {
+              const win = quickWins.find(w => w.id === winId);
+              if (win) {
+                navigate(`/employer/recommendations?prefill=zombie&category=${win.category}`);
+              }
+            }} 
+          />
+          <CauseBreakdownChart 
+            data={causeBreakdownData} 
+            totalUnrealized={summaryMetrics.totalUnused}
+            isDemo={true}
+          />
+        </div>
         
         {/* 4. Top Recovery Plays (exactly 5) */}
         <TopRecoveryPlays plays={recoveryPlays} isDemo={true} />

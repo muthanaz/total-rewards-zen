@@ -24,6 +24,8 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useEmployerViewMode, ViewMode } from '@/contexts/EmployerViewModeContext';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+import { useActionApprovals } from '@/hooks/useActionApprovals';
+import { PendingApprovalsBadge } from '@/components/employer/PendingApprovalsBadge';
 import {
   SidebarShell,
   SidebarHeader,
@@ -89,72 +91,54 @@ const opsNavigation: NavGroup[] = [
   },
 ];
 
-// 2. EXECUTIVE NAVIGATION (CFO/CEO decision flow)
+// 2. EXECUTIVE NAVIGATION (CFO/CEO decision flow - Simplified 5-item structure)
 const execNavigation: NavGroup[] = [
-  // A) EXECUTIVE OVERVIEW
+  // 1. EXECUTIVE SUMMARY
   {
-    id: 'executive-overview',
-    label: 'Executive Overview',
-    labelAr: 'نظرة تنفيذية',
+    id: 'executive-summary',
+    label: 'Executive Summary',
+    labelAr: 'الملخص التنفيذي',
     items: [
       { label: 'Total Rewards Overview', labelAr: 'نظرة عامة على المكافآت', path: '/employer', icon: LayoutDashboard },
     ],
   },
-  // B) INVESTMENT & ROI
+  // 2. SPEND & VALUE ANALYSIS (merged: Spend, Zombie, Segments)
   {
-    id: 'investment-roi',
-    label: 'Investment & ROI',
-    labelAr: 'الاستثمار والعائد',
+    id: 'spend-value',
+    label: 'Spend & Value Analysis',
+    labelAr: 'تحليل الإنفاق والقيمة',
     items: [
       { label: 'Spend & Utilization', labelAr: 'الإنفاق والاستخدام', path: '/employer/spend', icon: DollarSign },
       { label: 'Unrealized Value', labelAr: 'القيمة غير المحققة', path: '/employer/zombie', icon: Lightbulb },
-    ],
-  },
-  // C) DRIVERS & SEGMENTS
-  {
-    id: 'drivers-segments',
-    label: 'Drivers & Segments',
-    labelAr: 'المحركات والشرائح',
-    items: [
       { label: 'Employee Segments', labelAr: 'شرائح الموظفين', path: '/employer/segments', icon: Users },
     ],
   },
-  // D) ACTIONS
+  // 3. DECISIONS & ACTIONS
   {
-    id: 'actions',
-    label: 'Actions',
-    labelAr: 'الإجراءات',
+    id: 'decisions-actions',
+    label: 'Decisions & Actions',
+    labelAr: 'القرارات والإجراءات',
     items: [
       { label: 'Action Plan', labelAr: 'خطة العمل', path: '/employer/recommendations', icon: BarChart3 },
     ],
   },
-  // E) GOVERNANCE & RISK
+  // 4. GOVERNANCE & CONTROLS
   {
-    id: 'governance-risk',
-    label: 'Governance & Risk',
-    labelAr: 'الحوكمة والمخاطر',
+    id: 'governance-controls',
+    label: 'Governance & Controls',
+    labelAr: 'الحوكمة والضوابط',
     items: [
       { label: 'Policy Impact', labelAr: 'تأثير السياسات', path: '/employer/policy-insights', icon: TrendingUp },
       { label: 'Workflow Settings', labelAr: 'إعدادات سير العمل', path: '/employer/settings/workflows', icon: GitBranch },
     ],
   },
-  // F) ECOSYSTEM (optional based on feature flag)
+  // 5. DATA SOURCES
   {
-    id: 'ecosystem',
-    label: 'Ecosystem',
-    labelAr: 'النظام البيئي',
-    featureFlag: 'marketplaceEnabled',
+    id: 'data-sources',
+    label: 'Data Sources',
+    labelAr: 'مصادر البيانات',
     items: [
-      { label: 'Marketplace Impact', labelAr: 'تأثير السوق', path: '/employer/marketplace', icon: ShoppingBag },
-    ],
-  },
-  // G) DATA TRUST
-  {
-    id: 'data-trust',
-    label: 'Data Trust',
-    labelAr: 'ثقة البيانات',
-    items: [
-      { label: 'Data Sources', labelAr: 'مصادر البيانات', path: '/employer/integrations', icon: Database },
+      { label: 'Integrations', labelAr: 'التكاملات', path: '/employer/integrations', icon: Database },
     ],
   },
 ];
@@ -167,6 +151,7 @@ function ViewModeToggle() {
   const navigate = useNavigate();
   const { direction } = useLanguage();
   const { viewMode, setViewMode, isExecutive } = useEmployerViewMode();
+  const { pendingApprovals } = useActionApprovals();
   const isRTL = direction === 'rtl';
 
   const handleModeChange = (mode: ViewMode) => {
@@ -179,10 +164,19 @@ function ViewModeToggle() {
     }
   };
 
+  const pendingCount = pendingApprovals?.length || 0;
+
   return (
     <>
+      {/* Pending Approvals Badge (Executive mode only) */}
+      {isExecutive && pendingCount > 0 && (
+        <div className="mt-3">
+          <PendingApprovalsBadge count={pendingCount} className="w-full justify-center" />
+        </div>
+      )}
+
       {/* View Mode Toggle */}
-      <div className="mt-4 p-1 bg-sidebar-accent/50 rounded-xl">
+      <div className="mt-3 p-1 bg-sidebar-accent/50 rounded-xl">
         <div className="grid grid-cols-2 gap-1">
           <button
             onClick={() => handleModeChange('operational')}
@@ -210,7 +204,6 @@ function ViewModeToggle() {
           </button>
         </div>
       </div>
-
     </>
   );
 }
