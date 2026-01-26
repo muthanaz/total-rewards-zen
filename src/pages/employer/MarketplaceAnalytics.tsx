@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { ShoppingBag, TrendingUp, TrendingDown, Users, Star, Coffee, Dumbbell, ShoppingCart, Plane, BookOpen, Baby, Download, AlertTriangle, HelpCircle, Info } from 'lucide-react';
+import { ShoppingBag, TrendingUp, TrendingDown, Users, Star, Coffee, Dumbbell, ShoppingCart, Plane, BookOpen, Baby, Download, AlertTriangle, HelpCircle, Info, Calculator } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, Area, AreaChart } from 'recharts';
 import { formatCurrencyAED, formatPercent, formatInteger, cn } from '@/lib/utils';
 import { MetricEvidenceTrigger, createMetricEvidenceData } from '@/components/shared';
@@ -23,6 +23,9 @@ import {
   MarketplaceSegmentDrawer,
   MarketplaceOpportunityInsights,
   MarketplaceVendorPerformance,
+  MarketplaceNoDataState,
+  SavingsEstimationBanner,
+  SavingsMethodologyDrawer,
 } from '@/components/employer';
 import { ConfidenceDetailsDrawer } from '@/components/employer/ConfidenceDetailsDrawer';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
@@ -31,6 +34,11 @@ import { MarketplaceOffer } from '@/components/employer/MarketplaceOfferDrawer';
 import { CategoryData } from '@/components/employer/MarketplaceCategoryDrawer';
 import { SegmentData } from '@/components/employer/MarketplaceSegmentDrawer';
 import { toast } from 'sonner';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import { DemoModeBadge } from '@/components/shared/DemoDataGate';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Vibrant color palette
 const COLORS = {
@@ -112,6 +120,8 @@ function MetricDefinitionsTooltip() {
 
 export default function MarketplaceAnalyticsPage() {
   const { flags, loading } = useFeatureFlags();
+  const { isDemoMode } = useDemoMode();
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   
   // Filter states from URL
@@ -125,19 +135,61 @@ export default function MarketplaceAnalyticsPage() {
   const [selectedCategory, setSelectedCategory] = useState<CategoryData | null>(null);
   const [selectedSegment, setSelectedSegment] = useState<SegmentData | null>(null);
   const [confidenceDrawerOpen, setConfidenceDrawerOpen] = useState(false);
+  const [methodologyDrawerOpen, setMethodologyDrawerOpen] = useState(false);
   
-  // Computed metrics
-  const totalActivations = categoryPerformance.reduce((sum, c) => sum + c.activations, 0);
-  const totalSavings = categoryPerformance.reduce((sum, c) => sum + (c.activations * c.avgSavings), 0);
-  const engagementRate = 78;
-  const avgRating = 4.6;
+  // Check for real vendor/activation data
+  const { data: activationsData, isLoading: activationsLoading } = useQuery({
+    queryKey: ['perk_activations_count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('perk_activations')
+        .select('*', { count: 'exact', head: true });
+      if (error) throw error;
+      return { count: count || 0 };
+    },
+  });
+  
+  const { data: offersData, isLoading: offersLoading } = useQuery({
+    queryKey: ['marketplace_offers_count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('marketplace_offers')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active');
+      if (error) throw error;
+      return { count: count || 0 };
+    },
+  });
+  
+  const hasRealData = (activationsData?.count || 0) > 0 || (offersData?.count || 0) > 0;
+  const dataLoading = activationsLoading || offersLoading;
+  
+  // Computed metrics (use demo data only if in demo mode)
+  const showDemoData = isDemoMode || hasRealData;
+  const totalActivations = showDemoData ? categoryPerformance.reduce((sum, c) => sum + c.activations, 0) : 0;
+  const totalSavings = showDemoData ? categoryPerformance.reduce((sum, c) => sum + (c.activations * c.avgSavings), 0) : 0;
+  const engagementRate = showDemoData ? 78 : 0;
+  const avgRating = showDemoData ? 4.6 : 0;
   const coverageMetrics = useDataCoverageMetrics();
   
+  // Savings estimation inputs for banner
+  const savingsInputs = [
+    { label: 'Discount percentages', value: 'From offer config', isEstimated: false },
+    { label: 'Avg transaction value', value: 'AED 500', isEstimated: true },
+    { label: 'Activation count', value: formatInteger(totalActivations), isEstimated: false },
+  ];
+  
+  const savingsExclusions = [
+    'Actual transaction amounts',
+    'Avoided costs from free services',
+    'Non-monetary benefits',
+  ];
+  
   // Executive KPIs (2nd row)
-  const savingsPerEngaged = Math.floor(totalSavings / (150 * engagementRate / 100));
-  const activationToUniqueRatio = 1.42; // repeat usage
-  const lowValueOffers = 3;
-  const coverageGap = 22; // % without activity
+  const savingsPerEngaged = showDemoData ? Math.floor(totalSavings / (150 * engagementRate / 100)) : 0;
+  const activationToUniqueRatio = showDemoData ? 1.42 : 0; // repeat usage
+  const lowValueOffers = showDemoData ? 3 : 0;
+  const coverageGap = showDemoData ? 22 : 0; // % without activity
   
   // Previous period deltas (mock)
   const deltas = {
@@ -166,16 +218,33 @@ export default function MarketplaceAnalyticsPage() {
     return <MarketplaceDisabledState />;
   }
 
+  // Show empty state if no real data and not in demo mode
+  if (!dataLoading && !showDemoData) {
+    return <MarketplaceNoDataState />;
+  }
+
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">Marketplace Analytics</h1>
-          <p className="text-muted-foreground">Track perk activations, vendor performance, and employee savings</p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-2xl font-display font-bold text-foreground">Marketplace Analytics</h1>
+            <p className="text-muted-foreground">Track perk activations, vendor performance, and employee savings</p>
+          </div>
+          {isDemoMode && <DemoModeBadge />}
         </div>
         <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="gap-1"
+            onClick={() => setMethodologyDrawerOpen(true)}
+          >
+            <Calculator className="h-4 w-4" />
+            Savings Methodology
+          </Button>
           <Button 
             variant="outline" 
             size="sm"
@@ -194,6 +263,15 @@ export default function MarketplaceAnalyticsPage() {
           </Button>
         </div>
       </div>
+      
+      {/* Savings Estimation Banner */}
+      <SavingsEstimationBanner
+        confidence="medium"
+        inputs={savingsInputs}
+        exclusions={savingsExclusions}
+        confidenceReason="Savings calculated from discount percentages × estimated AED 500 avg transaction."
+        onOpenMethodology={() => setMethodologyDrawerOpen(true)}
+      />
       
       {/* Low Confidence Warning */}
       {((coverageMetrics.employeeCoverage + coverageMetrics.entitlementCoverage + coverageMetrics.policyCoverage + coverageMetrics.claimsCoverage) / 4) < 70 && (
@@ -689,6 +767,10 @@ export default function MarketplaceAnalyticsPage() {
       open={confidenceDrawerOpen} 
       onOpenChange={setConfidenceDrawerOpen}
       metrics={coverageMetrics}
+    />
+    <SavingsMethodologyDrawer
+      open={methodologyDrawerOpen}
+      onOpenChange={setMethodologyDrawerOpen}
     />
     </PageConfidenceGate>
   );

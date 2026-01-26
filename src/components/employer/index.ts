@@ -72,6 +72,10 @@ export { MarketplaceSegmentDrawer } from './MarketplaceSegmentDrawer';
 export type { SegmentData } from './MarketplaceSegmentDrawer';
 export { MarketplaceOpportunityInsights } from './MarketplaceOpportunityInsights';
 export { MarketplaceVendorPerformance } from './MarketplaceVendorPerformance';
+export { MarketplaceNoDataState } from './MarketplaceNoDataState';
+export { SavingsEstimationBanner } from './SavingsEstimationBanner';
+export type { SavingsConfidence } from './SavingsEstimationBanner';
+export { SavingsMethodologyDrawer } from './SavingsMethodologyDrawer';
 
 // Integration management components
 export { IntegrationConnectionDrawer } from './IntegrationConnectionDrawer';
