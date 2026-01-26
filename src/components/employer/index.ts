@@ -180,12 +180,16 @@ export { UtilizationFunnel, generateFunnelData } from './UtilizationFunnel';
 // New Executive Dashboard components
 export { ExecHighlightsStrip } from './ExecHighlightsStrip';
 export type { ConfidenceLevel } from './ExecHighlightsStrip';
+export { ExecSummaryStrip } from './ExecSummaryStrip';
 export { ExecKPICards } from './ExecKPICards';
 export { InvestmentAllocationTable } from './InvestmentAllocationTable';
 export { TopDriversList } from './TopDriversList';
 export type { DriverType } from './TopDriversList';
 export { DecisionsActionsCard } from './DecisionsActionsCard';
 export type { ActionStatus } from './DecisionsActionsCard';
+export { AtRiskSegmentsCard } from './AtRiskSegmentsCard';
+export type { AtRiskSegment } from './AtRiskSegmentsCard';
+export { BoardPackExportButton } from './BoardPackExportButton';
 
 // Demo Pack components
 export { ExecutiveSummaryCard } from './ExecutiveSummaryCard';
