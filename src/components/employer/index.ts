@@ -64,6 +64,11 @@ export { PolicyQuestionRow } from './PolicyQuestionRow';
 export type { PolicyQuestion } from './PolicyQuestionRow';
 export { PolicyFixCard } from './PolicyFixCard';
 export type { PolicyFix } from './PolicyFixCard';
+export { PolicyInsightKPIGrid } from './PolicyInsightKPIGrid';
+export { PolicyAreaCard } from './PolicyAreaCard';
+export type { PolicyAreaData } from './PolicyAreaCard';
+export { PolicyEvidenceDrawer } from './PolicyEvidenceDrawer';
+export type { PolicyEvidence } from './PolicyEvidenceDrawer';
 
 // Marketplace Analytics components
 export { MarketplaceOfferDrawer } from './MarketplaceOfferDrawer';
