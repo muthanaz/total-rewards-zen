@@ -80,33 +80,49 @@ export function MoneySnapshotCard({
     <>
       <Card 
         className={cn(
-          'group cursor-pointer border border-border/40 hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300',
-          compact ? 'p-3' : 'p-4',
+          'group relative cursor-pointer overflow-hidden transition-all duration-500',
+          'bg-gradient-to-br from-emerald-500/[0.08] via-card to-card',
+          'border border-emerald-500/20 hover:border-emerald-500/40',
+          'shadow-sm hover:shadow-xl hover:shadow-emerald-500/10',
+          'dark:from-emerald-500/[0.12] dark:via-card dark:to-card',
+          compact ? 'p-3' : 'p-5',
           rtl && 'text-right'
         )}
         onClick={() => setSheetOpen(true)}
       >
+        {/* Premium corner glow */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-emerald-500/20 to-transparent rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 opacity-60 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-500/10 to-transparent rounded-full blur-xl translate-y-1/2 -translate-x-1/2 opacity-40" />
+        
         {/* Header */}
-        <div className={cn('flex items-center justify-between mb-3', rtl && 'flex-row-reverse')}>
-          <div className={cn('flex items-center gap-2', rtl && 'flex-row-reverse')}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500/15 to-emerald-500/5 flex items-center justify-center">
-              <Wallet className="w-4 h-4 text-emerald-600" />
+        <div className={cn('flex items-center justify-between mb-4 relative z-10', rtl && 'flex-row-reverse')}>
+          <div className={cn('flex items-center gap-3', rtl && 'flex-row-reverse')}>
+            <div className="relative">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                <Wallet className="w-5 h-5 text-white" />
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-card animate-pulse" />
             </div>
-            <span className="font-semibold text-sm">
-              {rtl ? 'لمحة مالية' : 'Money Snapshot'}
-            </span>
+            <div>
+              <span className="font-bold text-base tracking-tight">
+                {rtl ? 'لمحة مالية' : 'Money Snapshot'}
+              </span>
+              <p className="text-[10px] text-muted-foreground/70 font-medium">
+                {rtl ? 'هذا الشهر' : 'This month'}
+              </p>
+            </div>
           </div>
           <div className={cn('flex items-center gap-1.5', rtl && 'flex-row-reverse')}>
             {useDemo && (
-              <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-muted/50 text-muted-foreground border-muted">
+              <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-amber-500/10 text-amber-600 border-amber-500/30 font-medium">
                 Demo
               </Badge>
             )}
             {/* Info popover */}
             <Popover>
               <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button variant="ghost" size="icon" className="h-6 w-6">
-                  <Info className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-emerald-500/10">
+                  <Info className="w-3.5 h-3.5 text-muted-foreground hover:text-emerald-600 transition-colors" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent 
@@ -143,8 +159,8 @@ export function MoneySnapshotCard({
           </div>
         </div>
 
-        {/* Values */}
-        <div className="space-y-2">
+        {/* Values - Premium Layout */}
+        <div className="space-y-3 relative z-10">
           {/* Net Pay */}
           <MoneyRow
             label={rtl ? 'صافي الراتب' : 'Net Pay'}
@@ -153,6 +169,7 @@ export function MoneySnapshotCard({
             howCalculated={getHowCalculatedText('netPay', snapshot, lang)}
             rtl={rtl}
             lang={lang}
+            isPrimary
           />
 
           {/* Commitments */}
@@ -166,22 +183,28 @@ export function MoneySnapshotCard({
             lang={lang}
           />
 
-          {/* Discretionary Room */}
-          <div className="border-t border-border/40 pt-2">
+          {/* Discretionary Room - Hero Section */}
+          <div className="relative mt-4 pt-4">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
             <div className={cn('flex items-center justify-between', rtl && 'flex-row-reverse')}>
-              <div className={cn('flex items-center gap-1.5', rtl && 'flex-row-reverse')}>
-                <span className="text-xs font-medium text-muted-foreground">
-                  {rtl ? 'المبلغ المتاح للإنفاق' : 'Safe to Spend'}
-                </span>
-                <HowCalculatedPopover 
-                  text={getHowCalculatedText('discretionary', snapshot, lang)} 
-                  rtl={rtl}
-                />
+              <div className={cn('flex items-center gap-2', rtl && 'flex-row-reverse')}>
+                <div className="w-1.5 h-6 rounded-full bg-gradient-to-b from-emerald-500 to-emerald-600" />
+                <div>
+                  <span className="text-xs font-semibold text-foreground">
+                    {rtl ? 'المبلغ المتاح للإنفاق' : 'Safe to Spend'}
+                  </span>
+                  <HowCalculatedPopover 
+                    text={getHowCalculatedText('discretionary', snapshot, lang)} 
+                    rtl={rtl}
+                  />
+                </div>
               </div>
-              <div className={cn('flex items-center gap-1.5', rtl && 'flex-row-reverse')}>
+              <div className={cn('flex items-center gap-2', rtl && 'flex-row-reverse')}>
                 <span className={cn(
-                  'text-base font-bold tabular-nums',
-                  snapshot.discretionaryRoom.amount >= 0 ? 'text-emerald-600' : 'text-destructive'
+                  'text-xl font-bold tabular-nums tracking-tight',
+                  snapshot.discretionaryRoom.amount >= 0 
+                    ? 'text-emerald-600 dark:text-emerald-400' 
+                    : 'text-destructive'
                 )}>
                   {formatCurrencyAED(snapshot.discretionaryRoom.amount)}
                 </span>
@@ -192,9 +215,6 @@ export function MoneySnapshotCard({
                 />
               </div>
             </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">
-              {rtl ? 'هذا الشهر' : 'This month'}
-            </p>
           </div>
         </div>
 
@@ -204,12 +224,15 @@ export function MoneySnapshotCard({
             variant="ghost" 
             size="sm" 
             className={cn(
-              'w-full mt-3 text-xs h-7 gap-1 text-accent hover:text-accent/80',
+              'w-full mt-4 text-xs h-8 gap-1.5 rounded-lg',
+              'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10',
+              'dark:text-emerald-400 dark:hover:text-emerald-300',
+              'font-medium transition-all duration-300',
               rtl && 'flex-row-reverse'
             )}
           >
             {rtl ? 'عرض التفاصيل' : 'View breakdown'}
-            <ChevronRight className={cn('w-3.5 h-3.5', rtl && 'rotate-180')} />
+            <ChevronRight className={cn('w-4 h-4 group-hover:translate-x-0.5 transition-transform', rtl && 'rotate-180')} />
           </Button>
         )}
       </Card>
@@ -235,19 +258,31 @@ interface MoneyRowProps {
   confidence: 'measured' | 'employee_reported' | 'estimated' | 'missing';
   howCalculated: string;
   isNegative?: boolean;
+  isPrimary?: boolean;
   rtl?: boolean;
   lang?: 'en' | 'ar';
 }
 
-function MoneyRow({ label, amount, confidence, howCalculated, isNegative, rtl, lang }: MoneyRowProps) {
+function MoneyRow({ label, amount, confidence, howCalculated, isNegative, isPrimary, rtl, lang }: MoneyRowProps) {
   return (
-    <div className={cn('flex items-center justify-between text-xs', rtl && 'flex-row-reverse')}>
-      <div className={cn('flex items-center gap-1', rtl && 'flex-row-reverse')}>
-        <span className="text-muted-foreground">{label}</span>
+    <div className={cn(
+      'flex items-center justify-between py-1.5 px-2 -mx-2 rounded-lg transition-colors',
+      isPrimary && 'bg-muted/30',
+      rtl && 'flex-row-reverse'
+    )}>
+      <div className={cn('flex items-center gap-1.5', rtl && 'flex-row-reverse')}>
+        <span className={cn(
+          'font-medium',
+          isPrimary ? 'text-sm text-foreground' : 'text-xs text-muted-foreground'
+        )}>{label}</span>
         <HowCalculatedPopover text={howCalculated} rtl={rtl} />
       </div>
       <div className={cn('flex items-center gap-1.5', rtl && 'flex-row-reverse')}>
-        <span className={cn('font-medium tabular-nums', isNegative && 'text-destructive')}>
+        <span className={cn(
+          'tabular-nums tracking-tight',
+          isPrimary ? 'text-sm font-semibold text-foreground' : 'text-xs font-medium',
+          isNegative && 'text-red-500 dark:text-red-400'
+        )}>
           {isNegative ? '−' : ''}{formatCurrencyAED(amount)}
         </span>
       </div>
