@@ -73,6 +73,8 @@ import {
 } from '@/hooks/usePolicyRPC';
 import { PolicyArchiveDeleteDialog } from './PolicyArchiveDeleteDialog';
 import { PolicyApprovalDialog } from './PolicyApprovalDialog';
+import { PolicyVersionHistoryDrawer } from './PolicyVersionHistoryDrawer';
+import { PolicyOwnerDisplay } from './PolicyOwnerDisplay';
 
 interface PolicyRow {
   id: string;
@@ -90,6 +92,7 @@ interface PolicyRow {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  owner_user_id?: string | null;
   // Joined version data
   currentVersion?: {
     id: string;
@@ -99,6 +102,7 @@ interface PolicyRow {
     effective_to: string | null;
     updated_at: string;
     logic_json?: PolicyLogic | null;
+    created_by?: string | null;
   } | null;
   draftVersion?: {
     id: string;
@@ -129,6 +133,9 @@ export function PolicyManagementView() {
   const [duplicatingPolicyId, setDuplicatingPolicyId] = useState<string | null>(null);
   // Track publish in-progress
   const [publishingPolicyId, setPublishingPolicyId] = useState<string | null>(null);
+  // Version history drawer
+  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
+  const [versionHistoryPolicy, setVersionHistoryPolicy] = useState<PolicyRow | null>(null);
   const { hasPermission } = useEmployerPermissions();
   const { user, role } = useAuth();
   const queryClient = useQueryClient();
@@ -915,11 +922,11 @@ export function PolicyManagementView() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Policy Name</TableHead>
+                      <TableHead>Owner</TableHead>
                       <TableHead>Life Area</TableHead>
-                      <TableHead>Model</TableHead>
-                      <TableHead>Capabilities</TableHead>
                       <TableHead>Version</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Effective Date</TableHead>
                       <TableHead>Last Updated</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -934,17 +941,10 @@ export function PolicyManagementView() {
                           </div>
                         </TableCell>
                         <TableCell>
+                          <PolicyOwnerDisplay ownerUserId={policy.owner_user_id || null} compact />
+                        </TableCell>
+                        <TableCell>
                           <LifeAreaChip value={policy.category || ''} showTooltip={true} />
-                        </TableCell>
-                        <TableCell>
-                          <PolicyModelChip model={policy.transaction_model || 'claim_only'} />
-                        </TableCell>
-                        <TableCell>
-                          <PolicyCapabilityChips 
-                            logicJson={policy.currentVersion?.logic_json || policy.draftVersion?.logic_json} 
-                            transactionModel={policy.transaction_model}
-                            compact
-                          />
                         </TableCell>
                         <TableCell>
                           {policy.currentVersion 
@@ -955,6 +955,14 @@ export function PolicyManagementView() {
                           }
                         </TableCell>
                         <TableCell>{getStatusBadge(policy)}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {policy.currentVersion?.effective_from
+                            ? format(new Date(policy.currentVersion.effective_from), 'MMM d, yyyy')
+                            : policy.effective_from
+                              ? format(new Date(policy.effective_from), 'MMM d, yyyy')
+                              : '—'
+                          }
+                        </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {policy.currentVersion?.updated_at
                             ? format(new Date(policy.currentVersion.updated_at), 'MMM d, yyyy')
@@ -985,7 +993,10 @@ export function PolicyManagementView() {
                                     <Copy className="w-4 h-4 mr-2" />
                                     {duplicatingPolicyId === policy.id ? 'Duplicating...' : 'Duplicate'}
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => {
+                                    setVersionHistoryPolicy(policy);
+                                    setVersionHistoryOpen(true);
+                                  }}>
                                     <History className="w-4 h-4 mr-2" />
                                     Version History
                                   </DropdownMenuItem>
@@ -1251,6 +1262,14 @@ export function PolicyManagementView() {
           if (approvalDialogMode === 'submit') void handleSubmitForApproval(noteOrReason);
           else void handleReject(noteOrReason);
         }}
+      />
+
+      {/* Version History Drawer */}
+      <PolicyVersionHistoryDrawer
+        policyId={versionHistoryPolicy?.id || ''}
+        policyTitle={versionHistoryPolicy?.title || ''}
+        open={versionHistoryOpen}
+        onOpenChange={setVersionHistoryOpen}
       />
       </PageLayout>
     </TooltipProvider>
