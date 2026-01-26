@@ -159,6 +159,16 @@ export { TopDriversTable } from './TopDriversTable';
 export { OpportunitiesRanking, generateOpportunities } from './OpportunitiesRanking';
 export { UtilizationFunnel, generateFunnelData } from './UtilizationFunnel';
 
+// New Executive Dashboard components
+export { ExecHighlightsStrip } from './ExecHighlightsStrip';
+export type { ConfidenceLevel } from './ExecHighlightsStrip';
+export { ExecKPICards } from './ExecKPICards';
+export { InvestmentAllocationTable } from './InvestmentAllocationTable';
+export { TopDriversList } from './TopDriversList';
+export type { DriverType } from './TopDriversList';
+export { DecisionsActionsCard } from './DecisionsActionsCard';
+export type { ActionStatus } from './DecisionsActionsCard';
+
 // Demo Pack components
 export { ExecutiveSummaryCard } from './ExecutiveSummaryCard';
 export { BenefitsActionPlanSummary, generateSampleActionPlan } from './BenefitsActionPlanSummary';
