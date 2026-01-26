@@ -18,6 +18,7 @@ import {
   Receipt,
   Zap,
   HelpCircle,
+  TrendingDown,
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -62,6 +63,11 @@ const allBenefitItems: NavItem[] = [
   { label: 'Wellbeing', labelAr: 'الرفاهية', path: '/employee/wellbeing', icon: Dumbbell },
   { label: 'Learning & Development', labelAr: 'التعلم والتطوير', path: '/employee/learning', icon: BookOpen },
   { label: 'Long-Term Financials', labelAr: 'الماليات طويلة الأجل', path: '/employee/long-term-financials', icon: Wallet },
+];
+
+// Money section items
+const moneyItems: NavItem[] = [
+  { label: 'Optimizer', labelAr: 'محسّن التكاليف', path: '/employee/out-of-pocket', icon: Wallet },
 ];
 // ============================================================================
 // NAVIGATION DATA
@@ -198,6 +204,14 @@ export function EmployeeSidebar() {
           label="Marketplace"
           labelAr="السوق"
           icon={ShoppingBag}
+        />
+
+        {/* Optimizer - Standalone (under Money grouping conceptually) */}
+        <SidebarStandaloneLink
+          path="/employee/out-of-pocket"
+          label="Optimizer"
+          labelAr="محسّن التكاليف"
+          icon={TrendingDown}
         />
 
         {/* Help & Settings Section */}
