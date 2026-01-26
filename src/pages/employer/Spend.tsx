@@ -6,18 +6,14 @@
  * 2. Spend vs Utilization Matrix Chart (visual diagnosis)
  * 3. Action Required link (drive decisions)
  * 
- * Removed for executive clarity:
- * - Definitions Card (analyst-level detail)
- * - Breakdown Tabs (clutter reduction)
- * - Waterfall Chart (matrix is more actionable)
+ * Uses unified metrics from executiveMetricsConstants for cross-page consistency.
  * 
  * @module Spend
  */
 
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,6 +31,13 @@ import {
 } from 'lucide-react';
 import { formatCurrencyAED, formatPercent, formatInteger, cn } from '@/lib/utils';
 import { calculateUtilization } from '@/lib/crossPortalContract';
+import { 
+  INVESTMENT_METRICS, 
+  UTILIZATION_METRICS, 
+  FRICTION_METRICS,
+  ORG_BASELINE,
+  CATEGORY_METRICS,
+} from '@/lib/executiveMetricsConstants';
 import { 
   EmployerGlobalFiltersBar, 
   DataConfidenceBadge, 
@@ -60,27 +63,30 @@ import {
 } from '@/components/ui/table';
 
 // ============================================================================
-// MOCK DATA (would come from hooks in production)
+// DERIVED DATA FROM CONSTANTS
 // ============================================================================
 
-const spendByBenefitType = [
-  { id: 'housing', name: 'Housing', category: 'Cash Allowances', spend: 2400000, budget: 2800000, entitled: 2700000, employees: 85, faqViews: 25, claimVelocity: 8, awarenessScore: 85, rejectionRate: 5, missingDocsRate: 8 },
-  { id: 'schooling', name: 'Schooling', category: 'Cash Allowances', spend: 1200000, budget: 1500000, entitled: 1400000, employees: 45, faqViews: 35, claimVelocity: 4, awarenessScore: 70, rejectionRate: 12, missingDocsRate: 18 },
-  { id: 'health', name: 'Health', category: 'Insurance', spend: 800000, budget: 900000, entitled: 850000, employees: 130, faqViews: 40, claimVelocity: 6, awarenessScore: 75, rejectionRate: 8, missingDocsRate: 12 },
-  { id: 'transport', name: 'Transport', category: 'Cash Allowances', spend: 400000, budget: 500000, entitled: 480000, employees: 90, faqViews: 20, claimVelocity: 5, awarenessScore: 60, rejectionRate: 6, missingDocsRate: 10 },
-  { id: 'learning', name: 'Learning', category: 'Reimbursement', spend: 150000, budget: 300000, entitled: 280000, employees: 60, faqViews: 95, claimVelocity: 2, awarenessScore: 35, rejectionRate: 22, missingDocsRate: 28 },
-  { id: 'wellbeing', name: 'Wellbeing', category: 'Reimbursement', spend: 80000, budget: 150000, entitled: 140000, employees: 50, faqViews: 78, claimVelocity: 1.5, awarenessScore: 30, rejectionRate: 18, missingDocsRate: 25 },
-];
+const spendByBenefitType = Object.values(CATEGORY_METRICS).map((cat, idx) => ({
+  id: cat.name.toLowerCase().replace(/\s+/g, '-'),
+  name: cat.name,
+  category: 'Benefits',
+  spend: cat.claimed,
+  budget: cat.budget,
+  entitled: cat.entitled,
+  employees: Math.round(ORG_BASELINE.employeeCount * (0.3 + idx * 0.1)),
+  rejectionRate: FRICTION_METRICS.rejectionRate + (idx * 2),
+  missingDocsRate: FRICTION_METRICS.missingDocsRate + (idx * 3),
+}));
 
 const forecastHistoricalData = [
-  { month: 'Jan', entitled: 6150000, claimed: 450000, unused: 5700000 },
-  { month: 'Feb', entitled: 6150000, claimed: 480000, unused: 5270000 },
-  { month: 'Mar', entitled: 6150000, claimed: 520000, unused: 4750000 },
-  { month: 'Apr', entitled: 6150000, claimed: 490000, unused: 4260000 },
-  { month: 'May', entitled: 6150000, claimed: 510000, unused: 3750000 },
-  { month: 'Jun', entitled: 6150000, claimed: 530000, unused: 3220000 },
-  { month: 'Jul', entitled: 6150000, claimed: 545000, unused: 2675000 },
-  { month: 'Aug', entitled: 6150000, claimed: 520000, unused: 2155000 },
+  { month: 'Jan', entitled: INVESTMENT_METRICS.entitledValue, claimed: 450000, unused: INVESTMENT_METRICS.entitledValue - 450000 },
+  { month: 'Feb', entitled: INVESTMENT_METRICS.entitledValue, claimed: 480000, unused: INVESTMENT_METRICS.entitledValue - 930000 },
+  { month: 'Mar', entitled: INVESTMENT_METRICS.entitledValue, claimed: 520000, unused: INVESTMENT_METRICS.entitledValue - 1450000 },
+  { month: 'Apr', entitled: INVESTMENT_METRICS.entitledValue, claimed: 490000, unused: INVESTMENT_METRICS.entitledValue - 1940000 },
+  { month: 'May', entitled: INVESTMENT_METRICS.entitledValue, claimed: 510000, unused: INVESTMENT_METRICS.entitledValue - 2450000 },
+  { month: 'Jun', entitled: INVESTMENT_METRICS.entitledValue, claimed: 530000, unused: INVESTMENT_METRICS.entitledValue - 2980000 },
+  { month: 'Jul', entitled: INVESTMENT_METRICS.entitledValue, claimed: 545000, unused: INVESTMENT_METRICS.entitledValue - 3525000 },
+  { month: 'Aug', entitled: INVESTMENT_METRICS.entitledValue, claimed: 520000, unused: INVESTMENT_METRICS.entitledValue - 4045000 },
 ];
 
 const drilldownData = {
@@ -280,7 +286,7 @@ export function Spend() {
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
       <PageLayout
         title="Investment Analysis"
-        description={`FY 2024 · ${formatInteger(130)} employees · AED ${(totals.spend / 130 / 1000).toFixed(1)}K per head`}
+        description={`FY ${ORG_BASELINE.fiscalYear} · ${formatInteger(ORG_BASELINE.employeeCount)} employees · AED ${(INVESTMENT_METRICS.costPerEmployee / 1000).toFixed(1)}K per head`}
         icon={DollarSign}
         iconClassName="bg-primary/10 text-primary"
         confidenceBadge={<DataConfidenceBadge metrics={coverageMetrics} />}
@@ -288,7 +294,7 @@ export function Spend() {
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm">
               <Calendar className="w-4 h-4 mr-2" />
-              YTD 2024
+              YTD {ORG_BASELINE.fiscalYear}
             </Button>
             <Button variant="outline" size="sm">
               <Download className="w-4 h-4 mr-2" />
@@ -301,12 +307,12 @@ export function Spend() {
         {/* 1. CFO KPI GRID - 4 Core Metrics First */}
         <CFOKPIGrid
           metrics={{
-            allocatedBudget: totals.budget,
-            actualSpend: totals.spend,
-            utilizationRate: overallUtilization.rate,
-            targetUtilization: 75,
-            unusedValue: overallUtilization.remaining,
-            yoyChange: 8.2,
+            allocatedBudget: INVESTMENT_METRICS.allocatedBudget,
+            actualSpend: INVESTMENT_METRICS.actualSpend,
+            utilizationRate: UTILIZATION_METRICS.utilizationRate,
+            targetUtilization: INVESTMENT_METRICS.targetUtilization,
+            unusedValue: UTILIZATION_METRICS.unrealizedValue,
+            yoyChange: INVESTMENT_METRICS.yoyChange,
           }}
           onKPIClick={(kpiId) => toast.info(`Opening ${kpiId} drilldown...`)}
         />
@@ -339,7 +345,7 @@ export function Spend() {
                 </div>
                 <div>
                   <p className="font-semibold text-base">
-                    {formatCurrencyAED(overallUtilization.remaining, { abbreviate: true })} opportunity to recapture
+                    {formatCurrencyAED(UTILIZATION_METRICS.unrealizedValue, { abbreviate: true })} opportunity to recapture
                   </p>
                   <p className="text-sm text-muted-foreground mt-0.5">
                     View root causes and recovery actions
