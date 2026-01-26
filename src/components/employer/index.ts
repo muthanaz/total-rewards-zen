@@ -190,6 +190,13 @@ export type { ActionStatus } from './DecisionsActionsCard';
 export { AtRiskSegmentsCard } from './AtRiskSegmentsCard';
 export type { AtRiskSegment } from './AtRiskSegmentsCard';
 export { BoardPackExportButton } from './BoardPackExportButton';
+export { PendingApprovalsBadge } from './PendingApprovalsBadge';
+export { QuickWinsCard } from './QuickWinsCard';
+export type { QuickWin } from './QuickWinsCard';
+export { AtRiskAlertBanner } from './AtRiskAlertBanner';
+export type { AtRiskSegmentAlert } from './AtRiskAlertBanner';
+export { SpendRedFlagBadge } from './SpendRedFlagBadge';
+export { CostOfConfusionCard } from './CostOfConfusionCard';
 
 // Demo Pack components
 export { ExecutiveSummaryCard } from './ExecutiveSummaryCard';

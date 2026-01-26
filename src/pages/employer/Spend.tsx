@@ -67,6 +67,7 @@ import {
   generateSpendInsights,
   SpendUtilizationMatrix,
   RejectionFrictionPanel,
+  SpendRedFlagBadge,
 } from '@/components/employer';
 import type { CategoryBubble } from '@/components/employer';
 import { UtilizationFunnel, generateFunnelData } from '@/components/employer/UtilizationFunnel';
@@ -672,6 +673,7 @@ export function Spend() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Benefit Type</TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead className="text-right">Budget</TableHead>
                       <TableHead className="text-right">Entitled</TableHead>
                       <TableHead className="text-right">Claimed</TableHead>
@@ -686,6 +688,13 @@ export function Spend() {
                       return (
                         <TableRow key={item.name} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelectedBenefit(item)}>
                           <TableCell className="font-medium">{item.name}</TableCell>
+                          <TableCell>
+                            <SpendRedFlagBadge 
+                              spend={item.spend} 
+                              budget={item.budget} 
+                              utilization={util.rate} 
+                            />
+                          </TableCell>
                           <TableCell className="text-right">{formatCurrencyAED(item.budget, { abbreviate: false })}</TableCell>
                           <TableCell className="text-right">{formatCurrencyAED(item.entitled, { abbreviate: false })}</TableCell>
                           <TableCell className="text-right">{formatCurrencyAED(item.spend, { abbreviate: false })}</TableCell>
