@@ -1,12 +1,12 @@
 /**
  * Employee Segments Page (Workforce Insights)
  * 
- * Upgraded segmentation workbench with:
- * - Segment dimension cards (Grade, Department, Nationality, Life Stage, Work Arrangement, Joiner Cohort)
- * - Drilldown tables with charts
- * - Insights drawer with actions connecting to Recommendations + Zombie Spend
- * - Compare segments mode
- * - Actionable confidence badge
+ * Executive-grade driver analysis tool with:
+ * - KPI row (Employees, Avg Utilization, Unused Entitlement, Available Segments)
+ * - Segment tiles with driver explanations
+ * - Segment Comparator panel (right-side)
+ * - Tile click drilldown modal
+ * - Full drilldown tables with charts
  */
 
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -39,7 +39,9 @@ import { SegmentDrilldownTable } from '@/components/employer/SegmentDrilldownTab
 import { SegmentInsightsDrawer } from '@/components/employer/SegmentInsightsDrawer';
 import { SegmentCharts } from '@/components/employer/SegmentCharts';
 import { SegmentComparePanel } from '@/components/employer/SegmentComparePanel';
-import { useSegmentData, SegmentDimensionId } from '@/hooks/useSegmentData';
+import { SegmentComparatorPanel } from '@/components/employer/SegmentComparatorPanel';
+import { SegmentTileDrilldownModal } from '@/components/employer/SegmentTileDrilldownModal';
+import { useSegmentData, SegmentDimensionId, SegmentDimension } from '@/hooks/useSegmentData';
 import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -58,6 +60,8 @@ export default function SegmentsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const coverageMetrics = useDataCoverageMetrics();
   const [compareMode, setCompareMode] = useState(false);
+  const [drilldownModalOpen, setDrilldownModalOpen] = useState(false);
+  const [selectedTileDimension, setSelectedTileDimension] = useState<SegmentDimension | null>(null);
   
   const {
     dimensions,
@@ -96,9 +100,9 @@ export default function SegmentsPage() {
     }
   }, [selectedDimension]);
   
-  const handleDimensionSelect = (id: SegmentDimensionId) => {
-    const dim = dimensions.find(d => d.id === id);
-    if (dim && !dim.isAvailable) {
+  // Handle tile click - open modal for quick drilldown
+  const handleTileClick = (dim: SegmentDimension) => {
+    if (!dim.isAvailable) {
       toast.error('Low data coverage', {
         description: 'This segment requires more data. Improve HRIS mapping or Smart Profile fields.',
         action: {
@@ -108,7 +112,8 @@ export default function SegmentsPage() {
       });
       return;
     }
-    selectDimension(id);
+    setSelectedTileDimension(dim);
+    setDrilldownModalOpen(true);
   };
   
   const handleDropdownChange = (value: string) => {
@@ -118,7 +123,10 @@ export default function SegmentsPage() {
       });
       return;
     }
-    handleDimensionSelect(value as SegmentDimensionId);
+    const dim = dimensions.find(d => d.id === value);
+    if (dim) {
+      selectDimension(value as SegmentDimensionId);
+    }
   };
   
   const handleBackToOverview = () => {
@@ -225,7 +233,7 @@ export default function SegmentsPage() {
             />
           </div>
         ) : (
-          /* Overview: Segment Cards */
+          /* Overview: KPIs + Segment Tiles + Comparator */
           <div className="space-y-6">
             {/* Summary Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -267,7 +275,7 @@ export default function SegmentsPage() {
                       <TrendingDown className="h-6 w-6 text-warning" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-amber-600">
+                      <p className="text-2xl font-bold text-warning">
                         {formatCurrencyAED(summaryMetrics.totalUnusedEntitlement)}
                       </p>
                       <p className="text-sm text-muted-foreground">Unused Entitlement</p>
@@ -291,82 +299,104 @@ export default function SegmentsPage() {
               </Card>
             </div>
             
-            {/* Segment Dimension Cards */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  Segment Dimensions
-                  <InfoTooltip 
-                    formula="Click a card to drill down" 
-                    dataSource="profiles + benefit_entitlements" 
-                  />
-                </h2>
-                <Badge variant="secondary" className="text-xs">
-                  {availableDimensions.length} of {dimensions.length} available
-                </Badge>
+            {/* Main Content: Tiles + Comparator */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Segment Tiles (2 columns) */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Available Segment Dimension Cards */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                      Segment Dimensions
+                      <InfoTooltip 
+                        formula="Click a card to see quick analysis" 
+                        dataSource="profiles + benefit_entitlements" 
+                      />
+                    </h2>
+                    <Badge variant="secondary" className="text-xs">
+                      {availableDimensions.length} of {dimensions.length} available
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {availableDimensions.map((dim) => (
+                      <SegmentDimensionCard
+                        key={dim.id}
+                        dimension={dim}
+                        isSelected={selectedDimension === dim.id}
+                        onClick={() => handleTileClick(dim)}
+                      />
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Low Coverage Dimensions */}
+                {lowCoverageDimensions.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <h2 className="text-lg font-semibold text-muted-foreground">Needs More Data</h2>
+                      <Badge variant="outline" className="text-xs bg-warning/10 text-warning border-warning/30">
+                        <AlertTriangle className="h-3 w-3 mr-1" />
+                        Low coverage
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {lowCoverageDimensions.map((dim) => (
+                        <SegmentDimensionCard
+                          key={dim.id}
+                          dimension={dim}
+                          isSelected={false}
+                          onClick={() => handleTileClick(dim)}
+                        />
+                      ))}
+                    </div>
+                    
+                    {/* Data Confidence CTA */}
+                    <Card className="mt-4 border-dashed">
+                      <CardContent className="py-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Database className="h-5 w-5 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium text-sm">Improve data confidence</p>
+                              <p className="text-xs text-muted-foreground">
+                                Connect HRIS or improve Smart Profile fields to unlock more segments
+                              </p>
+                            </div>
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => navigate('/employer/integrations?view=exec')}
+                          >
+                            Improve data confidence
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {availableDimensions.map((dim) => (
-                  <SegmentDimensionCard
-                    key={dim.id}
-                    dimension={dim}
-                    isSelected={selectedDimension === dim.id}
-                    onClick={() => handleDimensionSelect(dim.id)}
-                  />
-                ))}
+              {/* Segment Comparator Panel (right side) */}
+              <div className="lg:col-span-1">
+                <SegmentComparatorPanel
+                  dimensions={dimensions}
+                  selectedDimensionId={selectedDimension}
+                  onDimensionChange={(id) => {}}
+                />
               </div>
             </div>
-            
-            {/* Low Coverage Dimensions */}
-            {lowCoverageDimensions.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <h2 className="text-lg font-semibold text-muted-foreground">Needs More Data</h2>
-                  <Badge variant="outline" className="text-xs bg-warning/10 text-warning border-warning/30">
-                    <AlertTriangle className="h-3 w-3 mr-1" />
-                    Low coverage
-                  </Badge>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {lowCoverageDimensions.map((dim) => (
-                    <SegmentDimensionCard
-                      key={dim.id}
-                      dimension={dim}
-                      isSelected={false}
-                      onClick={() => handleDimensionSelect(dim.id)}
-                    />
-                  ))}
-                </div>
-                
-                {/* Data Confidence CTA */}
-                <Card className="mt-4 border-dashed">
-                  <CardContent className="py-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Database className="h-5 w-5 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium text-sm">Improve data confidence</p>
-                          <p className="text-xs text-muted-foreground">
-                            Connect HRIS or improve Smart Profile fields to unlock more segments
-                          </p>
-                        </div>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => navigate('/employer/integrations?view=exec')}
-                      >
-                        Improve data confidence
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
           </div>
         )}
+        
+        {/* Tile Drilldown Modal */}
+        <SegmentTileDrilldownModal
+          open={drilldownModalOpen}
+          onOpenChange={setDrilldownModalOpen}
+          dimension={selectedTileDimension}
+        />
         
         {/* Insights Drawer */}
         <SegmentInsightsDrawer

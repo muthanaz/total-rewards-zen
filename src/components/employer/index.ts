@@ -54,6 +54,8 @@ export { SegmentInsightsDrawer } from './SegmentInsightsDrawer';
 export { SegmentCharts } from './SegmentCharts';
 export { RiskFlagsModal } from './RiskFlagsModal';
 export { SegmentComparePanel } from './SegmentComparePanel';
+export { SegmentComparatorPanel } from './SegmentComparatorPanel';
+export { SegmentTileDrilldownModal } from './SegmentTileDrilldownModal';
 
 // Policy Insights components
 export { PolicyHotspotDrawer } from './PolicyHotspotDrawer';

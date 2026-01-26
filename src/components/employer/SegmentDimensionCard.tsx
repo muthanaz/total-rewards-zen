@@ -1,16 +1,15 @@
 /**
- * Segment Dimension Card
+ * SegmentDimensionCard - Enhanced segment tile with driver explanation
  * 
- * Clickable card showing a segment dimension with mini KPIs.
+ * Shows: Headcount, Utilization %, Unrealized Value, Top category driving unrealized value
  */
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { AlertTriangle } from 'lucide-react';
-import { formatCurrencyAED, formatPercent, formatInteger } from '@/lib/utils';
-import { SegmentDimension } from '@/hooks/useSegmentData';
-import { cn } from '@/lib/utils';
+import { AlertTriangle, TrendingDown } from 'lucide-react';
+import { formatCurrencyAED, formatPercent, formatInteger, cn } from '@/lib/utils';
+import { SegmentDimension, DRIVER_DEFINITIONS } from '@/hooks/useSegmentData';
 
 interface SegmentDimensionCardProps {
   dimension: SegmentDimension;
@@ -21,6 +20,25 @@ interface SegmentDimensionCardProps {
 export function SegmentDimensionCard({ dimension, isSelected, onClick }: SegmentDimensionCardProps) {
   const Icon = dimension.icon;
   const isLowCoverage = dimension.coverage < 70;
+  
+  // Find top driver from dimension values
+  const getTopDriver = () => {
+    const driverCounts: Record<string, number> = {};
+    dimension.values.forEach(v => {
+      if (v.drivers && v.drivers.length > 0) {
+        const topDriver = v.drivers.sort((a, b) => b.percentage - a.percentage)[0];
+        driverCounts[topDriver.id] = (driverCounts[topDriver.id] || 0) + topDriver.percentage;
+      }
+    });
+    const sorted = Object.entries(driverCounts).sort((a, b) => b[1] - a[1]);
+    if (sorted.length > 0) {
+      const driverId = sorted[0][0] as keyof typeof DRIVER_DEFINITIONS;
+      return DRIVER_DEFINITIONS[driverId]?.shortName || 'Unknown';
+    }
+    return 'Awareness'; // default
+  };
+  
+  const topDriver = getTopDriver();
   
   return (
     <Card 
@@ -61,32 +79,42 @@ export function SegmentDimensionCard({ dimension, isSelected, onClick }: Segment
             <p className="font-semibold">{formatInteger(dimension.headcount)}</p>
           </div>
           <div className="p-2 rounded bg-muted/50">
-            <p className="text-muted-foreground">Avg Comp</p>
-            <p className="font-semibold">
-              {dimension.avgTotalComp 
-                ? formatCurrencyAED(dimension.avgTotalComp, { abbreviate: true }) 
-                : '—'}
-            </p>
-          </div>
-          <div className="p-2 rounded bg-muted/50">
             <p className="text-muted-foreground">Utilization</p>
             <div className="flex items-center gap-1">
-              <p className="font-semibold">{formatPercent(dimension.utilizationRate)}</p>
+              <p className={cn(
+                "font-semibold",
+                dimension.utilizationRate >= 75 ? 'text-success' :
+                dimension.utilizationRate >= 50 ? 'text-foreground' :
+                'text-warning'
+              )}>
+                {formatPercent(dimension.utilizationRate)}
+              </p>
               <Progress value={dimension.utilizationRate} className="h-1 w-8" />
             </div>
           </div>
-          <div className="p-2 rounded bg-muted/50">
-            <p className="text-muted-foreground">Unused</p>
-            <p className="font-semibold text-amber-600">
+          <div className="p-2 rounded bg-muted/50 col-span-2">
+            <p className="text-muted-foreground">Unrealized Value</p>
+            <p className="font-semibold text-warning">
               {formatCurrencyAED(dimension.unusedEntitlement, { abbreviate: true })}
             </p>
           </div>
         </div>
         
-        {/* Top Category */}
-        <div className="mt-3 pt-2 border-t flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Top category:</span>
-          <Badge variant="secondary" className="text-xs">{dimension.topCategory}</Badge>
+        {/* Top Category Driving Unrealized */}
+        <div className="mt-3 pt-2 border-t space-y-1.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">Top category:</span>
+            <Badge variant="secondary" className="text-xs">{dimension.topCategory}</Badge>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground flex items-center gap-1">
+              <TrendingDown className="h-3 w-3" />
+              Top driver:
+            </span>
+            <Badge variant="outline" className="text-xs border-accent/30 text-accent bg-accent/5">
+              {topDriver}
+            </Badge>
+          </div>
         </div>
       </CardContent>
     </Card>
