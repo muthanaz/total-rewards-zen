@@ -147,10 +147,18 @@ export { SpendUtilizationMatrix } from './SpendUtilizationMatrix';
 export type { CategoryBubble } from './SpendUtilizationMatrix';
 export { RejectionFrictionPanel } from './RejectionFrictionPanel';
 
-// Optimization Opportunities components
+// Optimization Opportunities / Recoverable Value components
 export { OptimizationKPIGrid } from './OptimizationKPIGrid';
 export { OptimizationInsights, generateOptimizationInsights } from './OptimizationInsights';
 export type { OptimizationInsight, OptimizationDataForInsights } from './OptimizationInsights';
+export { RecoverableValueInsights, generateRecoverableInsights } from './RecoverableValueInsights';
+export type { RecoverableInsight, RecoveryCauseType, RecoverableDataForInsights } from './RecoverableValueInsights';
+export { RecoverableValueKPIGrid } from './RecoverableValueKPIGrid';
+export type { RecoverableValueMetrics } from './RecoverableValueKPIGrid';
+export { CauseBreakdownChart } from './CauseBreakdownChart';
+export type { CauseBreakdownData } from './CauseBreakdownChart';
+export { TopRecoveryPlays } from './TopRecoveryPlays';
+export type { RecoveryPlay } from './TopRecoveryPlays';
 
 // Executive Mode components
 export { ExecModeProvider, useExecMode } from './ExecModeContext';

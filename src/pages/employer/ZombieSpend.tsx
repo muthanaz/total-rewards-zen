@@ -1,14 +1,13 @@
 /**
- * Optimization Opportunities Page (formerly "Zombie Spend")
+ * Recoverable Value Page (formerly "Zombie Spend" / "Optimization Opportunities")
  * 
- * Executive-grade analytics page following the standardized template:
- * 1. Header + Confidence Badge
- * 2. Key Insights (with deep links)
- * 3. KPI Grid
- * 4. Breakdown Charts + Tables
- * 5. Benefits Action Plan
+ * Executive-grade analytics page that distinguishes unrealized value by:
+ * - Awareness/Engagement
+ * - Eligibility
+ * - Process Friction
+ * - Policy Design
  * 
- * @module ZombieSpend
+ * @module RecoverableValue
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -24,26 +23,31 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
-  Ghost, Target, AlertTriangle, ArrowRight,
+  Ghost, Target, ArrowRight,
   Eye, Play, Clock, CheckCircle2, Pause, CircleDot, Info,
-  Download, Calendar, Lightbulb, TrendingUp,
+  Download, Calendar, TrendingUp,
 } from 'lucide-react';
 import { 
   EmployerGlobalFiltersBar, 
   DataConfidenceBadge, 
   PageConfidenceGate, 
   useDataCoverageMetrics,
-  OptimizationKPIGrid,
-  OptimizationInsights,
-  generateOptimizationInsights,
+  ExecPageHeader,
 } from '@/components/employer';
+import { 
+  RecoverableValueInsights, 
+  generateRecoverableInsights,
+  RecoveryCauseType,
+} from '@/components/employer/RecoverableValueInsights';
+import { RecoverableValueKPIGrid } from '@/components/employer/RecoverableValueKPIGrid';
+import { CauseBreakdownChart, CauseBreakdownData } from '@/components/employer/CauseBreakdownChart';
+import { TopRecoveryPlays, RecoveryPlay } from '@/components/employer/TopRecoveryPlays';
 import { PageLayout } from '@/components/shared';
 import { ZombieCategoryDrawer } from '@/components/employer/ZombieCategoryDrawer';
 import { LaunchPlaybookModal } from '@/components/employer/LaunchPlaybookModal';
-import { ZombieMetricDefinitions } from '@/components/employer/ZombieMetricDefinitions';
 import { useZombieSpendData, ROOT_CAUSE_DEFINITIONS, RecoveryPlaybook, CONFIDENCE_FACTORS } from '@/hooks/useZombieSpendData';
 import { usePlaybookRuns, PlaybookRunStatus } from '@/hooks/usePlaybookRuns';
-import { formatCurrencyAED, formatPercent, formatInteger, cn } from '@/lib/utils';
+import { formatCurrencyAED, formatPercent, cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -60,6 +64,15 @@ const runStatusConfig: Record<PlaybookRunStatus, { label: string; icon: typeof C
   active: { label: 'Active', icon: Play, color: 'text-info' },
   completed: { label: 'Completed', icon: CheckCircle2, color: 'text-success' },
   paused: { label: 'Paused', icon: Pause, color: 'text-warning' },
+};
+
+// Map root causes to our 4 cause types
+const rootCauseToCauseType: Record<string, RecoveryCauseType> = {
+  awareness: 'awareness',
+  timing_mismatch: 'awareness',
+  process_friction: 'friction',
+  policy_constraints: 'policy',
+  vendor_access: 'eligibility',
 };
 
 // ============= MAIN COMPONENT =============
@@ -104,32 +117,73 @@ export default function ZombieSpendPage() {
     }
   }, [searchParams, allCategories]);
   
-  // Generate insights
-  const insights = useMemo(() => {
-    const topCategories = categories.slice(0, 5).map(c => ({
-      name: c.name,
-      unused: c.unusedEntitlement,
-      utilizationRate: c.utilizationRate,
-    }));
+  // Calculate cause breakdown data
+  const causeBreakdownData = useMemo((): CauseBreakdownData[] => {
+    const causeTotals: Record<RecoveryCauseType, number> = {
+      awareness: 0,
+      eligibility: 0,
+      friction: 0,
+      policy: 0,
+    };
     
-    const rootCauseCounts: Record<string, number> = {};
-    categories.forEach(c => {
-      const cause = ROOT_CAUSE_DEFINITIONS[c.primaryRootCause]?.label || c.primaryRootCause;
-      rootCauseCounts[cause] = (rootCauseCounts[cause] || 0) + 1;
+    categories.forEach(cat => {
+      const causeType = rootCauseToCauseType[cat.primaryRootCause] || 'policy';
+      causeTotals[causeType] += cat.unusedEntitlement;
     });
-    const primaryRootCauses = Object.entries(rootCauseCounts)
-      .map(([cause, count]) => ({ cause, count }))
-      .sort((a, b) => b.count - a.count);
     
-    return generateOptimizationInsights({
-      topCategories,
-      primaryRootCauses,
-      lowUtilizationSegments: [{ name: 'New Joiners', dimension: 'Tenure', utilization: 42 }],
-      processMetrics: { missingDocsRate: 22, avgApprovalDays: 4.5 },
-      yoyChange: -5,
-    });
+    const total = Object.values(causeTotals).reduce((sum, v) => sum + v, 0);
+    
+    return [
+      { cause: 'awareness', label: 'Awareness', value: causeTotals.awareness, percent: total > 0 ? (causeTotals.awareness / total) * 100 : 0 },
+      { cause: 'eligibility', label: 'Eligibility', value: causeTotals.eligibility, percent: total > 0 ? (causeTotals.eligibility / total) * 100 : 0 },
+      { cause: 'friction', label: 'Friction', value: causeTotals.friction, percent: total > 0 ? (causeTotals.friction / total) * 100 : 0 },
+      { cause: 'policy', label: 'Policy', value: causeTotals.policy, percent: total > 0 ? (causeTotals.policy / total) * 100 : 0 },
+    ];
   }, [categories]);
   
+  // Determine top cause
+  const topCause = useMemo((): RecoveryCauseType => {
+    const sorted = [...causeBreakdownData].sort((a, b) => b.value - a.value);
+    return sorted[0]?.cause || 'awareness';
+  }, [causeBreakdownData]);
+  
+  // Generate cause-mapped insights
+  const insights = useMemo(() => {
+    const awarenessCategories = categories
+      .filter(c => rootCauseToCauseType[c.primaryRootCause] === 'awareness')
+      .map(c => c.name);
+    const awarenessUnused = causeBreakdownData.find(d => d.cause === 'awareness')?.value || 0;
+    
+    return generateRecoverableInsights({
+      awarenessUnused,
+      awarenessCategories,
+      eligibilityRejectRate: 12,
+      frictionMissingDocsRate: 22,
+      frictionAvgApprovalDays: 4.5,
+      policyRejectionCount: 28,
+      policyTopCategory: categories.find(c => c.primaryRootCause === 'policy_constraints')?.name || 'Wellbeing',
+    });
+  }, [categories, causeBreakdownData]);
+  
+  // Transform playbooks to recovery plays
+  const recoveryPlays = useMemo((): RecoveryPlay[] => {
+    return playbooks.slice(0, 5).map(pb => {
+      const targetCause = rootCauseToCauseType[pb.targetRootCauses[0]] || 'awareness';
+      const avgUnused = summaryMetrics.totalUnused / categories.length || 50000;
+      const minImpact = avgUnused * (pb.expectedImpactPercent / 100) * 0.7;
+      const maxImpact = avgUnused * (pb.expectedImpactPercent / 100) * 1.3;
+      
+      return {
+        id: pb.id,
+        name: pb.title,
+        description: pb.description,
+        targetCause,
+        impactRange: { min: minImpact, max: maxImpact },
+        timeToImpact: pb.timeToImpact,
+        effort: pb.effortLevel,
+      };
+    });
+  }, [playbooks, summaryMetrics, categories]);
   
   const handleOpenPlaybook = (playbook: RecoveryPlaybook) => {
     setSelectedPlaybook(playbook);
@@ -165,10 +219,10 @@ export default function ZombieSpendPage() {
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
       <PageLayout
-        title="Optimization Opportunities"
-        description="Unrealized value ('zombie spend') and actionable next steps to recover it"
-        icon={Lightbulb}
-        iconClassName="bg-warning/10 text-warning"
+        title="Recoverable Value"
+        description="Unrealized benefits value and the fastest levers to recover it"
+        icon={Target}
+        iconClassName="bg-success/10 text-success"
         confidenceBadge={<DataConfidenceBadge metrics={coverageMetrics} />}
         actions={
           <div className="flex items-center gap-3">
@@ -202,32 +256,37 @@ export default function ZombieSpendPage() {
         }
         filters={<EmployerGlobalFiltersBar />}
       >
-        {/* 1. Key Insights */}
-        <OptimizationInsights insights={insights} isDemo={true} />
+        {/* 1. Key Insights (4 max, cause-mapped) */}
+        <RecoverableValueInsights insights={insights} isDemo={true} />
         
-        {/* 2. KPI Grid */}
-        <OptimizationKPIGrid
+        {/* 2. KPI Grid (exactly 6 cards) */}
+        <RecoverableValueKPIGrid
           metrics={{
             unrealizedValue: summaryMetrics.totalUnused,
             unrealizedRate: summaryMetrics.unusedPercent,
             estimatedRecoverable: summaryMetrics.estimatedRecoverable,
-            topCategories: summaryMetrics.topCategories,
             missingDocsRate: 22,
             medianApprovalDays: 4.5,
-            confidenceLevel: 'medium',
+            topCause,
           }}
           isDemo={true}
           onKPIClick={(kpiId) => toast.info(`Opening ${kpiId} drilldown...`)}
         />
         
-        {/* 3. Metric Definitions (collapsible) */}
-        <ZombieMetricDefinitions />
+        {/* 3. Cause Breakdown Chart */}
+        <CauseBreakdownChart 
+          data={causeBreakdownData} 
+          totalUnrealized={summaryMetrics.totalUnused}
+          isDemo={true}
+        />
         
-        {/* 4. Breakdown Tabs */}
+        {/* 4. Top Recovery Plays (exactly 5) */}
+        <TopRecoveryPlays plays={recoveryPlays} isDemo={true} />
+        
+        {/* 5. Detailed Breakdown Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="categories">Category Breakdown</TabsTrigger>
-            <TabsTrigger value="playbooks">Recovery Playbooks</TabsTrigger>
             <TabsTrigger value="runs">
               Active Runs {playbookRuns.length > 0 && `(${playbookRuns.length})`}
             </TabsTrigger>
@@ -262,11 +321,10 @@ export default function ZombieSpendPage() {
                       <TableRow className="bg-muted/30">
                         <TableHead>Category</TableHead>
                         <TableHead className="text-right">Allocated</TableHead>
-                        <TableHead className="text-right">Entitled</TableHead>
                         <TableHead className="text-right">Claimed</TableHead>
                         <TableHead className="text-right">Unrealized</TableHead>
                         <TableHead className="text-right">Utilization</TableHead>
-                        <TableHead>Confidence</TableHead>
+                        <TableHead>Root Cause</TableHead>
                         <TableHead className="text-right">Action</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -287,16 +345,13 @@ export default function ZombieSpendPage() {
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 <span className="font-medium">{cat.name}</span>
-                                <RootCauseIcon 
-                                  className={cn('h-4 w-4', ROOT_CAUSE_DEFINITIONS[cat.primaryRootCause].color)} 
-                                />
+                                <Badge variant="outline" className={cn("text-[10px]", confidenceBadgeStyles[cat.confidence])}>
+                                  {cat.confidence}
+                                </Badge>
                               </div>
                             </TableCell>
                             <TableCell className="text-right">
                               {formatCurrencyAED(cat.allocatedBudget, { abbreviate: true })}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {formatCurrencyAED(cat.entitledValue, { abbreviate: true })}
                             </TableCell>
                             <TableCell className="text-right">
                               {formatCurrencyAED(cat.claimedAmount, { abbreviate: true })}
@@ -317,9 +372,14 @@ export default function ZombieSpendPage() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge variant="outline" className={confidenceBadgeStyles[cat.confidence]}>
-                                {cat.confidence}
-                              </Badge>
+                              <div className="flex items-center gap-1">
+                                <RootCauseIcon 
+                                  className={cn('h-4 w-4', ROOT_CAUSE_DEFINITIONS[cat.primaryRootCause].color)} 
+                                />
+                                <span className="text-xs text-muted-foreground">
+                                  {ROOT_CAUSE_DEFINITIONS[cat.primaryRootCause].label}
+                                </span>
+                              </div>
                             </TableCell>
                             <TableCell className="text-right">
                               <Button 
@@ -332,7 +392,7 @@ export default function ZombieSpendPage() {
                                 className="gap-1"
                               >
                                 <Eye className="h-3 w-3" />
-                                View details
+                                View
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -345,106 +405,25 @@ export default function ZombieSpendPage() {
             </Card>
           </TabsContent>
           
-          {/* Recovery Playbooks Tab */}
-          <TabsContent value="playbooks" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {playbooks.map((playbook) => {
-                const PlaybookIcon = playbook.icon;
-                const avgRecovery = categories.reduce((sum, c) => 
-                  sum + c.unusedEntitlement * (playbook.expectedImpactPercent / 100), 0
-                ) / categories.length;
-                
-                return (
-                  <Card key={playbook.id} className="hover:border-accent/50 transition-colors">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="p-2 rounded-lg bg-accent/10">
-                            <PlaybookIcon className="h-5 w-5 text-accent" />
-                          </div>
-                          <CardTitle className="text-sm">{playbook.title}</CardTitle>
-                        </div>
-                        <Badge 
-                          variant="outline" 
-                          className={cn(
-                            'capitalize',
-                            playbook.effortLevel === 'low' ? 'border-success/50 text-success' :
-                            playbook.effortLevel === 'medium' ? 'border-warning/50 text-warning' :
-                            'border-destructive/50 text-destructive'
-                          )}
-                        >
-                          {playbook.effortLevel} effort
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <p className="text-sm text-muted-foreground">{playbook.description}</p>
-                      
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="p-2 rounded-lg bg-muted/30">
-                          <p className="text-xs text-muted-foreground">Expected Impact</p>
-                          <p className="font-bold text-success">
-                            {formatCurrencyAED(avgRecovery, { abbreviate: true })}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            +{playbook.expectedImpactPercent}% recovery
-                          </p>
-                        </div>
-                        <div className="p-2 rounded-lg bg-muted/30">
-                          <p className="text-xs text-muted-foreground">Time to Impact</p>
-                          <p className="font-medium">{playbook.timeToImpact}</p>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Outputs:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {playbook.outputs.slice(0, 3).map((output, idx) => (
-                            <Badge key={idx} variant="secondary" className="text-xs">
-                              {output}
-                            </Badge>
-                          ))}
-                          {playbook.outputs.length > 3 && (
-                            <Badge variant="secondary" className="text-xs">
-                              +{playbook.outputs.length - 3}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <Button 
-                        className="w-full gap-2" 
-                        onClick={() => handleOpenPlaybook(playbook)}
-                      >
-                        <Play className="h-4 w-4" />
-                        Launch
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </TabsContent>
-          
           {/* Active Runs Tab */}
           <TabsContent value="runs" className="mt-6">
             {playbookRuns.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center">
                   <Target className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                  <h3 className="font-semibold mb-2">No Active Playbook Runs</h3>
+                  <h3 className="font-semibold mb-2">No Active Recovery Runs</h3>
                   <p className="text-muted-foreground mb-4">
-                    Launch a recovery playbook to start tracking progress
+                    Create an action from the Recovery Plays above to start tracking
                   </p>
-                  <Button onClick={() => setActiveTab('playbooks')}>
-                    View Playbooks
+                  <Button onClick={() => navigate('/employer/recommendations')}>
+                    View Action Plan
                   </Button>
                 </CardContent>
               </Card>
             ) : (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Playbook Runs</CardTitle>
+                  <CardTitle className="text-lg">Recovery Runs</CardTitle>
                   <CardDescription>
                     Track launched recovery initiatives
                   </CardDescription>
@@ -454,7 +433,7 @@ export default function ZombieSpendPage() {
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-muted/30">
-                          <TableHead>Playbook</TableHead>
+                          <TableHead>Play</TableHead>
                           <TableHead>Category</TableHead>
                           <TableHead>Owner</TableHead>
                           <TableHead>Due Date</TableHead>
@@ -536,35 +515,6 @@ export default function ZombieSpendPage() {
             )}
           </TabsContent>
         </Tabs>
-        
-        {/* 5. Link to Action Plan - NOT duplicating dashboard */}
-        <Card className="border-accent/20 bg-gradient-to-r from-accent/5 to-transparent">
-          <CardContent className="py-4">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-accent/10">
-                  <Target className="w-5 h-5 text-accent" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm">
-                    Turn opportunities into tracked actions
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Create, assign, and measure recovery initiatives in the Action Plan
-                  </p>
-                </div>
-              </div>
-              <Button 
-                size="sm"
-                onClick={() => navigate('/employer/recommendations?source=optimization')}
-                className="gap-1"
-              >
-                View Action Plan
-                <ArrowRight className="w-3 h-3" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
         
         {/* Drawers & Modals */}
         <ZombieCategoryDrawer
