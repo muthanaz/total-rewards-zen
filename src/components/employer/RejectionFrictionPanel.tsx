@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { 
   XCircle, 
   FileX, 
@@ -27,6 +28,10 @@ interface FrictionMetric {
   threshold: { warning: number; critical: number };
   filterKey: string;
   icon: React.ElementType;
+  definition: {
+    formula: string;
+    dataSource: string;
+  };
 }
 
 interface RejectionFrictionPanelProps {
@@ -53,6 +58,10 @@ export function RejectionFrictionPanel({
       threshold: { warning: 10, critical: 20 },
       filterKey: 'rejection_reasons',
       icon: XCircle,
+      definition: {
+        formula: '(Rejected Claims / Total Claims) × 100',
+        dataSource: 'requests (status = rejected)',
+      },
     },
     {
       id: 'missing_docs',
@@ -62,6 +71,10 @@ export function RejectionFrictionPanel({
       threshold: { warning: 15, critical: 25 },
       filterKey: 'missing_documents',
       icon: FileX,
+      definition: {
+        formula: '(Claims with Missing Docs / Total Claims) × 100',
+        dataSource: 'claim_docs (status = missing)',
+      },
     },
     {
       id: 'approval_time',
@@ -71,6 +84,10 @@ export function RejectionFrictionPanel({
       threshold: { warning: 3, critical: 5 },
       filterKey: 'processing_time',
       icon: Clock,
+      definition: {
+        formula: 'Median(approved_at - submitted_at)',
+        dataSource: 'requests (status = approved)',
+      },
     },
   ];
 
@@ -118,6 +135,10 @@ export function RejectionFrictionPanel({
                 <div className="flex items-center gap-2">
                   <Icon className={cn("w-4 h-4", statusColor)} />
                   <span className="text-xs text-muted-foreground">{metric.label}</span>
+                  <InfoTooltip 
+                    formula={metric.definition.formula}
+                    dataSource={metric.definition.dataSource}
+                  />
                 </div>
                 <span className={cn("text-sm font-semibold", statusColor)}>
                   {metric.value.toFixed(metric.unit === '%' ? 1 : 0)}

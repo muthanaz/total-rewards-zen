@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { 
   AlertTriangle, 
   Users, 
@@ -74,6 +75,10 @@ export function AtRiskSegmentsCard({ segments, className }: AtRiskSegmentsCardPr
           <CardTitle className="text-base font-display flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-destructive" />
             At-Risk Segments
+            <InfoTooltip 
+              formula="Segments with utilization <50% OR satisfaction <70%"
+              dataSource="Segment analysis from benefit_entitlements + requests"
+            />
           </CardTitle>
           <Badge variant="outline" className="text-xs bg-destructive/5 text-destructive border-destructive/20">
             {formatCurrencyAED(totalAtRiskValue, { abbreviate: true })} at risk

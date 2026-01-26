@@ -11,6 +11,7 @@
  */
 
 import { Card, CardContent } from '@/components/ui/card';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { 
   DollarSign, 
   Target, 
@@ -33,6 +34,10 @@ interface KPICardData {
   icon: React.ElementType;
   iconColor: string;
   iconBg: string;
+  definition: {
+    formula: string;
+    dataSource: string;
+  };
   subMetric?: {
     label: string;
     value: string;
@@ -111,6 +116,10 @@ export function ExecKPICards({
       icon: DollarSign,
       iconColor: 'text-primary',
       iconBg: 'bg-primary/10',
+      definition: {
+        formula: 'SUM(all benefit entitlements + employer contributions)',
+        dataSource: 'benefit_entitlements + org_budgets',
+      },
       subMetric: {
         label: 'Budget',
         value: variancePercent < 1 
@@ -130,6 +139,10 @@ export function ExecKPICards({
       icon: Target,
       iconColor: utilizationRate >= utilizationTarget ? 'text-success' : 'text-warning',
       iconBg: utilizationRate >= utilizationTarget ? 'bg-success/10' : 'bg-warning/10',
+      definition: {
+        formula: '(Claimed Amount / Entitled Value) × 100',
+        dataSource: 'requests + benefit_entitlements',
+      },
       subMetric: {
         label: 'Target',
         value: `${utilizationTarget}%`,
@@ -147,6 +160,10 @@ export function ExecKPICards({
       icon: AlertTriangle,
       iconColor: unrealizedValue > totalInvestment * 0.3 ? 'text-destructive' : 'text-warning',
       iconBg: unrealizedValue > totalInvestment * 0.3 ? 'bg-destructive/10' : 'bg-warning/10',
+      definition: {
+        formula: 'Entitled Value - Claimed Amount',
+        dataSource: 'Calculated from entitlements vs claims',
+      },
       topDriver: topDriver ? `Top driver: ${topDriver.cause} (${topDriver.percent}%)` : undefined,
     },
     {
@@ -160,6 +177,10 @@ export function ExecKPICards({
       icon: Heart,
       iconColor: satisfactionScore >= satisfactionBenchmark ? 'text-success' : 'text-warning',
       iconBg: satisfactionScore >= satisfactionBenchmark ? 'bg-success/10' : 'bg-warning/10',
+      definition: {
+        formula: 'Avg. satisfaction rating from employee surveys',
+        dataSource: 'employee_satisfaction_ratings',
+      },
       subMetric: {
         label: 'Benchmark',
         value: `${satisfactionBenchmark}%`,
@@ -189,8 +210,14 @@ export function ExecKPICards({
             <CardContent className="p-5">
               {/* Header with icon */}
               <div className="flex items-start justify-between mb-3">
-                <div className={cn('rounded-xl p-2.5', kpi.iconBg)}>
-                  <Icon className={cn('w-5 h-5', kpi.iconColor)} />
+                <div className="flex items-center gap-2">
+                  <div className={cn('rounded-xl p-2.5', kpi.iconBg)}>
+                    <Icon className={cn('w-5 h-5', kpi.iconColor)} />
+                  </div>
+                  <InfoTooltip 
+                    formula={kpi.definition.formula}
+                    dataSource={kpi.definition.dataSource}
+                  />
                 </div>
                 {/* Delta indicator */}
                 <div className={cn('flex items-center gap-1 text-xs', trendColor)}>

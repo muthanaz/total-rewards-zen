@@ -17,6 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { cn, formatCurrencyAED, formatPercent } from '@/lib/utils';
 
 interface AllocationRow {
@@ -55,9 +56,33 @@ export function InvestmentAllocationTable({ data, className }: InvestmentAllocat
         <TableHeader>
           <TableRow className="bg-muted/30">
             <TableHead className="font-medium">Category</TableHead>
-            <TableHead className="text-right font-medium">AED</TableHead>
-            <TableHead className="text-right font-medium">% of total</TableHead>
-            <TableHead className="font-medium">Utilization</TableHead>
+            <TableHead className="text-right font-medium">
+              <div className="flex items-center justify-end gap-1">
+                AED
+                <InfoTooltip 
+                  formula="SUM(benefit value per category)"
+                  dataSource="benefit_entitlements"
+                />
+              </div>
+            </TableHead>
+            <TableHead className="text-right font-medium">
+              <div className="flex items-center justify-end gap-1">
+                % of total
+                <InfoTooltip 
+                  formula="(Category Amount / Total Investment) × 100"
+                  dataSource="Calculated"
+                />
+              </div>
+            </TableHead>
+            <TableHead className="font-medium">
+              <div className="flex items-center gap-1">
+                Utilization
+                <InfoTooltip 
+                  formula="(Claimed / Entitled) × 100"
+                  dataSource="requests + benefit_entitlements"
+                />
+              </div>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
