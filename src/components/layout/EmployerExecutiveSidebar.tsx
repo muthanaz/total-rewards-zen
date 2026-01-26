@@ -1,87 +1,86 @@
 /**
- * EmployerSidebar (HR Ops Mode)
+ * EmployerExecutiveSidebar
  * 
- * Sidebar for HR Operations mode. Uses shared sidebar components.
- * Executive mode uses EmployerExecutiveSidebar instead.
+ * Executive-mode sidebar for the Employer portal.
+ * Uses the same shared sidebar components as Employee Portal for visual consistency.
+ * Contains exactly 6 strategic menu items for executive decision-making.
  */
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import {
-  FileCheck,
-  FileText,
-  Database,
+import { 
+  LayoutDashboard,
+  TrendingUp,
+  Lightbulb,
+  Users,
+  ClipboardList,
+  Shield,
   Briefcase,
   Eye,
-  TrendingUp,
-  Shield,
-  AlertTriangle,
-  HelpCircle,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useEmployerViewMode, ViewMode } from '@/contexts/EmployerViewModeContext';
 import {
   SidebarShell,
   SidebarHeader,
   SidebarNav,
-  SidebarSection,
   SidebarItem,
   SidebarFooter,
 } from './sidebar';
 
 // ============================================================================
-// HR OPS NAVIGATION
+// EXECUTIVE NAVIGATION (6 items exactly as specified)
 // ============================================================================
 
 interface NavItem {
   label: string;
-  labelAr?: string;
+  labelAr: string;
   path: string;
   icon: React.ElementType;
-  badge?: string;
 }
 
-interface NavGroup {
-  id: string;
-  label: string;
-  labelAr?: string;
-  items: NavItem[];
-}
-
-const opsNavigation: NavGroup[] = [
+const EXECUTIVE_NAV_ITEMS: NavItem[] = [
   {
-    id: 'run-operations',
-    label: 'Run Operations',
-    labelAr: 'تشغيل العمليات',
-    items: [
-      { label: 'Claims Queue', labelAr: 'قائمة المطالبات', path: '/employer/claims', icon: FileCheck },
-      { label: 'Knowledge Center', labelAr: 'مركز المعرفة', path: '/employer/knowledge', icon: HelpCircle },
-    ],
+    label: 'Executive Summary',
+    labelAr: 'الملخص التنفيذي',
+    path: '/employer/executive-summary',
+    icon: LayoutDashboard,
   },
   {
-    id: 'improve-policies',
-    label: 'Improve Policies',
-    labelAr: 'تحسين السياسات',
-    items: [
-      { label: 'Policy Management', labelAr: 'إدارة السياسات', path: '/employer/policies', icon: FileText },
-      { label: 'Policy Insights', labelAr: 'رؤى السياسات', path: '/employer/policy-insights', icon: TrendingUp },
-    ],
+    label: 'Spend Efficiency',
+    labelAr: 'كفاءة الإنفاق',
+    path: '/employer/spend-efficiency',
+    icon: TrendingUp,
   },
   {
-    id: 'data-trust',
-    label: 'Data & Trust',
-    labelAr: 'البيانات والثقة',
-    items: [
-      { label: 'Integrations', labelAr: 'التكاملات', path: '/employer/integrations', icon: Database },
-      { label: 'Data Quality', labelAr: 'جودة البيانات', path: '/employer/data-quality/rules', icon: Shield },
-      { label: 'Sync Status', labelAr: 'حالة المزامنة', path: '/employer/data-quality/sync', icon: AlertTriangle },
-    ],
+    label: 'Recoverable Value',
+    labelAr: 'القيمة القابلة للاسترداد',
+    path: '/employer/recoverable-value',
+    icon: Lightbulb,
+  },
+  {
+    label: 'Segment Insights',
+    labelAr: 'رؤى الشرائح',
+    path: '/employer/segment-insights',
+    icon: Users,
+  },
+  {
+    label: 'Actions & Decisions',
+    labelAr: 'الإجراءات والقرارات',
+    path: '/employer/actions-decisions',
+    icon: ClipboardList,
+  },
+  {
+    label: 'Trust & Controls',
+    labelAr: 'الثقة والضوابط',
+    path: '/employer/trust-controls',
+    icon: Shield,
   },
 ];
 
 // ============================================================================
-// VIEW MODE TOGGLE
+// VIEW MODE TOGGLE (same as current EmployerSidebar)
 // ============================================================================
 
 function ViewModeToggle() {
@@ -135,48 +134,29 @@ function ViewModeToggle() {
 // MAIN COMPONENT
 // ============================================================================
 
-export function EmployerSidebar() {
-  const [expandedSections, setExpandedSections] = useState<string[]>(
-    opsNavigation.map((s) => s.id)
-  );
-
-  const toggleSection = (sectionId: string) => {
-    setExpandedSections((prev) =>
-      prev.includes(sectionId)
-        ? prev.filter((s) => s !== sectionId)
-        : [...prev, sectionId]
-    );
-  };
-
+export function EmployerExecutiveSidebar() {
   return (
     <SidebarShell>
       <SidebarHeader extraContent={<ViewModeToggle />} />
 
       <SidebarNav>
-        {opsNavigation.map((group) => (
-          <SidebarSection
-            key={group.id}
-            id={group.id}
-            label={group.label}
-            labelAr={group.labelAr}
-            isOpen={expandedSections.includes(group.id)}
-            onToggle={() => toggleSection(group.id)}
-          >
-            {group.items.map((item) => (
-              <SidebarItem
-                key={item.path + item.label}
-                path={item.path}
-                label={item.label}
-                labelAr={item.labelAr}
-                icon={item.icon}
-                badge={item.badge}
-              />
-            ))}
-          </SidebarSection>
-        ))}
+        {/* Single flat list of 6 executive items - no collapsible sections needed */}
+        <div className="space-y-0.5">
+          {EXECUTIVE_NAV_ITEMS.map((item) => (
+            <SidebarItem
+              key={item.path}
+              path={item.path}
+              label={item.label}
+              labelAr={item.labelAr}
+              icon={item.icon}
+            />
+          ))}
+        </div>
       </SidebarNav>
 
       <SidebarFooter />
     </SidebarShell>
   );
 }
+
+export default EmployerExecutiveSidebar;
