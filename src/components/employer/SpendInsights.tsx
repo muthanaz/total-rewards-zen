@@ -1,8 +1,10 @@
 /**
  * SpendInsights - Key Insights with Deep Links for Spend & Utilization page
  * 
- * Displays 3-5 data-derived insights with actionable deep links.
- * Each insight links to related pages (Segments, Zombie Spend, Claims, Policies).
+ * STRICT FORMAT: Max 4 insights, each with:
+ * (a) Signal - what is happening
+ * (b) Quantified metric - the number
+ * (c) Recommended next step - actionable link to /employer/recommendations
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,21 +27,20 @@ import { Link } from 'react-router-dom';
 export interface SpendInsight {
   id: string;
   icon: 'trend-up' | 'trend-down' | 'neutral' | 'alert' | 'target' | 'ghost' | 'policy';
-  title: string;
-  description: string;
-  impact?: string;
-  deepLink: {
-    label: string;
-    path: string;
-    params?: Record<string, string>;
-  };
+  /** The signal: what is happening */
+  signal: string;
+  /** Quantified metric with AED or % */
+  metric: string;
+  /** Recommended action label */
+  actionLabel: string;
+  /** Pre-filter for recommendations page */
+  actionParams?: Record<string, string>;
   confidence: 'high' | 'medium' | 'low';
 }
 
 interface SpendInsightsProps {
   insights: SpendInsight[];
   isDemo?: boolean;
-  maxItems?: number;
 }
 
 const iconMap = {
@@ -68,14 +69,16 @@ const confidenceBadges = {
   low: { label: 'Proxy', variant: 'destructive' as const },
 };
 
-function buildDeepLink(path: string, params?: Record<string, string>): string {
-  if (!params) return path;
+function buildActionLink(params?: Record<string, string>): string {
+  const basePath = '/employer/recommendations';
+  if (!params) return basePath;
   const searchParams = new URLSearchParams(params);
-  return `${path}?${searchParams.toString()}`;
+  return `${basePath}?${searchParams.toString()}`;
 }
 
-export function SpendInsights({ insights, isDemo, maxItems = 5 }: SpendInsightsProps) {
-  const displayInsights = insights.slice(0, maxItems);
+export function SpendInsights({ insights, isDemo }: SpendInsightsProps) {
+  // Enforce max 4 insights
+  const displayInsights = insights.slice(0, 4);
 
   return (
     <Card className="border-accent/20 bg-gradient-to-r from-card via-card to-accent/5">
@@ -85,9 +88,12 @@ export function SpendInsights({ insights, isDemo, maxItems = 5 }: SpendInsightsP
             <Lightbulb className="w-5 h-5 text-accent" />
             Key Insights
           </CardTitle>
-          {isDemo && (
-            <Badge variant="outline" className="text-xs">Demo Data</Badge>
-          )}
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="text-xs">{displayInsights.length} of 4</Badge>
+            {isDemo && (
+              <Badge variant="outline" className="text-xs">Demo Data</Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -96,7 +102,7 @@ export function SpendInsights({ insights, isDemo, maxItems = 5 }: SpendInsightsP
             const Icon = iconMap[insight.icon];
             const iconColor = iconColorMap[insight.icon];
             const confidence = confidenceBadges[insight.confidence];
-            const deepLinkUrl = buildDeepLink(insight.deepLink.path, insight.deepLink.params);
+            const actionUrl = buildActionLink(insight.actionParams);
 
             return (
               <div
@@ -108,10 +114,11 @@ export function SpendInsights({ insights, isDemo, maxItems = 5 }: SpendInsightsP
                   <Icon className="w-4 h-4" />
                 </div>
 
-                {/* Content */}
+                {/* Content - Signal + Metric + Action */}
                 <div className="flex-1 min-w-0">
+                  {/* Signal */}
                   <div className="flex items-center gap-2 mb-0.5">
-                    <p className="font-medium text-sm">{insight.title}</p>
+                    <p className="font-medium text-sm">{insight.signal}</p>
                     <Badge 
                       variant="outline" 
                       className={cn(
@@ -124,24 +131,23 @@ export function SpendInsights({ insights, isDemo, maxItems = 5 }: SpendInsightsP
                       {confidence.label}
                     </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground">{insight.description}</p>
-                  {insight.impact && (
-                    <p className="text-xs text-success font-medium mt-1">{insight.impact}</p>
-                  )}
+                  
+                  {/* Metric */}
+                  <p className="text-xs text-muted-foreground">{insight.metric}</p>
+                  
+                  {/* Action - always link to recommendations with pre-filter */}
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="h-6 px-0 text-xs text-accent hover:text-accent/80"
+                    asChild
+                  >
+                    <Link to={actionUrl}>
+                      Open Action: {insight.actionLabel}
+                      <ArrowRight className="w-3 h-3 ml-1" />
+                    </Link>
+                  </Button>
                 </div>
-
-                {/* Deep Link */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 h-7 text-xs"
-                  asChild
-                >
-                  <Link to={deepLinkUrl}>
-                    {insight.deepLink.label}
-                    <ArrowRight className="w-3 h-3 ml-1" />
-                  </Link>
-                </Button>
               </div>
             );
           })}
@@ -164,88 +170,73 @@ export interface SpendDataForInsights {
 export function generateSpendInsights(data: SpendDataForInsights): SpendInsight[] {
   const insights: SpendInsight[] = [];
 
-  // Utilization insight
+  // 1. Top underutilized category (most actionable)
+  if (data.topUnderutilizedCategory.utilization < 70) {
+    insights.push({
+      id: 'underutilized-category',
+      icon: 'ghost',
+      signal: `${data.topUnderutilizedCategory.name} has lowest utilization`,
+      metric: `Only ${data.topUnderutilizedCategory.utilization.toFixed(0)}% claimed — ${formatCurrencyAED(data.topUnderutilizedCategory.unused, { abbreviate: false, decimals: 0 })} unused`,
+      actionLabel: `Improve policy clarity for ${data.topUnderutilizedCategory.name}`,
+      actionParams: { 
+        category: data.topUnderutilizedCategory.name.toLowerCase(),
+        type: 'awareness',
+        source: 'spend-insights',
+      },
+      confidence: 'high',
+    });
+  }
+
+  // 2. Overall utilization gap
   if (data.overallUtilization < 75) {
     insights.push({
       id: 'utilization-gap',
       icon: data.overallUtilization < 60 ? 'alert' : 'trend-down',
-      title: `Overall utilization at ${data.overallUtilization.toFixed(0)}% (target: 75%)`,
-      description: `${formatCurrencyAED(data.unusedEntitlement, { abbreviate: false, decimals: 0 })} in entitled benefits remain unclaimed.`,
-      deepLink: {
-        label: 'View Zombie Spend',
-        path: '/employer/zombie-spend',
+      signal: `Overall utilization at ${data.overallUtilization.toFixed(0)}% (target: 75%)`,
+      metric: `${formatCurrencyAED(data.unusedEntitlement, { abbreviate: false, decimals: 0 })} in entitled benefits remain unclaimed`,
+      actionLabel: 'Launch awareness campaign',
+      actionParams: { 
+        type: 'campaign',
+        source: 'spend-insights',
       },
       confidence: 'high',
     });
   }
 
-  // Top underutilized category
-  if (data.topUnderutilizedCategory.utilization < 60) {
-    insights.push({
-      id: 'underutilized-category',
-      icon: 'ghost',
-      title: `${data.topUnderutilizedCategory.name} has lowest utilization`,
-      description: `Only ${data.topUnderutilizedCategory.utilization.toFixed(0)}% claimed — ${formatCurrencyAED(data.topUnderutilizedCategory.unused, { abbreviate: false, decimals: 0 })} unused.`,
-      impact: 'High recovery potential',
-      deepLink: {
-        label: 'Drill down',
-        path: '/employer/spend',
-        params: { tab: 'benefit-type', focus: data.topUnderutilizedCategory.name.toLowerCase() },
-      },
-      confidence: 'high',
-    });
-  }
-
-  // Segment-based insight
+  // 3. Segment-based insight
   if (data.lowUtilizationSegments.length > 0) {
     const segment = data.lowUtilizationSegments[0];
     insights.push({
       id: 'segment-utilization',
       icon: 'target',
-      title: `Utilization lower in ${segment.name} (${segment.dimension})`,
-      description: `${segment.utilization.toFixed(0)}% utilization vs org average. Investigate communication or eligibility gaps.`,
-      deepLink: {
-        label: 'View Segments',
-        path: '/employer/segments',
-        params: { dimension: segment.dimension.toLowerCase(), value: segment.name },
+      signal: `Utilization lower in ${segment.name} (${segment.dimension})`,
+      metric: `${segment.utilization.toFixed(0)}% utilization vs org average — investigate eligibility gaps`,
+      actionLabel: `Target ${segment.name} segment`,
+      actionParams: { 
+        segment: segment.name.toLowerCase(),
+        dimension: segment.dimension.toLowerCase(),
+        source: 'spend-insights',
       },
       confidence: 'medium',
     });
   }
 
-  // Policy-related insight
+  // 4. Policy friction insight
   if (data.highRejectionPolicy) {
     insights.push({
       id: 'policy-friction',
       icon: 'policy',
-      title: `High rejection rate for ${data.highRejectionPolicy.name}`,
-      description: `${data.highRejectionPolicy.rejectionRate.toFixed(0)}% of claims rejected — may indicate policy ambiguity or missing docs.`,
-      deepLink: {
-        label: 'Review Claims',
-        path: '/employer/claims',
-        params: { category: data.highRejectionPolicy.name.toLowerCase(), status: 'rejected' },
+      signal: `High rejection rate for ${data.highRejectionPolicy.name}`,
+      metric: `${data.highRejectionPolicy.rejectionRate.toFixed(0)}% of claims rejected — may indicate policy ambiguity`,
+      actionLabel: `Review ${data.highRejectionPolicy.name} policy`,
+      actionParams: { 
+        category: data.highRejectionPolicy.name.toLowerCase(),
+        type: 'policy_review',
+        source: 'spend-insights',
       },
       confidence: 'high',
     });
   }
 
-  // YoY trend
-  if (Math.abs(data.yoySpendChange) > 5) {
-    insights.push({
-      id: 'yoy-trend',
-      icon: data.yoySpendChange > 0 ? 'trend-up' : 'trend-down',
-      title: `YTD spend ${data.yoySpendChange > 0 ? 'up' : 'down'} ${Math.abs(data.yoySpendChange).toFixed(1)}% vs last year`,
-      description: data.yoySpendChange > 0 
-        ? 'Driven by increased health claims and education allowance uptake.'
-        : 'Lower claims activity detected — review employee awareness.',
-      deepLink: {
-        label: 'View Trends',
-        path: '/employer/spend',
-        params: { tab: 'trend' },
-      },
-      confidence: 'high',
-    });
-  }
-
-  return insights;
+  return insights.slice(0, 4); // Hard limit to 4
 }
