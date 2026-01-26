@@ -143,6 +143,9 @@ export { SpendInsights, generateSpendInsights } from './SpendInsights';
 export type { SpendInsight, SpendDataForInsights } from './SpendInsights';
 export { SpendRecommendedActions, generateSpendRecommendedActions } from './SpendRecommendedActions';
 export type { RecommendedAction } from './SpendRecommendedActions';
+export { SpendUtilizationMatrix } from './SpendUtilizationMatrix';
+export type { CategoryBubble } from './SpendUtilizationMatrix';
+export { RejectionFrictionPanel } from './RejectionFrictionPanel';
 
 // Optimization Opportunities components
 export { OptimizationKPIGrid } from './OptimizationKPIGrid';

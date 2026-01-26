@@ -48,29 +48,29 @@ const METRIC_DEFINITIONS = {
     formula: 'SUM(org_budgets.annual_budget) for current fiscal year',
     dataSource: 'org_budgets table',
   },
-  entitledValue: {
-    name: 'Entitled Value',
+  actualSpend: {
+    name: 'Actual Spend',
     formula: 'SUM(benefit_entitlements.annual_allowance) for all active employees',
     dataSource: 'benefit_entitlements table',
   },
-  claimedAmount: {
-    name: 'Claimed Amount',
+  claimsAmount: {
+    name: 'Claims Amount',
     formula: 'SUM(requests.amount) WHERE status IN ("approved", "paid")',
     dataSource: 'requests table',
   },
   utilizationRate: {
     name: 'Utilization Rate',
-    formula: '(Claimed Amount / Entitled Value) × 100',
+    formula: '(Claims Amount / Actual Spend) × 100',
     dataSource: 'Calculated',
   },
-  unusedEntitlement: {
-    name: 'Unused Entitlement',
-    formula: 'Entitled Value - Claimed Amount',
+  unrealizedValue: {
+    name: 'Unrealized Value',
+    formula: 'Actual Spend - Claims Amount (matches /employer definition)',
     dataSource: 'Calculated',
   },
   avgCostPerEmployee: {
-    name: 'Avg Cost per Employee',
-    formula: 'Claimed Amount / Employee Count',
+    name: 'Avg Cost / Employee',
+    formula: 'Claims Amount / Employee Count',
     dataSource: 'Calculated',
   },
 };
@@ -97,28 +97,28 @@ export function SpendKPIGrid({ metrics, isDemo, onKPIClick, provenance }: SpendK
       definition: METRIC_DEFINITIONS.allocatedBudget,
     },
     {
-      id: 'entitled',
-      label: 'Entitled Value',
+      id: 'actualSpend',
+      label: 'Actual Spend',
       value: metrics.entitledValue,
       isCurrency: true,
       icon: Target,
       iconBg: 'bg-secondary/10',
       iconColor: 'text-secondary',
-      definition: METRIC_DEFINITIONS.entitledValue,
+      definition: METRIC_DEFINITIONS.actualSpend,
       subtitle: metrics.entitledValue > metrics.allocatedBudget 
-        ? <><Currency amount={metrics.entitledValue - metrics.allocatedBudget} size="xs" /> over-entitled</>
+        ? <><Currency amount={metrics.entitledValue - metrics.allocatedBudget} size="xs" /> over budget</>
         : 'Within budget',
       subtitleColor: metrics.entitledValue > metrics.allocatedBudget ? 'text-warning' : 'text-success',
     },
     {
-      id: 'claimed',
-      label: 'Claimed Amount',
+      id: 'claimsAmount',
+      label: 'Claims Amount',
       value: metrics.claimedAmount,
       isCurrency: true,
       icon: BarChart3,
       iconBg: 'bg-accent/10',
       iconColor: 'text-accent',
-      definition: METRIC_DEFINITIONS.claimedAmount,
+      definition: METRIC_DEFINITIONS.claimsAmount,
       trend: metrics.yoyChange,
     },
     {
@@ -134,16 +134,16 @@ export function SpendKPIGrid({ metrics, isDemo, onKPIClick, provenance }: SpendK
       progress: metrics.utilizationRate,
     },
     {
-      id: 'unused',
-      label: 'Unused Entitlement',
+      id: 'unrealized',
+      label: 'Unrealized Value',
       value: metrics.unusedEntitlement,
       isCurrency: true,
       valueColor: 'text-warning',
       icon: TrendingDown,
       iconBg: 'bg-warning/10',
       iconColor: 'text-warning',
-      definition: METRIC_DEFINITIONS.unusedEntitlement,
-      subtitle: 'Potential zombie spend',
+      definition: METRIC_DEFINITIONS.unrealizedValue,
+      subtitle: 'Entitled but unclaimed',
     },
     ...(metrics.avgCostPerEmployee !== undefined ? [{
       id: 'avgCost',

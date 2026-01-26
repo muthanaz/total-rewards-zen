@@ -65,7 +65,10 @@ import {
   SpendKPIGrid,
   SpendInsights,
   generateSpendInsights,
+  SpendUtilizationMatrix,
+  RejectionFrictionPanel,
 } from '@/components/employer';
+import type { CategoryBubble } from '@/components/employer';
 import { UtilizationFunnel, generateFunnelData } from '@/components/employer/UtilizationFunnel';
 import { TopDriversTable } from '@/components/employer/TopDriversTable';
 import { ExecModeToggle } from '@/components/employer/ExecModeToggle';
@@ -128,12 +131,12 @@ const COLORS = {
 // ============================================================================
 
 const spendByBenefitType = [
-  { id: 'housing', name: 'Housing', category: 'Cash Allowances', spend: 2400000, budget: 2800000, entitled: 2700000, employees: 85, faqViews: 25, claimVelocity: 8, awarenessScore: 85 },
-  { id: 'schooling', name: 'Schooling', category: 'Cash Allowances', spend: 1200000, budget: 1500000, entitled: 1400000, employees: 45, faqViews: 35, claimVelocity: 4, awarenessScore: 70 },
-  { id: 'health', name: 'Health', category: 'Insurance', spend: 800000, budget: 900000, entitled: 850000, employees: 130, faqViews: 40, claimVelocity: 6, awarenessScore: 75 },
-  { id: 'transport', name: 'Transport', category: 'Cash Allowances', spend: 400000, budget: 500000, entitled: 480000, employees: 90, faqViews: 20, claimVelocity: 5, awarenessScore: 60 },
-  { id: 'learning', name: 'Learning', category: 'Reimbursement', spend: 150000, budget: 300000, entitled: 280000, employees: 60, faqViews: 95, claimVelocity: 2, awarenessScore: 35 },
-  { id: 'wellbeing', name: 'Wellbeing', category: 'Reimbursement', spend: 80000, budget: 150000, entitled: 140000, employees: 50, faqViews: 78, claimVelocity: 1.5, awarenessScore: 30 },
+  { id: 'housing', name: 'Housing', category: 'Cash Allowances', spend: 2400000, budget: 2800000, entitled: 2700000, employees: 85, faqViews: 25, claimVelocity: 8, awarenessScore: 85, rejectionRate: 5, missingDocsRate: 8 },
+  { id: 'schooling', name: 'Schooling', category: 'Cash Allowances', spend: 1200000, budget: 1500000, entitled: 1400000, employees: 45, faqViews: 35, claimVelocity: 4, awarenessScore: 70, rejectionRate: 12, missingDocsRate: 18 },
+  { id: 'health', name: 'Health', category: 'Insurance', spend: 800000, budget: 900000, entitled: 850000, employees: 130, faqViews: 40, claimVelocity: 6, awarenessScore: 75, rejectionRate: 8, missingDocsRate: 12 },
+  { id: 'transport', name: 'Transport', category: 'Cash Allowances', spend: 400000, budget: 500000, entitled: 480000, employees: 90, faqViews: 20, claimVelocity: 5, awarenessScore: 60, rejectionRate: 6, missingDocsRate: 10 },
+  { id: 'learning', name: 'Learning', category: 'Reimbursement', spend: 150000, budget: 300000, entitled: 280000, employees: 60, faqViews: 95, claimVelocity: 2, awarenessScore: 35, rejectionRate: 22, missingDocsRate: 28 },
+  { id: 'wellbeing', name: 'Wellbeing', category: 'Reimbursement', spend: 80000, budget: 150000, entitled: 140000, employees: 50, faqViews: 78, claimVelocity: 1.5, awarenessScore: 30, rejectionRate: 18, missingDocsRate: 25 },
 ];
 
 const forecastHistoricalData = [
@@ -413,6 +416,36 @@ export function Spend() {
     yoySpendChange: 8.2,
   }), [overallUtilization, topUnderutilized]);
 
+  // Generate matrix chart data
+  const matrixData: CategoryBubble[] = useMemo(() => spendByBenefitType.map(b => ({
+    id: b.id,
+    name: b.name,
+    spend: b.spend,
+    entitled: b.entitled,
+    utilization: (b.spend / b.entitled) * 100,
+    topSegments: [
+      { name: 'Engineering', spend: b.spend * 0.4, utilization: 75 },
+      { name: 'Sales', spend: b.spend * 0.3, utilization: 68 },
+      { name: 'Operations', spend: b.spend * 0.2, utilization: 55 },
+    ],
+    rejectionReasons: [
+      { reason: 'Missing documentation', count: Math.round(b.rejectionRate * 0.4), percentage: b.rejectionRate * 0.4 },
+      { reason: 'Exceeded limit', count: Math.round(b.rejectionRate * 0.35), percentage: b.rejectionRate * 0.35 },
+      { reason: 'Policy mismatch', count: Math.round(b.rejectionRate * 0.25), percentage: b.rejectionRate * 0.25 },
+    ],
+    suggestedAction: `Review ${b.name} policy requirements and consider targeted employee communication to improve utilization.`,
+  })), []);
+
+  // Calculate friction metrics
+  const frictionMetrics = useMemo(() => {
+    const avgRejectionRate = spendByBenefitType.reduce((sum, b) => sum + b.rejectionRate, 0) / spendByBenefitType.length;
+    const avgMissingDocsRate = spendByBenefitType.reduce((sum, b) => sum + b.missingDocsRate, 0) / spendByBenefitType.length;
+    return {
+      rejectionRate: avgRejectionRate,
+      missingDocsRate: avgMissingDocsRate,
+      medianApprovalDays: 2.8,
+    };
+  }, []);
 
   // Combine monthly data for comparison
   const comparisonData = monthlyTrendCurrent.map((curr, idx) => ({
@@ -505,7 +538,25 @@ export function Spend() {
           />
         </div>
 
-        {/* 5. Link to Optimization - NOT duplicating action cards */}
+        {/* 5. Spend vs Utilization Matrix + Friction Panel */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-3">
+            <SpendUtilizationMatrix
+              data={matrixData}
+              isDemo={true}
+            />
+          </div>
+          <div className="lg:col-span-1">
+            <RejectionFrictionPanel
+              rejectionRate={frictionMetrics.rejectionRate}
+              missingDocsRate={frictionMetrics.missingDocsRate}
+              medianApprovalDays={frictionMetrics.medianApprovalDays}
+              isDemo={true}
+            />
+          </div>
+        </div>
+
+        {/* 6. Link to Optimization */}
         <Card className="border-warning/20 bg-gradient-to-r from-warning/5 to-transparent">
           <CardContent className="py-4">
             <div className="flex items-center justify-between gap-4">
@@ -534,7 +585,6 @@ export function Spend() {
             </div>
           </CardContent>
         </Card>
-
         {/* 6. Tabs: Breakdown Views */}
         <Tabs defaultValue="benefit-type" className="space-y-4">
           <TabsList>

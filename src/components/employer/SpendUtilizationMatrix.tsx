@@ -1,0 +1,286 @@
+/**
+ * SpendUtilizationMatrix - Bubble chart showing Spend vs Utilization by category
+ * 
+ * X-axis: Utilization %
+ * Y-axis: Spend (AED)
+ * Bubble size: Entitled value (represents opportunity size)
+ */
+
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { 
+  ScatterChart, 
+  Scatter, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  ZAxis,
+  ReferenceLine,
+  Cell,
+} from 'recharts';
+import { formatCurrencyAED, formatPercent, cn } from '@/lib/utils';
+import { ArrowRight, AlertTriangle, FileX, Lightbulb } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+export interface CategoryBubble {
+  id: string;
+  name: string;
+  spend: number;
+  entitled: number;
+  utilization: number;
+  topSegments?: { name: string; spend: number; utilization: number }[];
+  rejectionReasons?: { reason: string; count: number; percentage: number }[];
+  suggestedAction?: string;
+}
+
+interface SpendUtilizationMatrixProps {
+  data: CategoryBubble[];
+  isDemo?: boolean;
+  className?: string;
+}
+
+const QUADRANT_COLORS = {
+  highSpendHighUtil: 'hsl(var(--success))',      // Good: Well utilized
+  highSpendLowUtil: 'hsl(var(--destructive))',   // Bad: Overspend/waste
+  lowSpendHighUtil: 'hsl(var(--chart-2))',       // Efficient
+  lowSpendLowUtil: 'hsl(var(--warning))',        // Underutilized
+};
+
+function getQuadrantColor(utilization: number, spend: number, medianSpend: number): string {
+  const isHighSpend = spend >= medianSpend;
+  const isHighUtil = utilization >= 65;
+  
+  if (isHighSpend && isHighUtil) return QUADRANT_COLORS.highSpendHighUtil;
+  if (isHighSpend && !isHighUtil) return QUADRANT_COLORS.highSpendLowUtil;
+  if (!isHighSpend && isHighUtil) return QUADRANT_COLORS.lowSpendHighUtil;
+  return QUADRANT_COLORS.lowSpendLowUtil;
+}
+
+export function SpendUtilizationMatrix({ data, isDemo, className }: SpendUtilizationMatrixProps) {
+  const [selectedCategory, setSelectedCategory] = useState<CategoryBubble | null>(null);
+  
+  // Calculate median for quadrant lines
+  const medianSpend = data.length > 0 
+    ? data.map(d => d.spend).sort((a, b) => a - b)[Math.floor(data.length / 2)]
+    : 0;
+  
+  // Prepare chart data with z-axis for bubble size
+  const chartData = data.map(item => ({
+    ...item,
+    x: item.utilization,
+    y: item.spend,
+    z: item.entitled / 100000, // Scale for bubble size
+  }));
+  
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (!active || !payload?.length) return null;
+    const item = payload[0].payload as CategoryBubble;
+    
+    return (
+      <div className="bg-card border border-border rounded-lg shadow-lg p-4 space-y-2">
+        <p className="font-semibold text-sm">{item.name}</p>
+        <div className="space-y-1 text-xs">
+          <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">Spend:</span>
+            <span className="font-medium">{formatCurrencyAED(item.spend, { abbreviate: true })}</span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">Utilization:</span>
+            <span className="font-medium">{formatPercent(item.utilization)}</span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-muted-foreground">Entitled:</span>
+            <span className="font-medium">{formatCurrencyAED(item.entitled, { abbreviate: true })}</span>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground pt-2 border-t">Click to drill down</p>
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <Card className={cn("border-border/50", className)}>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg flex items-center gap-2">
+                Spend vs Utilization Matrix
+                <InfoTooltip 
+                  formula="X: Utilization %, Y: Spend AED, Bubble: Entitled value" 
+                  dataSource="benefit_entitlements + requests" 
+                />
+              </CardTitle>
+              <CardDescription>Click any bubble to see category drilldown</CardDescription>
+            </div>
+            {isDemo && <Badge variant="outline" className="text-xs">Demo</Badge>}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                <XAxis 
+                  type="number" 
+                  dataKey="x" 
+                  name="Utilization" 
+                  unit="%" 
+                  domain={[0, 100]}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                  label={{ value: 'Utilization %', position: 'bottom', offset: 0, fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                />
+                <YAxis 
+                  type="number" 
+                  dataKey="y" 
+                  name="Spend" 
+                  tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                  label={{ value: 'Spend (AED)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                />
+                <ZAxis type="number" dataKey="z" range={[100, 800]} name="Entitled" />
+                <ReferenceLine x={65} stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeOpacity={0.5} />
+                <ReferenceLine y={medianSpend} stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeOpacity={0.5} />
+                <Tooltip content={<CustomTooltip />} />
+                <Scatter 
+                  data={chartData} 
+                  cursor="pointer"
+                  onClick={(e) => e && setSelectedCategory(e as CategoryBubble)}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={getQuadrantColor(entry.utilization, entry.spend, medianSpend)}
+                      fillOpacity={0.7}
+                      stroke={getQuadrantColor(entry.utilization, entry.spend, medianSpend)}
+                      strokeWidth={2}
+                    />
+                  ))}
+                </Scatter>
+              </ScatterChart>
+            </ResponsiveContainer>
+          </div>
+          
+          {/* Legend */}
+          <div className="flex flex-wrap justify-center gap-4 mt-4 text-xs">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: QUADRANT_COLORS.highSpendHighUtil }} />
+              <span className="text-muted-foreground">Well Utilized</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: QUADRANT_COLORS.lowSpendHighUtil }} />
+              <span className="text-muted-foreground">Efficient</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: QUADRANT_COLORS.lowSpendLowUtil }} />
+              <span className="text-muted-foreground">Underutilized</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: QUADRANT_COLORS.highSpendLowUtil }} />
+              <span className="text-muted-foreground">Overspend Risk</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Drilldown Modal */}
+      <Dialog open={!!selectedCategory} onOpenChange={(open) => !open && setSelectedCategory(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {selectedCategory?.name} Analysis
+              <Badge 
+                variant={selectedCategory && selectedCategory.utilization >= 65 ? 'default' : 'destructive'}
+                className="text-xs"
+              >
+                {selectedCategory && formatPercent(selectedCategory.utilization)} utilized
+              </Badge>
+            </DialogTitle>
+            <DialogDescription>
+              Category breakdown and friction analysis
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Top Segments */}
+            {selectedCategory?.topSegments && selectedCategory.topSegments.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium mb-2">Top 3 Segments Driving Cost</h4>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Segment</TableHead>
+                      <TableHead className="text-xs text-right">Spend</TableHead>
+                      <TableHead className="text-xs text-right">Util %</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedCategory.topSegments.map((seg, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell className="text-sm">{seg.name}</TableCell>
+                        <TableCell className="text-sm text-right">{formatCurrencyAED(seg.spend, { abbreviate: true })}</TableCell>
+                        <TableCell className="text-sm text-right">{formatPercent(seg.utilization)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {/* Rejection Reasons */}
+            {selectedCategory?.rejectionReasons && selectedCategory.rejectionReasons.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
+                  <AlertTriangle className="w-4 h-4 text-warning" />
+                  Top 3 Rejection Reasons
+                </h4>
+                <div className="space-y-2">
+                  {selectedCategory.rejectionReasons.map((reason, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-sm bg-muted/30 p-2 rounded">
+                      <span>{reason.reason}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {reason.count} ({formatPercent(reason.percentage)})
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Suggested Action */}
+            {selectedCategory?.suggestedAction && (
+              <div className="p-3 rounded-lg bg-accent/10 border border-accent/20">
+                <div className="flex items-start gap-2">
+                  <Lightbulb className="w-4 h-4 text-accent mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">Suggested Action</p>
+                    <p className="text-xs text-muted-foreground mt-1">{selectedCategory.suggestedAction}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Action Button */}
+            <Button asChild className="w-full">
+              <Link to={`/employer/recommendations?category=${selectedCategory?.id}&source=spend-matrix`}>
+                Create Action for {selectedCategory?.name}
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
