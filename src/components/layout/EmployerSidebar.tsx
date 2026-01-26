@@ -87,39 +87,55 @@ const opsNavigation: NavGroup[] = [
   },
 ];
 
-// 2. EXECUTIVE NAVIGATION (3 clear groupings)
+// 2. EXECUTIVE NAVIGATION (CFO/CEO decision flow)
 const execNavigation: NavGroup[] = [
-  // GROUP 1: Optimize Investment (Executive/Finance focus)
+  // A) EXECUTIVE OVERVIEW
   {
-    id: 'optimize-investment',
-    label: 'Optimize Investment',
-    labelAr: 'تحسين الاستثمار',
+    id: 'executive-overview',
+    label: 'Executive Overview',
+    labelAr: 'نظرة تنفيذية',
     items: [
-      { label: 'Executive Dashboard', labelAr: 'لوحة التحكم', path: '/employer', icon: LayoutDashboard },
+      { label: 'Total Rewards Overview', labelAr: 'نظرة عامة على المكافآت', path: '/employer', icon: LayoutDashboard },
+    ],
+  },
+  // B) INVESTMENT & ROI
+  {
+    id: 'investment-roi',
+    label: 'Investment & ROI',
+    labelAr: 'الاستثمار والعائد',
+    items: [
       { label: 'Spend & Utilization', labelAr: 'الإنفاق والاستخدام', path: '/employer/spend', icon: DollarSign },
       { label: 'Unrealized Value', labelAr: 'القيمة غير المحققة', path: '/employer/zombie', icon: Lightbulb },
-      { label: 'Segments', labelAr: 'الشرائح', path: '/employer/segments', icon: Users },
     ],
   },
-  // GROUP 2: Action Plan (Track execution)
+  // C) DRIVERS & SEGMENTS
   {
-    id: 'action-plan',
-    label: 'Action Plan',
-    labelAr: 'خطة العمل',
+    id: 'drivers-segments',
+    label: 'Drivers & Segments',
+    labelAr: 'المحركات والشرائح',
     items: [
-      { label: 'Recommendations', labelAr: 'التوصيات', path: '/employer/recommendations', icon: BarChart3 },
+      { label: 'Employee Segments', labelAr: 'شرائح الموظفين', path: '/employer/segments', icon: Users },
     ],
   },
-  // GROUP 3: Governance (Policy owners/Comp & Ben)
+  // D) ACTIONS
   {
-    id: 'governance',
-    label: 'Governance',
-    labelAr: 'الحوكمة',
+    id: 'actions',
+    label: 'Actions',
+    labelAr: 'الإجراءات',
+    items: [
+      { label: 'Action Plan', labelAr: 'خطة العمل', path: '/employer/recommendations', icon: BarChart3 },
+    ],
+  },
+  // E) GOVERNANCE & RISK
+  {
+    id: 'governance-risk',
+    label: 'Governance & Risk',
+    labelAr: 'الحوكمة والمخاطر',
     items: [
       { label: 'Policy Impact', labelAr: 'تأثير السياسات', path: '/employer/policy-insights', icon: TrendingUp },
     ],
   },
-  // Ecosystem (optional based on feature flag)
+  // F) ECOSYSTEM (optional based on feature flag)
   {
     id: 'ecosystem',
     label: 'Ecosystem',
@@ -129,13 +145,13 @@ const execNavigation: NavGroup[] = [
       { label: 'Marketplace Impact', labelAr: 'تأثير السوق', path: '/employer/marketplace', icon: ShoppingBag },
     ],
   },
-  // Trust (data sources)
+  // G) DATA TRUST
   {
-    id: 'trust',
-    label: 'Trust',
-    labelAr: 'الثقة',
+    id: 'data-trust',
+    label: 'Data Trust',
+    labelAr: 'ثقة البيانات',
     items: [
-      { label: 'Data Sources', labelAr: 'مصادر البيانات', path: '/employer/integrations', icon: Database, badge: 'Read-only' },
+      { label: 'Data Sources', labelAr: 'مصادر البيانات', path: '/employer/integrations', icon: Database },
     ],
   },
 ];
