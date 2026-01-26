@@ -28,9 +28,22 @@ export function useOrgRoleAssignments() {
 
   const assignRole = useMutation({
     mutationFn: async (assignment: { user_id: string; employer_role: string; scope_type?: string }) => {
+      // Get organization_id for the user
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('user_id', user?.id)
+        .single();
+      
       const { data, error } = await supabase
         .from('org_role_assignments')
-        .insert({ ...assignment, assigned_by: user?.id })
+        .insert({
+          user_id: assignment.user_id,
+          employer_role: assignment.employer_role as any,
+          scope_type: assignment.scope_type || 'global',
+          assigned_by: user?.id,
+          organization_id: profile?.organization_id || '',
+        })
         .select()
         .single();
       
