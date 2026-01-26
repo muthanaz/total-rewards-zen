@@ -17,8 +17,8 @@ export function ExecModeToggle({ className }: ExecModeToggleProps) {
   const { mode, setMode } = useExecMode();
 
   const modes: { id: ExecModeType; label: string; icon: React.ElementType }[] = [
-    { id: 'board', label: 'Board-ready', icon: LayoutGrid },
-    { id: 'cfo', label: 'CFO Detail', icon: BarChart3 },
+    { id: 'board', label: 'Summary', icon: LayoutGrid },
+    { id: 'cfo', label: 'Detailed', icon: BarChart3 },
   ];
 
   return (

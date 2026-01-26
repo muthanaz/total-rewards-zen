@@ -1,12 +1,12 @@
 /**
- * Decisions & Actions Card (Next 30 days)
+ * Action Required Card (Next 30 days)
  * 
- * Shows 3 recommended actions with:
+ * Shows top 3 actions requiring CEO/leadership decision:
  * - Title
- * - Expected Impact (AED)
+ * - Impact (Saves/Recovers AED X)
  * - Owner
  * - Status
- * - "Open action" button
+ * - "Open" button
  * - "View full Action Plan" link
  */
 
@@ -22,6 +22,7 @@ import {
   Clock,
   AlertCircle,
   XCircle,
+  Sparkles,
 } from 'lucide-react';
 import { cn, formatCurrencyAED } from '@/lib/utils';
 
@@ -48,13 +49,13 @@ const STATUS_CONFIG: Record<ActionStatus, {
 }> = {
   backlog: {
     icon: Clock,
-    label: 'Backlog',
+    label: 'Pending',
     color: 'text-muted-foreground',
     bg: 'bg-muted',
   },
   in_progress: {
     icon: Clock,
-    label: 'In Progress',
+    label: 'Active',
     color: 'text-primary',
     bg: 'bg-primary/10',
   },
@@ -66,7 +67,7 @@ const STATUS_CONFIG: Record<ActionStatus, {
   },
   completed: {
     icon: CheckCircle2,
-    label: 'Completed',
+    label: 'Done',
     color: 'text-success',
     bg: 'bg-success/10',
   },
@@ -87,7 +88,7 @@ export function DecisionsActionsCard({ actions, className }: DecisionsActionsCar
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
             <CalendarDays className="w-4 h-4 text-accent" />
-            Decisions & Actions
+            Action Required
             <Badge variant="secondary" className="ml-2 text-xs">
               Next 30 days
             </Badge>
@@ -106,6 +107,8 @@ export function DecisionsActionsCard({ actions, className }: DecisionsActionsCar
           {top3.map((action) => {
             const statusConfig = STATUS_CONFIG[action.status];
             const StatusIcon = statusConfig.icon;
+            const impactLabel = action.expectedImpact > 0 ? 'Saves' : 'Recovers';
+            const impactValue = Math.abs(action.expectedImpact);
 
             return (
               <div 
@@ -120,8 +123,8 @@ export function DecisionsActionsCard({ actions, className }: DecisionsActionsCar
                       <span>{action.owner}</span>
                     </div>
                     <span>•</span>
-                    <span className="font-medium text-foreground tabular-nums">
-                      {formatCurrencyAED(action.expectedImpact)} impact
+                    <span className="font-medium text-success tabular-nums">
+                      {impactLabel} {formatCurrencyAED(impactValue, { abbreviate: true })}
                     </span>
                   </div>
                 </div>
@@ -146,11 +149,9 @@ export function DecisionsActionsCard({ actions, className }: DecisionsActionsCar
 
           {top3.length === 0 && (
             <div className="text-center py-6 text-muted-foreground">
-              <CalendarDays className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No actions scheduled for next 30 days</p>
-              <Link to="/employer/recommendations" className="text-primary text-sm hover:underline">
-                Create an action
-              </Link>
+              <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-50 text-success" />
+              <p className="text-sm font-medium text-foreground">All caught up</p>
+              <p className="text-xs">No decisions needed right now</p>
             </div>
           )}
         </div>
