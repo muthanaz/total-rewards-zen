@@ -115,16 +115,12 @@ function ExecNavItem({ item, pendingCount }: { item: NavItem; pendingCount: numb
     <Link
       to={item.path}
       className={cn(
-        'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150',
-        'hover:bg-sidebar-accent',
-        finalActive 
-          ? 'bg-sidebar-accent font-medium' 
-          : '',
+        'nav-item',
+        finalActive && 'nav-item-active',
         isRTL && 'flex-row-reverse text-right'
       )}
-      style={{ color: 'hsl(var(--primary))' }}
     >
-      <Icon className="w-4 h-4 shrink-0" style={{ color: 'hsl(var(--primary))' }} />
+      <Icon className="w-4 h-4 shrink-0" />
       <span className={cn('text-sm flex-1', isRTL && 'text-right')}>{displayLabel}</span>
       {item.showPendingBadge && pendingCount > 0 && (
         <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-warning text-warning-foreground">
