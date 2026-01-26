@@ -1,15 +1,19 @@
 /**
- * Out-of-Pocket Optimizer - Action Generation Rules
+ * Out-of-Pocket Optimizer - Computation Engine
  * 
- * Generates prioritized actions to help employees reduce out-of-pocket costs
- * using their benefits and marketplace offers.
+ * Generates prioritized actions to help employees reduce out-of-pocket costs.
  * 
- * RULES:
- * - Reimbursement/Budget benefits: Show remaining amounts as claimable
- * - Coverage benefits: Do NOT show "remaining AED" - suggest service usage
- * - Missing documents: High priority to unblock claims
- * - Marketplace: Show eligible offers with discount amounts
- * - Bank cards: Suggest linking for card-linked offers
+ * CRITICAL RULES:
+ * 1. NEVER show spendable AED remaining for coverage/access/deferred benefits
+ * 2. All savings must include: timeframe, confidence, calculation method
+ * 3. Only cash/reimbursement/budget benefits can show AED impact
+ * 4. Coverage benefits show "Use coverage" actions without monetary value
+ * 
+ * Action Priority (descending):
+ * 1. Blockers (missing docs) - unblocks money
+ * 2. Due soon - time-sensitive
+ * 3. Highest net impact - biggest savings
+ * 4. Lowest effort - quick wins
  */
 
 import { BenefitValueType, canShowUnusedAmount } from '@/lib/benefitValueTypes';
@@ -27,15 +31,26 @@ import {
   Dumbbell,
   BookOpen,
   AlertTriangle,
+  Info,
 } from 'lucide-react';
+import { ConfidenceLevel } from '@/lib/metrics/types';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-export type ActionConfidence = 'high' | 'medium' | 'low' | 'estimated';
+export type ActionTimeframe = 'this_month' | 'one_time' | 'this_year';
+export type ActionConfidence = 'measured' | 'estimated' | 'proxy' | 'missing';
 export type ActionPriority = 'critical' | 'high' | 'medium' | 'low';
 export type ActionStatus = 'action_required' | 'pending' | 'in_progress' | 'blocked';
+export type ActionType = 
+  | 'upload_docs' 
+  | 'submit_claim' 
+  | 'redeem_offer' 
+  | 'link_card' 
+  | 'use_coverage' 
+  | 'view_policy'
+  | 'education';
 
 export interface OptimizerAction {
   id: string;
@@ -43,30 +58,71 @@ export interface OptimizerAction {
   titleAr: string;
   whyItMatters: string;
   whyItMattersAr: string;
-  estimatedImpact: number | null; // AED amount, null for non-monetary
-  impactLabel: string; // "AED 5,000" or "Save 20%" or "Service benefit"
+  
+  // Impact - ONLY for cash/reimbursement/budget
+  estimatedImpact: number | null;
+  impactLabel: string;
   impactLabelAr: string;
+  timeframe: ActionTimeframe;
+  
+  // Confidence with calculation explanation
   confidence: ActionConfidence;
   confidenceNote: string;
+  howCalculated: string;
+  howCalculatedAr: string;
+  
+  // Priority
   priority: ActionPriority;
-  priorityScore: number; // For sorting (higher = more urgent)
+  priorityScore: number;
   status: ActionStatus;
-  actionType: 'claim' | 'upload' | 'redeem' | 'link_card' | 'use_coverage' | 'view_policy';
+  
+  // Action metadata
+  actionType: ActionType;
   category: string;
   categoryAr: string;
+  severityTag?: string;
+  severityTagAr?: string;
+  
+  // Navigation
   route: string;
   ctaLabel: string;
   ctaLabelAr: string;
   icon: LucideIcon;
+  
+  // Prerequisites
+  prerequisites?: string[];
+  prerequisitesAr?: string[];
   documentChecklist?: string[];
+  
+  // Benefit type (for filtering)
   benefitValueType?: BenefitValueType;
+  
+  // Is this an educational action (no real savings)?
+  isEducational?: boolean;
+}
+
+export interface ReducibleCostBreakdown {
+  actionId: string;
+  label: string;
+  amount: number;
+  timeframe: ActionTimeframe;
+  confidence: ActionConfidence;
 }
 
 export interface OptimizerSummary {
-  potentialSavings: number;
-  savingsConfidence: ActionConfidence;
+  // Primary KPI - only actionable, reducible costs
+  reducibleCosts: number;
+  reducibleCostsTimeframe: ActionTimeframe;
+  reducibleCostsConfidence: ActionConfidence;
+  reducibleCostsBreakdown: ReducibleCostBreakdown[];
+  
+  // Secondary KPIs
   actionCount: number;
   estimatedMinutes: number;
+  
+  // Metadata
+  hasBlockers: boolean;
+  blockerCount: number;
 }
 
 // ============================================================================
@@ -89,14 +145,17 @@ interface DemoBenefit {
 interface DemoPendingRequest {
   id: string;
   benefitName: string;
+  benefitNameAr: string;
   amount: number;
   status: 'info_requested' | 'pending' | 'in_review';
   missingDocs: string[];
+  missingDocsAr: string[];
 }
 
-interface DemoMarketplaceOpportunity {
+interface DemoMarketplaceOffer {
   id: string;
   title: string;
+  titleAr: string;
   merchant: string;
   discountPercent?: number;
   discountAmount?: number;
@@ -105,7 +164,7 @@ interface DemoMarketplaceOpportunity {
   route: string;
 }
 
-// Demo benefits with utilization data
+// Demo benefits with proper value types
 const demoBenefits: DemoBenefit[] = [
   {
     id: 'housing',
@@ -113,7 +172,7 @@ const demoBenefits: DemoBenefit[] = [
     nameAr: 'بدل السكن',
     valueType: 'cash',
     annualAllowance: 90000,
-    utilizedAmount: 90000, // Fully utilized (paid monthly)
+    utilizedAmount: 90000,
     pendingAmount: 0,
     lifeArea: 'housing',
     icon: Home,
@@ -136,7 +195,7 @@ const demoBenefits: DemoBenefit[] = [
     name: 'Health Insurance',
     nameAr: 'التأمين الصحي',
     valueType: 'coverage',
-    annualAllowance: 25000, // Employer investment, not spendable
+    annualAllowance: 25000,
     utilizedAmount: 0,
     pendingAmount: 0,
     lifeArea: 'health',
@@ -181,36 +240,32 @@ const demoBenefits: DemoBenefit[] = [
   },
 ];
 
-// Demo pending requests with missing documents
 const demoPendingRequests: DemoPendingRequest[] = [
   {
     id: 'req-001',
     benefitName: 'Schooling',
+    benefitNameAr: 'التعليم',
     amount: 8000,
     status: 'info_requested',
     missingDocs: ['School tuition receipt', 'Fee breakdown'],
+    missingDocsAr: ['إيصال رسوم المدرسة', 'تفصيل الرسوم'],
   },
   {
     id: 'req-002',
     benefitName: 'Transport',
+    benefitNameAr: 'النقل',
     amount: 1500,
     status: 'pending',
     missingDocs: [],
-  },
-  {
-    id: 'req-003',
-    benefitName: 'Learning',
-    amount: 2000,
-    status: 'in_review',
-    missingDocs: [],
+    missingDocsAr: [],
   },
 ];
 
-// Demo marketplace opportunities
-const demoMarketplaceOpportunities: DemoMarketplaceOpportunity[] = [
+const demoMarketplaceOffers: DemoMarketplaceOffer[] = [
   {
     id: 'offer-001',
     title: '25% Off Gym Membership',
+    titleAr: 'خصم 25% على اشتراك الجيم',
     merchant: 'Fitness First',
     discountPercent: 25,
     isSponsored: true,
@@ -220,95 +275,104 @@ const demoMarketplaceOpportunities: DemoMarketplaceOpportunity[] = [
   {
     id: 'offer-002',
     title: 'AED 500 Learning Credit',
+    titleAr: 'رصيد تعليمي AED 500',
     merchant: 'Coursera',
     discountAmount: 500,
     isSponsored: true,
     cardLinked: false,
     route: '/employee/marketplace',
   },
-  {
-    id: 'offer-003',
-    title: '15% Off Grocery Shopping',
-    merchant: 'Carrefour',
-    discountPercent: 15,
-    isSponsored: false,
-    cardLinked: true,
-    route: '/employee/marketplace',
-  },
 ];
 
 // ============================================================================
-// ACTION GENERATION LOGIC
+// COMPUTATION ENGINE
 // ============================================================================
 
-/**
- * Generates optimizer actions based on benefit utilization, missing docs,
- * and marketplace opportunities.
- */
 export function computeOutOfPocketOpportunities(
   hasLinkedBankCards: boolean = false
 ): { actions: OptimizerAction[]; summary: OptimizerSummary } {
   const actions: OptimizerAction[] = [];
+  const reducibleCostsBreakdown: ReducibleCostBreakdown[] = [];
 
-  // -------------------------------------------------------------------------
-  // A) Missing Documents - Highest Priority
-  // -------------------------------------------------------------------------
+  // =========================================================================
+  // A) BLOCKERS: Missing Documents (Critical Priority)
+  // =========================================================================
   demoPendingRequests
     .filter(req => req.status === 'info_requested' && req.missingDocs.length > 0)
     .forEach(req => {
       actions.push({
-        id: `missing-docs-${req.id}`,
-        title: `Upload missing documents for ${req.benefitName}`,
-        titleAr: `رفع المستندات المفقودة لـ ${req.benefitName}`,
-        whyItMatters: 'Your claim is blocked until documents are provided',
-        whyItMattersAr: 'مطالبتك محظورة حتى يتم تقديم المستندات',
+        id: `blocker-${req.id}`,
+        title: `Upload documents to unblock ${req.benefitName} claim`,
+        titleAr: `ارفع المستندات لفتح مطالبة ${req.benefitNameAr}`,
+        whyItMatters: 'Your claim is blocked. Upload documents to release your reimbursement.',
+        whyItMattersAr: 'مطالبتك محظورة. ارفع المستندات للحصول على استردادك.',
         estimatedImpact: req.amount,
         impactLabel: `Unlocks AED ${req.amount.toLocaleString('en-US')}`,
         impactLabelAr: `يفتح AED ${req.amount.toLocaleString('en-US')}`,
-        confidence: 'high',
-        confidenceNote: 'Amount based on submitted claim',
+        timeframe: 'one_time',
+        confidence: 'measured',
+        confidenceNote: 'Based on your submitted claim amount',
+        howCalculated: `This is the exact amount from your claim submission (${req.benefitName}).`,
+        howCalculatedAr: `هذا هو المبلغ الدقيق من تقديم مطالبتك (${req.benefitNameAr}).`,
         priority: 'critical',
         priorityScore: 100,
-        status: 'action_required',
-        actionType: 'upload',
+        status: 'blocked',
+        actionType: 'upload_docs',
         category: 'Missing Documents',
         categoryAr: 'مستندات ناقصة',
+        severityTag: 'Blocked',
+        severityTagAr: 'محظور',
         route: '/employee/requests',
         ctaLabel: 'Upload now',
-        ctaLabelAr: 'رفع الآن',
-        icon: FileText,
+        ctaLabelAr: 'ارفع الآن',
+        icon: AlertTriangle,
         documentChecklist: req.missingDocs,
+        prerequisites: req.missingDocs,
+        prerequisitesAr: req.missingDocsAr,
+      });
+
+      // Add to breakdown
+      reducibleCostsBreakdown.push({
+        actionId: `blocker-${req.id}`,
+        label: `${req.benefitName} claim (blocked)`,
+        amount: req.amount,
+        timeframe: 'one_time',
+        confidence: 'measured',
       });
     });
 
-  // -------------------------------------------------------------------------
-  // B) Reimbursement/Budget Benefits with Remaining Balance
-  // -------------------------------------------------------------------------
+  // =========================================================================
+  // B) REIMBURSEMENT/BUDGET: Claim Remaining Balance
+  // =========================================================================
   demoBenefits
     .filter(b => canShowUnusedAmount(b.valueType))
-    .filter(b => b.annualAllowance > b.utilizedAmount + b.pendingAmount)
+    .filter(b => {
+      const remaining = b.annualAllowance - b.utilizedAmount - b.pendingAmount;
+      return remaining >= 500; // Only meaningful amounts
+    })
     .forEach(benefit => {
       const remaining = benefit.annualAllowance - benefit.utilizedAmount - benefit.pendingAmount;
-      const monthlyEstimate = Math.round(remaining / 12);
-      
-      // Only suggest if meaningful amount remaining
-      if (remaining < 500) return;
+      const monthsLeft = 12 - new Date().getMonth(); // Remaining months in year
+      const monthlyEstimate = Math.round(remaining / monthsLeft);
 
       actions.push({
         id: `claim-${benefit.id}`,
         title: `Claim your ${benefit.name} reimbursement`,
         titleAr: `قدم مطالبة استرداد ${benefit.nameAr}`,
-        whyItMatters: `You have AED ${remaining.toLocaleString('en-US')} remaining this year`,
-        whyItMattersAr: `لديك AED ${remaining.toLocaleString('en-US')} متبقية هذا العام`,
-        estimatedImpact: remaining,
-        impactLabel: `Est. AED ${monthlyEstimate.toLocaleString('en-US')}/mo`,
-        impactLabelAr: `تقدير AED ${monthlyEstimate.toLocaleString('en-US')}/شهر`,
+        whyItMatters: `You have AED ${remaining.toLocaleString('en-US')} unused this year. Submit eligible expenses.`,
+        whyItMattersAr: `لديك AED ${remaining.toLocaleString('en-US')} غير مستخدمة هذا العام. قدم مصاريفك المؤهلة.`,
+        estimatedImpact: monthlyEstimate,
+        impactLabel: `~AED ${monthlyEstimate.toLocaleString('en-US')}/mo`,
+        impactLabelAr: `~AED ${monthlyEstimate.toLocaleString('en-US')}/شهر`,
+        timeframe: 'this_month',
         confidence: 'estimated',
-        confidenceNote: 'Based on annual remaining ÷ 12 months',
+        confidenceNote: 'Estimated based on remaining balance ÷ months left',
+        howCalculated: `Remaining: AED ${remaining.toLocaleString('en-US')} ÷ ${monthsLeft} months = ~AED ${monthlyEstimate.toLocaleString('en-US')}/month. Actual depends on your expenses.`,
+        howCalculatedAr: `المتبقي: AED ${remaining.toLocaleString('en-US')} ÷ ${monthsLeft} شهر = ~AED ${monthlyEstimate.toLocaleString('en-US')}/شهر. الفعلي يعتمد على مصاريفك.`,
         priority: remaining > 5000 ? 'high' : 'medium',
         priorityScore: remaining > 5000 ? 80 : 60,
         status: 'action_required',
-        actionType: 'claim',
+        actionType: 'submit_claim',
         category: benefit.name,
         categoryAr: benefit.nameAr,
         route: benefit.route,
@@ -317,45 +381,58 @@ export function computeOutOfPocketOpportunities(
         icon: benefit.icon,
         benefitValueType: benefit.valueType,
       });
+
+      // Add to breakdown
+      reducibleCostsBreakdown.push({
+        actionId: `claim-${benefit.id}`,
+        label: `${benefit.name} (est. monthly)`,
+        amount: monthlyEstimate,
+        timeframe: 'this_month',
+        confidence: 'estimated',
+      });
     });
 
-  // -------------------------------------------------------------------------
-  // C) Coverage Benefits - Suggest Usage (NO AED remaining)
-  // -------------------------------------------------------------------------
+  // =========================================================================
+  // C) COVERAGE: Use Benefits (NO AED shown)
+  // =========================================================================
   demoBenefits
     .filter(b => b.valueType === 'coverage')
     .forEach(benefit => {
       actions.push({
-        id: `use-coverage-${benefit.id}`,
-        title: `Use your ${benefit.name} coverage`,
-        titleAr: `استخدم تغطية ${benefit.nameAr}`,
-        whyItMatters: 'Find in-network providers and save on medical expenses',
-        whyItMattersAr: 'ابحث عن مقدمي الخدمات ضمن الشبكة ووفر على المصاريف الطبية',
-        estimatedImpact: null,
-        impactLabel: 'Service benefit',
-        impactLabelAr: 'ميزة خدمية',
-        confidence: 'high',
+        id: `coverage-${benefit.id}`,
+        title: `Use your ${benefit.name}`,
+        titleAr: `استخدم ${benefit.nameAr}`,
+        whyItMatters: 'Find in-network providers for covered services. No out-of-pocket for covered care.',
+        whyItMattersAr: 'ابحث عن مقدمي الخدمات ضمن الشبكة. لا مصاريف من جيبك للرعاية المغطاة.',
+        estimatedImpact: null, // NO monetary value for coverage
+        impactLabel: 'Covered benefit',
+        impactLabelAr: 'ميزة مغطاة',
+        timeframe: 'this_month',
+        confidence: 'measured',
         confidenceNote: 'Employer-paid coverage',
+        howCalculated: 'This is employer-paid coverage. Using in-network providers avoids out-of-pocket costs.',
+        howCalculatedAr: 'هذه تغطية مدفوعة من صاحب العمل. استخدام مقدمي الخدمات ضمن الشبكة يتجنب التكاليف من جيبك.',
         priority: 'low',
-        priorityScore: 30,
+        priorityScore: 25,
         status: 'action_required',
         actionType: 'use_coverage',
-        category: benefit.name,
-        categoryAr: benefit.nameAr,
+        category: 'Coverage',
+        categoryAr: 'التغطية',
         route: benefit.route,
         ctaLabel: 'View coverage',
         ctaLabelAr: 'عرض التغطية',
         icon: Shield,
         benefitValueType: benefit.valueType,
+        isEducational: true,
       });
     });
 
-  // -------------------------------------------------------------------------
-  // D) Marketplace Offers
-  // -------------------------------------------------------------------------
-  demoMarketplaceOpportunities
-    .filter(offer => !offer.cardLinked || hasLinkedBankCards)
-    .slice(0, 3) // Limit marketplace actions
+  // =========================================================================
+  // D) MARKETPLACE: Sponsored Offers
+  // =========================================================================
+  demoMarketplaceOffers
+    .filter(offer => offer.isSponsored)
+    .slice(0, 2)
     .forEach(offer => {
       const impactLabel = offer.discountAmount 
         ? `AED ${offer.discountAmount} off`
@@ -363,23 +440,26 @@ export function computeOutOfPocketOpportunities(
 
       actions.push({
         id: `offer-${offer.id}`,
-        title: `Redeem: ${offer.title}`,
-        titleAr: `استخدم: ${offer.title}`,
-        whyItMatters: offer.isSponsored 
-          ? 'Employer-sponsored offer - exclusive to you'
-          : `Save at ${offer.merchant}`,
-        whyItMattersAr: offer.isSponsored
-          ? 'عرض مدعوم من صاحب العمل - حصري لك'
-          : `وفر في ${offer.merchant}`,
+        title: offer.title,
+        titleAr: offer.titleAr,
+        whyItMatters: `Employer-sponsored offer at ${offer.merchant}. Exclusive to your organization.`,
+        whyItMattersAr: `عرض مدعوم من صاحب العمل في ${offer.merchant}. حصري لمنظمتك.`,
         estimatedImpact: offer.discountAmount || null,
         impactLabel,
         impactLabelAr: impactLabel,
-        confidence: 'high',
-        confidenceNote: offer.isSponsored ? 'Employer-sponsored' : 'Partner offer',
-        priority: offer.isSponsored ? 'medium' : 'low',
-        priorityScore: offer.isSponsored ? 50 : 40,
+        timeframe: 'one_time',
+        confidence: 'measured',
+        confidenceNote: 'Employer-sponsored offer',
+        howCalculated: offer.discountAmount 
+          ? `Fixed discount of AED ${offer.discountAmount} on purchase.`
+          : `${offer.discountPercent}% off your purchase price.`,
+        howCalculatedAr: offer.discountAmount
+          ? `خصم ثابت AED ${offer.discountAmount} على الشراء.`
+          : `خصم ${offer.discountPercent}% على سعر الشراء.`,
+        priority: 'medium',
+        priorityScore: 45,
         status: 'action_required',
-        actionType: 'redeem',
+        actionType: 'redeem_offer',
         category: 'Marketplace',
         categoryAr: 'السوق',
         route: offer.route,
@@ -387,30 +467,43 @@ export function computeOutOfPocketOpportunities(
         ctaLabelAr: 'عرض العرض',
         icon: Gift,
       });
+
+      if (offer.discountAmount) {
+        reducibleCostsBreakdown.push({
+          actionId: `offer-${offer.id}`,
+          label: `${offer.title} (offer)`,
+          amount: offer.discountAmount,
+          timeframe: 'one_time',
+          confidence: 'measured',
+        });
+      }
     });
 
-  // -------------------------------------------------------------------------
-  // E) Bank Card Linking - If card-linked offers exist and no cards linked
-  // -------------------------------------------------------------------------
-  const cardLinkedOffers = demoMarketplaceOpportunities.filter(o => o.cardLinked);
+  // =========================================================================
+  // E) BANK CARD: Link for Card-Linked Offers
+  // =========================================================================
+  const cardLinkedOffers = demoMarketplaceOffers.filter(o => o.cardLinked);
   if (!hasLinkedBankCards && cardLinkedOffers.length > 0) {
     actions.push({
-      id: 'link-bank-card',
+      id: 'link-card',
       title: 'Link your bank card to unlock offers',
       titleAr: 'اربط بطاقتك المصرفية لفتح العروض',
-      whyItMatters: `${cardLinkedOffers.length} exclusive offers require a linked card`,
-      whyItMattersAr: `${cardLinkedOffers.length} عروض حصرية تتطلب بطاقة مرتبطة`,
+      whyItMatters: `${cardLinkedOffers.length} exclusive offers require a linked card.`,
+      whyItMattersAr: `${cardLinkedOffers.length} عروض حصرية تتطلب بطاقة مرتبطة.`,
       estimatedImpact: null,
       impactLabel: `${cardLinkedOffers.length} offers`,
       impactLabelAr: `${cardLinkedOffers.length} عروض`,
-      confidence: 'high',
-      confidenceNote: 'Link required for card-linked offers',
-      priority: 'medium',
-      priorityScore: 55,
+      timeframe: 'one_time',
+      confidence: 'measured',
+      confidenceNote: 'Card-linked offers available',
+      howCalculated: 'Link your card to access card-linked discounts automatically.',
+      howCalculatedAr: 'اربط بطاقتك للوصول إلى خصومات البطاقة تلقائيًا.',
+      priority: 'low',
+      priorityScore: 35,
       status: 'action_required',
       actionType: 'link_card',
-      category: 'Marketplace',
-      categoryAr: 'السوق',
+      category: 'Setup',
+      categoryAr: 'الإعداد',
       route: '/employee/profile#linked-cards',
       ctaLabel: 'Link card',
       ctaLabelAr: 'ربط البطاقة',
@@ -418,33 +511,38 @@ export function computeOutOfPocketOpportunities(
     });
   }
 
-  // -------------------------------------------------------------------------
-  // Sort by priority score (highest first)
-  // -------------------------------------------------------------------------
+  // =========================================================================
+  // SORT: Priority Score (blockers first, then impact, then effort)
+  // =========================================================================
   actions.sort((a, b) => b.priorityScore - a.priorityScore);
 
-  // -------------------------------------------------------------------------
-  // Calculate Summary
-  // -------------------------------------------------------------------------
-  const monetaryActions = actions.filter(a => a.estimatedImpact !== null);
-  const potentialSavings = monetaryActions.reduce((sum, a) => sum + (a.estimatedImpact || 0), 0);
+  // =========================================================================
+  // COMPUTE SUMMARY
+  // =========================================================================
+  const blockers = actions.filter(a => a.status === 'blocked');
   
-  // Estimate 2-3 minutes per action
-  const estimatedMinutes = actions.length * 2;
+  // Reducible costs = only actionable AED amounts (no coverage)
+  const reducibleCosts = reducibleCostsBreakdown.reduce((sum, b) => sum + b.amount, 0);
+  const hasEstimated = reducibleCostsBreakdown.some(b => b.confidence === 'estimated');
 
   const summary: OptimizerSummary = {
-    potentialSavings,
-    savingsConfidence: monetaryActions.some(a => a.confidence === 'estimated') ? 'estimated' : 'high',
-    actionCount: actions.length,
-    estimatedMinutes,
+    reducibleCosts,
+    reducibleCostsTimeframe: 'this_month',
+    reducibleCostsConfidence: hasEstimated ? 'estimated' : 'measured',
+    reducibleCostsBreakdown,
+    actionCount: actions.filter(a => !a.isEducational).length,
+    estimatedMinutes: Math.max(5, actions.length * 2),
+    hasBlockers: blockers.length > 0,
+    blockerCount: blockers.length,
   };
 
   return { actions, summary };
 }
 
-/**
- * Get priority badge styling
- */
+// ============================================================================
+// STYLE HELPERS
+// ============================================================================
+
 export function getPriorityStyle(priority: ActionPriority): string {
   switch (priority) {
     case 'critical': return 'bg-destructive/10 text-destructive border-destructive/20';
@@ -454,21 +552,15 @@ export function getPriorityStyle(priority: ActionPriority): string {
   }
 }
 
-/**
- * Get confidence badge styling
- */
 export function getConfidenceStyle(confidence: ActionConfidence): string {
   switch (confidence) {
-    case 'high': return 'bg-success/10 text-success border-success/20';
-    case 'medium': return 'bg-accent/10 text-accent border-accent/20';
-    case 'low': return 'bg-warning/10 text-warning border-warning/20';
-    case 'estimated': return 'bg-muted text-muted-foreground border-border';
+    case 'measured': return 'bg-success/10 text-success border-success/20';
+    case 'estimated': return 'bg-accent/10 text-accent border-accent/20';
+    case 'proxy': return 'bg-warning/10 text-warning border-warning/20';
+    case 'missing': return 'bg-muted text-muted-foreground border-border';
   }
 }
 
-/**
- * Get status styling
- */
 export function getStatusStyle(status: ActionStatus): string {
   switch (status) {
     case 'action_required': return 'bg-warning/10 text-warning border-warning/20';
@@ -476,4 +568,23 @@ export function getStatusStyle(status: ActionStatus): string {
     case 'in_progress': return 'bg-info/10 text-info border-info/20';
     case 'blocked': return 'bg-destructive/10 text-destructive border-destructive/20';
   }
+}
+
+export function getTimeframeLabel(timeframe: ActionTimeframe, lang: 'en' | 'ar' = 'en'): string {
+  const labels: Record<ActionTimeframe, { en: string; ar: string }> = {
+    this_month: { en: 'This month', ar: 'هذا الشهر' },
+    one_time: { en: 'One-time', ar: 'مرة واحدة' },
+    this_year: { en: 'This year', ar: 'هذا العام' },
+  };
+  return labels[timeframe][lang];
+}
+
+export function getConfidenceLabel(confidence: ActionConfidence, lang: 'en' | 'ar' = 'en'): string {
+  const labels: Record<ActionConfidence, { en: string; ar: string }> = {
+    measured: { en: 'Measured', ar: 'مقاس' },
+    estimated: { en: 'Estimated', ar: 'تقدير' },
+    proxy: { en: 'Proxy', ar: 'تقريبي' },
+    missing: { en: 'Missing', ar: 'مفقود' },
+  };
+  return labels[confidence][lang];
 }
