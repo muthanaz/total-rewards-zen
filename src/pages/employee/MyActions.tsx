@@ -4,6 +4,7 @@ import {
   CheckCircle2, Clock, FileText, AlertTriangle, User, Gift,
   ChevronRight, HelpCircle, Zap, Calendar, Home, Heart,
   GraduationCap, Car, Dumbbell, BookOpen, LucideIcon,
+  TrendingDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -267,6 +268,29 @@ export default function MyActions() {
       icon={Zap}
       iconClassName="bg-accent/10 text-accent"
     >
+      {/* Optimizer Entry Point */}
+      <Card 
+        className="mb-6 border-accent/20 bg-gradient-to-r from-accent/5 to-transparent hover:from-accent/10 cursor-pointer transition-colors"
+        onClick={() => navigate('/employee/out-of-pocket')}
+      >
+        <CardContent className="p-4">
+          <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
+            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
+              <TrendingDown className="w-5 h-5 text-accent" />
+            </div>
+            <div className={cn("flex-1", isRTL && "text-right")}>
+              <h3 className="font-medium text-sm">
+                {isRTL ? 'محسّن التكاليف' : 'Out-of-Pocket Optimizer'}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {isRTL ? 'اكتشف طرقًا لتقليل تكاليفك الشهرية' : 'Discover ways to reduce your monthly costs'}
+              </p>
+            </div>
+            <ChevronRight className={cn("w-5 h-5 text-accent", isRTL && "rotate-180")} />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* A) Action Inbox - Primary Section */}
       <section className="space-y-4">
         {/* Filter Tabs */}
