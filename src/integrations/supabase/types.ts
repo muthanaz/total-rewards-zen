@@ -41,6 +41,120 @@ export type Database = {
         }
         Relationships: []
       }
+      action_approval_steps: {
+        Row: {
+          approval_id: string
+          approver_group_id: string | null
+          assigned_approver_user_id: string | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          id: string
+          sla_due_at: string | null
+          status: string
+          step_order: number
+          updated_at: string
+        }
+        Insert: {
+          approval_id: string
+          approver_group_id?: string | null
+          assigned_approver_user_id?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          id?: string
+          sla_due_at?: string | null
+          status?: string
+          step_order: number
+          updated_at?: string
+        }
+        Update: {
+          approval_id?: string
+          approver_group_id?: string | null
+          assigned_approver_user_id?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          id?: string
+          sla_due_at?: string | null
+          status?: string
+          step_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_approval_steps_approval_id_fkey"
+            columns: ["approval_id"]
+            isOneToOne: false
+            referencedRelation: "action_approvals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "action_approval_steps_approver_group_id_fkey"
+            columns: ["approver_group_id"]
+            isOneToOne: false
+            referencedRelation: "approver_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      action_approvals: {
+        Row: {
+          action_id: string
+          approval_status: string
+          created_at: string
+          current_step_order: number | null
+          decided_at: string | null
+          id: string
+          submitted_at: string
+          submitted_by: string | null
+          updated_at: string
+          workflow_definition_id: string | null
+        }
+        Insert: {
+          action_id: string
+          approval_status?: string
+          created_at?: string
+          current_step_order?: number | null
+          decided_at?: string | null
+          id?: string
+          submitted_at?: string
+          submitted_by?: string | null
+          updated_at?: string
+          workflow_definition_id?: string | null
+        }
+        Update: {
+          action_id?: string
+          approval_status?: string
+          created_at?: string
+          current_step_order?: number | null
+          decided_at?: string | null
+          id?: string
+          submitted_at?: string
+          submitted_by?: string | null
+          updated_at?: string
+          workflow_definition_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_approvals_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "employer_actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "action_approvals_workflow_definition_id_fkey"
+            columns: ["workflow_definition_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_saved_reports: {
         Row: {
           admin_user_id: string
@@ -73,6 +187,82 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      approver_group_members: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          group_id: string
+          id: string
+          is_active: boolean | null
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          group_id: string
+          id?: string
+          is_active?: boolean | null
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          group_id?: string
+          id?: string
+          is_active?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approver_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "approver_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approver_groups: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approver_groups_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       audit_logs: {
         Row: {
@@ -721,6 +911,8 @@ export type Database = {
           description: string | null
           due_date: string | null
           expected_impact: Json | null
+          expected_impact_max_aed: number | null
+          expected_impact_min_aed: number | null
           id: string
           linked_categories: string[] | null
           linked_metrics: string[] | null
@@ -728,12 +920,16 @@ export type Database = {
           organization_id: string
           owner_user_id: string | null
           priority: string | null
+          requires_approval: boolean | null
+          segment_tags: string[] | null
           source_insight: string | null
+          source_page: string | null
           source_ref_id: string | null
           source_type: string | null
           status: string
           title: string
           updated_at: string
+          workflow_definition_id: string | null
         }
         Insert: {
           action_type?: string | null
@@ -747,6 +943,8 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           expected_impact?: Json | null
+          expected_impact_max_aed?: number | null
+          expected_impact_min_aed?: number | null
           id?: string
           linked_categories?: string[] | null
           linked_metrics?: string[] | null
@@ -754,12 +952,16 @@ export type Database = {
           organization_id: string
           owner_user_id?: string | null
           priority?: string | null
+          requires_approval?: boolean | null
+          segment_tags?: string[] | null
           source_insight?: string | null
+          source_page?: string | null
           source_ref_id?: string | null
           source_type?: string | null
           status?: string
           title: string
           updated_at?: string
+          workflow_definition_id?: string | null
         }
         Update: {
           action_type?: string | null
@@ -773,6 +975,8 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           expected_impact?: Json | null
+          expected_impact_max_aed?: number | null
+          expected_impact_min_aed?: number | null
           id?: string
           linked_categories?: string[] | null
           linked_metrics?: string[] | null
@@ -780,12 +984,16 @@ export type Database = {
           organization_id?: string
           owner_user_id?: string | null
           priority?: string | null
+          requires_approval?: boolean | null
+          segment_tags?: string[] | null
           source_insight?: string | null
+          source_page?: string | null
           source_ref_id?: string | null
           source_type?: string | null
           status?: string
           title?: string
           updated_at?: string
+          workflow_definition_id?: string | null
         }
         Relationships: [
           {
@@ -793,6 +1001,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employer_actions_workflow_definition_id_fkey"
+            columns: ["workflow_definition_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_definitions"
             referencedColumns: ["id"]
           },
         ]
@@ -4054,6 +4269,8 @@ export type Database = {
       }
       workflow_steps: {
         Row: {
+          allow_skip: boolean | null
+          approver_group_id: string | null
           assignee_role: string | null
           assignee_type: string
           assignee_user_id: string | null
@@ -4074,6 +4291,8 @@ export type Database = {
           workflow_definition_id: string
         }
         Insert: {
+          allow_skip?: boolean | null
+          approver_group_id?: string | null
           assignee_role?: string | null
           assignee_type?: string
           assignee_user_id?: string | null
@@ -4094,6 +4313,8 @@ export type Database = {
           workflow_definition_id: string
         }
         Update: {
+          allow_skip?: boolean | null
+          approver_group_id?: string | null
           assignee_role?: string | null
           assignee_type?: string
           assignee_user_id?: string | null
@@ -4114,6 +4335,13 @@ export type Database = {
           workflow_definition_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "workflow_steps_approver_group_id_fkey"
+            columns: ["approver_group_id"]
+            isOneToOne: false
+            referencedRelation: "approver_groups"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "workflow_steps_escalation_step_id_fkey"
             columns: ["escalation_step_id"]
@@ -4372,6 +4600,10 @@ export type Database = {
         }
         Returns: Json
       }
+      decide_approval_step: {
+        Args: { p_decision: string; p_note?: string; p_step_id: string }
+        Returns: Json
+      }
       duplicate_policy_version: {
         Args: {
           p_client_request_id?: string
@@ -4526,6 +4758,10 @@ export type Database = {
       }
       revert_policy_to_draft: {
         Args: { p_policy_version_id: string }
+        Returns: Json
+      }
+      submit_action_for_approval: {
+        Args: { p_action_id: string; p_workflow_definition_id: string }
         Returns: Json
       }
       submit_policy_for_approval: {

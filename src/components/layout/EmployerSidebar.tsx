@@ -18,6 +18,8 @@ import {
   AlertTriangle,
   HelpCircle,
   BarChart3,
+  GitBranch,
+  Settings,
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useEmployerViewMode, ViewMode } from '@/contexts/EmployerViewModeContext';
@@ -133,6 +135,7 @@ const execNavigation: NavGroup[] = [
     labelAr: 'الحوكمة والمخاطر',
     items: [
       { label: 'Policy Impact', labelAr: 'تأثير السياسات', path: '/employer/policy-insights', icon: TrendingUp },
+      { label: 'Workflow Settings', labelAr: 'إعدادات سير العمل', path: '/employer/settings/workflows', icon: GitBranch },
     ],
   },
   // F) ECOSYSTEM (optional based on feature flag)
