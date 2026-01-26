@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Target, Plus, Download, LayoutGrid, List, PlayCircle, AlertTriangle, 
-  PauseCircle, DollarSign, Clock, Info, RefreshCw, UserX
+  PauseCircle, DollarSign, Clock, Info, RefreshCw, UserX, CheckCircle2
 } from 'lucide-react';
 import { formatCurrencyAED } from '@/lib/utils';
 import { EmployerGlobalFiltersBar, DataConfidenceBadge, PageConfidenceGate, useDataCoverageMetrics, NarrativeInsights } from '@/components/employer';
@@ -14,13 +15,15 @@ import { ActionCreateModal } from '@/components/employer/ActionCreateModal';
 import { ActionKanbanView } from '@/components/employer/ActionKanbanView';
 import { ActionTableView } from '@/components/employer/ActionTableView';
 import { ActionFilters } from '@/components/employer/ActionFilters';
+import { ActionApprovalsTab } from '@/components/employer/ActionApprovalsTab';
 import { useEmployerActions, type ActionItem, type Status, type Priority, type ActionType, type SourceType, type Confidence } from '@/hooks/useEmployerActions';
+import { useActionApprovals } from '@/hooks/useActionApprovals';
 import { toast } from 'sonner';
 import { format, formatDistanceToNow } from 'date-fns';
 import { MetricEvidenceTrigger, createMetricEvidenceData } from '@/components/shared';
 
 export default function RecommendationsPage() {
-  const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
+  const [activeTab, setActiveTab] = useState<'kanban' | 'table' | 'approvals'>('kanban');
   const [selectedAction, setSelectedAction] = useState<ActionItem | null>(null);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -56,6 +59,8 @@ export default function RecommendationsPage() {
     confidenceFilter,
     ownerFilter,
   });
+
+  const { metrics: approvalMetrics } = useActionApprovals();
   
   const handleOpenDetail = (action: ActionItem) => {
     setSelectedAction(action);
@@ -315,7 +320,7 @@ export default function RecommendationsPage() {
           </Card>
         </div>
         
-        {/* Filters Row */}
+        {/* View Mode Tabs */}
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <ActionFilters
             statusFilter={statusFilter}
@@ -334,28 +339,33 @@ export default function RecommendationsPage() {
             owners={owners}
           />
           
-          <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant={viewMode === 'kanban' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('kanban')}
-            >
-              <LayoutGrid className="h-4 w-4 mr-1" />
-              Kanban
-            </Button>
-            <Button
-              variant={viewMode === 'table' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('table')}
-            >
-              <List className="h-4 w-4 mr-1" />
-              Table
-            </Button>
-          </div>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="shrink-0">
+            <TabsList>
+              <TabsTrigger value="kanban" className="gap-2">
+                <LayoutGrid className="h-4 w-4" />
+                Kanban
+              </TabsTrigger>
+              <TabsTrigger value="table" className="gap-2">
+                <List className="h-4 w-4" />
+                Table
+              </TabsTrigger>
+              <TabsTrigger value="approvals" className="gap-2">
+                <CheckCircle2 className="h-4 w-4" />
+                Approvals
+                {approvalMetrics.pending > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 px-1.5">
+                    {approvalMetrics.pending}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
         
         {/* Workboard */}
-        {viewMode === 'kanban' ? (
+        {activeTab === 'approvals' ? (
+          <ActionApprovalsTab />
+        ) : activeTab === 'kanban' ? (
           <ActionKanbanView
             actions={filteredActions}
             onOpenAction={handleOpenDetail}

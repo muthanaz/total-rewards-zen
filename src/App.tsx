@@ -63,6 +63,8 @@ import KnowledgeCenterPage from "./pages/employer/KnowledgeCenter";
 import RecommendationsPage from "./pages/employer/Recommendations";
 import EmployerDataQualityRules from "./pages/employer/DataQualityRules";
 import EmployerSyncMonitor from "./pages/employer/SyncMonitor";
+import ActionWorkflowsPage from "./pages/employer/settings/ActionWorkflows";
+import ApproverGroupsPage from "./pages/employer/settings/ApproverGroups";
 
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminBenchmarks from "./pages/admin/Benchmarks";
@@ -257,6 +259,8 @@ function AppRoutes() {
         <Route path="recommendations" element={<RecommendationsPage />} />
         <Route path="data-quality/rules" element={<EmployerDataQualityRules />} />
         <Route path="data-quality/sync" element={<EmployerSyncMonitor />} />
+        <Route path="settings/workflows" element={<ActionWorkflowsPage />} />
+        <Route path="settings/approver-groups" element={<ApproverGroupsPage />} />
       </Route>
 
       {/* Admin Routes - Platform owner only */}
