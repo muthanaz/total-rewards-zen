@@ -153,6 +153,7 @@ export type { OptimizationInsight, OptimizationDataForInsights } from './Optimiz
 export { ExecModeProvider, useExecMode } from './ExecModeContext';
 export type { ExecModeType } from './ExecModeContext';
 export { ExecModeToggle } from './ExecModeToggle';
+export { ExecPageHeader } from './ExecPageHeader';
 export { ExecKPIScorecard } from './ExecKPIScorecard';
 export { TopDriversTable } from './TopDriversTable';
 export { OpportunitiesRanking, generateOpportunities } from './OpportunitiesRanking';
