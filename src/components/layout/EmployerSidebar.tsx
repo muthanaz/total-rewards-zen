@@ -152,7 +152,12 @@ function ViewModeToggle() {
 
   const handleModeChange = (mode: ViewMode) => {
     setViewMode(mode);
-    navigate('/employer');
+    // Navigate to appropriate landing page for each mode
+    if (mode === 'operational') {
+      navigate('/employer/claims');
+    } else {
+      navigate('/employer');
+    }
   };
 
   return (
