@@ -1,11 +1,12 @@
 /**
- * Recoverable Value Page (formerly "Zombie Spend" / "Optimization Opportunities")
+ * Recovery Opportunities Page (formerly "Zombie Spend")
  * 
- * Executive-grade analytics page that distinguishes unrealized value by:
- * - Awareness/Engagement
- * - Eligibility
- * - Process Friction
- * - Policy Design
+ * CEO/CFO-grade layout following leading practices:
+ * 1. 4 Core KPIs (Unrealized Value, Est. Recoverable, Top Cause, Quick Wins)
+ * 2. Cause Breakdown + Quick Wins (visual diagnosis)
+ * 3. Recovery Plays (ranked actions)
+ * 
+ * Uses unified metrics from executiveMetricsConstants for cross-page consistency.
  * 
  * @module RecoverableValue
  */
@@ -23,23 +24,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
-  Ghost, Target, ArrowRight,
+  Target, ArrowRight,
   Eye, Play, Clock, CheckCircle2, Pause, CircleDot, Info,
-  Download, Calendar, TrendingUp,
+  Download, Calendar,
 } from 'lucide-react';
 import { 
   EmployerGlobalFiltersBar, 
   DataConfidenceBadge, 
   PageConfidenceGate, 
   useDataCoverageMetrics,
-  ExecPageHeader,
+  CFORecoveryKPIGrid,
 } from '@/components/employer';
 import { 
-  RecoverableValueInsights, 
-  generateRecoverableInsights,
   RecoveryCauseType,
 } from '@/components/employer/RecoverableValueInsights';
-import { RecoverableValueKPIGrid } from '@/components/employer/RecoverableValueKPIGrid';
 import { CauseBreakdownChart, CauseBreakdownData } from '@/components/employer/CauseBreakdownChart';
 import { TopRecoveryPlays, RecoveryPlay } from '@/components/employer/TopRecoveryPlays';
 import { QuickWinsCard, QuickWin } from '@/components/employer/QuickWinsCard';
@@ -48,7 +46,14 @@ import { ZombieCategoryDrawer } from '@/components/employer/ZombieCategoryDrawer
 import { LaunchPlaybookModal } from '@/components/employer/LaunchPlaybookModal';
 import { useZombieSpendData, ROOT_CAUSE_DEFINITIONS, RecoveryPlaybook, CONFIDENCE_FACTORS } from '@/hooks/useZombieSpendData';
 import { usePlaybookRuns, PlaybookRunStatus } from '@/hooks/usePlaybookRuns';
-import { formatCurrencyAED, formatPercent, cn } from '@/lib/utils';
+import { formatCurrencyAED, formatPercent, formatInteger, cn } from '@/lib/utils';
+import { 
+  UTILIZATION_METRICS, 
+  CAUSE_BREAKDOWN, 
+  QUICK_WINS,
+  getTopCause,
+  ORG_BASELINE,
+} from '@/lib/executiveMetricsConstants';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -148,23 +153,14 @@ export default function ZombieSpendPage() {
     return sorted[0]?.cause || 'awareness';
   }, [causeBreakdownData]);
   
-  // Generate cause-mapped insights
-  const insights = useMemo(() => {
-    const awarenessCategories = categories
-      .filter(c => rootCauseToCauseType[c.primaryRootCause] === 'awareness')
-      .map(c => c.name);
-    const awarenessUnused = causeBreakdownData.find(d => d.cause === 'awareness')?.value || 0;
-    
-    return generateRecoverableInsights({
-      awarenessUnused,
-      awarenessCategories,
-      eligibilityRejectRate: 12,
-      frictionMissingDocsRate: 22,
-      frictionAvgApprovalDays: 4.5,
-      policyRejectionCount: 28,
-      policyTopCategory: categories.find(c => c.primaryRootCause === 'policy_constraints')?.name || 'Wellbeing',
-    });
-  }, [categories, causeBreakdownData]);
+  // Use consistent metrics from constants
+  const consistentUnrealizedValue = UTILIZATION_METRICS.unrealizedValue;
+  const consistentRecoverable = UTILIZATION_METRICS.estimatedRecoverable;
+  const consistentTopCause = getTopCause();
+  const consistentTopCausePercent = CAUSE_BREAKDOWN[consistentTopCause].percent;
+  
+  // Quick wins from constants
+  const consistentQuickWins = QUICK_WINS.reduce((sum, w) => sum + w.estimatedRecovery, 0);
   
   // Transform playbooks to recovery plays
   const recoveryPlays = useMemo((): RecoveryPlay[] => {
@@ -240,8 +236,8 @@ export default function ZombieSpendPage() {
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
       <PageLayout
-        title="Recoverable Value"
-        description="Unrealized benefits value and the fastest levers to recover it"
+        title="Recovery Opportunities"
+        description={`FY ${ORG_BASELINE.fiscalYear} · ${formatCurrencyAED(consistentUnrealizedValue, { abbreviate: true })} unrealized · ${formatCurrencyAED(consistentRecoverable, { abbreviate: true })} recoverable`}
         icon={Target}
         iconClassName="bg-success/10 text-success"
         confidenceBadge={<DataConfidenceBadge metrics={coverageMetrics} />}
@@ -267,7 +263,7 @@ export default function ZombieSpendPage() {
             </div>
             <Button variant="outline" size="sm">
               <Calendar className="w-4 h-4 mr-2" />
-              YTD 2024
+              YTD {ORG_BASELINE.fiscalYear}
             </Button>
             <Button variant="outline" size="sm">
               <Download className="w-4 h-4 mr-2" />
@@ -277,24 +273,20 @@ export default function ZombieSpendPage() {
         }
         filters={<EmployerGlobalFiltersBar />}
       >
-        {/* 1. Key Insights (4 max, cause-mapped) */}
-        <RecoverableValueInsights insights={insights} isDemo={true} />
-        
-        {/* 2. KPI Grid (exactly 6 cards) */}
-        <RecoverableValueKPIGrid
+        {/* 1. CFO KPI GRID - 4 Core Metrics First */}
+        <CFORecoveryKPIGrid
           metrics={{
-            unrealizedValue: summaryMetrics.totalUnused,
-            unrealizedRate: summaryMetrics.unusedPercent,
-            estimatedRecoverable: summaryMetrics.estimatedRecoverable,
-            missingDocsRate: 22,
-            medianApprovalDays: 4.5,
-            topCause,
+            unrealizedValue: consistentUnrealizedValue,
+            estimatedRecoverable: consistentRecoverable,
+            topCause: consistentTopCause,
+            topCausePercent: consistentTopCausePercent,
+            quickWinPotential: consistentQuickWins,
+            avgTimeToImpact: '2-4 weeks',
           }}
-          isDemo={true}
           onKPIClick={(kpiId) => toast.info(`Opening ${kpiId} drilldown...`)}
         />
         
-        {/* 3. Top 3 Quick Wins + Cause Breakdown */}
+        {/* 2. Quick Wins + Cause Breakdown (side by side) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <QuickWinsCard 
             wins={quickWins} 
@@ -307,12 +299,12 @@ export default function ZombieSpendPage() {
           />
           <CauseBreakdownChart 
             data={causeBreakdownData} 
-            totalUnrealized={summaryMetrics.totalUnused}
+            totalUnrealized={consistentUnrealizedValue}
             isDemo={true}
           />
         </div>
         
-        {/* 4. Top Recovery Plays (exactly 5) */}
+        {/* 3. Top Recovery Plays (exactly 5) */}
         <TopRecoveryPlays plays={recoveryPlays} isDemo={true} />
         
         {/* 5. Detailed Breakdown Tabs */}

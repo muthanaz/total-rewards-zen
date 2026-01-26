@@ -157,6 +157,7 @@ export { RejectionFrictionPanel } from './RejectionFrictionPanel';
 
 // Optimization Opportunities / Recoverable Value components
 export { OptimizationKPIGrid } from './OptimizationKPIGrid';
+export { CFORecoveryKPIGrid } from './CFORecoveryKPIGrid';
 export { OptimizationInsights, generateOptimizationInsights } from './OptimizationInsights';
 export type { OptimizationInsight, OptimizationDataForInsights } from './OptimizationInsights';
 export { RecoverableValueInsights, generateRecoverableInsights } from './RecoverableValueInsights';
