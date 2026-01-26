@@ -1,190 +1,63 @@
+/**
+ * My Actions Page
+ * 
+ * Unified prioritized action list for employees.
+ * Merges out-of-pocket optimizer actions with task actions.
+ * 
+ * Structure:
+ * 1. Money Snapshot card at top
+ * 2. KPI strip: Reducible Costs, Actions to take, Time estimate
+ * 3. Unified prioritized action list with filters
+ */
+
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   CheckCircle2, Clock, FileText, AlertTriangle, User, Gift,
   ChevronRight, HelpCircle, Zap, Calendar, Home, Heart,
   GraduationCap, Car, Dumbbell, BookOpen, LucideIcon,
-  TrendingDown,
+  Wallet, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { PageLayout } from '@/components/shared/PageLayout';
-import { SectionCard } from '@/components/shared/SectionCard';
-import { ZeroState } from '@/components/shared/ZeroState';
-import { UniversalConfidenceBadge } from '@/components/shared/UniversalConfidenceBadge';
+import { MoneySnapshotCard } from '@/components/employee/MoneySnapshotCard';
+import { ConfidenceBadge } from '@/components/shared/ConfidenceBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useDemoMode } from '@/contexts/DemoModeContext';
 import { cn, formatCurrencyAED } from '@/lib/utils';
+import { 
+  computeOutOfPocketOpportunities,
+  getTimeframeLabel,
+  getConfidenceLabel,
+  getPriorityStyle,
+  getStatusStyle,
+  type OptimizerAction,
+  type ActionPriority,
+} from '@/lib/optimizer/computeOutOfPocketOpportunities';
+import { DEMO_FALLBACKS } from '@/lib/metrics/computations';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-type ActionCategory = 'all' | 'due_soon' | 'missing_docs' | 'profile' | 'eligible' | 'in_review';
-
-interface ActionItem {
-  id: string;
-  title: string;
-  titleAr: string;
-  impact: string;
-  impactAr: string;
-  impactType: 'unlock' | 'avoid' | 'save' | 'due';
-  category: ActionCategory;
-  dueDate?: string;
-  status: 'action_required' | 'in_review' | 'pending';
-  route: string;
-  policyReason: string;
-  policyReasonAr: string;
-  priority: number;
-  icon: LucideIcon;
-}
-
-interface BenefitOpportunity {
-  id: string;
-  name: string;
-  nameAr: string;
-  icon: LucideIcon;
-  eligible: number;
-  used: number;
-  pending: number;
-  route: string;
-}
-
-interface FrictionItem {
-  id: string;
-  count: number;
-  label: string;
-  labelAr: string;
-  route: string;
-  filter?: string;
-}
-
-// ============================================================================
-// DEMO DATA - Would come from hooks/API in production
-// ============================================================================
-
-const demoActions: ActionItem[] = [
-  {
-    id: '1',
-    title: 'Upload missing document',
-    titleAr: 'رفع المستند المفقود',
-    impact: 'Unlocks AED 8,000',
-    impactAr: 'يفتح AED 8,000',
-    impactType: 'unlock',
-    category: 'missing_docs',
-    dueDate: '2026-02-15',
-    status: 'action_required',
-    route: '/employee/requests',
-    policyReason: 'School tuition receipt required per Education Policy §3.2',
-    policyReasonAr: 'إيصال الرسوم المدرسية مطلوب حسب سياسة التعليم §3.2',
-    priority: 100,
-    icon: FileText,
-  },
-  {
-    id: '2',
-    title: 'Complete your profile',
-    titleAr: 'أكمل ملفك الشخصي',
-    impact: 'Avoid rejection',
-    impactAr: 'تجنب الرفض',
-    impactType: 'avoid',
-    category: 'profile',
-    status: 'action_required',
-    route: '/employee/profile',
-    policyReason: 'Emirates ID and emergency contact required for all claims',
-    policyReasonAr: 'الهوية الإماراتية وجهة الاتصال الطارئة مطلوبة لجميع المطالبات',
-    priority: 90,
-    icon: User,
-  },
-  {
-    id: '3',
-    title: 'Submit Q2 schooling claim',
-    titleAr: 'قدم مطالبة التعليم للربع الثاني',
-    impact: 'Unlocks AED 17,000',
-    impactAr: 'يفتح AED 17,000',
-    impactType: 'unlock',
-    category: 'eligible',
-    dueDate: '2026-06-30',
-    status: 'action_required',
-    route: '/employee/schooling',
-    policyReason: 'Education allowance: AED 17,000 remaining this year',
-    policyReasonAr: 'بدل التعليم: AED 17,000 متبقي هذا العام',
-    priority: 80,
-    icon: GraduationCap,
-  },
-  {
-    id: '4',
-    title: 'Claim is waiting for you',
-    titleAr: 'المطالبة بانتظارك',
-    impact: 'Due soon',
-    impactAr: 'موعد قريب',
-    impactType: 'due',
-    category: 'due_soon',
-    dueDate: '2026-01-28',
-    status: 'action_required',
-    route: '/employee/requests',
-    policyReason: 'HR requested additional information for transport claim #TR-2024-089',
-    policyReasonAr: 'طلبت الموارد البشرية معلومات إضافية للمطالبة #TR-2024-089',
-    priority: 95,
-    icon: Clock,
-  },
-  {
-    id: '5',
-    title: "You're eligible — activate gym benefit",
-    titleAr: 'أنت مؤهل — فعّل ميزة النادي',
-    impact: 'Saves AED 2,800',
-    impactAr: 'يوفر AED 2,800',
-    impactType: 'save',
-    category: 'eligible',
-    status: 'action_required',
-    route: '/employee/wellbeing',
-    policyReason: 'Wellbeing budget: AED 2,800 available for gym membership',
-    policyReasonAr: 'ميزانية الرفاهية: AED 2,800 متاحة لعضوية النادي',
-    priority: 60,
-    icon: Dumbbell,
-  },
-  {
-    id: '6',
-    title: 'Learning course reimbursement',
-    titleAr: 'استرداد دورة التعلم',
-    impact: 'In review',
-    impactAr: 'قيد المراجعة',
-    impactType: 'due',
-    category: 'in_review',
-    status: 'in_review',
-    route: '/employee/requests',
-    policyReason: 'Submitted Jan 15, expected decision by Jan 25',
-    policyReasonAr: 'تم التقديم في 15 يناير، القرار المتوقع بحلول 25 يناير',
-    priority: 40,
-    icon: BookOpen,
-  },
-];
-
-const demoBenefitOpportunities: BenefitOpportunity[] = [
-  { id: 'schooling', name: 'Education', nameAr: 'التعليم', icon: GraduationCap, eligible: 60000, used: 35000, pending: 8000, route: '/employee/schooling' },
-  { id: 'learning', name: 'Learning', nameAr: 'التعلم', icon: BookOpen, eligible: 12000, used: 4500, pending: 0, route: '/employee/learning' },
-  { id: 'wellbeing', name: 'Wellbeing', nameAr: 'الرفاهية', icon: Dumbbell, eligible: 6000, used: 3200, pending: 0, route: '/employee/wellbeing' },
-  { id: 'health', name: 'Health', nameAr: 'الصحة', icon: Heart, eligible: 5000, used: 1500, pending: 0, route: '/employee/health' },
-];
-
-const demoFrictionItems: FrictionItem[] = [
-  { id: '1', count: 2, label: 'requests delayed by missing docs', labelAr: 'طلبات متأخرة بسبب مستندات ناقصة', route: '/employee/requests', filter: 'missing_docs' },
-  { id: '2', count: 3, label: 'items blocked by incomplete profile', labelAr: 'عناصر محظورة بسبب ملف غير مكتمل', route: '/employee/profile' },
-  { id: '3', count: 1, label: 'claim rejected recently — tap to learn why', labelAr: 'مطالبة مرفوضة مؤخراً — انقر لمعرفة السبب', route: '/employee/requests', filter: 'rejected' },
-];
+type ActionFilter = 'all' | 'blockers' | 'claims' | 'offers' | 'profile' | 'in_review';
 
 // ============================================================================
 // FILTER TABS
 // ============================================================================
 
-const filterTabs: { id: ActionCategory; label: string; labelAr: string }[] = [
+const filterTabs: { id: ActionFilter; label: string; labelAr: string }[] = [
   { id: 'all', label: 'All', labelAr: 'الكل' },
-  { id: 'due_soon', label: 'Due soon', labelAr: 'قريب' },
-  { id: 'missing_docs', label: 'Missing docs', labelAr: 'مستندات ناقصة' },
-  { id: 'profile', label: 'Profile', labelAr: 'الملف' },
-  { id: 'eligible', label: 'Eligible now', labelAr: 'مؤهل الآن' },
-  { id: 'in_review', label: 'In review', labelAr: 'قيد المراجعة' },
+  { id: 'blockers', label: 'Blocked', labelAr: 'محظور' },
+  { id: 'claims', label: 'Claims', labelAr: 'المطالبات' },
+  { id: 'offers', label: 'Offers', labelAr: 'العروض' },
+  { id: 'profile', label: 'Setup', labelAr: 'الإعداد' },
 ];
+
+const MAX_VISIBLE_ACTIONS = 5;
 
 // ============================================================================
 // COMPONENT
@@ -193,143 +66,224 @@ const filterTabs: { id: ActionCategory; label: string; labelAr: string }[] = [
 export default function MyActions() {
   const navigate = useNavigate();
   const { language, direction } = useLanguage();
+  const { isDemoMode } = useDemoMode();
   const isRTL = direction === 'rtl';
+  const lang = isRTL ? 'ar' : 'en';
   
-  const [activeFilter, setActiveFilter] = useState<ActionCategory>('all');
-  const [visibleCount, setVisibleCount] = useState(5);
+  const [activeFilter, setActiveFilter] = useState<ActionFilter>('all');
+  const [showAll, setShowAll] = useState(false);
+  const hasLinkedBankCards = false;
 
-  // Filter and sort actions
+  // Get optimizer actions and summary
+  const { actions: optimizerActions, summary } = useMemo(() => {
+    return computeOutOfPocketOpportunities(hasLinkedBankCards);
+  }, [hasLinkedBankCards]);
+
+  // Filter actions
   const filteredActions = useMemo(() => {
-    let actions = [...demoActions];
+    if (activeFilter === 'all') return optimizerActions;
     
-    if (activeFilter !== 'all') {
-      actions = actions.filter(a => a.category === activeFilter);
-    }
-    
-    // Sort by priority (higher first)
-    return actions.sort((a, b) => b.priority - a.priority);
-  }, [activeFilter]);
-
-  const displayedActions = filteredActions.slice(0, visibleCount);
-  const hasMore = filteredActions.length > visibleCount;
-
-  // Impact badge styling
-  const getImpactStyle = (type: ActionItem['impactType']) => {
-    switch (type) {
-      case 'unlock': return 'bg-success/10 text-success border-success/20';
-      case 'avoid': return 'bg-destructive/10 text-destructive border-destructive/20';
-      case 'save': return 'bg-accent/10 text-accent border-accent/20';
-      case 'due': return 'bg-warning/10 text-warning border-warning/20';
-    }
-  };
-
-  // Status badge
-  const getStatusStyle = (status: ActionItem['status']) => {
-    switch (status) {
-      case 'action_required': return 'bg-warning/10 text-warning border-warning/20';
-      case 'in_review': return 'bg-info/10 text-info border-info/20';
-      case 'pending': return 'bg-muted text-muted-foreground border-border';
-    }
-  };
-
-  const getStatusLabel = (status: ActionItem['status']) => {
-    if (isRTL) {
-      switch (status) {
-        case 'action_required': return 'إجراء مطلوب';
-        case 'in_review': return 'قيد المراجعة';
-        case 'pending': return 'معلق';
+    return optimizerActions.filter(action => {
+      switch (activeFilter) {
+        case 'blockers':
+          return action.status === 'blocked' || action.priority === 'critical';
+        case 'claims':
+          return action.actionType === 'submit_claim' || action.actionType === 'upload_docs';
+        case 'offers':
+          return action.actionType === 'redeem_offer';
+        case 'profile':
+          return action.actionType === 'link_card' || action.category === 'Setup';
+        case 'in_review':
+          return action.status === 'in_progress';
+        default:
+          return true;
       }
-    }
-    switch (status) {
-      case 'action_required': return 'Action required';
-      case 'in_review': return 'In review';
-      case 'pending': return 'Pending';
-    }
-  };
+    });
+  }, [optimizerActions, activeFilter]);
 
-  // Format due date
-  const formatDueDate = (dateStr?: string) => {
-    if (!dateStr) return null;
-    const date = new Date(dateStr);
-    const now = new Date();
-    const days = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (days < 0) return isRTL ? 'متأخر' : 'Overdue';
-    if (days === 0) return isRTL ? 'اليوم' : 'Today';
-    if (days === 1) return isRTL ? 'غداً' : 'Tomorrow';
-    if (days < 7) return isRTL ? `${days} أيام` : `${days} days`;
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const visibleActions = showAll ? filteredActions : filteredActions.slice(0, MAX_VISIBLE_ACTIONS);
+  const hiddenCount = filteredActions.length - MAX_VISIBLE_ACTIONS;
+
+  // Get filter counts
+  const getFilterCount = (filter: ActionFilter): number => {
+    if (filter === 'all') return optimizerActions.length;
+    return optimizerActions.filter(action => {
+      switch (filter) {
+        case 'blockers':
+          return action.status === 'blocked' || action.priority === 'critical';
+        case 'claims':
+          return action.actionType === 'submit_claim' || action.actionType === 'upload_docs';
+        case 'offers':
+          return action.actionType === 'redeem_offer';
+        case 'profile':
+          return action.actionType === 'link_card' || action.category === 'Setup';
+        case 'in_review':
+          return action.status === 'in_progress';
+        default:
+          return true;
+      }
+    }).length;
   };
 
   return (
     <PageLayout
       title={isRTL ? 'إجراءاتي' : 'My Actions'}
-      description={isRTL ? 'خطوات واضحة لاستخدام مزاياك بسلاسة' : 'Clear next steps to use your benefits smoothly'}
+      description={isRTL ? 'إجراءات ذات أولوية لتقليل تكاليفك' : 'Prioritized actions to reduce your costs'}
       icon={Zap}
       iconClassName="bg-accent/10 text-accent"
     >
-      {/* Optimizer Entry Point */}
-      <Card 
-        className="mb-6 border-accent/20 bg-gradient-to-r from-accent/5 to-transparent hover:from-accent/10 cursor-pointer transition-colors"
-        onClick={() => navigate('/employee/out-of-pocket')}
-      >
-        <CardContent className="p-4">
-          <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
-            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-              <TrendingDown className="w-5 h-5 text-accent" />
-            </div>
-            <div className={cn("flex-1", isRTL && "text-right")}>
-              <h3 className="font-medium text-sm">
-                {isRTL ? 'محسّن التكاليف' : 'Out-of-Pocket Optimizer'}
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                {isRTL ? 'اكتشف طرقًا لتقليل تكاليفك الشهرية' : 'Discover ways to reduce your monthly costs'}
-              </p>
-            </div>
-            <ChevronRight className={cn("w-5 h-5 text-accent", isRTL && "rotate-180")} />
-          </div>
-        </CardContent>
-      </Card>
+      {isDemoMode && (
+        <Badge variant="outline" className="mb-4 text-xs bg-muted/50">Demo</Badge>
+      )}
 
-      {/* A) Action Inbox - Primary Section */}
-      <section className="space-y-4">
-        {/* Filter Tabs */}
-        <div className={cn(
-          "flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide",
-          isRTL && "flex-row-reverse"
-        )}>
-          {filterTabs.map((tab) => {
-            const count = tab.id === 'all' 
-              ? demoActions.length 
-              : demoActions.filter(a => a.category === tab.id).length;
-            
-            return (
-              <Button
-                key={tab.id}
-                variant={activeFilter === tab.id ? 'default' : 'outline'}
-                size="sm"
-                className={cn(
-                  "shrink-0 h-8 text-xs gap-1.5",
-                  activeFilter === tab.id && "bg-accent text-accent-foreground"
-                )}
-                onClick={() => {
-                  setActiveFilter(tab.id);
-                  setVisibleCount(5);
-                }}
-              >
-                {isRTL ? tab.labelAr : tab.label}
-                {count > 0 && (
-                  <Badge variant="secondary" className="h-4 px-1.5 text-[10px] bg-background/20">
-                    {count}
-                  </Badge>
-                )}
-              </Button>
-            );
-          })}
-        </div>
+      {/* Money Snapshot at top */}
+      <div className="mb-6">
+        <MoneySnapshotCard 
+          monthlySalary={DEMO_FALLBACKS.employeeMonthlySalary}
+          isDemo={isDemoMode}
+          isRTL={isRTL}
+          compact
+        />
+      </div>
 
-        {/* Action List */}
-        {displayedActions.length === 0 ? (
+      {/* KPI Strip */}
+      <div className={cn("grid grid-cols-3 gap-4 mb-6", isRTL && "direction-rtl")}>
+        {/* Reducible Costs */}
+        <Card className="border-accent/20 bg-gradient-to-br from-accent/5 to-transparent">
+          <CardContent className="p-4">
+            <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+              <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
+                <Wallet className="w-5 h-5 text-accent" />
+              </div>
+              <div className={cn("flex-1", isRTL && "text-right")}>
+                <p className="text-xs text-muted-foreground">
+                  {isRTL ? 'تكاليف قابلة للتخفيض' : 'Reducible costs'}
+                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-lg font-bold tabular-nums">
+                    {formatCurrencyAED(summary.reducibleCosts)}
+                  </p>
+                  {/* Breakdown popover */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-5 w-5">
+                        <HelpCircle className="w-3.5 h-3.5 text-muted-foreground" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-72" align={isRTL ? 'start' : 'end'}>
+                      <div className={cn("space-y-3", isRTL && "text-right")}>
+                        <p className="font-medium text-xs uppercase text-muted-foreground">
+                          {isRTL ? 'تفصيل التكاليف' : 'Cost Breakdown'}
+                        </p>
+                        <div className="space-y-2">
+                          {summary.reducibleCostsBreakdown.map((item) => (
+                            <div key={item.actionId} className="flex justify-between text-xs">
+                              <span className="text-muted-foreground">{item.label}</span>
+                              <span className="font-medium tabular-nums">
+                                {formatCurrencyAED(item.amount)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground pt-2 border-t">
+                          {getTimeframeLabel(summary.reducibleCostsTimeframe, lang)} • {getConfidenceLabel(summary.reducibleCostsConfidence, lang)}
+                        </p>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <Badge variant="outline" className="text-[10px] px-1 mt-0.5 bg-muted/50">
+                  {getTimeframeLabel(summary.reducibleCostsTimeframe, lang)}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Actions Count */}
+        <Card>
+          <CardContent className="p-4">
+            <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+              <div className={cn(
+                "w-10 h-10 rounded-lg flex items-center justify-center",
+                summary.hasBlockers ? "bg-destructive/10" : "bg-warning/10"
+              )}>
+                {summary.hasBlockers 
+                  ? <AlertTriangle className="w-5 h-5 text-destructive" />
+                  : <Zap className="w-5 h-5 text-warning" />
+                }
+              </div>
+              <div className={cn(isRTL && "text-right")}>
+                <p className="text-xs text-muted-foreground">
+                  {isRTL ? 'إجراءات للتنفيذ' : 'Actions to take'}
+                </p>
+                <p className="text-lg font-bold tabular-nums">{summary.actionCount}</p>
+                {summary.hasBlockers && (
+                  <p className="text-[10px] text-destructive">
+                    {summary.blockerCount} {isRTL ? 'محظورة' : 'blocked'}
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Time Estimate */}
+        <Card>
+          <CardContent className="p-4">
+            <div className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}>
+              <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-info" />
+              </div>
+              <div className={cn(isRTL && "text-right")}>
+                <p className="text-xs text-muted-foreground">
+                  {isRTL ? 'الوقت المقدر' : 'Time to complete'}
+                </p>
+                <p className="text-lg font-bold tabular-nums">
+                  ~{summary.estimatedMinutes} {isRTL ? 'دقيقة' : 'min'}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className={cn(
+        "flex items-center gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide",
+        isRTL && "flex-row-reverse"
+      )}>
+        {filterTabs.map((tab) => {
+          const count = getFilterCount(tab.id);
+          
+          return (
+            <Button
+              key={tab.id}
+              variant={activeFilter === tab.id ? 'default' : 'outline'}
+              size="sm"
+              className={cn(
+                "shrink-0 h-8 text-xs gap-1.5",
+                activeFilter === tab.id && "bg-accent text-accent-foreground"
+              )}
+              onClick={() => {
+                setActiveFilter(tab.id);
+                setShowAll(false);
+              }}
+            >
+              {isRTL ? tab.labelAr : tab.label}
+              {count > 0 && (
+                <Badge variant="secondary" className="h-4 px-1.5 text-[10px] bg-background/20">
+                  {count}
+                </Badge>
+              )}
+            </Button>
+          );
+        })}
+      </div>
+
+      {/* Action List */}
+      <section className="space-y-2">
+        {filteredActions.length === 0 ? (
           <Card className="border-success/20 bg-success/5">
             <CardContent className="p-6">
               <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
@@ -348,106 +302,193 @@ export default function MyActions() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-2">
-            {displayedActions.map((action) => (
-              <Card
-                key={action.id}
-                className={cn(
-                  "border-border/50 hover:border-accent/30 hover:shadow-sm transition-all cursor-pointer group",
-                  action.status === 'action_required' && "border-l-2 border-l-warning"
-                )}
-                onClick={() => navigate(action.route)}
-              >
-                <CardContent className="p-4">
-                  <div className={cn("flex items-start gap-4", isRTL && "flex-row-reverse")}>
-                    {/* Icon */}
-                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                      <action.icon className="w-5 h-5 text-muted-foreground" />
-                    </div>
-                    
-                    {/* Content */}
-                    <div className={cn("flex-1 min-w-0 space-y-1", isRTL && "text-right")}>
-                      <div className={cn("flex items-center gap-2 flex-wrap", isRTL && "flex-row-reverse justify-end")}>
-                        <h3 className="font-medium text-sm">
-                          {isRTL ? action.titleAr : action.title}
-                        </h3>
-                        <Badge variant="outline" className={cn("text-[10px] px-1.5", getImpactStyle(action.impactType))}>
-                          {isRTL ? action.impactAr : action.impact}
-                        </Badge>
-                      </div>
-                      
-                      <div className={cn("flex items-center gap-2 text-xs text-muted-foreground", isRTL && "flex-row-reverse justify-end")}>
-                        <Badge variant="outline" className={cn("text-[10px] px-1.5", getStatusStyle(action.status))}>
-                          {getStatusLabel(action.status)}
-                        </Badge>
-                        {action.dueDate && (
-                          <>
-                            <span>•</span>
-                            <span className={cn(
-                              "flex items-center gap-1",
-                              isRTL && "flex-row-reverse"
-                            )}>
-                              <Calendar className="w-3 h-3" />
-                              {formatDueDate(action.dueDate)}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Actions */}
-                    <div className={cn("flex items-center gap-2 shrink-0", isRTL && "flex-row-reverse")}>
-                      {/* Why? Popover */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <HelpCircle className="w-4 h-4" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-64 text-sm" align={isRTL ? "start" : "end"}>
-                          <p className={cn("text-muted-foreground", isRTL && "text-right")}>
-                            {isRTL ? action.policyReasonAr : action.policyReason}
-                          </p>
-                        </PopoverContent>
-                      </Popover>
-                      
-                      {/* Fix now button */}
-                      <Button
-                        size="sm"
-                        className="h-8 text-xs gap-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(action.route);
-                        }}
-                      >
-                        {isRTL ? 'إصلاح الآن' : 'Fix now'}
-                        <ChevronRight className={cn("w-3 h-3", isRTL && "rotate-180")} />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            
-            {/* Show more */}
-            {hasMore && (
+          <>
+            <div className="space-y-2">
+              {visibleActions.map((action) => (
+                <ActionCard 
+                  key={action.id} 
+                  action={action} 
+                  isRTL={isRTL}
+                  lang={lang}
+                  onNavigate={() => navigate(action.route)}
+                />
+              ))}
+            </div>
+
+            {hiddenCount > 0 && (
               <Button
                 variant="ghost"
-                className="w-full text-muted-foreground hover:text-foreground"
-                onClick={() => setVisibleCount(prev => prev + 5)}
+                className={cn("w-full text-muted-foreground", isRTL && "flex-row-reverse")}
+                onClick={() => setShowAll(!showAll)}
               >
-                {isRTL ? `عرض المزيد (${filteredActions.length - visibleCount} متبقي)` : `Show more (${filteredActions.length - visibleCount} remaining)`}
+                {showAll ? (
+                  <>{isRTL ? 'إخفاء' : 'Show less'} <ChevronUp className="w-4 h-4 ml-1" /></>
+                ) : (
+                  <>{isRTL ? `المزيد (${hiddenCount})` : `Show all (${hiddenCount} more)`} <ChevronDown className="w-4 h-4 ml-1" /></>
+                )}
               </Button>
             )}
-          </div>
+          </>
         )}
       </section>
 
+      {/* Trust footer */}
+      <p className={cn("text-xs text-muted-foreground mt-6 text-center", isRTL && "text-right")}>
+        {isRTL 
+          ? 'الحسابات مبنية على بيانات مزاياك والسياسات الحالية' 
+          : 'Calculations based on your benefit data and current policies'}
+        {isDemoMode && <span className="text-muted-foreground/50"> (Demo)</span>}
+      </p>
     </PageLayout>
+  );
+}
+
+// ============================================================================
+// ACTION CARD COMPONENT
+// ============================================================================
+
+interface ActionCardProps {
+  action: OptimizerAction;
+  isRTL: boolean;
+  lang: 'en' | 'ar';
+  onNavigate: () => void;
+}
+
+function ActionCard({ action, isRTL, lang, onNavigate }: ActionCardProps) {
+  const Icon = action.icon;
+  const priorityStyle = getPriorityStyle(action.priority);
+  const statusStyle = getStatusStyle(action.status);
+
+  const getStatusLabel = () => {
+    const labels = {
+      action_required: { en: 'Action required', ar: 'إجراء مطلوب' },
+      pending: { en: 'Pending', ar: 'معلق' },
+      in_progress: { en: 'In progress', ar: 'قيد التنفيذ' },
+      blocked: { en: 'Blocked', ar: 'محظور' },
+    };
+    return labels[action.status][lang];
+  };
+
+  return (
+    <Card
+      className={cn(
+        "border-border/50 hover:border-accent/30 hover:shadow-sm transition-all cursor-pointer group",
+        action.status === 'blocked' && "border-l-2 border-l-destructive",
+        action.priority === 'critical' && action.status !== 'blocked' && "border-l-2 border-l-warning"
+      )}
+      onClick={onNavigate}
+    >
+      <CardContent className="p-4">
+        <div className={cn("flex items-start gap-4", isRTL && "flex-row-reverse")}>
+          {/* Icon */}
+          <div className={cn(
+            "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
+            action.priority === 'critical' ? 'bg-destructive/10' :
+            action.priority === 'high' ? 'bg-warning/10' :
+            'bg-muted'
+          )}>
+            <Icon className={cn(
+              "w-5 h-5",
+              action.priority === 'critical' ? 'text-destructive' :
+              action.priority === 'high' ? 'text-warning' :
+              'text-muted-foreground'
+            )} />
+          </div>
+          
+          {/* Content */}
+          <div className={cn("flex-1 min-w-0 space-y-1", isRTL && "text-right")}>
+            {/* Title + Impact */}
+            <div className={cn("flex items-center gap-2 flex-wrap", isRTL && "flex-row-reverse justify-end")}>
+              <h3 className="font-medium text-sm">
+                {isRTL ? action.titleAr : action.title}
+              </h3>
+              {action.estimatedImpact !== null && (
+                <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-[10px] px-1.5">
+                  {isRTL ? action.impactLabelAr : action.impactLabel}
+                </Badge>
+              )}
+              {action.isEducational && (
+                <Badge variant="outline" className="bg-info/10 text-info border-info/20 text-[10px] px-1.5">
+                  {action.impactLabel}
+                </Badge>
+              )}
+            </div>
+
+            {/* Why it matters */}
+            <p className="text-xs text-muted-foreground line-clamp-1">
+              {isRTL ? action.whyItMattersAr : action.whyItMatters}
+            </p>
+            
+            {/* Status + Category + Confidence */}
+            <div className={cn("flex items-center gap-2 text-xs text-muted-foreground flex-wrap", isRTL && "flex-row-reverse justify-end")}>
+              <Badge variant="outline" className={cn("text-[10px] px-1.5", statusStyle)}>
+                {getStatusLabel()}
+              </Badge>
+              <Badge variant="outline" className="text-[10px] px-1.5 bg-muted/50">
+                {isRTL ? action.categoryAr : action.category}
+              </Badge>
+              {action.estimatedImpact !== null && (
+                <>
+                  <span>•</span>
+                  <span className="text-[10px]">
+                    {getTimeframeLabel(action.timeframe, lang)} • {getConfidenceLabel(action.confidence, lang)}
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* Prerequisites (if blocked) */}
+            {action.prerequisites && action.prerequisites.length > 0 && (
+              <div className={cn("flex items-center gap-1 text-[10px] text-destructive mt-1", isRTL && "flex-row-reverse")}>
+                <AlertTriangle className="w-3 h-3" />
+                <span>
+                  {isRTL ? 'مطلوب: ' : 'Needs: '}
+                  {(isRTL ? action.prerequisitesAr : action.prerequisites)?.slice(0, 2).join(', ')}
+                  {action.prerequisites.length > 2 && ` +${action.prerequisites.length - 2}`}
+                </span>
+              </div>
+            )}
+          </div>
+          
+          {/* Actions */}
+          <div className={cn("flex items-center gap-2 shrink-0", isRTL && "flex-row-reverse")}>
+            {/* How calculated popover */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <HelpCircle className="w-4 h-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 text-sm" align={isRTL ? "start" : "end"}>
+                <p className={cn("font-medium mb-1 text-xs", isRTL && "text-right")}>
+                  {isRTL ? 'كيف يتم الحساب' : 'How calculated'}
+                </p>
+                <p className={cn("text-muted-foreground text-xs", isRTL && "text-right")}>
+                  {isRTL ? action.howCalculatedAr : action.howCalculated}
+                </p>
+              </PopoverContent>
+            </Popover>
+            
+            {/* CTA button */}
+            <Button
+              size="sm"
+              className="h-8 text-xs gap-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                onNavigate();
+              }}
+            >
+              {isRTL ? action.ctaLabelAr : action.ctaLabel}
+              <ChevronRight className={cn("w-3 h-3", isRTL && "rotate-180")} />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
