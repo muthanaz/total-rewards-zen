@@ -1299,6 +1299,523 @@ export type Database = {
           },
         ]
       }
+      org_business_units: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          head_user_id: string | null
+          id: string
+          is_active: boolean
+          legal_entity_id: string | null
+          name: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          head_user_id?: string | null
+          id?: string
+          is_active?: boolean
+          legal_entity_id?: string | null
+          name: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          head_user_id?: string | null
+          id?: string
+          is_active?: boolean
+          legal_entity_id?: string | null
+          name?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_business_units_legal_entity_id_fkey"
+            columns: ["legal_entity_id"]
+            isOneToOne: false
+            referencedRelation: "org_legal_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_business_units_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_cost_centers: {
+        Row: {
+          budget_amount: number | null
+          budget_currency: string | null
+          business_unit_id: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          id: string
+          is_active: boolean
+          name: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          budget_amount?: number | null
+          budget_currency?: string | null
+          business_unit_id?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          budget_amount?: number | null
+          budget_currency?: string | null
+          business_unit_id?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_cost_centers_business_unit_id_fkey"
+            columns: ["business_unit_id"]
+            isOneToOne: false
+            referencedRelation: "org_business_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_cost_centers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_data_thresholds: {
+        Row: {
+          confidence_degraded_threshold: number | null
+          created_at: string
+          id: string
+          metric_key: string
+          min_coverage_percent: number | null
+          min_sample_size: number
+          notes: string | null
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          confidence_degraded_threshold?: number | null
+          created_at?: string
+          id?: string
+          metric_key: string
+          min_coverage_percent?: number | null
+          min_sample_size?: number
+          notes?: string | null
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          confidence_degraded_threshold?: number | null
+          created_at?: string
+          id?: string
+          metric_key?: string
+          min_coverage_percent?: number | null
+          min_sample_size?: number
+          notes?: string | null
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_data_thresholds_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_departments: {
+        Row: {
+          business_unit_id: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          head_user_id: string | null
+          id: string
+          is_active: boolean
+          name: string
+          organization_id: string
+          parent_department_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_unit_id?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          head_user_id?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          organization_id: string
+          parent_department_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_unit_id?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          head_user_id?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          organization_id?: string
+          parent_department_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_departments_business_unit_id_fkey"
+            columns: ["business_unit_id"]
+            isOneToOne: false
+            referencedRelation: "org_business_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_departments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_departments_parent_department_id_fkey"
+            columns: ["parent_department_id"]
+            isOneToOne: false
+            referencedRelation: "org_departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_employment_types: {
+        Row: {
+          benefits_eligible: boolean
+          code: string
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          id: string
+          is_active: boolean
+          is_full_time: boolean
+          is_permanent: boolean
+          name: string
+          notice_period_days: number | null
+          organization_id: string
+          probation_months: number | null
+          updated_at: string
+        }
+        Insert: {
+          benefits_eligible?: boolean
+          code: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          is_active?: boolean
+          is_full_time?: boolean
+          is_permanent?: boolean
+          name: string
+          notice_period_days?: number | null
+          organization_id: string
+          probation_months?: number | null
+          updated_at?: string
+        }
+        Update: {
+          benefits_eligible?: boolean
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          is_active?: boolean
+          is_full_time?: boolean
+          is_permanent?: boolean
+          name?: string
+          notice_period_days?: number | null
+          organization_id?: string
+          probation_months?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_employment_types_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_grades: {
+        Row: {
+          benefit_tier: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          currency: string | null
+          description: string | null
+          effective_from: string
+          effective_to: string | null
+          id: string
+          is_active: boolean
+          level: number
+          max_salary: number | null
+          min_salary: number | null
+          name: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          benefit_tier?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string | null
+          description?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          is_active?: boolean
+          level?: number
+          max_salary?: number | null
+          min_salary?: number | null
+          name: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          benefit_tier?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string | null
+          description?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          is_active?: boolean
+          level?: number
+          max_salary?: number | null
+          min_salary?: number | null
+          name?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_grades_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_legal_entities: {
+        Row: {
+          code: string
+          country: string | null
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          id: string
+          is_active: boolean
+          name: string
+          organization_id: string
+          registration_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          organization_id: string
+          registration_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          organization_id?: string
+          registration_number?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_legal_entities_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_locations: {
+        Row: {
+          address: string | null
+          city: string | null
+          code: string
+          country: string | null
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          id: string
+          is_active: boolean
+          is_remote: boolean
+          name: string
+          organization_id: string
+          timezone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          code: string
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          is_active?: boolean
+          is_remote?: boolean
+          name: string
+          organization_id: string
+          timezone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          code?: string
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          is_active?: boolean
+          is_remote?: boolean
+          name?: string
+          organization_id?: string
+          timezone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_locations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_permissions: {
+        Row: {
+          created_at: string
+          employer_role: Database["public"]["Enums"]["employer_role_type"]
+          id: string
+          is_allowed: boolean
+          organization_id: string | null
+          permission_key: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          employer_role: Database["public"]["Enums"]["employer_role_type"]
+          id?: string
+          is_allowed?: boolean
+          organization_id?: string | null
+          permission_key: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          employer_role?: Database["public"]["Enums"]["employer_role_type"]
+          id?: string
+          is_allowed?: boolean
+          organization_id?: string | null
+          permission_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_permissions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_policy_governance_settings: {
         Row: {
           approval_sla_days: number | null
@@ -1380,6 +1897,153 @@ export type Database = {
             foreignKeyName: "org_policy_settings_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_role_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          created_at: string
+          employer_role: Database["public"]["Enums"]["employer_role_type"]
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          organization_id: string
+          scope_ref_id: string | null
+          scope_type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          created_at?: string
+          employer_role: Database["public"]["Enums"]["employer_role_type"]
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          organization_id: string
+          scope_ref_id?: string | null
+          scope_type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          created_at?: string
+          employer_role?: Database["public"]["Enums"]["employer_role_type"]
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          organization_id?: string
+          scope_ref_id?: string | null
+          scope_type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_role_assignments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_segment_tags: {
+        Row: {
+          created_at: string
+          display_order: number | null
+          id: string
+          is_active: boolean
+          organization_id: string
+          tag_type: string
+          tag_value: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          is_active?: boolean
+          organization_id: string
+          tag_type: string
+          tag_value: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          is_active?: boolean
+          organization_id?: string
+          tag_type?: string
+          tag_value?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_segment_tags_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_targets: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          fiscal_year: number
+          id: string
+          metric_key: string
+          notes: string | null
+          organization_id: string
+          target_unit: string | null
+          target_value: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          fiscal_year?: number
+          id?: string
+          metric_key: string
+          notes?: string | null
+          organization_id: string
+          target_unit?: string | null
+          target_value: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          fiscal_year?: number
+          id?: string
+          metric_key?: string
+          notes?: string | null
+          organization_id?: string
+          target_unit?: string | null
+          target_value?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_targets_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -1708,6 +2372,7 @@ export type Database = {
           is_deleted: boolean | null
           is_pilot: boolean | null
           organization_id: string | null
+          owner_role: Database["public"]["Enums"]["employer_role_type"] | null
           owner_user_id: string | null
           pilot_end_date: string | null
           pilot_group_ids: string[] | null
@@ -1742,6 +2407,7 @@ export type Database = {
           is_deleted?: boolean | null
           is_pilot?: boolean | null
           organization_id?: string | null
+          owner_role?: Database["public"]["Enums"]["employer_role_type"] | null
           owner_user_id?: string | null
           pilot_end_date?: string | null
           pilot_group_ids?: string[] | null
@@ -1776,6 +2442,7 @@ export type Database = {
           is_deleted?: boolean | null
           is_pilot?: boolean | null
           organization_id?: string | null
+          owner_role?: Database["public"]["Enums"]["employer_role_type"] | null
           owner_user_id?: string | null
           pilot_end_date?: string | null
           pilot_group_ids?: string[] | null
@@ -2654,6 +3321,7 @@ export type Database = {
           compliance_status: string | null
           created_at: string | null
           currency: string | null
+          current_workflow_step_id: string | null
           decision_at: string | null
           department: string | null
           description: string | null
@@ -2695,6 +3363,7 @@ export type Database = {
             | null
           user_id: string
           value_band: string | null
+          workflow_definition_id: string | null
         }
         Insert: {
           amount?: number | null
@@ -2708,6 +3377,7 @@ export type Database = {
           compliance_status?: string | null
           created_at?: string | null
           currency?: string | null
+          current_workflow_step_id?: string | null
           decision_at?: string | null
           department?: string | null
           description?: string | null
@@ -2749,6 +3419,7 @@ export type Database = {
             | null
           user_id: string
           value_band?: string | null
+          workflow_definition_id?: string | null
         }
         Update: {
           amount?: number | null
@@ -2762,6 +3433,7 @@ export type Database = {
           compliance_status?: string | null
           created_at?: string | null
           currency?: string | null
+          current_workflow_step_id?: string | null
           decision_at?: string | null
           department?: string | null
           description?: string | null
@@ -2803,8 +3475,16 @@ export type Database = {
             | null
           user_id?: string
           value_band?: string | null
+          workflow_definition_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "requests_current_workflow_step_id_fkey"
+            columns: ["current_workflow_step_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_steps"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "requests_organization_id_fkey"
             columns: ["organization_id"]
@@ -2838,6 +3518,13 @@ export type Database = {
             columns: ["policy_id"]
             isOneToOne: false
             referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_workflow_definition_id_fkey"
+            columns: ["workflow_definition_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_definitions"
             referencedColumns: ["id"]
           },
         ]
@@ -3243,6 +3930,206 @@ export type Database = {
         }
         Relationships: []
       }
+      workflow_assignments: {
+        Row: {
+          action_notes: string | null
+          action_taken: string | null
+          assigned_at: string
+          assigned_to_user_id: string | null
+          completed_at: string | null
+          created_at: string
+          due_at: string | null
+          id: string
+          is_current: boolean
+          request_id: string
+          updated_at: string
+          workflow_step_id: string
+        }
+        Insert: {
+          action_notes?: string | null
+          action_taken?: string | null
+          assigned_at?: string
+          assigned_to_user_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          is_current?: boolean
+          request_id: string
+          updated_at?: string
+          workflow_step_id: string
+        }
+        Update: {
+          action_notes?: string | null
+          action_taken?: string | null
+          assigned_at?: string
+          assigned_to_user_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          is_current?: boolean
+          request_id?: string
+          updated_at?: string
+          workflow_step_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_assignments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_assignments_workflow_step_id_fkey"
+            columns: ["workflow_step_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_definitions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          enforcement_mode: string
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name: string
+          organization_id: string | null
+          owner_user_id: string | null
+          scope_ref_id: string | null
+          scope_type: string
+          updated_at: string
+          version: number
+          workflow_type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          enforcement_mode?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name: string
+          organization_id?: string | null
+          owner_user_id?: string | null
+          scope_ref_id?: string | null
+          scope_type?: string
+          updated_at?: string
+          version?: number
+          workflow_type: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          enforcement_mode?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name?: string
+          organization_id?: string | null
+          owner_user_id?: string | null
+          scope_ref_id?: string | null
+          scope_type?: string
+          updated_at?: string
+          version?: number
+          workflow_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_definitions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_steps: {
+        Row: {
+          assignee_role: string | null
+          assignee_type: string
+          assignee_user_id: string | null
+          auto_action: string | null
+          auto_condition_json: Json | null
+          conditions_json: Json | null
+          created_at: string
+          description: string | null
+          escalation_after_hours: number | null
+          escalation_step_id: string | null
+          id: string
+          is_active: boolean
+          name: string
+          sla_hours: number | null
+          step_order: number
+          step_type: string
+          updated_at: string
+          workflow_definition_id: string
+        }
+        Insert: {
+          assignee_role?: string | null
+          assignee_type?: string
+          assignee_user_id?: string | null
+          auto_action?: string | null
+          auto_condition_json?: Json | null
+          conditions_json?: Json | null
+          created_at?: string
+          description?: string | null
+          escalation_after_hours?: number | null
+          escalation_step_id?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          sla_hours?: number | null
+          step_order: number
+          step_type?: string
+          updated_at?: string
+          workflow_definition_id: string
+        }
+        Update: {
+          assignee_role?: string | null
+          assignee_type?: string
+          assignee_user_id?: string | null
+          auto_action?: string | null
+          auto_condition_json?: Json | null
+          conditions_json?: Json | null
+          created_at?: string
+          description?: string | null
+          escalation_after_hours?: number | null
+          escalation_step_id?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          sla_hours?: number | null
+          step_order?: number
+          step_type?: string
+          updated_at?: string
+          workflow_definition_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_steps_escalation_step_id_fkey"
+            columns: ["escalation_step_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_steps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_steps_workflow_definition_id_fkey"
+            columns: ["workflow_definition_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       overlapping_policies: {
@@ -3571,6 +4458,10 @@ export type Database = {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
       }
+      has_org_permission: {
+        Args: { _permission_key: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["user_role"]
@@ -3650,6 +4541,14 @@ export type Database = {
         | "growth_career"
         | "wealth_ownership"
         | "wellbeing"
+      employer_role_type:
+        | "executive"
+        | "hr_ops"
+        | "comp_ben"
+        | "finance"
+        | "policy_owner"
+        | "it_admin"
+        | "viewer"
       life_area:
         | "home_living"
         | "family_parenting"
@@ -3809,6 +4708,15 @@ export const Constants = {
         "growth_career",
         "wealth_ownership",
         "wellbeing",
+      ],
+      employer_role_type: [
+        "executive",
+        "hr_ops",
+        "comp_ben",
+        "finance",
+        "policy_owner",
+        "it_admin",
+        "viewer",
       ],
       life_area: [
         "home_living",
