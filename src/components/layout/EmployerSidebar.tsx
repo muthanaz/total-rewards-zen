@@ -51,72 +51,57 @@ interface NavGroup {
   featureFlag?: keyof ReturnType<typeof useFeatureFlags>['flags'];
 }
 
-// HR OPS NAVIGATION
+// ============================================================================
+// NAVIGATION GROUPINGS (3 clear categories per prompt)
+// ============================================================================
+
+// 1. RUN OPERATIONS (HR Ops - day-to-day processing)
 const opsNavigation: NavGroup[] = [
   {
-    id: 'queue',
-    label: 'Queue',
-    labelAr: 'قائمة الانتظار',
+    id: 'run-operations',
+    label: 'Run Operations',
+    labelAr: 'تشغيل العمليات',
     items: [
-      { label: 'Claims & Approvals', labelAr: 'المطالبات والموافقات', path: '/employer/claims', icon: FileCheck },
+      { label: 'Claims Queue', labelAr: 'قائمة المطالبات', path: '/employer/claims', icon: FileCheck },
+      { label: 'Knowledge Center', labelAr: 'مركز المعرفة', path: '/employer/knowledge', icon: HelpCircle },
     ],
   },
   {
-    id: 'policies',
-    label: 'Policies',
-    labelAr: 'السياسات',
+    id: 'improve-policies',
+    label: 'Improve Policies',
+    labelAr: 'تحسين السياسات',
     items: [
       { label: 'Policy Management', labelAr: 'إدارة السياسات', path: '/employer/policies', icon: FileText },
-      { label: 'Policy Insights', labelAr: 'رؤى السياسات', path: '/employer/policy-insights', icon: TrendingUp, badge: 'HR Lead' },
+      { label: 'Policy Insights', labelAr: 'رؤى السياسات', path: '/employer/policy-insights', icon: TrendingUp },
     ],
   },
   {
-    id: 'data',
-    label: 'Data',
-    labelAr: 'البيانات',
+    id: 'data-trust',
+    label: 'Data & Trust',
+    labelAr: 'البيانات والثقة',
     items: [
       { label: 'Integrations', labelAr: 'التكاملات', path: '/employer/integrations', icon: Database },
-      { label: 'Data Quality Rules', labelAr: 'قواعد جودة البيانات', path: '/employer/data-quality/rules', icon: Shield },
+      { label: 'Data Quality', labelAr: 'جودة البيانات', path: '/employer/data-quality/rules', icon: Shield },
       { label: 'Sync Status', labelAr: 'حالة المزامنة', path: '/employer/data-quality/sync', icon: AlertTriangle },
-    ],
-  },
-  {
-    id: 'support',
-    label: 'Support',
-    labelAr: 'الدعم',
-    items: [
-      { label: 'Knowledge Center', labelAr: 'مركز المعرفة', path: '/employer/knowledge', icon: HelpCircle },
     ],
   },
 ];
 
-// EXECUTIVE NAVIGATION
+// 2. EXECUTIVE NAVIGATION (3 clear groupings)
 const execNavigation: NavGroup[] = [
+  // GROUP 1: Optimize Investment (Executive/Finance focus)
   {
-    id: 'overview',
-    label: 'Overview',
-    labelAr: 'نظرة عامة',
+    id: 'optimize-investment',
+    label: 'Optimize Investment',
+    labelAr: 'تحسين الاستثمار',
     items: [
-      { label: 'Executive Dashboard', labelAr: 'لوحة التحكم التنفيذية', path: '/employer', icon: LayoutDashboard },
-    ],
-  },
-  {
-    id: 'spend',
-    label: 'Spend',
-    labelAr: 'الإنفاق',
-    items: [
+      { label: 'Executive Dashboard', labelAr: 'لوحة التحكم', path: '/employer', icon: LayoutDashboard },
       { label: 'Spend & Utilization', labelAr: 'الإنفاق والاستخدام', path: '/employer/spend', icon: DollarSign },
-    ],
-  },
-  {
-    id: 'opportunities',
-    label: 'Opportunities',
-    labelAr: 'الفرص',
-    items: [
-      { label: 'Optimization', labelAr: 'التحسين', path: '/employer/zombie', icon: Lightbulb },
+      { label: 'Unrealized Value', labelAr: 'القيمة غير المحققة', path: '/employer/zombie', icon: Lightbulb },
       { label: 'Segments', labelAr: 'الشرائح', path: '/employer/segments', icon: Users },
     ],
   },
+  // GROUP 2: Action Plan (Track execution)
   {
     id: 'action-plan',
     label: 'Action Plan',
@@ -125,6 +110,7 @@ const execNavigation: NavGroup[] = [
       { label: 'Recommendations', labelAr: 'التوصيات', path: '/employer/recommendations', icon: BarChart3 },
     ],
   },
+  // GROUP 3: Governance (Policy owners/Comp & Ben)
   {
     id: 'governance',
     label: 'Governance',
@@ -133,6 +119,7 @@ const execNavigation: NavGroup[] = [
       { label: 'Policy Impact', labelAr: 'تأثير السياسات', path: '/employer/policy-insights', icon: TrendingUp },
     ],
   },
+  // Ecosystem (optional based on feature flag)
   {
     id: 'ecosystem',
     label: 'Ecosystem',
@@ -142,6 +129,7 @@ const execNavigation: NavGroup[] = [
       { label: 'Marketplace Impact', labelAr: 'تأثير السوق', path: '/employer/marketplace', icon: ShoppingBag },
     ],
   },
+  // Trust (data sources)
   {
     id: 'trust',
     label: 'Trust',
