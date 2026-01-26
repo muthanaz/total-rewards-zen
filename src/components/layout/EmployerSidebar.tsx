@@ -21,7 +21,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useEmployerViewMode, ViewMode } from '@/contexts/EmployerViewModeContext';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { useActionApprovals } from '@/hooks/useActionApprovals';
-import { BoardPackExportButton } from '@/components/employer/BoardPackExportButton';
+
 import {
   SidebarShell,
   SidebarHeader,
@@ -183,7 +183,7 @@ function ViewModeToggle() {
 }
 
 // ============================================================================
-// EXECUTIVE FOOTER WITH BOARD PACK
+// EXECUTIVE FOOTER (Clean - export is in dashboard header)
 // ============================================================================
 
 function ExecSidebarFooter() {
@@ -197,20 +197,8 @@ function ExecSidebarFooter() {
     navigate('/auth');
   };
 
-  // Mock metrics for board pack - in production, fetch from context/API
-  const boardPackMetrics = {
-    totalInvestment: 2450000,
-    utilizationRate: 73,
-    unrealizedValue: 485000,
-    satisfactionScore: 82,
-  };
-
   return (
-    <div className={cn('p-4 border-t border-sidebar-border space-y-3', isRTL && 'text-right')}>
-      {/* Board Pack Export */}
-      <BoardPackExportButton metrics={boardPackMetrics} />
-      
-      {/* Sign Out */}
+    <div className={cn('p-4 border-t border-sidebar-border', isRTL && 'text-right')}>
       <Button
         variant="ghost"
         onClick={handleSignOut}

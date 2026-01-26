@@ -297,18 +297,7 @@ export function ExecutiveDashboard() {
           </div>
         </div>
 
-        {/* 2. EXECUTIVE SUMMARY STRIP */}
-        <ExecSummaryStrip
-          totalInvestment={metrics.totalInvestment}
-          budgetAllocated={budgetAllocated}
-          utilizationRate={metrics.utilizationRate}
-          targetUtilization={metrics.targetUtilization}
-          recoverableValue={unrealizedValue}
-          priorityActionsCount={priorityActionsCount}
-          satisfactionScore={satisfactionScore}
-        />
-
-        {/* 3. DATA VERIFICATION STRIP */}
+        {/* 2. DATA VERIFICATION (minimal line) */}
         <ExecHighlightsStrip
           confidence={confidenceLevel}
           lastSync={coverageMetrics.lastSyncTime}
