@@ -69,7 +69,8 @@ export function AtRiskSegmentsCard({ segments, className }: AtRiskSegmentsCardPr
   const totalAtRiskValue = sortedSegments.reduce((sum, s) => sum + s.unusedEntitlement, 0);
 
   return (
-    <Card className={cn("border-destructive/20", className)}>
+    <Link to="/employer/segments" className="block">
+    <Card className={cn("border-destructive/20 hover:border-destructive/40 transition-colors cursor-pointer", className)}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-display flex items-center gap-2">
@@ -152,13 +153,12 @@ export function AtRiskSegmentsCard({ segments, className }: AtRiskSegmentsCardPr
         })}
 
         {/* View All Link */}
-        <Button variant="ghost" size="sm" className="w-full mt-2" asChild>
-          <Link to="/employer/segments">
-            View all segments
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Link>
+        <Button variant="ghost" size="sm" className="w-full mt-2">
+          View all segments
+          <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </CardContent>
     </Card>
+    </Link>
   );
 }
