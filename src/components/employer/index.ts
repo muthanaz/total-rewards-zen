@@ -6,6 +6,7 @@ export { ActionKanbanView } from './ActionKanbanView';
 export { ActionTableView } from './ActionTableView';
 export { ActionFilters } from './ActionFilters';
 export { HROpsDashboard } from './HROpsDashboard';
+export { PayrollCountdownCard } from './PayrollCountdownCard';
 export { DataQualityBadge, DataConfidenceIndicator } from './DataQualityBadge';
 export { DataConfidenceBadge, useDataCoverageMetrics } from './DataConfidenceBadge';
 export { SegmentMetricDefinitions } from './SegmentMetricDefinitions';

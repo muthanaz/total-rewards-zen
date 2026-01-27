@@ -51,6 +51,10 @@ export interface RequestWithDetails {
   employee_code?: string | null;
   policy_ref?: string | null;
   currency?: string | null;
+  /** Annual or per-transaction cap for this benefit category */
+  cap_limit?: number | null;
+  /** For leave requests, duration in days instead of monetary amount */
+  duration_days?: number | null;
   // Computed fields
   employeeName?: string;
   employeeEmail?: string;
@@ -150,6 +154,8 @@ export function useSharedRequests(options: UseSharedRequestsOptions = {}) {
           submitted_at: reqAny.submitted_at,
           sla_hours: reqAny.sla_hours,
           policy_ref: reqAny.policy_ref,
+          cap_limit: reqAny.cap_limit ?? null,
+          duration_days: reqAny.duration_days ?? null,
           employeeName: profile 
             ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || undefined
             : undefined,
