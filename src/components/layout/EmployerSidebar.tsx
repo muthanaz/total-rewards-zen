@@ -136,7 +136,7 @@ function ExecNavItem({ item, pendingCount }: { item: NavItem; pendingCount: numb
       )}
     >
       <Icon className="w-4 h-4 shrink-0" />
-      <span className={cn('text-sm flex-1', isRTL && 'text-right')}>{displayLabel}</span>
+      <span className={cn('text-sm font-semibold flex-1', isRTL && 'text-right')}>{displayLabel}</span>
       {item.showPendingBadge && pendingCount > 0 && (
         <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-warning text-warning-foreground">
           {pendingCount}
