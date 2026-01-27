@@ -67,6 +67,8 @@ interface ExecKPICardsProps {
     percent: number;
   }>;
   onKPIClick?: (kpiId: string) => void;
+  /** Navigation handler for specific KPI cards (e.g., navigating to spend analysis) */
+  onNavigate?: (path: string) => void;
   className?: string;
 }
 
@@ -93,6 +95,7 @@ export function ExecKPICards({
     { cause: 'Policy Design', percent: 15 },
   ],
   onKPIClick,
+  onNavigate,
   className,
 }: ExecKPICardsProps) {
   const budgetVariance = totalInvestment - budgetAllocated;
@@ -104,7 +107,10 @@ export function ExecKPICards({
     ? unrealizedBreakdown.reduce((a, b) => a.percent > b.percent ? a : b)
     : null;
 
-  const kpis: KPICardData[] = [
+  // Define navigable KPIs
+  const navigableKpis = new Set(['totalInvestment', 'utilizationRate']);
+
+  const kpis: (KPICardData & { navigateTo?: string })[] = [
     {
       id: 'totalInvestment',
       label: 'YTD Total Spend',
@@ -127,6 +133,7 @@ export function ExecKPICards({
           : `${Math.round(variancePercent)}% ${isOverBudget ? 'over' : 'under'} budget`,
         status: variancePercent < 5 ? 'success' : isOverBudget ? 'warning' : 'success',
       },
+      navigateTo: '/employer/spend',
     },
     {
       id: 'utilizationRate',
@@ -148,6 +155,7 @@ export function ExecKPICards({
         value: `${utilizationTarget}%`,
         status: utilizationRate >= utilizationTarget ? 'success' : 'warning',
       },
+      navigateTo: '/employer/spend',
     },
     {
       id: 'unrealizedValue',
@@ -198,14 +206,24 @@ export function ExecKPICards({
         const TrendIcon = kpi.delta > 0 ? TrendingUp : kpi.delta < 0 ? TrendingDown : Minus;
         const trendColor = isGoodMove ? 'text-success' : 'text-destructive';
 
+        const isNavigable = navigableKpis.has(kpi.id);
+
+        const handleClick = () => {
+          if (isNavigable && kpi.navigateTo && onNavigate) {
+            onNavigate(kpi.navigateTo);
+          } else {
+            onKPIClick?.(kpi.id);
+          }
+        };
+
         return (
           <Card 
             key={kpi.id}
             className={cn(
               'border-border/50 transition-all duration-200',
-              onKPIClick && 'cursor-pointer hover:shadow-md hover:border-accent/30'
+              (onKPIClick || isNavigable) && 'cursor-pointer hover:shadow-md hover:border-accent/30'
             )}
-            onClick={() => onKPIClick?.(kpi.id)}
+            onClick={handleClick}
           >
             <CardContent className="p-5">
               {/* Header with icon */}
