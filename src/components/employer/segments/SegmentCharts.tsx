@@ -154,131 +154,52 @@ export function SegmentCharts({ metrics }: SegmentChartsProps) {
             </CardContent>
           </Card>
         </motion.div>
-
-        {/* Budget vs Participation Comparison */}
+        {/* Top 3 Requests - Moved to full width */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
+          className="lg:col-span-1"
         >
-          <Card>
+          <Card className="h-full">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Usage vs Adoption</CardTitle>
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Lightbulb className="h-4 w-4 text-warning" />
+                Top 3 Requests
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6 py-2">
-                {/* Budget Usage Bar */}
+              {metrics.topNeeds.length > 0 ? (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-accent" />
-                      Budget Usage
-                    </span>
-                    <span className="font-semibold tabular-nums">{formatPercent(metrics.budgetUsage)}</span>
-                  </div>
-                  <div className="h-6 bg-muted rounded-md overflow-hidden relative">
-                    <motion.div
-                      className="h-full bg-accent rounded-md"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${metrics.budgetUsage}%` }}
-                      transition={{ duration: 0.5, ease: 'easeOut' }}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center text-xs font-medium">
-                      {formatCurrencyAED(metrics.totalSpend, { abbreviate: true })} / {formatCurrencyAED(metrics.totalBudget, { abbreviate: true })}
+                  {metrics.topNeeds.map((need, index) => (
+                    <div
+                      key={need.need}
+                      className={cn(
+                        "p-2 rounded-lg border text-sm",
+                        index === 0 ? 'bg-accent/10 border-accent/30' : 'bg-muted/50'
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="shrink-0 text-xs">
+                          #{index + 1}
+                        </Badge>
+                        <span className="font-medium truncate">{need.need}</span>
+                        <span className="text-xs text-muted-foreground ml-auto">
+                          {need.count}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-
-                {/* Participation Rate Bar */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2">
-                      <UserCheck className="h-4 w-4 text-success" />
-                      Employee Participation
-                    </span>
-                    <span className="font-semibold tabular-nums">{formatPercent(metrics.participationRate)}</span>
-                  </div>
-                  <div className="h-6 bg-muted rounded-md overflow-hidden relative">
-                    <motion.div
-                      className="h-full bg-success rounded-md"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${metrics.participationRate}%` }}
-                      transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center text-xs font-medium">
-                      {metrics.participatingCount} / {metrics.matches} employees
-                    </div>
-                  </div>
-                </div>
-
-                {/* Gap indicator */}
-                <div className="flex items-center justify-center gap-2 pt-2 border-t border-border/50">
-                  <span className="text-xs text-muted-foreground">Gap:</span>
-                  <Badge 
-                    variant="outline" 
-                    className={cn(
-                      'text-xs',
-                      metrics.behavioralGap === 'high-engagement-low-cost' ? 'bg-success/10 text-success border-success/30' :
-                      metrics.behavioralGap === 'concentrated-spend' ? 'bg-warning/10 text-warning border-warning/30' :
-                      metrics.behavioralGap === 'balanced' ? 'bg-primary/10 text-primary border-primary/30' :
-                      'bg-destructive/10 text-destructive border-destructive/30'
-                    )}
-                  >
-                    {Math.abs(metrics.participationRate - metrics.budgetUsage)}% difference
-                  </Badge>
-                </div>
-              </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No specific requests identified
+                </p>
+              )}
             </CardContent>
           </Card>
         </motion.div>
       </div>
-
-      {/* Top 3 Needs */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Lightbulb className="h-4 w-4 text-warning" />
-              Top 3 Requests (from Claims Data)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {metrics.topNeeds.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {metrics.topNeeds.map((need, index) => (
-                  <div
-                    key={need.need}
-                    className={cn(
-                      "p-3 rounded-lg border",
-                      index === 0 ? 'bg-accent/10 border-accent/30' : 'bg-muted/50'
-                    )}
-                  >
-                    <div className="flex items-start gap-2">
-                      <Badge variant="outline" className="shrink-0">
-                        #{index + 1}
-                      </Badge>
-                      <div>
-                        <p className="text-sm font-medium">{need.need}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {need.count} employees requesting
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No specific requests identified for this segment
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
     </div>
   );
 }
