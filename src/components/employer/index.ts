@@ -7,6 +7,7 @@ export { ActionTableView } from './ActionTableView';
 export { ActionFilters } from './ActionFilters';
 export { HROpsDashboard } from './HROpsDashboard';
 export { UnifiedWorkbench } from './UnifiedWorkbench';
+export { FloatingActionBar } from './FloatingActionBar';
 export { PayrollCountdownCard } from './PayrollCountdownCard';
 export { DataQualityBadge, DataConfidenceIndicator } from './DataQualityBadge';
 export { DataConfidenceBadge, useDataCoverageMetrics } from './DataConfidenceBadge';

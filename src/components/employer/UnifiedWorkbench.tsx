@@ -66,6 +66,7 @@ import { PageConfidenceGate } from '@/components/employer/PageConfidenceGate';
 import { useEmployerPermissions } from '@/hooks/useEmployerPermissions';
 import { ClaimReviewSheet } from '@/components/employer/ClaimReviewSheet';
 import { ClaimsBulkActionsBar } from '@/components/employer/ClaimsBulkActionsBar';
+import { FloatingActionBar } from '@/components/employer/FloatingActionBar';
 import { SLARulesModal } from '@/components/employer/SLARulesModal';
 import { ClaimsQueueCounters } from '@/components/employer/ClaimsQueueCounters';
 import { ClaimsTypeChip } from '@/components/employer/ClaimsTypeChip';
@@ -1233,6 +1234,20 @@ export function UnifiedWorkbench() {
             onSave={(rules) => {
               toast({ title: 'SLA Rules Updated', description: 'Your SLA configuration has been saved.' });
             }}
+          />
+
+          {/* Floating Bulk Action Bar */}
+          <FloatingActionBar
+            selectedIds={selectedForBulk}
+            claimsData={paginatedRequests.map(r => ({ 
+              id: r.id, 
+              status: r.status, 
+              amount: r.amount,
+              employeeName: r.employeeName 
+            }))}
+            onClearSelection={() => setSelectedForBulk([])}
+            onRefresh={refetch}
+            organizationId={organizationId}
           />
         </div>
       </PageConfidenceGate>
