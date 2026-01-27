@@ -14,7 +14,6 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -29,6 +28,7 @@ import {
   Lightbulb,
   TrendingUp,
 } from 'lucide-react';
+import { BudgetStackChart, BudgetStackCell } from '@/components/charts/BudgetStackChart';
 import { formatCurrencyAED, formatPercent, formatInteger, cn } from '@/lib/utils';
 import { calculateUtilization } from '@/lib/crossPortalContract';
 import { 
@@ -166,6 +166,22 @@ function BenefitDrilldownSheet({ isOpen, onClose, benefit }: DrilldownSheetProps
         primary: { label: 'View Recommendations', onClick: () => {} },
       }}
     >
+      {/* Budget Stack Visualization */}
+      <div className="mb-6">
+        <h4 className="text-sm font-medium text-muted-foreground mb-3">Budget Allocation Overview</h4>
+        <BudgetStackChart
+          data={currentData.map(row => ({
+            name: row.name,
+            allocated: row.entitled,
+            utilized: row.spend,
+            runRateProjection: row.spend * 1.2, // Projected based on current run-rate
+          }))}
+          showRunRate={true}
+          barHeight={28}
+        />
+      </div>
+
+      {/* Detailed Table */}
       <Table>
         <TableHeader>
           <TableRow>
@@ -173,7 +189,7 @@ function BenefitDrilldownSheet({ isOpen, onClose, benefit }: DrilldownSheetProps
             <TableHead className="text-right">Total Spend</TableHead>
             <TableHead className="text-right">Cost/Head</TableHead>
             <TableHead className="text-right">Employees</TableHead>
-            <TableHead className="text-right">Utilization</TableHead>
+            <TableHead className="text-right w-[180px]">Budget Stack</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -181,8 +197,8 @@ function BenefitDrilldownSheet({ isOpen, onClose, benefit }: DrilldownSheetProps
           {[...currentData]
             .sort((a, b) => b.spend - a.spend)
             .map((row) => {
-              const rowUtil = calculateUtilization({ allocated: row.entitled, utilized: row.spend });
               const costPerHead = row.employees > 0 ? row.spend / row.employees : 0;
+              const runRateProjection = row.spend * 1.2; // 20% projected increase
               return (
                 <TableRow key={row.name}>
                   <TableCell className="font-medium">{row.name}</TableCell>
@@ -190,12 +206,12 @@ function BenefitDrilldownSheet({ isOpen, onClose, benefit }: DrilldownSheetProps
                   <TableCell className="text-right tabular-nums">{formatCurrencyAED(costPerHead, { abbreviate: true })}</TableCell>
                   <TableCell className="text-right tabular-nums">{formatInteger(row.employees)}</TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Progress value={rowUtil.rate} className="w-16 h-2" />
-                      <span className={rowUtil.rate >= 80 ? 'text-success' : rowUtil.rate >= 60 ? 'text-warning' : 'text-destructive'}>
-                        {formatPercent(rowUtil.rate)}
-                      </span>
-                    </div>
+                    <BudgetStackCell
+                      allocated={row.entitled}
+                      utilized={row.spend}
+                      runRateProjection={runRateProjection}
+                      width={100}
+                    />
                   </TableCell>
                 </TableRow>
               );
