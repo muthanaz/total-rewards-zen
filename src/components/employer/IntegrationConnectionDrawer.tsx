@@ -165,7 +165,7 @@ export function IntegrationConnectionDrawer({
                   {integration.status === 'degraded' && <AlertTriangle className="h-3 w-3 mr-1" />}
                   {integration.status === 'not_connected' && <XCircle className="h-3 w-3 mr-1" />}
                   {integration.status === 'connected' ? 'Connected' : 
-                   integration.status === 'degraded' ? 'Degraded' : 'Not Connected'}
+                   integration.status === 'degraded' ? (integration.statusDetail || 'Degraded') : 'Not Connected'}
                 </Badge>
               </SheetTitle>
               <SheetDescription>Connection details and data mapping</SheetDescription>

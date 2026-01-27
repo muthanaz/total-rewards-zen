@@ -33,6 +33,7 @@ export interface IntegrationSource {
   type: IntegrationType;
   icon: string;
   status: IntegrationStatus;
+  statusDetail?: string; // Specific error descriptor (e.g., "API Latency", "Partial Sync")
   coverage: number;
   lastSync: string | null;
   recordCount: number;
@@ -104,6 +105,7 @@ const SEED_INTEGRATIONS: IntegrationSource[] = [
     type: 'benefits',
     icon: '🎁',
     status: 'degraded',
+    statusDetail: 'Partial Sync',
     coverage: 87,
     lastSync: '3 days ago',
     recordCount: 11200,
@@ -128,6 +130,7 @@ const SEED_INTEGRATIONS: IntegrationSource[] = [
     type: 'claims',
     icon: '📋',
     status: 'degraded',
+    statusDetail: 'API Latency',
     coverage: 65,
     lastSync: '3 days ago',
     recordCount: 45200,

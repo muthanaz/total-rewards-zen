@@ -27,6 +27,7 @@ import {
   Unlink,
   FileSpreadsheet,
   Download,
+  DownloadCloud,
   Lock,
   Zap,
   ArrowLeft,
@@ -368,14 +369,14 @@ export function IntegrationsOpsView() {
     setCsvPreviewData(null);
   };
 
-  const getStatusBadge = (status: IntegrationStatus) => {
+  const getStatusBadge = (status: IntegrationStatus, statusDetail?: string) => {
     switch (status) {
       case 'connected':
         return <Badge className="bg-success/10 text-success border-0 gap-1"><CheckCircle className="w-3 h-3" />Connected</Badge>;
       case 'not_connected':
         return <Badge className="bg-muted text-muted-foreground gap-1"><Unlink className="w-3 h-3" />Not Connected</Badge>;
       case 'degraded':
-        return <Badge className="bg-warning/10 text-warning border-0 gap-1"><AlertTriangle className="w-3 h-3" />Degraded</Badge>;
+        return <Badge className="bg-warning/10 text-warning border-0 gap-1"><AlertTriangle className="w-3 h-3" />{statusDetail || 'Degraded'}</Badge>;
       case 'syncing':
         return <Badge className="bg-primary/10 text-primary border-0 gap-1"><RefreshCw className="w-3 h-3 animate-spin" />Syncing</Badge>;
       default:
@@ -591,7 +592,7 @@ export function IntegrationsOpsView() {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
                           <h3 className="font-semibold">{source.name}</h3>
-                          {getStatusBadge(syncingId === source.id ? 'syncing' : source.status)}
+                          {getStatusBadge(syncingId === source.id ? 'syncing' : source.status, source.statusDetail)}
                           <Badge variant="outline" className={cn(
                             'text-xs',
                             source.status === 'connected' ? 'bg-success/10 text-success border-success/30' : 'bg-warning/10 text-warning border-warning/30'
@@ -676,20 +677,40 @@ export function IntegrationsOpsView() {
 
                         {/* Validation warnings */}
                         {source.validationResults.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {source.validationResults.map((result, idx) => (
-                              <Badge 
-                                key={idx} 
-                                variant="outline" 
-                                className={cn(
-                                  "text-xs",
-                                  result.status === 'error' && 'text-destructive border-destructive/30',
-                                  result.status === 'warning' && 'text-warning border-warning/30'
-                                )}
-                              >
-                                {result.message}
-                              </Badge>
-                            ))}
+                          <div className="flex flex-wrap gap-2 items-center">
+                            {source.validationResults.map((result, idx) => {
+                              const hasMissingRecords = result.message.toLowerCase().includes('missing') && result.recordsAffected && result.recordsAffected > 0;
+                              return (
+                                <div key={idx} className="flex items-center gap-1">
+                                  <Badge 
+                                    variant="outline" 
+                                    className={cn(
+                                      "text-xs",
+                                      result.status === 'error' && 'text-destructive border-destructive/30',
+                                      result.status === 'warning' && 'text-warning border-warning/30'
+                                    )}
+                                  >
+                                    {result.message}
+                                  </Badge>
+                                  {hasMissingRecords && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2 text-xs gap-1 text-muted-foreground hover:text-foreground"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toast.success('Error Log Downloaded', { 
+                                          description: `${result.recordsAffected?.toLocaleString()} records exported to CSV` 
+                                        });
+                                      }}
+                                    >
+                                      <DownloadCloud className="w-3 h-3" />
+                                      Download Error Log
+                                    </Button>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>

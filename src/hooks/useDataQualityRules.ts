@@ -65,9 +65,9 @@ const SEED_RULES: DataQualityRule[] = [
   {
     id: 'rule-003',
     name: 'Missing Grade/Department/Location',
-    description: 'Required fields for benefit eligibility must be populated',
+    description: 'Blocking Issue: Employees without Grade cannot access any benefits.',
     dataSource: 'HRIS',
-    severity: 'high',
+    severity: 'critical',
     status: 'active',
     logic: 'SELECT * FROM employees WHERE grade IS NULL OR department IS NULL OR work_location IS NULL',
     violations: 45,
@@ -167,7 +167,7 @@ const SEED_RULES: DataQualityRule[] = [
 // Sample violations
 const SEED_VIOLATIONS: RuleViolation[] = [
   { id: 'v1', ruleId: 'rule-001', ruleName: 'Missing Employee ID', employee: 'New Hire - John Smith', field: 'employee_id', issue: 'Field is empty', detectedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), severity: 'critical' },
-  { id: 'v2', ruleId: 'rule-003', ruleName: 'Missing Grade/Department/Location', employee: 'Sarah Johnson', field: 'grade', issue: 'Grade not assigned', detectedAt: new Date(Date.now() - 4 * 60 * 60 * 1000), severity: 'high' },
+  { id: 'v2', ruleId: 'rule-003', ruleName: 'Missing Grade/Department/Location', employee: 'Sarah Johnson', field: 'grade', issue: 'Grade not assigned', detectedAt: new Date(Date.now() - 4 * 60 * 60 * 1000), severity: 'critical' },
   { id: 'v3', ruleId: 'rule-004', ruleName: 'Claim Without Policy Reference', record: 'CLM-2024-4521', field: 'policy_ref', issue: 'No policy linked', detectedAt: new Date(Date.now() - 6 * 60 * 60 * 1000), severity: 'high' },
   { id: 'v4', ruleId: 'rule-005', ruleName: 'Claim Amount Exceeds Entitlement', employee: 'Mohammed Hassan', field: 'claim_amount', issue: 'Exceeds remaining by AED 2,500', detectedAt: new Date(Date.now() - 8 * 60 * 60 * 1000), severity: 'high' },
 ];
