@@ -112,6 +112,8 @@ export { DecisionRationaleCard } from './DecisionRationaleCard';
 export { MissingDocsChecklist } from './MissingDocsChecklist';
 export { EmployeeMessagePreview } from './EmployeeMessagePreview';
 export { ClaimAuditLog } from './ClaimAuditLog';
+export { PolicyContextWidget } from './PolicyContextWidget';
+export { QuickActionFooter } from './QuickActionFooter';
 
 // Policy Lifecycle components
 export { PolicyLifecycleBadge, PolicyLifecycleFlow } from './PolicyLifecycleBadge';
