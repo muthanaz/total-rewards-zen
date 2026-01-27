@@ -61,7 +61,7 @@ const unifiedNavigation: NavGroup[] = [
     items: [
       { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/employer', icon: LayoutDashboard },
       { label: 'Investment Analysis', labelAr: 'تحليل الاستثمار', path: '/employer/spend', icon: BarChart3 },
-      { label: 'Employee Segments', labelAr: 'شرائح الموظفين', path: '/employer/segments', icon: PieChart },
+      { label: 'Segments', labelAr: 'الشرائح', path: '/employer/segments', icon: PieChart },
       { label: 'Optimization', labelAr: 'التحسين', path: '/employer/optimization', icon: TrendingUp },
       { label: 'Action Plan', labelAr: 'خطة العمل', path: '/employer/actions', icon: KanbanSquare, showPendingBadge: true },
     ],
@@ -92,7 +92,7 @@ const unifiedNavigation: NavGroup[] = [
 const execNavItems: NavItem[] = [
   { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/employer', icon: LayoutDashboard },
   { label: 'Investment Analysis', labelAr: 'تحليل الاستثمار', path: '/employer/spend', icon: BarChart3 },
-  { label: 'Employee Segments', labelAr: 'شرائح الموظفين', path: '/employer/segments', icon: PieChart },
+  { label: 'Segments', labelAr: 'الشرائح', path: '/employer/segments', icon: PieChart },
   { label: 'Optimization', labelAr: 'التحسين', path: '/employer/optimization', icon: TrendingUp },
   { label: 'Action Plan', labelAr: 'خطة العمل', path: '/employer/actions', icon: KanbanSquare, showPendingBadge: true },
 ];
