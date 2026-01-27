@@ -54,6 +54,7 @@ import EmployerDashboard from "./pages/employer/Dashboard";
 import SpendPage from "./pages/employer/Spend";
 import ZombieSpendPage from "./pages/employer/ZombieSpend";
 import SegmentsPage from "./pages/employer/Segments";
+import BenchmarksPage from "./pages/employer/Benchmarks";
 import ClaimsPage from "./pages/employer/Claims";
 import MarketplaceAnalyticsPage from "./pages/employer/MarketplaceAnalytics";
 import PoliciesPage from "./pages/employer/Policies";
@@ -252,6 +253,7 @@ function AppRoutes() {
         <Route path="zombie" element={<ZombieSpendPage />} />
         <Route path="actions" element={<RecommendationsPage />} />
         <Route path="segments" element={<SegmentsPage />} />
+        <Route path="benchmarks" element={<BenchmarksPage />} />
         <Route path="claims" element={<ClaimsPage />} />
         <Route path="employees" element={<EmployeeDirectoryPage />} />
         <Route path="audit" element={<AuditLogsPage />} />
