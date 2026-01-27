@@ -63,6 +63,8 @@ import KnowledgeCenterPage from "./pages/employer/KnowledgeCenter";
 import RecommendationsPage from "./pages/employer/Recommendations";
 import EmployerDataQualityRules from "./pages/employer/DataQualityRules";
 import EmployerSyncMonitor from "./pages/employer/SyncMonitor";
+import EmployeeDirectoryPage from "./pages/employer/EmployeeDirectory";
+import AuditLogsPage from "./pages/employer/AuditLogs";
 import ActionWorkflowsPage from "./pages/employer/settings/ActionWorkflows";
 import ApproverGroupsPage from "./pages/employer/settings/ApproverGroups";
 
@@ -248,13 +250,18 @@ function AppRoutes() {
       >
         <Route index element={<EmployerDashboard />} />
         <Route path="spend" element={<SpendPage />} />
+        <Route path="optimization" element={<ZombieSpendPage />} />
         <Route path="zombie" element={<ZombieSpendPage />} />
+        <Route path="actions" element={<RecommendationsPage />} />
         <Route path="segments" element={<SegmentsPage />} />
         <Route path="claims" element={<ClaimsPage />} />
+        <Route path="employees" element={<EmployeeDirectoryPage />} />
+        <Route path="audit" element={<AuditLogsPage />} />
         <Route path="marketplace" element={<MarketplaceAnalyticsPage />} />
         <Route path="policies" element={<PoliciesPage />} />
         <Route path="policy-insights" element={<PolicyInsightsPage />} />
         <Route path="integrations" element={<IntegrationsPage />} />
+        <Route path="data-quality" element={<EmployerDataQualityRules />} />
         <Route path="knowledge" element={<KnowledgeCenterPage />} />
         <Route path="recommendations" element={<RecommendationsPage />} />
         <Route path="data-quality/rules" element={<EmployerDataQualityRules />} />
