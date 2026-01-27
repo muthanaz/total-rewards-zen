@@ -1,14 +1,15 @@
 /**
- * Optimization Opportunities Page (formerly "Zombie Spend")
+ * Strategic Decision Support Page (formerly "Optimization Opportunities")
  * 
- * CFO-grade layout with financial reality alignment:
- * 1. 4 Core KPIs (Unrealized Value, Value Opportunity, Top Cause, Quick Wins)
- * 2. Savings Funnel + Cause Breakdown (visual diagnosis)
- * 3. Split table: Hard Savings vs Value Realization
+ * Three executive-focused tabs that guide strategic budget decisions:
  * 
- * Uses unified metrics from executiveMetricsConstants for cross-page consistency.
+ * Tab 1: "Cost Efficiency" (CFO View) - Hard financial waste recovery
+ * Tab 2: "Value Activation" (CHRO View) - Low adoption awareness campaigns
+ * Tab 3: "Portfolio Rebalancing" (CEO View) - Moving idle money to high-demand areas
  * 
- * @module OptimizationOpportunities
+ * Uses enterprise-grade language without false retention promises.
+ * 
+ * @module StrategicDecisionSupport
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -16,17 +17,17 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Target, ArrowRight,
-  Eye, Play, Clock, CheckCircle2, Pause, CircleDot, Info,
-  Download, Calendar,
+  Download, Calendar, Info,
+  Wallet, Users, Scale,
+  TrendingUp,
+  CircleDollarSign,
 } from 'lucide-react';
 import { 
   EmployerGlobalFiltersBar, 
@@ -35,19 +36,14 @@ import {
   useDataCoverageMetrics,
   CFORecoveryKPIGrid,
 } from '@/components/employer';
-import { 
-  RecoveryCauseType,
-} from '@/components/employer/RecoverableValueInsights';
-import { CauseBreakdownChart, CauseBreakdownData } from '@/components/employer/CauseBreakdownChart';
 import { SavingsFunnel } from '@/components/employer/SavingsFunnel';
-import { OptimizationOpportunitiesTable, OptimizationOpportunity } from '@/components/employer/OptimizationOpportunitiesTable';
 import { CreateActionModal, OpportunityData } from '@/components/employer/CreateActionModal';
 import { PageLayout } from '@/components/shared';
 import { ZombieCategoryDrawer } from '@/components/employer/ZombieCategoryDrawer';
 import { LaunchPlaybookModal } from '@/components/employer/LaunchPlaybookModal';
-import { useZombieSpendData, ROOT_CAUSE_DEFINITIONS, RecoveryPlaybook, CONFIDENCE_FACTORS } from '@/hooks/useZombieSpendData';
-import { usePlaybookRuns, PlaybookRunStatus } from '@/hooks/usePlaybookRuns';
-import { formatCurrencyAED, formatPercent, formatInteger, cn } from '@/lib/utils';
+import { useZombieSpendData, RecoveryPlaybook } from '@/hooks/useZombieSpendData';
+import { usePlaybookRuns } from '@/hooks/usePlaybookRuns';
+import { formatCurrencyAED, cn } from '@/lib/utils';
 import { 
   UTILIZATION_METRICS, 
   CAUSE_BREAKDOWN, 
@@ -55,32 +51,19 @@ import {
   getTopCause,
   ORG_BASELINE,
 } from '@/lib/executiveMetricsConstants';
-import { format } from 'date-fns';
 import { toast } from 'sonner';
 
-// ============= STATUS CONFIG =============
-
-const confidenceBadgeStyles = {
-  high: 'bg-success/10 text-success border-success/30',
-  medium: 'bg-warning/10 text-warning border-warning/30',
-  low: 'bg-destructive/10 text-destructive border-destructive/30',
-};
-
-const runStatusConfig: Record<PlaybookRunStatus, { label: string; icon: typeof CircleDot; color: string }> = {
-  draft: { label: 'Draft', icon: CircleDot, color: 'text-muted-foreground' },
-  active: { label: 'Active', icon: Play, color: 'text-info' },
-  completed: { label: 'Completed', icon: CheckCircle2, color: 'text-success' },
-  paused: { label: 'Paused', icon: Pause, color: 'text-warning' },
-};
-
-// Map root causes to our 4 cause types
-const rootCauseToCauseType: Record<string, RecoveryCauseType> = {
-  awareness: 'awareness',
-  timing_mismatch: 'awareness',
-  process_friction: 'friction',
-  policy_constraints: 'policy',
-  vendor_access: 'eligibility',
-};
+// Import new strategic tab components
+import {
+  CostEfficiencyTab,
+  ValueActivationTab,
+  PortfolioRebalancingTab,
+  getStrategicOptimizationData,
+  CostEfficiencyItem,
+  ValueActivationItem,
+  PortfolioRebalanceItem,
+  StrategicTabType,
+} from '@/components/employer/optimization';
 
 // ============= MAIN COMPONENT =============
 
@@ -95,7 +78,6 @@ export default function ZombieSpendPage() {
     selectedCategory,
     drawerOpen,
     showHighConfidenceOnly,
-    summaryMetrics,
     playbooks,
     setShowHighConfidenceOnly,
     openCategoryDrawer,
@@ -104,14 +86,12 @@ export default function ZombieSpendPage() {
   } = useZombieSpendData();
   
   const {
-    runs: playbookRuns,
     launchPlaybook,
-    updateRunStatus,
   } = usePlaybookRuns();
   
   const [launchModalOpen, setLaunchModalOpen] = useState(false);
   const [selectedPlaybook, setSelectedPlaybook] = useState<RecoveryPlaybook | null>(null);
-  const [activeTab, setActiveTab] = useState('opportunities');
+  const [activeTab, setActiveTab] = useState<StrategicTabType>('cost_efficiency');
   
   // Action modal state
   const [actionModalOpen, setActionModalOpen] = useState(false);
@@ -119,6 +99,11 @@ export default function ZombieSpendPage() {
   
   // Handle URL params for deep linking
   useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['cost_efficiency', 'value_activation', 'portfolio_rebalancing'].includes(tabParam)) {
+      setActiveTab(tabParam as StrategicTabType);
+    }
+    
     const categoryParam = searchParams.get('category');
     if (categoryParam) {
       const cat = allCategories.find(c => c.id === categoryParam || c.name === categoryParam);
@@ -128,35 +113,8 @@ export default function ZombieSpendPage() {
     }
   }, [searchParams, allCategories]);
   
-  // Calculate cause breakdown data
-  const causeBreakdownData = useMemo((): CauseBreakdownData[] => {
-    const causeTotals: Record<RecoveryCauseType, number> = {
-      awareness: 0,
-      eligibility: 0,
-      friction: 0,
-      policy: 0,
-    };
-    
-    categories.forEach(cat => {
-      const causeType = rootCauseToCauseType[cat.primaryRootCause] || 'policy';
-      causeTotals[causeType] += cat.unusedEntitlement;
-    });
-    
-    const total = Object.values(causeTotals).reduce((sum, v) => sum + v, 0);
-    
-    return [
-      { cause: 'awareness', label: 'Awareness', value: causeTotals.awareness, percent: total > 0 ? (causeTotals.awareness / total) * 100 : 0 },
-      { cause: 'eligibility', label: 'Eligibility', value: causeTotals.eligibility, percent: total > 0 ? (causeTotals.eligibility / total) * 100 : 0 },
-      { cause: 'friction', label: 'Friction', value: causeTotals.friction, percent: total > 0 ? (causeTotals.friction / total) * 100 : 0 },
-      { cause: 'policy', label: 'Policy', value: causeTotals.policy, percent: total > 0 ? (causeTotals.policy / total) * 100 : 0 },
-    ];
-  }, [categories]);
-  
-  // Determine top cause
-  const topCause = useMemo((): RecoveryCauseType => {
-    const sorted = [...causeBreakdownData].sort((a, b) => b.value - a.value);
-    return sorted[0]?.cause || 'awareness';
-  }, [causeBreakdownData]);
+  // Get strategic optimization data
+  const strategicData = useMemo(() => getStrategicOptimizationData(), []);
   
   // Use consistent metrics from constants
   const consistentUnrealizedValue = UTILIZATION_METRICS.unrealizedValue;
@@ -168,56 +126,58 @@ export default function ZombieSpendPage() {
   const consistentQuickWins = QUICK_WINS.reduce((sum, w) => sum + w.estimatedRecovery, 0);
   
   // Savings funnel values (demo)
-  const inActionPlanValue = consistentRecoverable * 0.35; // 35% in active action plans
-  const realizedValue = consistentRecoverable * 0.12; // 12% already realized
+  const inActionPlanValue = consistentRecoverable * 0.35;
+  const realizedValue = consistentRecoverable * 0.12;
 
-  // Transform categories to optimization opportunities
-  const opportunities = useMemo((): OptimizationOpportunity[] => {
-    // Define which categories are "hard savings" vs "value realization"
-    const hardSavingsCategories = ['Insurance', 'Transport', 'Utilities'];
-    
-    return categories.map(cat => {
-      const causeType = rootCauseToCauseType[cat.primaryRootCause] || 'policy';
-      const rootCauseDef = ROOT_CAUSE_DEFINITIONS[cat.primaryRootCause];
-      const isHardSavings = hardSavingsCategories.some(hc => 
-        cat.name.toLowerCase().includes(hc.toLowerCase())
-      ) || cat.primaryRootCause === 'vendor_access';
-      
-      return {
-        id: cat.id,
-        name: cat.name,
-        category: cat.name,
-        valueOpportunity: cat.unusedEntitlement * CONFIDENCE_FACTORS[cat.confidence],
-        utilization: cat.utilizationRate,
-        rootCause: cat.primaryRootCause,
-        rootCauseLabel: rootCauseDef.label,
-        rootCauseColor: rootCauseDef.color,
-        effort: causeType === 'awareness' ? 'low' : causeType === 'friction' ? 'medium' : 'high',
-        timeToImpact: causeType === 'awareness' ? '2-4 weeks' : causeType === 'friction' ? '4-8 weeks' : '8-12 weeks',
-        type: isHardSavings ? 'hard_savings' : 'value_realization',
-        confidence: cat.confidence,
-      } as OptimizationOpportunity;
-    });
-  }, [categories]);
+  // Calculate total opportunity across all tabs
+  const totalOpportunity = 
+    strategicData.costEfficiency.totalRecoverable +
+    strategicData.valueActivation.totalUnutilized +
+    strategicData.portfolioRebalancing.totalReallocationPotential;
 
-  // Handle Take Action button
-  const handleTakeAction = (opp: OptimizationOpportunity) => {
+  // Handle Cost Efficiency action
+  const handleInitiateRecovery = (item: CostEfficiencyItem) => {
     setSelectedOpportunity({
-      id: opp.id,
-      title: opp.name,
-      category: opp.category,
-      type: opp.type,
-      valueOpportunity: opp.valueOpportunity,
-      rootCause: opp.rootCauseLabel,
-      effort: opp.effort,
-      timeToImpact: opp.timeToImpact,
+      id: item.id,
+      title: `Recover: ${item.issue}`,
+      category: item.category,
+      type: 'hard_savings',
+      valueOpportunity: item.recoveryAmount,
+      rootCause: item.issueType,
+      effort: 'medium',
+      timeToImpact: '2-4 weeks',
     });
     setActionModalOpen(true);
   };
 
-  // Handle View Details
-  const handleViewDetails = (opp: OptimizationOpportunity) => {
-    openCategoryDrawer(opp.id);
+  // Handle Value Activation action
+  const handleLaunchCampaign = (item: ValueActivationItem) => {
+    setSelectedOpportunity({
+      id: item.id,
+      title: `Awareness Campaign: ${item.benefitName}`,
+      category: item.category,
+      type: 'value_realization',
+      valueOpportunity: item.unutilizedValue,
+      rootCause: 'awareness',
+      effort: 'low',
+      timeToImpact: '4-6 weeks',
+    });
+    setActionModalOpen(true);
+  };
+
+  // Handle Portfolio Rebalancing action
+  const handleEvaluatePolicyShift = (item: PortfolioRebalanceItem) => {
+    setSelectedOpportunity({
+      id: item.id,
+      title: `Policy Shift: ${item.sourceCategory} → ${item.suggestedTarget}`,
+      category: item.sourceCategory,
+      type: 'value_realization',
+      valueOpportunity: item.reallocationAmount,
+      rootCause: 'policy',
+      effort: 'high',
+      timeToImpact: '8-12 weeks',
+    });
+    setActionModalOpen(true);
   };
 
   // Handle action creation
@@ -230,25 +190,14 @@ export default function ZombieSpendPage() {
     expectedImpact: number;
     opportunityId: string;
   }) => {
-    // In a real app, this would save to the database
     console.log('Creating action:', actionData);
-    // Navigate to recommendations page with prefilled data
-    navigate(`/employer/recommendations?action=new&opportunityId=${actionData.opportunityId}`);
-  };
-  
-  const handleOpenPlaybook = (playbook: RecoveryPlaybook) => {
-    setSelectedPlaybook(playbook);
-    setLaunchModalOpen(true);
+    navigate(`/employer/actions?action=new&opportunityId=${actionData.opportunityId}`);
   };
   
   const handleLaunchFromDrawer = (playbook: RecoveryPlaybook) => {
     setSelectedPlaybook(playbook);
     closeCategoryDrawer();
     setTimeout(() => setLaunchModalOpen(true), 200);
-  };
-  
-  const handleLaunchComplete = () => {
-    setActiveTab('runs');
   };
   
   const handleLaunch = async (params: {
@@ -270,8 +219,8 @@ export default function ZombieSpendPage() {
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
       <PageLayout
-        title="Optimization Opportunities"
-        description={`FY ${ORG_BASELINE.fiscalYear} · ${formatCurrencyAED(consistentUnrealizedValue, { abbreviate: true })} unrealized · ${formatCurrencyAED(consistentRecoverable, { abbreviate: true })} recoverable`}
+        title="Strategic Decision Support"
+        description={`FY ${ORG_BASELINE.fiscalYear} · ${formatCurrencyAED(totalOpportunity, { abbreviate: true })} total optimization potential`}
         icon={Target}
         iconClassName="bg-success/10 text-success"
         confidenceBadge={<DataConfidenceBadge metrics={coverageMetrics} />}
@@ -291,7 +240,7 @@ export default function ZombieSpendPage() {
                   <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Filters to High confidence categories only.</p>
+                  <p>Filters to High confidence items only.</p>
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -320,259 +269,128 @@ export default function ZombieSpendPage() {
           onKPIClick={(kpiId) => toast.info(`Opening ${kpiId} drilldown...`)}
         />
         
-        {/* 2. Savings Funnel + Cause Breakdown (side by side) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <SavingsFunnel 
-            identifiedValue={consistentRecoverable}
-            inActionPlanValue={inActionPlanValue}
-            realizedValue={realizedValue}
-          />
-          <CauseBreakdownChart 
-            data={causeBreakdownData} 
-            totalUnrealized={consistentUnrealizedValue}
-            isDemo={true}
-          />
-        </div>
-        
-        {/* 3. Split Opportunities Table */}
-        <OptimizationOpportunitiesTable 
-          opportunities={opportunities}
-          onViewDetails={handleViewDetails}
-          onTakeAction={handleTakeAction}
+        {/* 2. Savings Funnel - Progress Visualization */}
+        <SavingsFunnel 
+          identifiedValue={consistentRecoverable}
+          inActionPlanValue={inActionPlanValue}
+          realizedValue={realizedValue}
         />
         
-        {/* 4. Active Runs Tab */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="opportunities">Opportunities Summary</TabsTrigger>
-            <TabsTrigger value="runs">
-              Active Runs {playbookRuns.length > 0 && `(${playbookRuns.length})`}
-            </TabsTrigger>
-          </TabsList>
-          
-          {/* Opportunities Summary Tab */}
-          <TabsContent value="opportunities" className="mt-6">
-            <Card>
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      Detailed Category Breakdown
-                      <InfoTooltip 
-                        formula="Entitled Value - Claimed Amount" 
-                        dataSource="benefit_entitlements + requests" 
-                      />
-                    </CardTitle>
-                    <CardDescription>
-                      Click "View details" to see root-cause analysis and recovery options
-                    </CardDescription>
-                  </div>
-                  <Badge variant="secondary">
-                    {categories.length} categories
+        {/* 3. Strategic Decision Tabs */}
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  Strategic Decision Framework
+                  <InfoTooltip 
+                    formula="Three executive lenses for budget optimization" 
+                    dataSource="Policy rules + Claims + Demand analysis" 
+                  />
+                </CardTitle>
+                <CardDescription>
+                  Three perspectives for strategic budget decisions
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="gap-1">
+                  <CircleDollarSign className="h-3 w-3" />
+                  {formatCurrencyAED(totalOpportunity, { abbreviate: true })} Total Opportunity
+                </Badge>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as StrategicTabType)}>
+              <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsTrigger value="cost_efficiency" className="gap-2">
+                  <Wallet className="h-4 w-4" />
+                  <span className="hidden sm:inline">Cost Efficiency</span>
+                  <span className="sm:hidden">CFO</span>
+                  <Badge variant="secondary" className="ml-1 text-xs hidden md:flex">
+                    {formatCurrencyAED(strategicData.costEfficiency.totalRecoverable, { abbreviate: true })}
                   </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-lg border overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/30">
-                        <TableHead>Benefit Type</TableHead>
-                        <TableHead className="text-right">Allocated</TableHead>
-                        <TableHead className="text-right">Claimed</TableHead>
-                        <TableHead className="text-right">Value Opportunity</TableHead>
-                        <TableHead className="text-right">Utilization</TableHead>
-                        <TableHead>Root Cause</TableHead>
-                        <TableHead className="text-right">Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {categories.map((cat) => {
-                        const RootCauseIcon = ROOT_CAUSE_DEFINITIONS[cat.primaryRootCause].icon;
-                        const isLowConfidence = cat.confidence === 'low';
-                        
-                        return (
-                          <TableRow 
-                            key={cat.id} 
-                            className={cn(
-                              "hover:bg-muted/30 cursor-pointer",
-                              showHighConfidenceOnly && isLowConfidence && "opacity-50"
-                            )}
-                            onClick={() => openCategoryDrawer(cat.id)}
-                          >
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">{cat.name}</span>
-                                <Badge variant="outline" className={cn("text-[10px]", confidenceBadgeStyles[cat.confidence])}>
-                                  {cat.confidence}
-                                </Badge>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {formatCurrencyAED(cat.allocatedBudget, { abbreviate: true })}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {formatCurrencyAED(cat.claimedAmount, { abbreviate: true })}
-                            </TableCell>
-                            <TableCell className="text-right font-medium text-success">
-                              {formatCurrencyAED(cat.unusedEntitlement * CONFIDENCE_FACTORS[cat.confidence], { abbreviate: true })}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex items-center justify-end gap-2">
-                                <span className={cn(
-                                  cat.utilizationRate >= 75 ? 'text-success' :
-                                  cat.utilizationRate >= 50 ? 'text-foreground' :
-                                  'text-warning'
-                                )}>
-                                  {formatPercent(cat.utilizationRate)}
-                                </span>
-                                <Progress value={cat.utilizationRate} className="h-1 w-12" />
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1">
-                                <RootCauseIcon 
-                                  className={cn('h-4 w-4', ROOT_CAUSE_DEFINITIONS[cat.primaryRootCause].color)} 
-                                />
-                                <span className="text-xs text-muted-foreground">
-                                  {ROOT_CAUSE_DEFINITIONS[cat.primaryRootCause].label}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openCategoryDrawer(cat.id);
-                                }}
-                                className="gap-1"
-                              >
-                                <Eye className="h-3 w-3" />
-                                View
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {/* Active Runs Tab */}
-          <TabsContent value="runs" className="mt-6">
-            {playbookRuns.length === 0 ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <Target className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                  <h3 className="font-semibold mb-2">No Active Recovery Runs</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Create an action from the Recovery Plays above to start tracking
-                  </p>
-                  <Button onClick={() => navigate('/employer/recommendations')}>
-                    View Action Plan
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Recovery Runs</CardTitle>
-                  <CardDescription>
-                    Track launched recovery initiatives
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="rounded-lg border overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/30">
-                          <TableHead>Play</TableHead>
-                          <TableHead>Category</TableHead>
-                          <TableHead>Owner</TableHead>
-                          <TableHead>Due Date</TableHead>
-                          <TableHead className="text-right">Expected Impact</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {playbookRuns.map((run) => {
-                          const playbook = playbooks.find(p => p.id === run.playbookType);
-                          const StatusIcon = runStatusConfig[run.status].icon;
-                          
-                          return (
-                            <TableRow key={run.id}>
-                              <TableCell className="font-medium">
-                                {playbook?.title || run.playbookType}
-                              </TableCell>
-                              <TableCell>{run.category}</TableCell>
-                              <TableCell>{run.owner}</TableCell>
-                              <TableCell>{format(new Date(run.dueDate), 'MMM d, yyyy')}</TableCell>
-                              <TableCell className="text-right text-success font-medium">
-                                {formatCurrencyAED(run.expectedImpactAed)}
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className={runStatusConfig[run.status].color}>
-                                  <StatusIcon className="h-3 w-3 mr-1" />
-                                  {runStatusConfig[run.status].label}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex items-center justify-end gap-1">
-                                  {run.status === 'draft' && (
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm"
-                                      onClick={() => updateRunStatus(run.id, 'active')}
-                                    >
-                                      Start
-                                    </Button>
-                                  )}
-                                  {run.status === 'active' && (
-                                    <>
-                                      <Button 
-                                        variant="ghost" 
-                                        size="sm"
-                                        onClick={() => updateRunStatus(run.id, 'paused')}
-                                      >
-                                        Pause
-                                      </Button>
-                                      <Button 
-                                        variant="ghost" 
-                                        size="sm"
-                                        onClick={() => updateRunStatus(run.id, 'completed')}
-                                      >
-                                        Complete
-                                      </Button>
-                                    </>
-                                  )}
-                                  {run.status === 'paused' && (
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm"
-                                      onClick={() => updateRunStatus(run.id, 'active')}
-                                    >
-                                      Resume
-                                    </Button>
-                                  )}
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
+                </TabsTrigger>
+                <TabsTrigger value="value_activation" className="gap-2">
+                  <Users className="h-4 w-4" />
+                  <span className="hidden sm:inline">Value Activation</span>
+                  <span className="sm:hidden">CHRO</span>
+                  <Badge variant="secondary" className="ml-1 text-xs hidden md:flex">
+                    {strategicData.valueActivation.benefitCount} benefits
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger value="portfolio_rebalancing" className="gap-2">
+                  <Scale className="h-4 w-4" />
+                  <span className="hidden sm:inline">Portfolio Rebalancing</span>
+                  <span className="sm:hidden">CEO</span>
+                  <Badge variant="secondary" className="ml-1 text-xs hidden md:flex">
+                    {formatCurrencyAED(strategicData.portfolioRebalancing.totalReallocationPotential, { abbreviate: true })}
+                  </Badge>
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Tab 1: Cost Efficiency (CFO View) */}
+              <TabsContent value="cost_efficiency" className="mt-0">
+                <div className="mb-4 p-3 rounded-lg bg-muted/30 border">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="h-5 w-5 text-success" />
+                    <div>
+                      <p className="font-semibold text-sm">The CFO View</p>
+                      <p className="text-xs text-muted-foreground">
+                        Hard financial waste: Duplicate coverage, Vendor overcharges, Unclaimed cash-out options
+                      </p>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-        </Tabs>
+                </div>
+                <CostEfficiencyTab 
+                  items={strategicData.costEfficiency.items}
+                  totalRecoverable={strategicData.costEfficiency.totalRecoverable}
+                  onInitiateRecovery={handleInitiateRecovery}
+                />
+              </TabsContent>
+
+              {/* Tab 2: Value Activation (CHRO View) */}
+              <TabsContent value="value_activation" className="mt-0">
+                <div className="mb-4 p-3 rounded-lg bg-muted/30 border">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-info" />
+                    <div>
+                      <p className="font-semibold text-sm">The CHRO View</p>
+                      <p className="text-xs text-muted-foreground">
+                        Benefits with &lt;20% adoption rate - Ensuring employees know what they're entitled to
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <ValueActivationTab 
+                  items={strategicData.valueActivation.items}
+                  totalUnutilized={strategicData.valueActivation.totalUnutilized}
+                  onLaunchCampaign={handleLaunchCampaign}
+                />
+              </TabsContent>
+
+              {/* Tab 3: Portfolio Rebalancing (CEO View) */}
+              <TabsContent value="portfolio_rebalancing" className="mt-0">
+                <div className="mb-4 p-3 rounded-lg bg-muted/30 border">
+                  <div className="flex items-center gap-2">
+                    <Scale className="h-5 w-5 text-accent" />
+                    <div>
+                      <p className="font-semibold text-sm">The CEO View</p>
+                      <p className="text-xs text-muted-foreground">
+                        Moving idle money to high-demand areas - Aligning spend with what employees actually use
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <PortfolioRebalancingTab 
+                  items={strategicData.portfolioRebalancing.items}
+                  totalReallocationPotential={strategicData.portfolioRebalancing.totalReallocationPotential}
+                  onEvaluatePolicyShift={handleEvaluatePolicyShift}
+                />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
         
         {/* Drawers & Modals */}
         <ZombieCategoryDrawer
@@ -590,7 +408,7 @@ export default function ZombieSpendPage() {
           category={selectedCategory}
           allCategories={allCategories}
           onLaunch={handleLaunch}
-          onLaunchComplete={handleLaunchComplete}
+          onLaunchComplete={() => {}}
         />
         
         <CreateActionModal
