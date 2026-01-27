@@ -1,8 +1,12 @@
-import { CalendarDays, Clock, AlertTriangle, CheckCircle2, FileText, Wallet } from 'lucide-react';
+import { useState } from 'react';
+import { CalendarDays, Clock, AlertTriangle, CheckCircle2, FileText, Wallet, CalendarCheck, Mail } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const upcomingEvents = [
   {
@@ -78,22 +82,53 @@ const getStatusBadge = (status: string, daysUntil: number) => {
 export default function CalendarPage() {
   const { direction } = useLanguage();
   const isRTL = direction === 'rtl';
+  const [hoveredEventId, setHoveredEventId] = useState<string | null>(null);
 
   const thisMonth = upcomingEvents.filter(e => e.daysUntil >= 0 && e.daysUntil <= 30);
   const upcoming = upcomingEvents.filter(e => e.daysUntil > 30);
   const past = upcomingEvents.filter(e => e.status === 'completed');
 
+  const handleSyncCalendar = () => {
+    // In production, this would generate an iCal feed URL
+    toast.success('Calendar sync initiated', {
+      description: 'iCal feed URL copied to clipboard. Add to Outlook or Google Calendar.',
+    });
+  };
+
+  const handleSendReminder = (event: typeof upcomingEvents[0]) => {
+    // In production, this would trigger an email workflow
+    toast.success('Reminder scheduled', {
+      description: `Email reminder for "${event.title}" will be sent to relevant employees.`,
+    });
+  };
+
+  const isActionableEvent = (type: string) => type === 'deadline' || type === 'expiry';
+
   return (
-    <div className={cn('space-y-6 animate-fade-in', isRTL && 'text-right')}>
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">
-          Benefits Calendar
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Track payroll cutoffs, policy renewals, and expiration dates
-        </p>
-      </div>
+    <TooltipProvider>
+      <div className={cn('space-y-6 animate-fade-in', isRTL && 'text-right')}>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">
+              Benefits Calendar
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Track payroll cutoffs, policy renewals, and expiration dates
+            </p>
+          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" onClick={handleSyncCalendar} className="gap-2">
+                <CalendarCheck className="w-4 h-4" />
+                Sync to Calendar
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Subscribe to iCal feed (Outlook/Google)</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -152,6 +187,8 @@ export default function CalendarPage() {
               <div
                 key={event.id}
                 className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                onMouseEnter={() => setHoveredEventId(event.id)}
+                onMouseLeave={() => setHoveredEventId(null)}
               >
                 <div className="flex items-center gap-4">
                   <div className="p-2 rounded-lg bg-muted">
@@ -162,7 +199,27 @@ export default function CalendarPage() {
                     <p className="text-sm text-muted-foreground">{event.date}</p>
                   </div>
                 </div>
-                {getStatusBadge(event.status, event.daysUntil)}
+                <div className="flex items-center gap-2">
+                  {isActionableEvent(event.type) && hoveredEventId === event.id && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleSendReminder(event)}
+                          className="gap-1.5 text-primary hover:text-primary"
+                        >
+                          <Mail className="w-4 h-4" />
+                          Send Reminder
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Send email reminder to relevant employees</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  {getStatusBadge(event.status, event.daysUntil)}
+                </div>
               </div>
             ))}
           </div>
@@ -183,6 +240,8 @@ export default function CalendarPage() {
               <div
                 key={event.id}
                 className="flex items-center justify-between p-4 rounded-lg border bg-card/50 hover:bg-muted/50 transition-colors"
+                onMouseEnter={() => setHoveredEventId(event.id)}
+                onMouseLeave={() => setHoveredEventId(null)}
               >
                 <div className="flex items-center gap-4">
                   <div className="p-2 rounded-lg bg-muted">
@@ -193,7 +252,27 @@ export default function CalendarPage() {
                     <p className="text-sm text-muted-foreground">{event.date}</p>
                   </div>
                 </div>
-                {getStatusBadge(event.status, event.daysUntil)}
+                <div className="flex items-center gap-2">
+                  {isActionableEvent(event.type) && hoveredEventId === event.id && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleSendReminder(event)}
+                          className="gap-1.5 text-primary hover:text-primary"
+                        >
+                          <Mail className="w-4 h-4" />
+                          Send Reminder
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Send email reminder to relevant employees</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  {getStatusBadge(event.status, event.daysUntil)}
+                </div>
               </div>
             ))}
           </div>
@@ -232,6 +311,7 @@ export default function CalendarPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }
