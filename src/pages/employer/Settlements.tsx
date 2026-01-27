@@ -37,6 +37,22 @@ const settlementBatches = [
     totalAmount: 512800,
     createdAt: '2025-12-31',
   },
+  {
+    id: 'BATCH-2025-051',
+    period: 'Dec 2025',
+    status: 'paid',
+    claimsCount: 112,
+    totalAmount: 687400,
+    createdAt: '2025-12-15',
+  },
+  {
+    id: 'BATCH-2025-050',
+    period: 'Nov 2025',
+    status: 'paid',
+    claimsCount: 95,
+    totalAmount: 543200,
+    createdAt: '2025-11-30',
+  },
 ];
 
 const statusConfig = {
@@ -87,34 +103,51 @@ export default function SettlementsPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Ready to Export</p>
-                <p className="text-2xl font-bold tabular-nums">1 Batch</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-warning/10">
-                <Clock className="w-5 h-5 text-warning" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Pending Review</p>
-                <p className="text-2xl font-bold tabular-nums">1 Batch</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Banknote className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total This Month</p>
                 <p className="text-2xl font-bold tabular-nums">
-                  {formatCurrencyAED(440700, { abbreviate: true })}
+                  {settlementBatches.filter(b => b.status === 'ready').length} Batch
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-500/10">
+                <Clock className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Pending Payment</p>
+                <p className="text-2xl font-bold tabular-nums">
+                  {formatCurrencyAED(
+                    settlementBatches
+                      .filter(b => b.status === 'exported')
+                      .reduce((sum, b) => sum + b.totalAmount, 0),
+                    { abbreviate: true }
+                  )}
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  {settlementBatches.filter(b => b.status === 'exported').length} batch(es) with Finance
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-emerald-500/10">
+                <Banknote className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Paid YTD</p>
+                <p className="text-2xl font-bold tabular-nums">
+                  {formatCurrencyAED(
+                    settlementBatches
+                      .filter(b => b.status === 'paid')
+                      .reduce((sum, b) => sum + b.totalAmount, 0),
+                    { abbreviate: true }
+                  )}
                 </p>
               </div>
             </div>
@@ -201,7 +234,11 @@ export default function SettlementsPage() {
                       </Button>
                     )}
                     {batch.status === 'exported' && (
-                      <Button size="sm" className="gap-1 bg-emerald-600 hover:bg-emerald-700 text-white">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="gap-1 border-emerald-500 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950"
+                      >
                         <CheckCircle2 className="w-3 h-3" />
                         Mark as Paid
                       </Button>
