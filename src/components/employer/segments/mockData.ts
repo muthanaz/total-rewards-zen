@@ -3,6 +3,12 @@
  * 
  * Rich mock data with OBJECTIVE BEHAVIORAL METRICS.
  * No subjective satisfaction surveys - only claim/spend data.
+ * 
+ * UAE Market Values (2024-2026):
+ * - Housing: AED 60,000-250,000/year
+ * - Schooling: AED 25,000-65,000/year per child
+ * - Annual Tickets: AED 2,000-15,000 (by destination class)
+ * - Parking/Transport: AED 100-500/month
  */
 
 import { MockEmployee, DEPARTMENTS, NATIONALITIES, GRADES, TENURE_OPTIONS, SegmentFilters, SALARY_MIN, SALARY_MAX } from './types';
@@ -10,6 +16,7 @@ import { MockEmployee, DEPARTMENTS, NATIONALITIES, GRADES, TENURE_OPTIONS, Segme
 const FIRST_NAMES = ['Ahmed', 'Sara', 'Mohammed', 'Fatima', 'John', 'Emily', 'Wei', 'Priya', 'Omar', 'Layla', 'James', 'Aisha', 'David', 'Noor', 'Chen'];
 const LAST_NAMES = ['Al-Rashid', 'Khan', 'Smith', 'Williams', 'Li', 'Sharma', 'Abdullah', 'Al-Maktoum', 'Brown', 'Lee', 'Patel', 'O\'Connor', 'Zhang', 'Hassan'];
 
+// Realistic UAE benefit types with proper value categories
 const BENEFIT_TYPES = ['Housing', 'Schooling', 'Health', 'Transport', 'Flight', 'L&D', 'Wellbeing', 'Equity'];
 
 const EMPLOYEE_NEEDS = [

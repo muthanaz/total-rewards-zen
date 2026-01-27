@@ -498,7 +498,7 @@ export const DEMO_CLAIMS_QUEUE = [
     type: 'claim' as const,
     category: 'Transport',
     subject: 'Annual Flight Ticket - Home Country',
-    amount: 3200,
+    amount: 4800, // Economy international (AED 2,000-8,000 range)
     status: 'pending' as const,
     priority: 'normal' as const,
     submittedAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
