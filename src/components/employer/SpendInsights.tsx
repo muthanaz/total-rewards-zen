@@ -175,7 +175,7 @@ export function generateSpendInsights(data: SpendDataForInsights): SpendInsight[
     insights.push({
       id: 'underutilized-category',
       icon: 'ghost',
-      signal: `${data.topUnderutilizedCategory.name} has lowest utilization`,
+      signal: `${data.topUnderutilizedCategory.name} has lowest utilization (${data.topUnderutilizedCategory.utilization.toFixed(0)}%)`,
       metric: `Only ${data.topUnderutilizedCategory.utilization.toFixed(0)}% claimed — ${formatCurrencyAED(data.topUnderutilizedCategory.unused, { abbreviate: false, decimals: 0 })} unused`,
       actionLabel: `Improve policy clarity for ${data.topUnderutilizedCategory.name}`,
       actionParams: { 
