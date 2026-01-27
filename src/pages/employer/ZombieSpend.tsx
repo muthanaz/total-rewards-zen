@@ -1,14 +1,14 @@
 /**
- * Recovery Opportunities Page (formerly "Zombie Spend")
+ * Optimization Opportunities Page (formerly "Zombie Spend")
  * 
- * CEO/CFO-grade layout following leading practices:
- * 1. 4 Core KPIs (Unrealized Value, Est. Recoverable, Top Cause, Quick Wins)
- * 2. Cause Breakdown + Quick Wins (visual diagnosis)
- * 3. Recovery Plays (ranked actions)
+ * CFO-grade layout with financial reality alignment:
+ * 1. 4 Core KPIs (Unrealized Value, Value Opportunity, Top Cause, Quick Wins)
+ * 2. Savings Funnel + Cause Breakdown (visual diagnosis)
+ * 3. Split table: Hard Savings vs Value Realization
  * 
  * Uses unified metrics from executiveMetricsConstants for cross-page consistency.
  * 
- * @module RecoverableValue
+ * @module OptimizationOpportunities
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -39,8 +39,9 @@ import {
   RecoveryCauseType,
 } from '@/components/employer/RecoverableValueInsights';
 import { CauseBreakdownChart, CauseBreakdownData } from '@/components/employer/CauseBreakdownChart';
-import { TopRecoveryPlays, RecoveryPlay } from '@/components/employer/TopRecoveryPlays';
-import { QuickWinsCard, QuickWin } from '@/components/employer/QuickWinsCard';
+import { SavingsFunnel } from '@/components/employer/SavingsFunnel';
+import { OptimizationOpportunitiesTable, OptimizationOpportunity } from '@/components/employer/OptimizationOpportunitiesTable';
+import { CreateActionModal, OpportunityData } from '@/components/employer/CreateActionModal';
 import { PageLayout } from '@/components/shared';
 import { ZombieCategoryDrawer } from '@/components/employer/ZombieCategoryDrawer';
 import { LaunchPlaybookModal } from '@/components/employer/LaunchPlaybookModal';
@@ -110,7 +111,11 @@ export default function ZombieSpendPage() {
   
   const [launchModalOpen, setLaunchModalOpen] = useState(false);
   const [selectedPlaybook, setSelectedPlaybook] = useState<RecoveryPlaybook | null>(null);
-  const [activeTab, setActiveTab] = useState('categories');
+  const [activeTab, setActiveTab] = useState('opportunities');
+  
+  // Action modal state
+  const [actionModalOpen, setActionModalOpen] = useState(false);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<OpportunityData | null>(null);
   
   // Handle URL params for deep linking
   useEffect(() => {
@@ -162,45 +167,74 @@ export default function ZombieSpendPage() {
   // Quick wins from constants
   const consistentQuickWins = QUICK_WINS.reduce((sum, w) => sum + w.estimatedRecovery, 0);
   
-  // Transform playbooks to recovery plays
-  const recoveryPlays = useMemo((): RecoveryPlay[] => {
-    return playbooks.slice(0, 5).map(pb => {
-      const targetCause = rootCauseToCauseType[pb.targetRootCauses[0]] || 'awareness';
-      const avgUnused = summaryMetrics.totalUnused / categories.length || 50000;
-      const minImpact = avgUnused * (pb.expectedImpactPercent / 100) * 0.7;
-      const maxImpact = avgUnused * (pb.expectedImpactPercent / 100) * 1.3;
+  // Savings funnel values (demo)
+  const inActionPlanValue = consistentRecoverable * 0.35; // 35% in active action plans
+  const realizedValue = consistentRecoverable * 0.12; // 12% already realized
+
+  // Transform categories to optimization opportunities
+  const opportunities = useMemo((): OptimizationOpportunity[] => {
+    // Define which categories are "hard savings" vs "value realization"
+    const hardSavingsCategories = ['Insurance', 'Transport', 'Utilities'];
+    
+    return categories.map(cat => {
+      const causeType = rootCauseToCauseType[cat.primaryRootCause] || 'policy';
+      const rootCauseDef = ROOT_CAUSE_DEFINITIONS[cat.primaryRootCause];
+      const isHardSavings = hardSavingsCategories.some(hc => 
+        cat.name.toLowerCase().includes(hc.toLowerCase())
+      ) || cat.primaryRootCause === 'vendor_access';
       
       return {
-        id: pb.id,
-        name: pb.title,
-        description: pb.description,
-        targetCause,
-        impactRange: { min: minImpact, max: maxImpact },
-        timeToImpact: pb.timeToImpact,
-        effort: pb.effortLevel,
-      };
+        id: cat.id,
+        name: cat.name,
+        category: cat.name,
+        valueOpportunity: cat.unusedEntitlement * CONFIDENCE_FACTORS[cat.confidence],
+        utilization: cat.utilizationRate,
+        rootCause: cat.primaryRootCause,
+        rootCauseLabel: rootCauseDef.label,
+        rootCauseColor: rootCauseDef.color,
+        effort: causeType === 'awareness' ? 'low' : causeType === 'friction' ? 'medium' : 'high',
+        timeToImpact: causeType === 'awareness' ? '2-4 weeks' : causeType === 'friction' ? '4-8 weeks' : '8-12 weeks',
+        type: isHardSavings ? 'hard_savings' : 'value_realization',
+        confidence: cat.confidence,
+      } as OptimizationOpportunity;
     });
-  }, [playbooks, summaryMetrics, categories]);
-
-  // Generate quick wins from top categories with lowest effort
-  const quickWins: QuickWin[] = useMemo(() => {
-    return categories
-      .filter(c => c.confidence !== 'low')
-      .sort((a, b) => b.unusedEntitlement - a.unusedEntitlement)
-      .slice(0, 3)
-      .map(cat => {
-        const causeType = rootCauseToCauseType[cat.primaryRootCause] || 'awareness';
-        return {
-          id: cat.id,
-          title: `Recover ${cat.name} benefits`,
-          category: cat.name,
-          estimatedRecovery: cat.unusedEntitlement * 0.3, // 30% recovery estimate
-          effort: causeType === 'awareness' ? 'low' : causeType === 'friction' ? 'medium' : 'high',
-          timeToImpact: causeType === 'awareness' ? '2-4 weeks' : causeType === 'friction' ? '4-8 weeks' : '8-12 weeks',
-          cause: causeType,
-        } as QuickWin;
-      });
   }, [categories]);
+
+  // Handle Take Action button
+  const handleTakeAction = (opp: OptimizationOpportunity) => {
+    setSelectedOpportunity({
+      id: opp.id,
+      title: opp.name,
+      category: opp.category,
+      type: opp.type,
+      valueOpportunity: opp.valueOpportunity,
+      rootCause: opp.rootCauseLabel,
+      effort: opp.effort,
+      timeToImpact: opp.timeToImpact,
+    });
+    setActionModalOpen(true);
+  };
+
+  // Handle View Details
+  const handleViewDetails = (opp: OptimizationOpportunity) => {
+    openCategoryDrawer(opp.id);
+  };
+
+  // Handle action creation
+  const handleCreateAction = async (actionData: {
+    title: string;
+    description: string;
+    owner: string;
+    dueDate: string;
+    priority: string;
+    expectedImpact: number;
+    opportunityId: string;
+  }) => {
+    // In a real app, this would save to the database
+    console.log('Creating action:', actionData);
+    // Navigate to recommendations page with prefilled data
+    navigate(`/employer/recommendations?action=new&opportunityId=${actionData.opportunityId}`);
+  };
   
   const handleOpenPlaybook = (playbook: RecoveryPlaybook) => {
     setSelectedPlaybook(playbook);
@@ -286,16 +320,12 @@ export default function ZombieSpendPage() {
           onKPIClick={(kpiId) => toast.info(`Opening ${kpiId} drilldown...`)}
         />
         
-        {/* 2. Quick Wins + Cause Breakdown (side by side) */}
+        {/* 2. Savings Funnel + Cause Breakdown (side by side) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <QuickWinsCard 
-            wins={quickWins} 
-            onTakeAction={(winId) => {
-              const win = quickWins.find(w => w.id === winId);
-              if (win) {
-                navigate(`/employer/recommendations?prefill=zombie&category=${win.category}`);
-              }
-            }} 
+          <SavingsFunnel 
+            identifiedValue={consistentRecoverable}
+            inActionPlanValue={inActionPlanValue}
+            realizedValue={realizedValue}
           />
           <CauseBreakdownChart 
             data={causeBreakdownData} 
@@ -304,26 +334,30 @@ export default function ZombieSpendPage() {
           />
         </div>
         
-        {/* 3. Top Recovery Plays (exactly 5) */}
-        <TopRecoveryPlays plays={recoveryPlays} isDemo={true} />
+        {/* 3. Split Opportunities Table */}
+        <OptimizationOpportunitiesTable 
+          opportunities={opportunities}
+          onViewDetails={handleViewDetails}
+          onTakeAction={handleTakeAction}
+        />
         
-        {/* 5. Detailed Breakdown Tabs */}
+        {/* 4. Active Runs Tab */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="categories">Category Breakdown</TabsTrigger>
+            <TabsTrigger value="opportunities">Opportunities Summary</TabsTrigger>
             <TabsTrigger value="runs">
               Active Runs {playbookRuns.length > 0 && `(${playbookRuns.length})`}
             </TabsTrigger>
           </TabsList>
           
-          {/* Category Breakdown Tab */}
-          <TabsContent value="categories" className="mt-6">
+          {/* Opportunities Summary Tab */}
+          <TabsContent value="opportunities" className="mt-6">
             <Card>
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-lg flex items-center gap-2">
-                      Unrealized Value by Category
+                      Detailed Category Breakdown
                       <InfoTooltip 
                         formula="Entitled Value - Claimed Amount" 
                         dataSource="benefit_entitlements + requests" 
@@ -346,7 +380,7 @@ export default function ZombieSpendPage() {
                         <TableHead>Benefit Type</TableHead>
                         <TableHead className="text-right">Allocated</TableHead>
                         <TableHead className="text-right">Claimed</TableHead>
-                        <TableHead className="text-right">Potential Recovery</TableHead>
+                        <TableHead className="text-right">Value Opportunity</TableHead>
                         <TableHead className="text-right">Utilization</TableHead>
                         <TableHead>Root Cause</TableHead>
                         <TableHead className="text-right">Action</TableHead>
@@ -380,8 +414,8 @@ export default function ZombieSpendPage() {
                             <TableCell className="text-right">
                               {formatCurrencyAED(cat.claimedAmount, { abbreviate: true })}
                             </TableCell>
-                            <TableCell className="text-right font-medium text-warning">
-                              {formatCurrencyAED(cat.unusedEntitlement, { abbreviate: true })}
+                            <TableCell className="text-right font-medium text-success">
+                              {formatCurrencyAED(cat.unusedEntitlement * CONFIDENCE_FACTORS[cat.confidence], { abbreviate: true })}
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex items-center justify-end gap-2">
@@ -557,6 +591,13 @@ export default function ZombieSpendPage() {
           allCategories={allCategories}
           onLaunch={handleLaunch}
           onLaunchComplete={handleLaunchComplete}
+        />
+        
+        <CreateActionModal
+          open={actionModalOpen}
+          onOpenChange={setActionModalOpen}
+          opportunity={selectedOpportunity}
+          onCreateAction={handleCreateAction}
         />
       </PageLayout>
     </PageConfidenceGate>
