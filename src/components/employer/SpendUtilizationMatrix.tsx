@@ -44,6 +44,7 @@ interface SpendUtilizationMatrixProps {
   data: CategoryBubble[];
   isDemo?: boolean;
   className?: string;
+  onCategoryClick?: (category: CategoryBubble) => void;
 }
 
 const QUADRANT_COLORS = {
@@ -63,7 +64,7 @@ function getQuadrantColor(utilization: number, spend: number, medianSpend: numbe
   return QUADRANT_COLORS.lowSpendLowUtil;
 }
 
-export function SpendUtilizationMatrix({ data, isDemo, className }: SpendUtilizationMatrixProps) {
+export function SpendUtilizationMatrix({ data, isDemo, className, onCategoryClick }: SpendUtilizationMatrixProps) {
   const [selectedCategory, setSelectedCategory] = useState<CategoryBubble | null>(null);
   
   // Calculate median for quadrant lines
@@ -125,27 +126,33 @@ export function SpendUtilizationMatrix({ data, isDemo, className }: SpendUtiliza
         </CardHeader>
         <CardContent>
           <div className="h-[350px] relative">
-            {/* Quadrant background with grid lines */}
+            {/* Quadrant background colors */}
             <div className="absolute inset-0 pointer-events-none z-0" style={{ margin: '40px 60px 40px 60px' }}>
+              {/* Background quadrant fills */}
+              <div className="absolute left-0 top-0 w-1/2 h-1/2 bg-success/5" />
+              <div className="absolute right-0 top-0 w-1/2 h-1/2 bg-chart-2/5" />
+              <div className="absolute left-0 bottom-0 w-1/2 h-1/2 bg-muted/20" />
+              <div className="absolute right-0 bottom-0 w-1/2 h-1/2 bg-destructive/5" />
+              
               {/* Quadrant divider lines */}
-              <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border/30" />
-              <div className="absolute top-1/2 left-0 right-0 h-px bg-border/30" />
+              <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border/40" />
+              <div className="absolute top-1/2 left-0 right-0 h-px bg-border/40" />
               
               {/* Top-Left: Star Performers (High Util, Low Spend) */}
-              <div className="absolute left-[25%] top-[25%] -translate-x-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground/20 select-none whitespace-nowrap">
+              <div className="absolute left-[25%] top-[25%] -translate-x-1/2 -translate-y-1/2 text-sm font-medium text-success/30 select-none whitespace-nowrap">
                 Star Performers
               </div>
               {/* Top-Right: High Value / High Cost (High Util, High Spend) */}
-              <div className="absolute left-[75%] top-[25%] -translate-x-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground/20 select-none whitespace-nowrap">
+              <div className="absolute left-[75%] top-[25%] -translate-x-1/2 -translate-y-1/2 text-sm font-medium text-chart-2/30 select-none whitespace-nowrap">
                 High Value / High Cost
               </div>
-              {/* Bottom-Left: Low Priority (Low Util, Low Spend) */}
+              {/* Bottom-Left: Low Impact (Low Util, Low Spend) */}
               <div className="absolute left-[25%] top-[75%] -translate-x-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground/20 select-none whitespace-nowrap">
-                Low Priority
+                Low Impact
               </div>
-              {/* Bottom-Right: Optimization Needed (Low Util, High Spend) */}
-              <div className="absolute left-[75%] top-[75%] -translate-x-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground/20 select-none whitespace-nowrap">
-                Optimization Needed
+              {/* Bottom-Right: Optimization Candidates (Low Util, High Spend) */}
+              <div className="absolute left-[75%] top-[75%] -translate-x-1/2 -translate-y-1/2 text-sm font-medium text-destructive/30 select-none whitespace-nowrap">
+                Optimization Candidates
               </div>
             </div>
             <ResponsiveContainer width="100%" height="100%">
@@ -179,7 +186,16 @@ export function SpendUtilizationMatrix({ data, isDemo, className }: SpendUtiliza
                 <Scatter 
                   data={chartData} 
                   cursor="pointer"
-                  onClick={(e) => e && setSelectedCategory(e as CategoryBubble)}
+                  onClick={(e) => {
+                    if (e) {
+                      const category = e as CategoryBubble;
+                      if (onCategoryClick) {
+                        onCategoryClick(category);
+                      } else {
+                        setSelectedCategory(category);
+                      }
+                    }
+                  }}
                 >
                   {chartData.map((entry, index) => (
                     <Cell 

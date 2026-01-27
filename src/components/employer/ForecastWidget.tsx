@@ -94,8 +94,12 @@ function calculateForecast(
   // Project remaining claims
   const projectedRemainingClaims = monthlyVelocity * remainingMonths;
   const projectedTotalClaims = totalClaimed + projectedRemainingClaims;
-  const projectedUnused = Math.max(0, totalEntitled - projectedTotalClaims);
-  const projectedUtilization = (projectedTotalClaims / totalEntitled) * 100;
+  
+  // Ensure projected unused never hits exact 0 - asymptote to a realistic buffer (2% minimum)
+  const minimumBuffer = totalEntitled * 0.02; // 2% buffer
+  const rawProjectedUnused = totalEntitled - projectedTotalClaims;
+  const projectedUnused = Math.max(minimumBuffer, rawProjectedUnused);
+  const projectedUtilization = Math.min(98, (projectedTotalClaims / totalEntitled) * 100); // Cap at 98%
 
   // Confidence interval (±15% based on historical variance)
   const variance = recentMonths.reduce((sum, m) => {
@@ -127,12 +131,14 @@ function calculateForecast(
       // Project future months
       const monthsAhead = idx - historicalData.length + 1;
       const projectedClaims = monthlyVelocity * monthsAhead;
-      const projectedUnusedAtMonth = Math.max(0, cumulativeUnused - projectedClaims);
+      const rawProjectedUnusedAtMonth = cumulativeUnused - projectedClaims;
+      // Apply asymptotic buffer - projected unused should never hit exact 0
+      const projectedUnusedAtMonth = Math.max(minimumBuffer, rawProjectedUnusedAtMonth);
       
       chartData.push({
         month,
         projected: projectedUnusedAtMonth,
-        projectedLow: Math.max(0, projectedUnusedAtMonth - confidenceMargin * (monthsAhead / remainingMonths)),
+        projectedLow: Math.max(minimumBuffer, projectedUnusedAtMonth - confidenceMargin * (monthsAhead / remainingMonths)),
         projectedHigh: projectedUnusedAtMonth + confidenceMargin * (monthsAhead / remainingMonths),
         isProjected: true,
       });
