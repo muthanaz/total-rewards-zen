@@ -139,7 +139,7 @@ export function DecisionsActionsCard({ actions, className, strategicOnly = false
               </Badge>
             </CardTitle>
             <Link 
-              to="/employer/recommendations"
+              to="/employer/actions"
               className="text-sm text-primary hover:underline flex items-center gap-1"
             >
               View full Action Plan

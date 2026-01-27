@@ -123,6 +123,8 @@ export { PolicyLogicEditor } from './PolicyLogicEditor';
 export { PolicyEditorSheetV2 } from './PolicyEditorSheetV2';
 export { PolicyManagementView } from './PolicyManagementView';
 export { PolicyInsightsDrawer } from './PolicyInsightsDrawer';
+export { PolicyInsightsTabContent } from './PolicyInsightsTabContent';
+export { KnowledgeBaseTabContent } from './KnowledgeBaseTabContent';
 
 // Claims Bulk Actions & SLA
 export { ClaimsBulkActionsBar } from './ClaimsBulkActionsBar';
