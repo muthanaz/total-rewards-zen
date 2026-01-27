@@ -12,6 +12,16 @@ export interface CostEfficiencyItem {
   recoveryAmount: number;
   confidence: 'high' | 'medium' | 'low';
   issueType: 'duplicate_coverage' | 'vendor_overcharge' | 'unclaimed_cashout';
+  vendorName?: string; // For vendor_overcharge items
+  affectedEmployees?: AffectedEmployee[]; // Employees affected for recovery batch
+}
+
+export interface AffectedEmployee {
+  id: string;
+  name: string;
+  employeeId: string;
+  department: string;
+  amount: number;
 }
 
 export interface ValueActivationItem {
