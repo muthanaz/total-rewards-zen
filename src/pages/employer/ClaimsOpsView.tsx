@@ -210,6 +210,14 @@ const PRIORITIES = [
   { value: 'low', label: 'Low' },
 ];
 
+// SLA Status filter options
+const SLA_STATUS_FILTERS = [
+  { value: 'all', label: 'All SLA Status' },
+  { value: 'on_track', label: 'On Track' },
+  { value: 'at_risk', label: 'At Risk' },
+  { value: 'breached', label: 'Breached' },
+];
+
 // Rejection reasons for quick reject
 const REJECTION_REASONS = [
   { value: 'incomplete_docs', label: 'Incomplete Documentation' },
@@ -245,6 +253,7 @@ export function ClaimsOpsView() {
   const categoryFilter = searchParams.get('category') || 'All Categories';
   const assignedFilter = searchParams.get('assigned') || 'all';
   const priorityFilter = searchParams.get('priority') || 'all';
+  const slaStatusFilter = searchParams.get('slaStatus') || 'all';
   const minAmount = searchParams.get('minAmount') ? Number(searchParams.get('minAmount')) : undefined;
   const maxAmount = searchParams.get('maxAmount') ? Number(searchParams.get('maxAmount')) : undefined;
   const dateFrom = searchParams.get('dateFrom') || '';
@@ -392,6 +401,18 @@ export function ClaimsOpsView() {
       result = result.filter(r => r.priority === priorityFilter);
     }
 
+    // SLA Status filter
+    if (slaStatusFilter !== 'all') {
+      result = result.filter(r => {
+        const sla = getSlaInfo(r);
+        if (!sla) return slaStatusFilter === 'on_track'; // No SLA = on track
+        if (slaStatusFilter === 'breached') return sla.isOverdue;
+        if (slaStatusFilter === 'at_risk') return sla.isUrgent && !sla.isOverdue;
+        if (slaStatusFilter === 'on_track') return sla.isOnTrack;
+        return true;
+      });
+    }
+
     if (minAmount !== undefined) {
       result = result.filter(r => r.amount && r.amount >= minAmount);
     }
@@ -427,7 +448,7 @@ export function ClaimsOpsView() {
     }
 
     return result;
-  }, [requests, activeTab, searchQuery, statusFilter, typeFilter, categoryFilter, assignedFilter, priorityFilter, minAmount, maxAmount, dateFrom, dateTo, sortBySlaRisk, getSlaInfo]);
+  }, [requests, activeTab, searchQuery, statusFilter, typeFilter, categoryFilter, assignedFilter, priorityFilter, slaStatusFilter, minAmount, maxAmount, dateFrom, dateTo, sortBySlaRisk, getSlaInfo]);
 
   // Queue counts
   const queueCounts = useMemo(() => ({
@@ -818,6 +839,7 @@ export function ClaimsOpsView() {
     categoryFilter !== 'All Categories',
     assignedFilter !== 'all',
     priorityFilter !== 'all',
+    slaStatusFilter !== 'all',
     minAmount !== undefined,
     maxAmount !== undefined,
     dateFrom !== '',
@@ -1032,6 +1054,18 @@ export function ClaimsOpsView() {
                     ))}
                   </SelectContent>
                 </Select>
+                {slaEnabled && (
+                  <Select value={slaStatusFilter} onValueChange={(v) => updateParam('slaStatus', v)}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="SLA Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SLA_STATUS_FILTERS.map((s) => (
+                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 <Button
                   variant="outline"
                   onClick={() => setShowFilters(!showFilters)}

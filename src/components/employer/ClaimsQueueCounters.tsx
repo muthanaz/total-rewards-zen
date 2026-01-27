@@ -80,7 +80,7 @@ export function ClaimsQueueCounters({
     },
     {
       key: 'pending_7d',
-      label: 'Pending > 7 Days',
+      label: pending7dCount > 0 ? 'SLA Breach' : 'Pending > 7 Days',
       icon: <AlertTriangle className="w-4 h-4" />,
       count: pending7dCount,
       variant: pending7dCount > 0 ? 'danger' : 'default',
