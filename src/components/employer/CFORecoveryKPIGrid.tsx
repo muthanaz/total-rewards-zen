@@ -41,7 +41,7 @@ const METRIC_DEFINITIONS = {
     formula: 'Entitled Value - Claimed Amount',
     dataSource: 'Budgeted funds blocked by policy or process friction',
   },
-  estimatedRecoverable: {
+  valueOpportunity: {
     formula: 'Unrealized × Confidence Factor (High=100%, Med=70%, Low=40%)',
     dataSource: 'Category analysis with confidence weighting',
   },
@@ -82,7 +82,7 @@ export function CFORecoveryKPIGrid({ metrics, onKPIClick }: CFORecoveryKPIGridPr
     },
     {
       id: 'recoverable',
-      label: 'Est. Recoverable',
+      label: 'Value Opportunity',
       value: <Currency amount={metrics.estimatedRecoverable} abbreviate />,
       valueColor: 'text-success',
       subtitle: `${recoveryRate.toFixed(0)}% recovery potential`,
@@ -90,7 +90,7 @@ export function CFORecoveryKPIGrid({ metrics, onKPIClick }: CFORecoveryKPIGridPr
       icon: Target,
       iconBg: 'bg-success/10',
       iconColor: 'text-success',
-      definition: METRIC_DEFINITIONS.estimatedRecoverable,
+      definition: METRIC_DEFINITIONS.valueOpportunity,
       context: 'Confidence-weighted',
       progress: recoveryRate,
     },

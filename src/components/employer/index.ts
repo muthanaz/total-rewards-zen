@@ -169,6 +169,11 @@ export { CauseBreakdownChart } from './CauseBreakdownChart';
 export type { CauseBreakdownData } from './CauseBreakdownChart';
 export { TopRecoveryPlays } from './TopRecoveryPlays';
 export type { RecoveryPlay } from './TopRecoveryPlays';
+export { SavingsFunnel } from './SavingsFunnel';
+export { OptimizationOpportunitiesTable } from './OptimizationOpportunitiesTable';
+export type { OptimizationOpportunity } from './OptimizationOpportunitiesTable';
+export { CreateActionModal } from './CreateActionModal';
+export type { OpportunityData } from './CreateActionModal';
 
 // Executive Mode components
 export { ExecModeProvider, useExecMode } from './ExecModeContext';
