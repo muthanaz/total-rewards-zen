@@ -42,6 +42,7 @@ import { RequestTimeline, type TimelineEvent } from '@/components/shared/Request
 import { useSharedRequest, useRequestTimeline } from '@/hooks/useSharedRequests';
 import { useBenefitByCategory, useClaimEntitlementCheck, useClaimValidation } from '@/hooks/useClaimEntitlements';
 import { useClaimActions } from '@/hooks/useClaimActions';
+import { useClaimActions as useDemoClaimActions } from '@/contexts/DemoDataContext';
 import { useToast } from '@/hooks/use-toast';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { 
@@ -129,6 +130,9 @@ export function ClaimDetailSheet({
     return null;
   }, [request, canProcess, validation, entitlementCheck]);
 
+  // Get reactive demo actions for global metrics update
+  const { approveClaim: updateGlobalMetrics } = useDemoClaimActions();
+
   const handleApprove = async () => {
     if (!request) return;
     try {
@@ -136,6 +140,12 @@ export function ClaimDetailSheet({
         requestId: request.id,
         reviewerNotes: reviewNotes || 'Approved',
       });
+      
+      // Update global metrics reactively
+      if (request.amount) {
+        updateGlobalMetrics(request.amount, request.id);
+      }
+      
       toast({ title: 'Claim Approved', description: 'Employee will be notified.' });
       refetch();
       onStatusChange?.();

@@ -53,6 +53,7 @@ import {
 import type { CategoryBubble } from '@/components/employer';
 import { DrillDownSheet, DrillDownSummaryGrid, PageLayout } from '@/components/shared';
 import { toast } from 'sonner';
+import { useGlobalMetrics } from '@/contexts/DemoDataContext';
 import {
   Table,
   TableBody,
@@ -230,6 +231,9 @@ export function Spend() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedBenefit, setSelectedBenefit] = useState<typeof spendByBenefitType[0] | null>(null);
   const coverageMetrics = useDataCoverageMetrics();
+  
+  // Get global metrics from shared context for consistency
+  const globalMetrics = useGlobalMetrics();
 
   // Calculate totals
   const totals = useMemo(() => spendByBenefitType.reduce(

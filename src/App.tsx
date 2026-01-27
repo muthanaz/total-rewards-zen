@@ -11,6 +11,7 @@ import { SecurityProvider } from "@/components/security/SecurityProvider";
 import { UIVisibilityProvider } from "@/contexts/UIVisibilityContext";
 import { PrivacyProvider } from "@/components/ui/privacy-toggle";
 import { DemoModeProvider } from "@/contexts/DemoModeContext";
+import { DemoDataProvider } from "@/contexts/DemoDataContext";
 import { DemoModeBadge } from "@/components/demo";
 import { CommandPalette } from "@/components/ui/command-palette";
 import { GlobalErrorBoundary } from "@/components/shared/GlobalErrorBoundary";
@@ -355,17 +356,19 @@ const App = () => (
             <ProfileProvider>
               <PrivacyProvider>
                 <DemoModeProvider>
-                  <UIVisibilityProvider>
-                    <SecurityProvider enableSessionTimeout={true}>
-                      <TooltipProvider>
-                        <Toaster />
-                        <Sonner />
-                        <CommandPalette />
-                        <AppRoutes />
-                        <DemoModeBadge />
-                      </TooltipProvider>
-                    </SecurityProvider>
-                  </UIVisibilityProvider>
+                  <DemoDataProvider>
+                    <UIVisibilityProvider>
+                      <SecurityProvider enableSessionTimeout={true}>
+                        <TooltipProvider>
+                          <Toaster />
+                          <Sonner />
+                          <CommandPalette />
+                          <AppRoutes />
+                          <DemoModeBadge />
+                        </TooltipProvider>
+                      </SecurityProvider>
+                    </UIVisibilityProvider>
+                  </DemoDataProvider>
                 </DemoModeProvider>
               </PrivacyProvider>
             </ProfileProvider>

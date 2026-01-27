@@ -36,6 +36,7 @@ import { useEmployerActions } from '@/hooks/useEmployerActions';
 import { cn, formatCurrencyAED } from '@/lib/utils';
 import { KPIDrilldownSheet, KPIMetricData } from '@/components/shared';
 import { addDays } from 'date-fns';
+import { useGlobalMetrics } from '@/contexts/DemoDataContext';
 
 // New components
 import { ExecModeToggle } from './ExecModeToggle';
@@ -56,12 +57,28 @@ export function ExecutiveDashboard() {
   const [isDrilldownOpen, setIsDrilldownOpen] = useState(false);
   const { isBoard, isCFO } = useExecMode();
   
+  // Get global metrics from shared context (reactive updates)
+  const globalMetrics = useGlobalMetrics();
+  
   // Fetch data
   const { data: metrics, isLoading: metricsLoading } = useExecutiveMetrics();
   const coverageMetrics = useDataCoverageMetrics();
   const { data: spendAllocation } = useSpendAllocation();
   const { data: claimMetrics } = useClaimMetrics();
   const { filteredActions } = useEmployerActions();
+  
+  // Merge global metrics with fetched metrics for reactive updates
+  const effectiveMetrics = useMemo(() => {
+    if (!metrics) return null;
+    return {
+      ...metrics,
+      // Override with global context values for reactivity
+      totalInvestment: globalMetrics.totalBudget,
+      budgetUtilized: globalMetrics.ytdSpend,
+      utilizationRate: globalMetrics.utilizationRate,
+      employeeCount: globalMetrics.activeEmployees,
+    };
+  }, [metrics, globalMetrics]);
 
   // Calculate confidence level
   const confidenceLevel: ConfidenceLevel = useMemo(() => {
@@ -76,8 +93,8 @@ export function ExecutiveDashboard() {
 
   // Prepare allocation table data
   const allocationTableData = useMemo(() => {
-    if (!spendAllocation || !metrics) return [];
-    const total = metrics.totalInvestment;
+    if (!spendAllocation || !effectiveMetrics) return [];
+    const total = effectiveMetrics.totalInvestment;
     // Demo utilization values per category
     const utilizationMap: Record<string, number> = {
       'Health': 85,
@@ -94,12 +111,11 @@ export function ExecutiveDashboard() {
       percentOfTotal: total > 0 ? ((item.amount || item.value * 50000) / total) * 100 : 0,
       utilization: utilizationMap[item.name] || 60,
     }));
-  }, [spendAllocation, metrics]);
+  }, [spendAllocation, effectiveMetrics]);
 
   // Prepare Budget vs Actual chart data
   const budgetVsActualData = useMemo(() => {
-    if (!spendAllocation || !metrics) return [];
-    const totalBudget = metrics.totalInvestment * 1.05; // Total budget slightly higher than spend
+    if (!spendAllocation || !effectiveMetrics) return [];
     
     // Demo utilization values per category (determines actual vs budget)
     const utilizationMap: Record<string, number> = {
@@ -124,7 +140,7 @@ export function ExecutiveDashboard() {
         color: `hsl(var(--chart-${(i % 6) + 1}))`,
       };
     });
-  }, [spendAllocation, metrics]);
+  }, [spendAllocation, effectiveMetrics]);
 
   // Prepare top drivers
   const topDrivers = useMemo(() => {
@@ -204,18 +220,18 @@ export function ExecutiveDashboard() {
   [filteredActions]);
 
   // Satisfaction score (from metrics or default)
-  const satisfactionScore = metrics?.esatScore || 78;
+  const satisfactionScore = effectiveMetrics?.esatScore || 78;
 
   // Drilldown handlers
   const openDrilldown = (metricKey: string) => {
     // Create metric data for drilldown
-    if (!metrics) return;
+    if (!effectiveMetrics) return;
     const metricData: Record<string, KPIMetricData> = {
       totalInvestment: {
         key: 'totalInvestment',
         name: 'Total Investment',
-        value: metrics.totalInvestment,
-        formattedValue: formatCurrencyAED(metrics.totalInvestment),
+        value: effectiveMetrics.totalInvestment,
+        formattedValue: formatCurrencyAED(effectiveMetrics.totalInvestment),
         unit: 'currency',
         trend: { value: 8, higherIsBetter: true, period: 'vs last year' },
         formula: 'SUM(org_budgets.annual_budget) for current fiscal year',
@@ -224,8 +240,8 @@ export function ExecutiveDashboard() {
       utilizationRate: {
         key: 'utilizationRate',
         name: 'Utilization Rate',
-        value: metrics.utilizationRate,
-        formattedValue: `${metrics.utilizationRate}%`,
+        value: effectiveMetrics.utilizationRate,
+        formattedValue: `${effectiveMetrics.utilizationRate}%`,
         unit: 'percent',
         trend: { value: 5.3, higherIsBetter: true, period: 'vs last quarter' },
         formula: '(Claimed Amount / Entitled Amount) × 100',
@@ -234,8 +250,8 @@ export function ExecutiveDashboard() {
       unrealizedValue: {
         key: 'unrealizedValue',
         name: 'Unrealized Value',
-        value: metrics.zombieSpend,
-        formattedValue: formatCurrencyAED(metrics.zombieSpend),
+        value: globalMetrics.unutilizedBudget,
+        formattedValue: formatCurrencyAED(globalMetrics.unutilizedBudget),
         unit: 'currency',
         trend: { value: -12.4, higherIsBetter: false, period: 'vs last quarter' },
         formula: 'Total Entitled - Total Claimed (for cap-based benefits)',

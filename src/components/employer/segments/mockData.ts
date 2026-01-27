@@ -70,8 +70,9 @@ function generateNeeds(): string[] {
   return shuffled.slice(0, randomBetween(1, 3));
 }
 
-// Generate 150 mock employees with objective behavioral data
-export const MOCK_EMPLOYEES: MockEmployee[] = Array.from({ length: 150 }, (_, i) => {
+// Generate 312 mock employees to match GLOBAL_METRICS.activeEmployees
+// This ensures segment totals align with the shared demo context
+export const MOCK_EMPLOYEES: MockEmployee[] = Array.from({ length: 312 }, (_, i) => {
   const grade = randomChoice(GRADES);
   const salary = generateSalary(grade);
   

@@ -109,6 +109,7 @@ import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useClaimActions as useDemoClaimActions } from '@/contexts/DemoDataContext';
 import { format, differenceInDays, differenceInHours } from 'date-fns';
 
 // HR team members for assignment
@@ -284,6 +285,9 @@ export function ClaimReviewSheet({
     return null;
   }, [request, validation, entitlementCheck]);
 
+  // Get reactive demo actions for global metrics update
+  const { approveClaim: updateGlobalMetrics } = useDemoClaimActions();
+
   const handleApprove = async () => {
     if (!request) return;
     try {
@@ -292,6 +296,12 @@ export function ClaimReviewSheet({
         reviewerNotes: reviewNotes || 'Approved',
         internalNotes,
       });
+      
+      // Update global metrics reactively
+      if (request.amount) {
+        updateGlobalMetrics(request.amount, request.id);
+      }
+      
       toast({
         title: 'Claim Approved',
         description: 'The claim has been approved and the employee will be notified.',
