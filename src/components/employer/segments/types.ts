@@ -2,6 +2,7 @@
  * Segment Builder Types
  * 
  * Types for the People Intelligence Engine segment builder.
+ * Uses OBJECTIVE BEHAVIORAL DATA - no subjective surveys.
  */
 
 export interface SegmentFilters {
@@ -20,9 +21,11 @@ export interface MockEmployee {
   grade: string;
   salary: number;
   tenure: string;
-  utilizationRate: number;
-  totalSpend: number;
-  satisfaction: 'happy' | 'neutral' | 'frustrated';
+  // Objective Behavioral Metrics
+  budgetAllocated: number;
+  amountSpent: number;
+  hasMadeClaim: boolean; // Adoption indicator
+  claimCount: number;
   topBenefits: { name: string; percentage: number }[];
   topNeeds: string[];
 }
@@ -34,16 +37,27 @@ export interface SavedSegment {
   isAI: boolean;
   icon: string;
   matchCount: number;
-  riskScore: 'high' | 'medium' | 'low';
+  behavioralGap: BehavioralGapType;
 }
+
+export type BehavioralGapType = 
+  | 'high-engagement-low-cost' 
+  | 'concentrated-spend' 
+  | 'balanced' 
+  | 'low-engagement';
 
 export interface SegmentMetrics {
   matches: number;
   totalSpend: number;
-  utilizationRate: number;
-  riskScore: 'high' | 'medium' | 'low';
-  happyCount: number;
-  frustratedCount: number;
+  totalBudget: number;
+  // Objective Behavioral Metrics
+  budgetUsage: number; // (Total Spent / Total Budget) %
+  participationRate: number; // % of eligible who made at least 1 claim
+  participatingCount: number;
+  // Behavioral Gap Analysis
+  behavioralGap: BehavioralGapType;
+  behavioralGapInsight: string;
+  // Benefit breakdown
   benefitMix: { name: string; percentage: number; amount: number }[];
   topNeeds: { need: string; count: number }[];
 }

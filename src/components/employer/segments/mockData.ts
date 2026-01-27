@@ -1,7 +1,8 @@
 /**
  * Mock Employee Data for Segment Builder
  * 
- * Rich mock data for filtering and segment analysis.
+ * Rich mock data with OBJECTIVE BEHAVIORAL METRICS.
+ * No subjective satisfaction surveys - only claim/spend data.
  */
 
 import { MockEmployee, DEPARTMENTS, NATIONALITIES, GRADES, TENURE_OPTIONS } from './types';
@@ -62,16 +63,25 @@ function generateNeeds(): string[] {
   return shuffled.slice(0, randomBetween(1, 3));
 }
 
-// Generate 150 mock employees
+// Generate 150 mock employees with objective behavioral data
 export const MOCK_EMPLOYEES: MockEmployee[] = Array.from({ length: 150 }, (_, i) => {
   const grade = randomChoice(GRADES);
   const salary = generateSalary(grade);
-  const utilizationRate = randomBetween(35, 98);
   
-  // Higher grades tend to have higher satisfaction
-  const gradeIndex = GRADES.indexOf(grade);
-  const satisfactionRoll = Math.random();
-  const satisfaction = satisfactionRoll < 0.2 ? 'frustrated' : satisfactionRoll < 0.5 ? 'neutral' : 'happy';
+  // Budget allocated based on grade (% of salary for benefits)
+  const budgetMultiplier = grade === 'C-Suite' ? 0.40 : 
+                           ['G4', 'G5'].includes(grade) ? 0.35 : 0.30;
+  const budgetAllocated = Math.round(salary * budgetMultiplier * 12); // Annual
+  
+  // Adoption: ~70% of employees have made at least 1 claim
+  const hasMadeClaim = Math.random() < 0.70;
+  const claimCount = hasMadeClaim ? randomBetween(1, 12) : 0;
+  
+  // Amount spent varies - some heavy users, some light
+  const spendRate = hasMadeClaim 
+    ? Math.random() < 0.3 ? randomBetween(80, 98) : randomBetween(20, 75) // 30% heavy users
+    : 0;
+  const amountSpent = Math.round(budgetAllocated * (spendRate / 100));
   
   return {
     id: `emp-${i + 1}`,
@@ -81,9 +91,11 @@ export const MOCK_EMPLOYEES: MockEmployee[] = Array.from({ length: 150 }, (_, i)
     grade,
     salary,
     tenure: randomChoice(TENURE_OPTIONS).value,
-    utilizationRate,
-    totalSpend: Math.round(salary * 0.3 * (utilizationRate / 100) * 12), // 30% of salary annualized
-    satisfaction: satisfaction as 'happy' | 'neutral' | 'frustrated',
+    // Objective behavioral data
+    budgetAllocated,
+    amountSpent,
+    hasMadeClaim,
+    claimCount,
     topBenefits: generateBenefitMix(),
     topNeeds: generateNeeds(),
   };
@@ -92,19 +104,19 @@ export const MOCK_EMPLOYEES: MockEmployee[] = Array.from({ length: 150 }, (_, i)
 // AI Watchlist segments (pre-defined smart segments)
 export const AI_WATCHLIST_SEGMENTS = [
   {
-    id: 'flight-risk',
-    name: 'Flight Risk',
-    description: 'High performers with low satisfaction',
+    id: 'low-adoption',
+    name: 'Low Adoption',
+    description: 'Eligible employees not claiming benefits',
     icon: 'AlertTriangle',
     filters: {
       departments: [],
       nationalities: [],
-      grades: ['G4', 'G5', 'C-Suite'],
-      salaryRange: [40000, 100000] as [number, number],
-      tenure: '3-5',
+      grades: [],
+      salaryRange: [5000, 100000] as [number, number],
+      tenure: null,
     },
     isAI: true,
-    riskScore: 'high' as const,
+    behavioralGap: 'low-engagement' as const,
   },
   {
     id: 'high-potentials',
@@ -119,7 +131,7 @@ export const AI_WATCHLIST_SEGMENTS = [
       tenure: '1-3',
     },
     isAI: true,
-    riskScore: 'medium' as const,
+    behavioralGap: 'balanced' as const,
   },
   {
     id: 'new-joiners',
@@ -134,21 +146,21 @@ export const AI_WATCHLIST_SEGMENTS = [
       tenure: '<1',
     },
     isAI: true,
-    riskScore: 'medium' as const,
+    behavioralGap: 'low-engagement' as const,
   },
   {
-    id: 'uae-nationals',
-    name: 'UAE Nationals',
-    description: 'Emiratization focus group',
-    icon: 'Flag',
+    id: 'heavy-users',
+    name: 'Heavy Users',
+    description: 'High budget utilization',
+    icon: 'TrendingUp',
     filters: {
       departments: [],
-      nationalities: ['UAE National'],
-      grades: [],
-      salaryRange: [5000, 100000] as [number, number],
+      nationalities: [],
+      grades: ['G4', 'G5', 'C-Suite'],
+      salaryRange: [40000, 100000] as [number, number],
       tenure: null,
     },
     isAI: true,
-    riskScore: 'low' as const,
+    behavioralGap: 'concentrated-spend' as const,
   },
 ];

@@ -1,16 +1,16 @@
 /**
  * Segment Charts
  * 
- * Visualizations for the segment builder - Benefit Mix, Sentiment, Top Needs.
+ * Visualizations for the segment builder.
+ * Uses OBJECTIVE BEHAVIORAL DATA - Budget vs Participation comparison.
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { SegmentMetrics } from './types';
 import { formatCurrencyAED, formatPercent, cn } from '@/lib/utils';
-import { Smile, Frown, Meh, Lightbulb, TrendingUp } from 'lucide-react';
+import { Lightbulb, TrendingUp, Target, AlertTriangle, CheckCircle, DollarSign, UserCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface SegmentChartsProps {
@@ -19,20 +19,21 @@ interface SegmentChartsProps {
 
 const COLORS = ['hsl(var(--accent))', 'hsl(var(--primary))', 'hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--chart-5))', 'hsl(var(--chart-6))'];
 
+const gapIcons = {
+  'high-engagement-low-cost': CheckCircle,
+  'concentrated-spend': AlertTriangle,
+  'balanced': Target,
+  'low-engagement': TrendingUp,
+};
+
+const gapColors = {
+  'high-engagement-low-cost': 'text-success',
+  'concentrated-spend': 'text-warning',
+  'balanced': 'text-primary',
+  'low-engagement': 'text-destructive',
+};
+
 export function SegmentCharts({ metrics }: SegmentChartsProps) {
-  const totalSentiment = metrics.happyCount + metrics.frustratedCount + 
-    (metrics.matches - metrics.happyCount - metrics.frustratedCount);
-  const neutralCount = metrics.matches - metrics.happyCount - metrics.frustratedCount;
-  
-  const sentimentData = [
-    { name: 'Happy', value: metrics.happyCount, color: 'hsl(var(--success))' },
-    { name: 'Neutral', value: neutralCount, color: 'hsl(var(--muted-foreground))' },
-    { name: 'Frustrated', value: metrics.frustratedCount, color: 'hsl(var(--destructive))' },
-  ];
-
-  const happyPercent = totalSentiment > 0 ? Math.round((metrics.happyCount / totalSentiment) * 100) : 0;
-  const frustratedPercent = totalSentiment > 0 ? Math.round((metrics.frustratedCount / totalSentiment) * 100) : 0;
-
   if (metrics.matches === 0) {
     return (
       <Card className="border-dashed">
@@ -47,8 +48,60 @@ export function SegmentCharts({ metrics }: SegmentChartsProps) {
     );
   }
 
+  const GapIcon = gapIcons[metrics.behavioralGap];
+
   return (
     <div className="space-y-4">
+      {/* Behavioral Gap Insight - Prominent display */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <Card className={cn(
+          'border-2',
+          metrics.behavioralGap === 'high-engagement-low-cost' ? 'border-success/30 bg-success/5' :
+          metrics.behavioralGap === 'concentrated-spend' ? 'border-warning/30 bg-warning/5' :
+          metrics.behavioralGap === 'balanced' ? 'border-primary/30 bg-primary/5' :
+          'border-destructive/30 bg-destructive/5'
+        )}>
+          <CardContent className="py-4">
+            <div className="flex items-start gap-4">
+              <div className={cn(
+                'p-3 rounded-xl shrink-0',
+                metrics.behavioralGap === 'high-engagement-low-cost' ? 'bg-success/10' :
+                metrics.behavioralGap === 'concentrated-spend' ? 'bg-warning/10' :
+                metrics.behavioralGap === 'balanced' ? 'bg-primary/10' :
+                'bg-destructive/10'
+              )}>
+                <GapIcon className={cn('h-6 w-6', gapColors[metrics.behavioralGap])} />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-base mb-1">Behavioral Gap Analysis</h3>
+                <p className="text-sm text-muted-foreground">{metrics.behavioralGapInsight}</p>
+                
+                {/* Visual comparison */}
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="h-4 w-4 text-success" />
+                    <span className="text-sm">
+                      <span className="font-semibold">{formatPercent(metrics.participationRate)}</span>{' '}
+                      <span className="text-muted-foreground">Participation</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-accent" />
+                    <span className="text-sm">
+                      <span className="font-semibold">{formatPercent(metrics.budgetUsage)}</span>{' '}
+                      <span className="text-muted-foreground">Budget Usage</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* Chart Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Benefit Mix Stacked Bar */}
@@ -102,7 +155,7 @@ export function SegmentCharts({ metrics }: SegmentChartsProps) {
           </Card>
         </motion.div>
 
-        {/* Sentiment Heatmap */}
+        {/* Budget vs Participation Comparison */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -110,53 +163,69 @@ export function SegmentCharts({ metrics }: SegmentChartsProps) {
         >
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Sentiment Heatmap</CardTitle>
+              <CardTitle className="text-sm">Usage vs Adoption</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {/* Visual Bar */}
-                <div className="h-12 flex rounded-lg overflow-hidden">
-                  <div
-                    className="bg-success flex items-center justify-center text-white text-xs font-medium transition-all"
-                    style={{ width: `${happyPercent}%` }}
-                  >
-                    {happyPercent > 15 && `${happyPercent}%`}
+              <div className="space-y-6 py-2">
+                {/* Budget Usage Bar */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-accent" />
+                      Budget Usage
+                    </span>
+                    <span className="font-semibold tabular-nums">{formatPercent(metrics.budgetUsage)}</span>
                   </div>
-                  <div
-                    className="bg-muted flex items-center justify-center text-muted-foreground text-xs font-medium transition-all"
-                    style={{ width: `${100 - happyPercent - frustratedPercent}%` }}
-                  />
-                  <div
-                    className="bg-destructive flex items-center justify-center text-white text-xs font-medium transition-all"
-                    style={{ width: `${frustratedPercent}%` }}
-                  >
-                    {frustratedPercent > 15 && `${frustratedPercent}%`}
+                  <div className="h-6 bg-muted rounded-md overflow-hidden relative">
+                    <motion.div
+                      className="h-full bg-accent rounded-md"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${metrics.budgetUsage}%` }}
+                      transition={{ duration: 0.5, ease: 'easeOut' }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center text-xs font-medium">
+                      {formatCurrencyAED(metrics.totalSpend, { abbreviate: true })} / {formatCurrencyAED(metrics.totalBudget, { abbreviate: true })}
+                    </div>
                   </div>
                 </div>
 
-                {/* Legend */}
-                <div className="grid grid-cols-3 gap-2 text-sm">
-                  <div className="flex items-center gap-2 p-2 rounded-lg bg-success/10">
-                    <Smile className="h-4 w-4 text-success" />
-                    <div>
-                      <p className="font-semibold">{metrics.happyCount}</p>
-                      <p className="text-xs text-muted-foreground">Happy</p>
+                {/* Participation Rate Bar */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2">
+                      <UserCheck className="h-4 w-4 text-success" />
+                      Employee Participation
+                    </span>
+                    <span className="font-semibold tabular-nums">{formatPercent(metrics.participationRate)}</span>
+                  </div>
+                  <div className="h-6 bg-muted rounded-md overflow-hidden relative">
+                    <motion.div
+                      className="h-full bg-success rounded-md"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${metrics.participationRate}%` }}
+                      transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center text-xs font-medium">
+                      {metrics.participatingCount} / {metrics.matches} employees
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
-                    <Meh className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="font-semibold">{neutralCount}</p>
-                      <p className="text-xs text-muted-foreground">Neutral</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 p-2 rounded-lg bg-destructive/10">
-                    <Frown className="h-4 w-4 text-destructive" />
-                    <div>
-                      <p className="font-semibold">{metrics.frustratedCount}</p>
-                      <p className="text-xs text-muted-foreground">Frustrated</p>
-                    </div>
-                  </div>
+                </div>
+
+                {/* Gap indicator */}
+                <div className="flex items-center justify-center gap-2 pt-2 border-t border-border/50">
+                  <span className="text-xs text-muted-foreground">Gap:</span>
+                  <Badge 
+                    variant="outline" 
+                    className={cn(
+                      'text-xs',
+                      metrics.behavioralGap === 'high-engagement-low-cost' ? 'bg-success/10 text-success border-success/30' :
+                      metrics.behavioralGap === 'concentrated-spend' ? 'bg-warning/10 text-warning border-warning/30' :
+                      metrics.behavioralGap === 'balanced' ? 'bg-primary/10 text-primary border-primary/30' :
+                      'bg-destructive/10 text-destructive border-destructive/30'
+                    )}
+                  >
+                    {Math.abs(metrics.participationRate - metrics.budgetUsage)}% difference
+                  </Badge>
                 </div>
               </div>
             </CardContent>
@@ -174,7 +243,7 @@ export function SegmentCharts({ metrics }: SegmentChartsProps) {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Lightbulb className="h-4 w-4 text-warning" />
-              Top 3 Needs
+              Top 3 Requests (from Claims Data)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -204,7 +273,7 @@ export function SegmentCharts({ metrics }: SegmentChartsProps) {
               </div>
             ) : (
               <p className="text-sm text-muted-foreground text-center py-4">
-                No specific needs identified for this segment
+                No specific requests identified for this segment
               </p>
             )}
           </CardContent>

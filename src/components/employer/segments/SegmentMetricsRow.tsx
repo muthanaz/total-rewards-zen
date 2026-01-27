@@ -1,12 +1,13 @@
 /**
  * Segment Metrics Row
  * 
- * Top metric row with live-updating KPIs for the current filter.
+ * Top metric row with live-updating KPIs.
+ * Uses OBJECTIVE BEHAVIORAL DATA: Budget Usage & Participation Rate.
  */
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, DollarSign, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Users, DollarSign, UserCheck, PieChart } from 'lucide-react';
 import { SegmentMetrics } from './types';
 import { formatCurrencyAED, formatPercent, formatInteger, cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,14 +17,27 @@ interface SegmentMetricsRowProps {
   title: string;
 }
 
-const riskConfig = {
-  high: { label: 'High Risk', className: 'bg-destructive/10 text-destructive border-destructive/30' },
-  medium: { label: 'Medium Risk', className: 'bg-warning/10 text-warning border-warning/30' },
-  low: { label: 'Low Risk', className: 'bg-success/10 text-success border-success/30' },
+const gapConfig = {
+  'high-engagement-low-cost': { 
+    label: 'High Engagement / Low Cost', 
+    className: 'bg-success/10 text-success border-success/30' 
+  },
+  'concentrated-spend': { 
+    label: 'Concentrated Spend', 
+    className: 'bg-warning/10 text-warning border-warning/30' 
+  },
+  'balanced': { 
+    label: 'Balanced', 
+    className: 'bg-primary/10 text-primary border-primary/30' 
+  },
+  'low-engagement': { 
+    label: 'Low Engagement', 
+    className: 'bg-destructive/10 text-destructive border-destructive/30' 
+  },
 };
 
 export function SegmentMetricsRow({ metrics, title }: SegmentMetricsRowProps) {
-  const risk = riskConfig[metrics.riskScore];
+  const gap = gapConfig[metrics.behavioralGap];
 
   return (
     <div className="space-y-4">
@@ -64,9 +78,9 @@ export function SegmentMetricsRow({ metrics, title }: SegmentMetricsRowProps) {
             </Card>
           </motion.div>
 
-          {/* Total Spend */}
+          {/* Budget Usage (Financial Utilization) */}
           <motion.div
-            key={`spend-${metrics.totalSpend}`}
+            key={`budget-${metrics.budgetUsage}`}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2, delay: 0.05 }}
@@ -78,19 +92,23 @@ export function SegmentMetricsRow({ metrics, title }: SegmentMetricsRowProps) {
                     <DollarSign className="h-5 w-5 text-accent" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold tabular-nums">
-                      {formatCurrencyAED(metrics.totalSpend, { abbreviate: true })}
+                    <p className={cn(
+                      "text-2xl font-bold tabular-nums",
+                      metrics.budgetUsage >= 80 ? 'text-success' :
+                      metrics.budgetUsage >= 60 ? 'text-foreground' : 'text-warning'
+                    )}>
+                      {formatPercent(metrics.budgetUsage)}
                     </p>
-                    <p className="text-xs text-muted-foreground">Total Spend</p>
+                    <p className="text-xs text-muted-foreground">Budget Usage</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
 
-          {/* Utilization */}
+          {/* Participation Rate (Adoption) */}
           <motion.div
-            key={`util-${metrics.utilizationRate}`}
+            key={`participation-${metrics.participationRate}`}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2, delay: 0.1 }}
@@ -99,26 +117,26 @@ export function SegmentMetricsRow({ metrics, title }: SegmentMetricsRowProps) {
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-success/10">
-                    <TrendingUp className="h-5 w-5 text-success" />
+                    <UserCheck className="h-5 w-5 text-success" />
                   </div>
                   <div>
                     <p className={cn(
                       "text-2xl font-bold tabular-nums",
-                      metrics.utilizationRate >= 80 ? 'text-success' :
-                      metrics.utilizationRate >= 60 ? 'text-foreground' : 'text-warning'
+                      metrics.participationRate >= 80 ? 'text-success' :
+                      metrics.participationRate >= 60 ? 'text-foreground' : 'text-warning'
                     )}>
-                      {formatPercent(metrics.utilizationRate)}
+                      {formatPercent(metrics.participationRate)}
                     </p>
-                    <p className="text-xs text-muted-foreground">Utilization</p>
+                    <p className="text-xs text-muted-foreground">Employee Participation</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
 
-          {/* Risk Score */}
+          {/* Behavioral Gap */}
           <motion.div
-            key={`risk-${metrics.riskScore}`}
+            key={`gap-${metrics.behavioralGap}`}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2, delay: 0.15 }}
@@ -128,21 +146,23 @@ export function SegmentMetricsRow({ metrics, title }: SegmentMetricsRowProps) {
                 <div className="flex items-center gap-3">
                   <div className={cn(
                     "p-2 rounded-lg",
-                    metrics.riskScore === 'high' ? 'bg-destructive/10' :
-                    metrics.riskScore === 'medium' ? 'bg-warning/10' : 'bg-success/10'
+                    metrics.behavioralGap === 'high-engagement-low-cost' ? 'bg-success/10' :
+                    metrics.behavioralGap === 'concentrated-spend' ? 'bg-warning/10' :
+                    metrics.behavioralGap === 'balanced' ? 'bg-primary/10' : 'bg-destructive/10'
                   )}>
-                    <AlertTriangle className={cn(
+                    <PieChart className={cn(
                       "h-5 w-5",
-                      metrics.riskScore === 'high' ? 'text-destructive' :
-                      metrics.riskScore === 'medium' ? 'text-warning' : 'text-success'
+                      metrics.behavioralGap === 'high-engagement-low-cost' ? 'text-success' :
+                      metrics.behavioralGap === 'concentrated-spend' ? 'text-warning' :
+                      metrics.behavioralGap === 'balanced' ? 'text-primary' : 'text-destructive'
                     )} />
                   </div>
                   <div>
-                    <Badge variant="outline" className={cn('text-xs', risk.className)}>
-                      {risk.label}
+                    <Badge variant="outline" className={cn('text-xs', gap.className)}>
+                      {gap.label}
                     </Badge>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {metrics.frustratedCount} frustrated
+                      {formatInteger(metrics.participatingCount)} claiming
                     </p>
                   </div>
                 </div>
