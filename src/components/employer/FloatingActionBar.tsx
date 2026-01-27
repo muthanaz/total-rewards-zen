@@ -36,7 +36,17 @@ import {
   AlertTriangle,
   Loader2,
   FileQuestion,
+  UserPlus,
+  ChevronDown,
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
 import { PermissionGate } from '@/components/shared/PermissionGate';
 import { useToast } from '@/hooks/use-toast';
 import { useUpdateRequestStatus } from '@/hooks/useSharedRequests';
@@ -52,12 +62,20 @@ interface ClaimData {
   employeeName?: string;
 }
 
+interface HRTeamMember {
+  id: string;
+  name: string;
+  role: string;
+}
+
 interface FloatingActionBarProps {
   selectedIds: string[];
   claimsData: ClaimData[];
   onClearSelection: () => void;
   onRefresh: () => void;
   organizationId?: string | null;
+  onAssignTo?: (assigneeId: string, assigneeName: string) => void;
+  hrTeamMembers?: HRTeamMember[];
 }
 
 const REJECTION_REASONS = [
@@ -71,12 +89,22 @@ const REJECTION_REASONS = [
 
 const PROCESSABLE_STATUSES = ['pending', 'submitted', 'in_review', 'needs_info'];
 
+// Default HR Team Members for assignment
+const DEFAULT_HR_TEAM_MEMBERS: HRTeamMember[] = [
+  { id: 'hr-manager-1', name: 'Fatima Hassan', role: 'HR Manager' },
+  { id: 'hr-specialist-1', name: 'Sarah Al-Rashid', role: 'HR Specialist' },
+  { id: 'hr-specialist-2', name: 'Ahmed Khan', role: 'HR Specialist' },
+  { id: 'finance-lead-1', name: 'John Mitchell', role: 'Finance Lead' },
+];
+
 export function FloatingActionBar({
   selectedIds,
   claimsData,
   onClearSelection,
   onRefresh,
   organizationId,
+  onAssignTo,
+  hrTeamMembers = DEFAULT_HR_TEAM_MEMBERS,
 }: FloatingActionBarProps) {
   const { toast } = useToast();
   const updateStatus = useUpdateRequestStatus();
@@ -99,6 +127,47 @@ export function FloatingActionBar({
   
   const totalAmount = eligibleForApproval.reduce((sum, c) => sum + (c.amount || 0), 0);
 
+  const handleBulkAssign = async (assigneeId: string, assigneeName: string) => {
+    setIsProcessing(true);
+    
+    try {
+      // Call parent handler if provided
+      if (onAssignTo) {
+        onAssignTo(assigneeId, assigneeName);
+      }
+      
+      // Log each assignment
+      for (const id of selectedIds) {
+        await logEvent({
+          action: 'BULK_ASSIGN',
+          resourceType: 'request',
+          resourceId: id,
+          details: { 
+            org_id: organizationId, 
+            assignee_id: assigneeId, 
+            assignee_name: assigneeName,
+            bulk_action: true 
+          }
+        });
+      }
+      
+      toast({
+        title: 'Claims Assigned',
+        description: `${selectedIds.length} claim${selectedIds.length !== 1 ? 's' : ''} assigned to ${assigneeName}.`,
+      });
+      
+      onClearSelection();
+      onRefresh();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to assign claims.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
   const handleBulkApprove = async () => {
     setIsProcessing(true);
     let approved = 0;
@@ -273,6 +342,40 @@ export function FloatingActionBar({
               {/* Right: Action buttons */}
               <PermissionGate permission="can_process_claims">
                 <div className="flex items-center gap-2">
+                  {/* Assign To Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={isProcessing}
+                        className="bg-blue-500/20 border-blue-500/50 text-blue-400 hover:bg-blue-500/30 hover:text-blue-300 gap-2"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        Assign to...
+                        <ChevronDown className="w-3 h-3 ml-0.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 bg-popover z-[60]">
+                      <DropdownMenuLabel className="text-xs text-muted-foreground">
+                        HR Team Members
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {hrTeamMembers.map((member) => (
+                        <DropdownMenuItem
+                          key={member.id}
+                          onClick={() => handleBulkAssign(member.id, member.name)}
+                          className="cursor-pointer"
+                        >
+                          <div className="flex flex-col">
+                            <span className="font-medium">{member.name}</span>
+                            <span className="text-xs text-muted-foreground">{member.role}</span>
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  
                   <Button
                     variant="outline"
                     size="sm"
