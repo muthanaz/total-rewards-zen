@@ -2,6 +2,7 @@
  * Employee Directory
  * 
  * Comprehensive employee list with avatar, role, grade, status, total value, and utilization.
+ * Includes Employee 360 Drawer for deep-dive profile viewing.
  */
 
 import { useState, useMemo } from 'react';
@@ -16,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Eye, Building2 } from 'lucide-react';
 import { cn, formatCurrencyAED } from '@/lib/utils';
 import { DemoModeBadge } from '@/components/shared/DemoDataGate';
-import { toast } from 'sonner';
+import { Employee360Drawer, Employee360Data } from '@/components/employer/Employee360Drawer';
 
 // Employee status type
 type EmployeeStatus = 'active' | 'on_leave' | 'probation';
@@ -182,6 +183,8 @@ const STATUS_CONFIG: Record<EmployeeStatus, { label: string; className: string }
 export default function EmployeeDirectory() {
   const [searchQuery, setSearchQuery] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('All Departments');
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee360Data | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Filter employees
   const filteredEmployees = useMemo(() => {
@@ -202,11 +205,10 @@ export default function EmployeeDirectory() {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
-  // Handle view action
+  // Handle view action - open drawer
   const handleView = (employee: Employee) => {
-    toast.info(`Viewing ${employee.firstName} ${employee.lastName}`, {
-      description: `Employee ID: ${employee.id}`,
-    });
+    setSelectedEmployee(employee as Employee360Data);
+    setDrawerOpen(true);
   };
 
   return (
@@ -268,7 +270,11 @@ export default function EmployeeDirectory() {
             </TableHeader>
             <TableBody>
               {filteredEmployees.map(emp => (
-                <TableRow key={emp.id} className="group">
+                <TableRow 
+                  key={emp.id} 
+                  className="group cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => handleView(emp)}
+                >
                   {/* Employee: Avatar + Name + Email */}
                   <TableCell>
                     <div className="flex items-center gap-3">
@@ -342,7 +348,7 @@ export default function EmployeeDirectory() {
                   </TableCell>
 
                   {/* Action Button */}
-                  <TableCell className="text-center">
+                  <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -367,6 +373,13 @@ export default function EmployeeDirectory() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Employee 360 Drawer */}
+      <Employee360Drawer
+        employee={selectedEmployee}
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+      />
     </div>
   );
 }
