@@ -3,19 +3,17 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
-  FileCheck,
+  BarChart3,
+  TrendingUp,
+  KanbanSquare,
+  Inbox,
   Users,
-  DollarSign,
-  Lightbulb,
-  FileText,
+  ShieldAlert,
+  BookOpen,
+  Cable,
   Database,
   Briefcase,
   Eye,
-  TrendingUp,
-  Shield,
-  HelpCircle,
-  BarChart3,
-  ClipboardList,
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useEmployerViewMode, ViewMode } from '@/contexts/EmployerViewModeContext';
@@ -51,36 +49,39 @@ interface NavGroup {
 }
 
 // ============================================================================
-// NAVIGATION GROUPINGS
+// UNIFIED NAVIGATION (3 Groups: Strategy, Operations, Configuration)
 // ============================================================================
 
-// HR OPS NAVIGATION (operational workbench)
-const opsNavigation: NavGroup[] = [
+const unifiedNavigation: NavGroup[] = [
   {
-    id: 'run-operations',
-    label: 'Run Operations',
-    labelAr: 'تشغيل العمليات',
+    id: 'strategy',
+    label: 'Strategy',
+    labelAr: 'الاستراتيجية',
     items: [
-      { label: 'Claims Queue', labelAr: 'قائمة المطالبات', path: '/employer/claims', icon: FileCheck },
-      { label: 'Knowledge Center', labelAr: 'مركز المعرفة', path: '/employer/knowledge', icon: HelpCircle },
+      { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/employer', icon: LayoutDashboard },
+      { label: 'Investment Analysis', labelAr: 'تحليل الاستثمار', path: '/employer/spend', icon: BarChart3 },
+      { label: 'Optimization', labelAr: 'التحسين', path: '/employer/optimization', icon: TrendingUp },
+      { label: 'Action Plan', labelAr: 'خطة العمل', path: '/employer/actions', icon: KanbanSquare, showPendingBadge: true },
     ],
   },
   {
-    id: 'improve-policies',
-    label: 'Improve Policies',
-    labelAr: 'تحسين السياسات',
+    id: 'operations',
+    label: 'Operations',
+    labelAr: 'العمليات',
     items: [
-      { label: 'Policy Management', labelAr: 'إدارة السياسات', path: '/employer/policies', icon: FileText },
-      { label: 'Policy Insights', labelAr: 'رؤى السياسات', path: '/employer/policy-insights', icon: TrendingUp },
+      { label: 'Claims Queue', labelAr: 'قائمة المطالبات', path: '/employer/claims', icon: Inbox },
+      { label: 'Employee Directory', labelAr: 'دليل الموظفين', path: '/employer/employees', icon: Users },
+      { label: 'Audit Logs', labelAr: 'سجلات التدقيق', path: '/employer/audit', icon: ShieldAlert },
     ],
   },
   {
-    id: 'data-trust',
-    label: 'Data & Trust',
-    labelAr: 'البيانات والثقة',
+    id: 'configuration',
+    label: 'Configuration',
+    labelAr: 'الإعدادات',
     items: [
-      { label: 'Integrations', labelAr: 'التكاملات', path: '/employer/integrations', icon: Database },
-      { label: 'Data Quality', labelAr: 'جودة البيانات', path: '/employer/data-quality/rules', icon: Shield },
+      { label: 'Policy Management', labelAr: 'إدارة السياسات', path: '/employer/policies', icon: BookOpen },
+      { label: 'Integrations', labelAr: 'التكاملات', path: '/employer/integrations', icon: Cable },
+      { label: 'Data Quality', labelAr: 'جودة البيانات', path: '/employer/data-quality', icon: Database },
     ],
   },
 ];
@@ -88,10 +89,9 @@ const opsNavigation: NavGroup[] = [
 // CEO-OPTIMIZED EXECUTIVE NAVIGATION (5 flat items - no collapsible sections)
 const execNavItems: NavItem[] = [
   { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/employer', icon: LayoutDashboard },
-  { label: 'Investment Analysis', labelAr: 'تحليل الاستثمار', path: '/employer/spend', icon: DollarSign },
-  { label: 'Recovery Opportunities', labelAr: 'فرص الاسترداد', path: '/employer/zombie', icon: Lightbulb },
-  { label: 'Action Plan', labelAr: 'خطة العمل', path: '/employer/recommendations', icon: ClipboardList, showPendingBadge: true },
-  { label: 'Risk & Compliance', labelAr: 'المخاطر والامتثال', path: '/employer/policy-insights', icon: Shield },
+  { label: 'Investment Analysis', labelAr: 'تحليل الاستثمار', path: '/employer/spend', icon: BarChart3 },
+  { label: 'Optimization', labelAr: 'التحسين', path: '/employer/optimization', icon: TrendingUp },
+  { label: 'Action Plan', labelAr: 'خطة العمل', path: '/employer/actions', icon: KanbanSquare, showPendingBadge: true },
 ];
 
 // ============================================================================
@@ -231,13 +231,13 @@ export function EmployerSidebar() {
   const { pendingApprovals } = useActionApprovals();
   const pendingCount = pendingApprovals?.length || 0;
 
-  // HR Ops mode uses collapsible sections
+  // Unified navigation uses collapsible sections
   const [expandedSections, setExpandedSections] = useState<string[]>(
-    opsNavigation.map((s) => s.id)
+    unifiedNavigation.map((s) => s.id)
   );
 
-  const visibleOpsNavigation = useMemo(() => {
-    return opsNavigation.filter((section) => {
+  const visibleNavigation = useMemo(() => {
+    return unifiedNavigation.filter((section) => {
       if (section.featureFlag) {
         return flags[section.featureFlag];
       }
@@ -259,7 +259,7 @@ export function EmployerSidebar() {
 
       <SidebarNav>
         {isExecutive ? (
-          // EXECUTIVE MODE: Flat 5-item navigation (CEO-optimized)
+          // EXECUTIVE MODE: Flat navigation (CEO-optimized)
           <div className="space-y-1">
             {execNavItems.map((item) => (
               <ExecNavItem 
@@ -270,8 +270,8 @@ export function EmployerSidebar() {
             ))}
           </div>
         ) : (
-          // HR OPS MODE: Collapsible sections
-          visibleOpsNavigation.map((group) => (
+          // OPERATIONAL MODE: Collapsible sections (Strategy, Operations, Configuration)
+          visibleNavigation.map((group) => (
             <SidebarSection
               key={group.id}
               id={group.id}
@@ -288,6 +288,7 @@ export function EmployerSidebar() {
                   labelAr={item.labelAr}
                   icon={item.icon}
                   badge={item.badge}
+                  badgeCount={item.showPendingBadge ? pendingCount : undefined}
                 />
               ))}
             </SidebarSection>
