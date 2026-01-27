@@ -116,16 +116,19 @@ export function DecisionsActionsCard({ actions, className }: DecisionsActionsCar
               >
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm truncate">{action.title}</p>
-                  <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <User className="w-3 h-3" />
-                      <span>{action.owner}</span>
+                    <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        <span>{action.owner}</span>
+                      </div>
+                      <span>•</span>
+                      <span className="font-medium text-success tabular-nums">
+                        {impactValue > 0 
+                          ? `Recoverable: ${formatCurrencyAED(impactValue, { abbreviate: true })}`
+                          : 'Process Efficiency'
+                        }
+                      </span>
                     </div>
-                    <span>•</span>
-                    <span className="font-medium text-success tabular-nums">
-                      Potential Recovery: {formatCurrencyAED(impactValue, { abbreviate: true })}
-                    </span>
-                  </div>
                 </div>
                 <div className="flex items-center gap-3 ml-4">
                   <Badge 

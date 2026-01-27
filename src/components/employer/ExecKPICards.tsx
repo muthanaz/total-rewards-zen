@@ -130,10 +130,10 @@ export function ExecKPICards({
     },
     {
       id: 'utilizationRate',
-      label: 'Usage Rate',
+      label: 'Budget Utilization',
       value: formatPercent(utilizationRate),
       delta: utilizationDelta,
-      deltaLabel: 'vs last quarter',
+      deltaLabel: 'vs Prev. Month',
       higherIsBetter: true,
       whyMoved: utilizationWhy,
       icon: Target,

@@ -125,22 +125,26 @@ export function SpendUtilizationMatrix({ data, isDemo, className }: SpendUtiliza
         </CardHeader>
         <CardContent>
           <div className="h-[350px] relative">
-            {/* Quadrant background labels */}
-            <div className="absolute inset-0 pointer-events-none z-0" style={{ margin: '20px' }}>
+            {/* Quadrant background with grid lines */}
+            <div className="absolute inset-0 pointer-events-none z-0" style={{ margin: '40px 60px 40px 60px' }}>
+              {/* Quadrant divider lines */}
+              <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border/30" />
+              <div className="absolute top-1/2 left-0 right-0 h-px bg-border/30" />
+              
               {/* Top-Left: Star Performers (High Util, Low Spend) */}
-              <div className="absolute left-[10%] top-[15%] text-[11px] font-medium text-muted-foreground/20 select-none">
+              <div className="absolute left-[25%] top-[25%] -translate-x-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground/20 select-none whitespace-nowrap">
                 Star Performers
               </div>
               {/* Top-Right: High Value / High Cost (High Util, High Spend) */}
-              <div className="absolute right-[10%] top-[15%] text-[11px] font-medium text-muted-foreground/20 select-none text-right">
+              <div className="absolute left-[75%] top-[25%] -translate-x-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground/20 select-none whitespace-nowrap">
                 High Value / High Cost
               </div>
-              {/* Bottom-Left: Low Impact (Low Util, Low Spend) */}
-              <div className="absolute left-[10%] bottom-[25%] text-[11px] font-medium text-muted-foreground/20 select-none">
-                Low Impact
+              {/* Bottom-Left: Low Priority (Low Util, Low Spend) */}
+              <div className="absolute left-[25%] top-[75%] -translate-x-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground/20 select-none whitespace-nowrap">
+                Low Priority
               </div>
               {/* Bottom-Right: Optimization Needed (Low Util, High Spend) */}
-              <div className="absolute right-[10%] bottom-[25%] text-[11px] font-medium text-muted-foreground/20 select-none text-right">
+              <div className="absolute left-[75%] top-[75%] -translate-x-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground/20 select-none whitespace-nowrap">
                 Optimization Needed
               </div>
             </div>
