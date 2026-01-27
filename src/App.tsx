@@ -259,7 +259,7 @@ function AppRoutes() {
         <Route path="actions" element={<RecommendationsPage />} />
         <Route path="segments" element={<SegmentsPage />} />
         <Route path="benchmarks" element={<BenchmarksPage />} />
-        <Route path="claims" element={<ClaimsPage />} />
+        <Route path="claims" element={<Navigate to="/employer/ops" replace />} />
         <Route path="settlements" element={<SettlementsPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="communications" element={<CommunicationsPage />} />

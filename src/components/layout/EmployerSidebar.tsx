@@ -66,7 +66,6 @@ const unifiedNavigation: NavGroup[] = [
     labelAr: 'العمليات',
     items: [
       { label: 'Workbench', labelAr: 'منضدة العمل', path: '/employer/ops', icon: LayoutGrid },
-      { label: 'Claims & Requests', labelAr: 'المطالبات والطلبات', path: '/employer/claims', icon: Inbox },
       { label: 'Settlements', labelAr: 'التسويات', path: '/employer/settlements', icon: Banknote },
       { label: 'Communications', labelAr: 'الاتصالات', path: '/employer/communications', icon: Megaphone },
       { label: 'Calendar', labelAr: 'التقويم', path: '/employer/calendar', icon: CalendarDays },
@@ -253,9 +252,9 @@ export function EmployerSidebar() {
   const getDefaultExpandedSections = () => {
     const path = location.pathname;
     // Always expand operations when on ops-related pages
-    const opsPages = ['/employer/claims', '/employer/settlements', '/employer/reports', '/employer/employees', '/employer/ops', '/employer/communications', '/employer/calendar'];
+    const opsPages = ['/employer/settlements', '/employer/reports', '/employer/employees', '/employer/ops', '/employer/communications', '/employer/calendar'];
     if (opsPages.some(p => path.startsWith(p))) {
-      return unifiedNavigation.map(s => s.id); // All expanded, but operations is guaranteed
+      return unifiedNavigation.map(s => s.id);
     }
     return unifiedNavigation.map(s => s.id);
   };
@@ -265,7 +264,7 @@ export function EmployerSidebar() {
   // Update expanded sections when route changes to ensure relevant section is open
   useEffect(() => {
     const path = location.pathname;
-    const opsPages = ['/employer/claims', '/employer/settlements', '/employer/reports', '/employer/employees', '/employer/ops', '/employer/communications', '/employer/calendar'];
+    const opsPages = ['/employer/settlements', '/employer/reports', '/employer/employees', '/employer/ops', '/employer/communications', '/employer/calendar'];
     if (opsPages.some(p => path.startsWith(p))) {
       setExpandedSections(prev => prev.includes('operations') ? prev : [...prev, 'operations']);
     }
