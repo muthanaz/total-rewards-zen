@@ -170,32 +170,36 @@ function BenefitDrilldownSheet({ isOpen, onClose, benefit }: DrilldownSheetProps
         <TableHeader>
           <TableRow>
             <TableHead>{drillLevel === 'department' ? 'Department' : drillLevel === 'grade' ? 'Grade' : 'Segment'}</TableHead>
-            <TableHead className="text-right">Entitled</TableHead>
-            <TableHead className="text-right">Claimed</TableHead>
+            <TableHead className="text-right">Total Spend</TableHead>
+            <TableHead className="text-right">Cost/Head</TableHead>
             <TableHead className="text-right">Employees</TableHead>
             <TableHead className="text-right">Utilization</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {currentData.map((row) => {
-            const rowUtil = calculateUtilization({ allocated: row.entitled, utilized: row.spend });
-            return (
-              <TableRow key={row.name}>
-                <TableCell className="font-medium">{row.name}</TableCell>
-                <TableCell className="text-right">{formatCurrencyAED(row.entitled, { abbreviate: false })}</TableCell>
-                <TableCell className="text-right">{formatCurrencyAED(row.spend, { abbreviate: false })}</TableCell>
-                <TableCell className="text-right">{formatInteger(row.employees)}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Progress value={rowUtil.rate} className="w-16 h-2" />
-                    <span className={rowUtil.rate >= 80 ? 'text-success' : rowUtil.rate >= 60 ? 'text-warning' : 'text-destructive'}>
-                      {formatPercent(rowUtil.rate)}
-                    </span>
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
-          })}
+          {/* Sort by Total Spend (High to Low) */}
+          {[...currentData]
+            .sort((a, b) => b.spend - a.spend)
+            .map((row) => {
+              const rowUtil = calculateUtilization({ allocated: row.entitled, utilized: row.spend });
+              const costPerHead = row.employees > 0 ? row.spend / row.employees : 0;
+              return (
+                <TableRow key={row.name}>
+                  <TableCell className="font-medium">{row.name}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatCurrencyAED(row.spend, { abbreviate: true })}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatCurrencyAED(costPerHead, { abbreviate: true })}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatInteger(row.employees)}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Progress value={rowUtil.rate} className="w-16 h-2" />
+                      <span className={rowUtil.rate >= 80 ? 'text-success' : rowUtil.rate >= 60 ? 'text-warning' : 'text-destructive'}>
+                        {formatPercent(rowUtil.rate)}
+                      </span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
         </TableBody>
       </Table>
     </DrillDownSheet>
@@ -323,6 +327,13 @@ export function Spend() {
             <SpendUtilizationMatrix
               data={matrixData}
               isDemo={true}
+              onCategoryClick={(category) => {
+                // Find matching benefit for drilldown
+                const benefit = spendByBenefitType.find(b => b.id === category.id);
+                if (benefit) {
+                  setSelectedBenefit(benefit);
+                }
+              }}
             />
           </div>
           <div className="lg:col-span-1">
