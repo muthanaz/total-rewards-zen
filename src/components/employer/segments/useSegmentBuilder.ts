@@ -15,6 +15,9 @@ const DEFAULT_FILTERS: SegmentFilters = {
   grades: [],
   salaryRange: [SALARY_MIN, SALARY_MAX],
   tenure: null,
+  utilizationRange: null,
+  riskLevel: null,
+  benefitType: null,
 };
 
 /**
@@ -54,6 +57,19 @@ function calculateBehavioralGap(participationRate: number, budgetUsage: number):
   };
 }
 
+/**
+ * Compute risk level for an employee
+ */
+function getEmployeeRiskLevel(emp: typeof MOCK_EMPLOYEES[0]): 'at-risk' | 'watch' | 'healthy' {
+  const utilizationPct = emp.budgetAllocated > 0 
+    ? Math.round((emp.amountSpent / emp.budgetAllocated) * 100) 
+    : 0;
+  
+  if (utilizationPct === 0) return 'at-risk';
+  if (utilizationPct < 30) return 'watch';
+  return 'healthy';
+}
+
 export function useSegmentBuilder() {
   const [filters, setFilters] = useState<SegmentFilters>(DEFAULT_FILTERS);
   const [savedSegments, setSavedSegments] = useState<SavedSegment[]>([]);
@@ -85,6 +101,32 @@ export function useSegmentBuilder() {
       // Tenure filter
       if (filters.tenure && emp.tenure !== filters.tenure) {
         return false;
+      }
+      
+      // Utilization range filter
+      if (filters.utilizationRange) {
+        const utilizationPct = emp.budgetAllocated > 0 
+          ? Math.round((emp.amountSpent / emp.budgetAllocated) * 100) 
+          : 0;
+        if (utilizationPct < filters.utilizationRange[0] || utilizationPct > filters.utilizationRange[1]) {
+          return false;
+        }
+      }
+      
+      // Risk level filter
+      if (filters.riskLevel) {
+        const riskLevel = getEmployeeRiskLevel(emp);
+        if (riskLevel !== filters.riskLevel) {
+          return false;
+        }
+      }
+      
+      // Benefit type filter (from drill-down)
+      if (filters.benefitType) {
+        const hasBenefit = emp.topBenefits.some(b => b.name === filters.benefitType);
+        if (!hasBenefit) {
+          return false;
+        }
       }
       
       return true;
@@ -201,6 +243,14 @@ export function useSegmentBuilder() {
       parts.push(`| ${filters.tenure} tenure`);
     }
     
+    if (filters.benefitType) {
+      parts.push(`| ${filters.benefitType} users`);
+    }
+    
+    if (filters.riskLevel) {
+      parts.push(`| ${filters.riskLevel} risk`);
+    }
+    
     return parts.length > 0 ? `Analysis: ${parts.join(' ')}` : 'Analysis: All Employees';
   }, [filters]);
 
@@ -223,7 +273,7 @@ export function useSegmentBuilder() {
   const applyWatchlistSegment = useCallback((segmentId: string) => {
     const segment = AI_WATCHLIST_SEGMENTS.find(s => s.id === segmentId);
     if (segment) {
-      setFilters(segment.filters);
+      setFilters(segment.filters as SegmentFilters);
       setSelectedWatchlistId(segmentId);
     }
   }, []);
@@ -251,7 +301,10 @@ export function useSegmentBuilder() {
       filters.grades.length > 0 ||
       filters.salaryRange[0] !== SALARY_MIN ||
       filters.salaryRange[1] !== SALARY_MAX ||
-      filters.tenure !== null
+      filters.tenure !== null ||
+      filters.utilizationRange !== null ||
+      filters.riskLevel !== null ||
+      filters.benefitType !== null
     );
   }, [filters]);
 

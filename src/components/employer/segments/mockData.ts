@@ -5,7 +5,7 @@
  * No subjective satisfaction surveys - only claim/spend data.
  */
 
-import { MockEmployee, DEPARTMENTS, NATIONALITIES, GRADES, TENURE_OPTIONS } from './types';
+import { MockEmployee, DEPARTMENTS, NATIONALITIES, GRADES, TENURE_OPTIONS, SegmentFilters, SALARY_MIN, SALARY_MAX } from './types';
 
 const FIRST_NAMES = ['Ahmed', 'Sara', 'Mohammed', 'Fatima', 'John', 'Emily', 'Wei', 'Priya', 'Omar', 'Layla', 'James', 'Aisha', 'David', 'Noor', 'Chen'];
 const LAST_NAMES = ['Al-Rashid', 'Khan', 'Smith', 'Williams', 'Li', 'Sharma', 'Abdullah', 'Al-Maktoum', 'Brown', 'Lee', 'Patel', 'O\'Connor', 'Zhang', 'Hassan'];
@@ -101,22 +101,29 @@ export const MOCK_EMPLOYEES: MockEmployee[] = Array.from({ length: 150 }, (_, i)
   };
 });
 
-// AI Watchlist segments (pre-defined smart segments)
+// Default filter template
+const DEFAULT_FILTERS: SegmentFilters = {
+  departments: [],
+  nationalities: [],
+  grades: [],
+  salaryRange: [SALARY_MIN, SALARY_MAX],
+  tenure: null,
+  utilizationRange: null,
+  riskLevel: null,
+  benefitType: null,
+};
+
+// AI Watchlist segments (pre-defined smart segments) with trends
 export const AI_WATCHLIST_SEGMENTS = [
   {
     id: 'low-adoption',
     name: 'Low Adoption',
     description: 'Eligible employees not claiming benefits',
     icon: 'AlertTriangle',
-    filters: {
-      departments: [],
-      nationalities: [],
-      grades: [],
-      salaryRange: [5000, 100000] as [number, number],
-      tenure: null,
-    },
+    filters: { ...DEFAULT_FILTERS },
     isAI: true,
     behavioralGap: 'low-engagement' as const,
+    trend: 'up' as const, // Increasing (bad)
   },
   {
     id: 'high-potentials',
@@ -124,14 +131,14 @@ export const AI_WATCHLIST_SEGMENTS = [
     description: 'Rising stars to retain',
     icon: 'Star',
     filters: {
-      departments: [],
-      nationalities: [],
+      ...DEFAULT_FILTERS,
       grades: ['G2', 'G3'],
       salaryRange: [15000, 40000] as [number, number],
       tenure: '1-3',
     },
     isAI: true,
     behavioralGap: 'balanced' as const,
+    trend: 'stable' as const,
   },
   {
     id: 'new-joiners',
@@ -139,14 +146,12 @@ export const AI_WATCHLIST_SEGMENTS = [
     description: 'Employees in first year',
     icon: 'UserPlus',
     filters: {
-      departments: [],
-      nationalities: [],
-      grades: [],
-      salaryRange: [5000, 100000] as [number, number],
+      ...DEFAULT_FILTERS,
       tenure: '<1',
     },
     isAI: true,
     behavioralGap: 'low-engagement' as const,
+    trend: 'down' as const, // Decreasing (good)
   },
   {
     id: 'heavy-users',
@@ -154,13 +159,26 @@ export const AI_WATCHLIST_SEGMENTS = [
     description: 'High budget utilization',
     icon: 'TrendingUp',
     filters: {
-      departments: [],
-      nationalities: [],
+      ...DEFAULT_FILTERS,
       grades: ['G4', 'G5', 'C-Suite'],
       salaryRange: [40000, 100000] as [number, number],
-      tenure: null,
     },
     isAI: true,
     behavioralGap: 'concentrated-spend' as const,
+    trend: 'up' as const,
+  },
+  {
+    id: 'flight-risks',
+    name: 'Flight Risks',
+    description: 'Low engagement, high value employees',
+    icon: 'AlertTriangle',
+    filters: {
+      ...DEFAULT_FILTERS,
+      grades: ['G3', 'G4', 'G5'],
+      riskLevel: 'at-risk',
+    },
+    isAI: true,
+    behavioralGap: 'low-engagement' as const,
+    trend: 'up' as const,
   },
 ];
