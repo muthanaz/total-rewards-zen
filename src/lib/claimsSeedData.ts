@@ -4,12 +4,18 @@
  * Realistic seed data for the Claims & Approvals Console
  * Covers various categories, statuses, SLA states, and value bands
  * 
- * UAE Market Values (2024):
- * - Parking: AED 100-200/month
- * - Medical Consultation: AED 400-800
- * - Schooling: AED 12,000-40,000/year per child
- * - Housing: AED 80,000-180,000/year (varies by grade)
+ * UAE Market Values (2024-2026):
+ * - Parking: AED 100-500/month
+ * - Medical Consultation: AED 400-800/visit
+ * - Schooling: AED 25,000-65,000/year per child
+ * - Housing: AED 60,000-250,000/year (varies by grade)
+ * - Annual Flight Tickets: AED 2,000-15,000 (by destination class)
  * - Fuel: AED 300-600/month
+ * 
+ * SLA Thresholds:
+ * - Simple claims (Parking): 48 hours
+ * - Standard claims (Medical): 72 hours  
+ * - Complex claims (Schooling, Housing): 5 days (120 hours)
  */
 
 import { addDays, subDays, subHours } from 'date-fns';
@@ -126,7 +132,7 @@ export const seedClaims: SeedClaim[] = [
     location: 'Dubai',
   },
   
-  // Schooling claims - realistic UAE school fees
+  // Schooling claims - realistic UAE school fees (AED 25,000-65,000/year per child)
   {
     id: 'claim-004',
     user_id: 'user-emp-004',
@@ -139,15 +145,15 @@ export const seedClaims: SeedClaim[] = [
     request_type: 'claim',
     subject: 'School Fees - Term 2',
     description: 'Dubai British School - Grade 5 tuition',
-    amount: 18500, // Realistic mid-tier school term fees
-    cap_limit: 40000, // Annual schooling cap per child
+    amount: 15000, // Realistic mid-tier school term fees (~45k/year)
+    cap_limit: 50000, // Annual schooling cap per child for L4
     currency: 'AED',
     value_band: 'Premium',
     status: 'pending',
     priority: 'medium',
     submitted_at: subDays(now, 4),
-    sla_due_at: addDays(now, 2),
-    sla_hours: 72,
+    sla_due_at: addDays(now, 3), // 5-day SLA for complex claims
+    sla_hours: 120, // Complex claim = 5 days
     policy_ref: 'ED-2024-v2',
     missing_docs: [],
     location: 'Dubai',
@@ -162,17 +168,17 @@ export const seedClaims: SeedClaim[] = [
     grade: 'L5',
     category: 'Schooling',
     request_type: 'claim',
-    subject: 'School Registration Fees',
-    description: 'GEMS Wellington - New registration',
-    amount: 8500, // Registration fee
-    cap_limit: 12000, // Registration cap
+    subject: 'School Fees - Annual',
+    description: 'GEMS Wellington - Year 8 tuition',
+    amount: 52000, // Higher-tier school annual fees
+    cap_limit: 55000, // Annual schooling cap for L5
     currency: 'AED',
-    value_band: 'Standard',
+    value_band: 'Premium',
     status: 'approved',
     priority: 'low',
     submitted_at: subDays(now, 7),
-    sla_due_at: subDays(now, 4),
-    sla_hours: 72,
+    sla_due_at: subDays(now, 2),
+    sla_hours: 120, // Complex claim = 5 days
     policy_ref: 'ED-2024-v2',
     missing_docs: [],
     location: 'Dubai',
@@ -216,22 +222,22 @@ export const seedClaims: SeedClaim[] = [
     request_type: 'claim',
     subject: 'Parking Pass - Monthly',
     description: 'Monthly parking at DIFC office building',
-    amount: 150, // Realistic parking pass
-    cap_limit: 200, // Monthly parking cap
+    amount: 350, // Premium parking (AED 200-500 range)
+    cap_limit: 500, // Monthly parking cap
     currency: 'AED',
     value_band: 'Low',
     status: 'in_review',
     priority: 'medium',
-    submitted_at: subDays(now, 2),
-    sla_due_at: addDays(now, 1),
-    sla_hours: 72,
+    submitted_at: subDays(now, 1),
+    sla_due_at: addDays(now, 1), // 48h SLA for simple claims
+    sla_hours: 48, // Simple claim = 48 hours
     policy_ref: 'TR-2024-v1',
     missing_docs: ['Parking contract copy'],
     location: 'Dubai',
     assigned_owner_name: 'HR Specialist',
   },
   
-  // Housing claims
+  // Housing claims - realistic UAE values (AED 60,000-250,000/year)
   {
     id: 'claim-008',
     user_id: 'user-emp-008',
@@ -243,16 +249,16 @@ export const seedClaims: SeedClaim[] = [
     category: 'Housing',
     request_type: 'claim',
     subject: 'Housing Allowance - Q4',
-    description: 'Quarterly housing allowance claim',
-    amount: 35000, // Quarterly = 140k/year for L6
-    cap_limit: 45000, // Quarterly cap
+    description: 'Quarterly housing allowance claim - Marina apartment',
+    amount: 50000, // Quarterly = 200k/year for L6
+    cap_limit: 55000, // Quarterly cap (220k/year)
     currency: 'AED',
     value_band: 'Premium',
     status: 'pending',
     priority: 'high',
     submitted_at: subDays(now, 1),
-    sla_due_at: addDays(now, 1),
-    sla_hours: 48,
+    sla_due_at: addDays(now, 4), // 5-day SLA for complex claims
+    sla_hours: 120, // Complex claim = 5 days
     policy_ref: 'HS-2024-v2',
     missing_docs: [],
     location: 'Dubai',
@@ -497,7 +503,7 @@ export const seedClaims: SeedClaim[] = [
     missing_docs: [],
     location: 'Dubai',
   },
-  // Schooling - high value
+  // Schooling - high value (AED 25,000-65,000/year per child)
   {
     id: 'claim-018',
     user_id: 'user-emp-018',
@@ -510,19 +516,72 @@ export const seedClaims: SeedClaim[] = [
     request_type: 'claim',
     subject: 'School Fees - Full Year',
     description: 'Dubai College - Year 10 annual tuition',
-    amount: 65000, // Premium school exceeds cap
-    cap_limit: 50000, // Annual schooling cap for L6
+    amount: 68000, // Premium school at cap limit
+    cap_limit: 65000, // Annual schooling cap for L6
     currency: 'AED',
     value_band: 'Premium',
     status: 'in_review',
     priority: 'high',
     submitted_at: subDays(now, 3),
-    sla_due_at: addDays(now, 1),
-    sla_hours: 72,
+    sla_due_at: addDays(now, 2), // 5-day SLA for complex claims
+    sla_hours: 120, // Complex claim = 5 days
     policy_ref: 'ED-2024-v2',
     missing_docs: [],
     location: 'Dubai',
     assigned_owner_name: 'Finance Lead',
+  },
+  
+  // Annual Flight Ticket claims (AED 2,000-15,000)
+  {
+    id: 'claim-019',
+    user_id: 'user-emp-019',
+    organization_id: 'org-001',
+    employee_name: 'Priya Sharma',
+    employee_code: 'EMP-9911',
+    department: 'Engineering',
+    grade: 'L4',
+    category: 'Transport',
+    request_type: 'claim',
+    subject: 'Annual Flight Ticket - Home Country',
+    description: 'Economy class return ticket to Mumbai for annual leave',
+    amount: 4500, // Economy international
+    cap_limit: 8000, // L4 flight cap
+    currency: 'AED',
+    value_band: 'Standard',
+    status: 'pending',
+    priority: 'medium',
+    submitted_at: subDays(now, 2),
+    sla_due_at: addDays(now, 1),
+    sla_hours: 72,
+    policy_ref: 'TR-2024-v1',
+    missing_docs: [],
+    location: 'Dubai',
+  },
+  {
+    id: 'claim-020',
+    user_id: 'user-emp-020',
+    organization_id: 'org-001',
+    employee_name: 'James Wilson',
+    employee_code: 'EMP-1122',
+    department: 'Sales',
+    grade: 'L6',
+    category: 'Transport',
+    request_type: 'claim',
+    subject: 'Annual Flight Ticket - Family',
+    description: 'Business class return tickets to London for family of 4',
+    amount: 42000, // Business class family
+    cap_limit: 48000, // L6 family flight cap
+    currency: 'AED',
+    value_band: 'Premium',
+    status: 'in_review',
+    priority: 'high',
+    submitted_at: subDays(now, 3),
+    sla_due_at: addDays(now, 2),
+    sla_hours: 120, // Complex = 5 days
+    policy_ref: 'TR-2024-v1',
+    missing_docs: [],
+    location: 'Dubai',
+    assigned_owner_name: 'HR Manager',
   },
 ];
 

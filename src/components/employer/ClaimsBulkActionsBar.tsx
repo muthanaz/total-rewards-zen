@@ -66,12 +66,14 @@ interface ClaimsBulkActionsBarProps {
 }
 
 const REJECTION_REASONS = [
+  { value: 'receipt_predates_policy', label: 'Receipt Pre-dates Policy' },
+  { value: 'exceeds_category_cap', label: 'Exceeds Category Cap' },
+  { value: 'duplicate_submission', label: 'Duplicate Submission' },
   { value: 'incomplete_docs', label: 'Incomplete Documentation' },
-  { value: 'exceeds_limit', label: 'Exceeds Entitlement' },
-  { value: 'not_eligible', label: 'Not Eligible' },
-  { value: 'duplicate', label: 'Duplicate Claim' },
-  { value: 'policy_violation', label: 'Policy Violation' },
-  { value: 'expired', label: 'Claim Period Expired' },
+  { value: 'not_eligible', label: 'Not Eligible for Benefit' },
+  { value: 'outside_claim_period', label: 'Outside Claim Period' },
+  { value: 'provider_not_approved', label: 'Provider Not Approved' },
+  { value: 'budget_exhausted', label: 'Annual Budget Exhausted' },
 ];
 
 const MISSING_DOC_TYPES = [
