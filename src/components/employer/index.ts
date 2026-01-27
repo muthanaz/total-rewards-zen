@@ -116,6 +116,8 @@ export { EmployeeMessagePreview } from './EmployeeMessagePreview';
 export { ClaimAuditLog } from './ClaimAuditLog';
 export { PolicyContextWidget } from './PolicyContextWidget';
 export { QuickActionFooter } from './QuickActionFooter';
+export { Employee360Drawer } from './Employee360Drawer';
+export type { Employee360Data } from './Employee360Drawer';
 
 // Policy Lifecycle components
 export { PolicyLifecycleBadge, PolicyLifecycleFlow } from './PolicyLifecycleBadge';
