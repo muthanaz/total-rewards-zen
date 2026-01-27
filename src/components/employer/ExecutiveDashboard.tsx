@@ -24,7 +24,7 @@ import {
   ArrowRight,
   Settings2,
 } from 'lucide-react';
-import { ChartWrapper, CHART_EXPLANATIONS, AnimatedDonutChart } from '@/components/charts';
+import { ChartWrapper, CHART_EXPLANATIONS, ExecutiveSpendChart } from '@/components/charts';
 import { DataConfidenceBadge, useDataCoverageMetrics } from './DataConfidenceBadge';
 import { PageConfidenceGate } from './PageConfidenceGate';
 import { 
@@ -96,10 +96,11 @@ export function ExecutiveDashboard() {
     }));
   }, [spendAllocation, metrics]);
 
-  // Prepare chart data
+  // Prepare chart data with amounts
   const spendChartData = spendAllocation?.map((s, i) => ({
     name: s.name,
     value: s.value,
+    amount: s.amount || s.value * 50000,
     color: `hsl(var(--chart-${(i % 6) + 1}))`,
   })) || [];
 
@@ -328,15 +329,11 @@ export function ExecutiveDashboard() {
               dataSource="Finance"
               explanation={CHART_EXPLANATIONS.spendDistribution}
             >
-              <AnimatedDonutChart 
+              <ExecutiveSpendChart 
                 data={spendChartData} 
-                height={200}
-                centerContent={
-                  <div className="text-center">
-                    <p className="text-lg font-bold">{formatCurrencyAED(metrics.totalInvestment, { abbreviate: true })}</p>
-                    <p className="text-xs text-muted-foreground">Total</p>
-                  </div>
-                }
+                totalAmount={metrics.totalInvestment}
+                showRank={true}
+                maxItems={6}
               />
             </ChartWrapper>
             
