@@ -38,17 +38,17 @@ interface AtRiskSegmentsCardProps {
 
 const riskConfig = {
   high: { 
-    label: 'High Risk', 
+    label: 'Flight Risk', 
     className: 'bg-destructive/10 text-destructive border-destructive/30',
     icon: AlertTriangle,
   },
   medium: { 
-    label: 'Medium Risk', 
+    label: 'Engagement Alert', 
     className: 'bg-warning/10 text-warning border-warning/30',
     icon: TrendingDown,
   },
   low: { 
-    label: 'Low Risk', 
+    label: 'Stable', 
     className: 'bg-success/10 text-success border-success/30',
     icon: Shield,
   },
@@ -153,10 +153,20 @@ export function AtRiskSegmentsCard({ segments, className }: AtRiskSegmentsCardPr
         })}
 
         {/* View All Link */}
-        <Button variant="ghost" size="sm" className="w-full mt-2">
-          View all segments
-          <ArrowRight className="w-4 h-4 ml-2" />
-        </Button>
+        <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
+          <Link 
+            to="/employer/optimization" 
+            className="text-xs text-primary hover:underline flex items-center gap-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            View Recovery Plan
+            <ArrowRight className="w-3 h-3" />
+          </Link>
+          <Button variant="ghost" size="sm" className="h-7 text-xs">
+            View all segments
+            <ArrowRight className="w-3 h-3 ml-1" />
+          </Button>
+        </div>
       </CardContent>
     </Card>
     </Link>
