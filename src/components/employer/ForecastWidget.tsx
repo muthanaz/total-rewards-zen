@@ -396,15 +396,39 @@ export function ForecastWidget({
           </div>
         </div>
 
+        {/* Prudent Variance Summary */}
+        <div className={cn(
+          'p-3 rounded-lg border',
+          forecast.projectedUnused > currentUnused * 0.1
+            ? 'bg-success/5 border-success/30'
+            : 'bg-destructive/5 border-destructive/30'
+        )}>
+          <div className="flex items-center gap-2 mb-2">
+            <Info className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium">Year-End Variance</span>
+          </div>
+          {forecast.projectedUnused >= 0 ? (
+            <p className="text-sm">
+              Projected Variance: <span className="font-semibold text-success">{formatCurrencyAED(forecast.projectedUnused)} Surplus</span>.{' '}
+              <span className="text-muted-foreground">Available for reallocation or rollover consideration.</span>
+            </p>
+          ) : (
+            <p className="text-sm">
+              Projected Variance: <span className="font-semibold text-destructive">{formatCurrencyAED(Math.abs(forecast.projectedUnused))} Deficit</span>.{' '}
+              <span className="text-muted-foreground">Review policy caps and benefit limits.</span>
+            </p>
+          )}
+        </div>
+
         {/* Insights */}
         <div className="p-3 rounded-lg bg-muted/30">
           <div className="flex items-center gap-2 mb-2">
             <Lightbulb className="h-4 w-4 text-amber-500" />
-            <span className="text-sm font-medium">Insight</span>
+            <span className="text-sm font-medium">Run-Rate Insight</span>
           </div>
           <p className="text-sm text-muted-foreground">
             At current velocity of {formatCurrencyAED(forecast.monthlyVelocity, { abbreviate: true })}/month, 
-            you're on track to have {formatCurrencyAED(forecast.projectedUnused)} unused by year-end.
+            you're on track to have {formatCurrencyAED(forecast.projectedUnused)} unutilized by year-end.
             {isRisk && ' Consider running targeted awareness campaigns for underutilized benefits.'}
           </p>
         </div>
