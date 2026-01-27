@@ -45,7 +45,7 @@ const confidenceConfig: Record<Confidence, { label: string; color: string }> = {
 };
 
 const sourceLabels: Record<SourceType, string> = {
-  zombie_spend: 'Zombie',
+  zombie_spend: 'Leakage',
   segments: 'Segments',
   claims: 'Claims',
   policies: 'Policies',

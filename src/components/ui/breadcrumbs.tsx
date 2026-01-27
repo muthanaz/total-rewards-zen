@@ -24,7 +24,7 @@ const routeLabels: Record<string, string> = {
   'gov-connect': 'Gov Connect',
   profile: 'Smart Profile',
   spend: 'Spend Analytics',
-  zombie: 'Zombie Spend',
+  zombie: 'Budget Leakage',
   segments: 'Employee Segments',
   claims: 'Claims Management',
   policies: 'Policies',

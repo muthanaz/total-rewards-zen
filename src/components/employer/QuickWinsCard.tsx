@@ -78,16 +78,23 @@ export function QuickWinsCard({ wins, onTakeAction, className }: QuickWinsCardPr
                 </div>
                 
                 <div>
-                  <p className="font-medium text-sm">{win.title}</p>
-                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="font-medium text-sm">{win.title}</p>
+                    {/* Prominent Effort Level Badge */}
+                    <Badge 
+                      className={cn(
+                        "text-[10px] px-2 py-0.5 font-semibold",
+                        win.effort === 'low' && "bg-success text-success-foreground",
+                        win.effort === 'medium' && "bg-warning text-warning-foreground",
+                        win.effort === 'high' && "bg-destructive text-destructive-foreground"
+                      )}
+                    >
+                      {win.effort.charAt(0).toUpperCase() + win.effort.slice(1)} Effort
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                       {win.category}
-                    </Badge>
-                    <Badge 
-                      variant="outline" 
-                      className={cn("text-[10px] px-1.5 py-0", effortConfig[win.effort].color)}
-                    >
-                      {effortConfig[win.effort].label}
                     </Badge>
                     <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                       <Clock className="h-2.5 w-2.5" />

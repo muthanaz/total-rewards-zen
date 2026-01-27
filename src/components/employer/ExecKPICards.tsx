@@ -107,7 +107,7 @@ export function ExecKPICards({
   const kpis: KPICardData[] = [
     {
       id: 'totalInvestment',
-      label: 'Total Investment',
+      label: 'YTD Total Spend',
       value: formatCurrencyAED(totalInvestment, { abbreviate: true }),
       delta: investmentDelta,
       deltaLabel: 'vs last year',
@@ -117,7 +117,7 @@ export function ExecKPICards({
       iconColor: 'text-primary',
       iconBg: 'bg-primary/10',
       definition: {
-        formula: 'SUM(all benefit entitlements + employer contributions)',
+        formula: 'Total claims paid + allowances disbursed year-to-date',
         dataSource: 'benefit_entitlements + org_budgets',
       },
       subMetric: {
@@ -151,7 +151,7 @@ export function ExecKPICards({
     },
     {
       id: 'unrealizedValue',
-      label: 'Unused Value',
+      label: 'Unclaimed Allowances',
       value: formatCurrencyAED(unrealizedValue, { abbreviate: true }),
       delta: unrealizedDelta,
       deltaLabel: 'vs last quarter',
@@ -162,7 +162,7 @@ export function ExecKPICards({
       iconBg: unrealizedValue > totalInvestment * 0.3 ? 'bg-destructive/10' : 'bg-warning/10',
       definition: {
         formula: 'Entitled Value - Claimed Amount',
-        dataSource: 'Calculated from entitlements vs claims',
+        dataSource: 'Budget available for reallocation',
       },
       topDriver: topDriver ? `Top driver: ${topDriver.cause} (${topDriver.percent}%)` : undefined,
     },
