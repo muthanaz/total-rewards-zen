@@ -14,7 +14,7 @@
  */
 
 import { useState, useMemo } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -51,6 +51,7 @@ import { BoardPackExportButton } from './BoardPackExportButton';
 
 export function ExecutiveDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [drilldownMetric, setDrilldownMetric] = useState<KPIMetricData | null>(null);
   const [isDrilldownOpen, setIsDrilldownOpen] = useState(false);
   const { isBoard, isCFO } = useExecMode();
@@ -314,10 +315,11 @@ export function ExecutiveDashboard() {
           utilizationTarget={metrics.targetUtilization}
           satisfactionBenchmark={metrics.esatBenchmark || 80}
           onKPIClick={openDrilldown}
+          onNavigate={(path) => navigate(path)}
         />
 
-        {/* 5. ACTIONS REQUIRED (moved up for CEO priority) */}
-        <DecisionsActionsCard actions={upcomingActions} />
+        {/* 5. STRATEGIC DECISIONS & ALERTS (moved up for CEO priority) */}
+        <DecisionsActionsCard actions={upcomingActions} strategicOnly />
 
         {/* 6. WHERE THE MONEY GOES + AT-RISK SEGMENTS (2 columns) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

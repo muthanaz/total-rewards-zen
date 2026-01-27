@@ -90,12 +90,19 @@ export function AtRiskSegmentsCard({ segments, className }: AtRiskSegmentsCardPr
           const risk = riskConfig[segment.retentionRisk];
           const RiskIcon = risk.icon;
 
+          // Build navigation URL based on dimension type
+          const navigationUrl = segment.dimension === 'grade' 
+            ? `/employer/spend?grade=${encodeURIComponent(segment.name)}`
+            : segment.dimension === 'department'
+            ? `/employer/spend?department=${encodeURIComponent(segment.name)}`
+            : `/employer/segments?dimension=${segment.dimension.toLowerCase()}&value=${segment.id}`;
+
           return (
             <Link 
               key={segment.id} 
-              to={`/employer/segments?dimension=${segment.dimension.toLowerCase()}&value=${segment.id}`}
+              to={navigationUrl}
             >
-              <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 hover:border-accent/30 hover:bg-muted/30 transition-all group">
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 hover:border-accent/30 hover:bg-muted/30 transition-all group cursor-pointer">
                 {/* Risk Indicator */}
                 <div className={cn(
                   "p-2 rounded-lg shrink-0",
@@ -129,12 +136,12 @@ export function AtRiskSegmentsCard({ segments, className }: AtRiskSegmentsCardPr
                   </div>
                 </div>
 
-                {/* Unrealized Value */}
+                {/* Low Engagement Value (renamed from Unrealized) */}
                 <div className="text-right shrink-0">
                   <p className="text-sm font-semibold text-destructive tabular-nums">
                     {formatCurrencyAED(segment.unusedEntitlement, { abbreviate: true })}
                   </p>
-                  <p className="text-[10px] text-muted-foreground">Unrealized</p>
+                  <p className="text-[10px] text-muted-foreground">Low Engagement</p>
                 </div>
 
                 {/* Arrow */}
