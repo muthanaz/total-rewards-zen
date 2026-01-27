@@ -266,8 +266,8 @@ const zeroStateConfigs: Record<Portal, Partial<Record<PageType, ZeroStateConfig>
     },
     zombie: {
       icon: TrendingUp,
-      title: 'No zombie spend detected',
-      titleAr: 'لم يتم اكتشاف إنفاق غير مستخدم',
+      title: 'No budget leakage detected',
+      titleAr: 'لم يتم اكتشاف تسرب في الميزانية',
       description: 'Good news! All benefits are being utilized effectively.',
       descriptionAr: 'أخبار جيدة! يتم استخدام جميع المزايا بفعالية.',
       actionLabel: 'View Utilization',

@@ -71,7 +71,7 @@ const typeIcons: Record<ActionType, React.ElementType> = {
 };
 
 const sourceLabels: Record<SourceType, string> = {
-  zombie_spend: 'Zombie Spend',
+  zombie_spend: 'Budget Leakage',
   segments: 'Segments',
   claims: 'Claims',
   policies: 'Policies',

@@ -49,7 +49,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Navigation - Employer
     'nav.overview': 'Overview',
     'nav.spendUtilization': 'Spend & Utilization',
-    'nav.zombieSpend': 'Zombie Spend',
+    'nav.zombieSpend': 'Budget Leakage',
     'nav.employeeSegments': 'Employee Segments',
     'nav.claimsApprovals': 'Claims & Approvals',
     'nav.marketplaceAnalytics': 'Marketplace Analytics',
@@ -164,7 +164,7 @@ const translations: Record<Language, Record<string, string>> = {
     'employer.dashboard.totalEmployees': 'Total Employees',
     'employer.dashboard.annualBudget': 'Annual Budget',
     'employer.dashboard.utilizationRate': 'Utilization Rate',
-    'employer.dashboard.zombieSpend': 'Zombie Spend',
+    'employer.dashboard.zombieSpend': 'Budget Leakage',
     'employer.dashboard.satisfaction': 'Satisfaction Score',
     'employer.dashboard.retention': 'Retention Rate',
     'employer.dashboard.pendingClaims': 'Pending Claims',

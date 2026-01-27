@@ -124,10 +124,29 @@ export function SpendUtilizationMatrix({ data, isDemo, className }: SpendUtiliza
           </div>
         </CardHeader>
         <CardContent>
-          <div className="h-[350px]">
+          <div className="h-[350px] relative">
+            {/* Quadrant background labels */}
+            <div className="absolute inset-0 pointer-events-none z-0" style={{ margin: '20px' }}>
+              {/* Top-Left: Star Performers (High Util, Low Spend) */}
+              <div className="absolute left-[10%] top-[15%] text-[11px] font-medium text-muted-foreground/20 select-none">
+                Star Performers
+              </div>
+              {/* Top-Right: High Value / High Cost (High Util, High Spend) */}
+              <div className="absolute right-[10%] top-[15%] text-[11px] font-medium text-muted-foreground/20 select-none text-right">
+                High Value / High Cost
+              </div>
+              {/* Bottom-Left: Low Impact (Low Util, Low Spend) */}
+              <div className="absolute left-[10%] bottom-[25%] text-[11px] font-medium text-muted-foreground/20 select-none">
+                Low Impact
+              </div>
+              {/* Bottom-Right: Optimization Needed (Low Util, High Spend) */}
+              <div className="absolute right-[10%] bottom-[25%] text-[11px] font-medium text-muted-foreground/20 select-none text-right">
+                Optimization Needed
+              </div>
+            </div>
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
                 <XAxis 
                   type="number" 
                   dataKey="x" 

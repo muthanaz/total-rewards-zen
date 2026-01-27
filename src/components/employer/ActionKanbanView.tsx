@@ -32,7 +32,7 @@ const confidenceConfig: Record<Confidence, { color: string }> = {
 };
 
 const sourceIcons: Record<SourceType, string> = {
-  zombie_spend: '💀',
+  zombie_spend: '📉',
   segments: '👥',
   claims: '📋',
   policies: '📜',

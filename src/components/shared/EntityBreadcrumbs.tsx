@@ -67,7 +67,7 @@ const routeLabels: Record<string, string> = {
   // Employer portal
   employer: 'Dashboard',
   spend: 'Spend Analytics',
-  'zombie-spend': 'Zombie Spend',
+  'zombie-spend': 'Budget Leakage',
   segments: 'Employee Segments',
   claims: 'Claims & Approvals',
   policies: 'Policy Management',

@@ -123,8 +123,8 @@ const METRIC_DEFINITIONS: MetricDefinition[] = [
   },
   {
     id: 'zombie-spend',
-    name: 'Zombie Spend',
-    shortName: 'Zombie',
+    name: 'Unrealized Budget',
+    shortName: 'Leakage',
     icon: TrendingDown,
     category: 'financial',
     tags: ['waste', 'cost', 'optimization'],

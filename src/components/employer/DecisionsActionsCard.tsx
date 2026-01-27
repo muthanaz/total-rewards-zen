@@ -107,7 +107,6 @@ export function DecisionsActionsCard({ actions, className }: DecisionsActionsCar
           {top3.map((action) => {
             const statusConfig = STATUS_CONFIG[action.status];
             const StatusIcon = statusConfig.icon;
-            const impactLabel = action.expectedImpact > 0 ? 'Saves' : 'Recovers';
             const impactValue = Math.abs(action.expectedImpact);
 
             return (
@@ -124,7 +123,7 @@ export function DecisionsActionsCard({ actions, className }: DecisionsActionsCar
                     </div>
                     <span>•</span>
                     <span className="font-medium text-success tabular-nums">
-                      {impactLabel} {formatCurrencyAED(impactValue, { abbreviate: true })}
+                      Potential Recovery: {formatCurrencyAED(impactValue, { abbreviate: true })}
                     </span>
                   </div>
                 </div>
