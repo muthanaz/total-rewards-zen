@@ -116,7 +116,9 @@ export function CostEfficiencyTab({
             <p className="text-xl font-bold">
               {formatCurrencyAED(vendorOvercharges.reduce((s, i) => s + i.recoveryAmount, 0), { abbreviate: true })}
             </p>
-            <p className="text-xs text-muted-foreground">{vendorOvercharges.length} instances found</p>
+            <p className="text-xs text-muted-foreground">
+              {vendorOvercharges.length} vendor{vendorOvercharges.length !== 1 ? 's' : ''}: {vendorOvercharges.map(v => v.vendorName || 'Unknown').join(', ')}
+            </p>
           </CardContent>
         </Card>
 

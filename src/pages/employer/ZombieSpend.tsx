@@ -63,6 +63,7 @@ import {
   ValueActivationItem,
   PortfolioRebalanceItem,
   StrategicTabType,
+  RecoveryBatchReviewModal,
 } from '@/components/employer/optimization';
 
 // ============= MAIN COMPONENT =============
@@ -96,6 +97,10 @@ export default function ZombieSpendPage() {
   // Action modal state
   const [actionModalOpen, setActionModalOpen] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<OpportunityData | null>(null);
+  
+  // Recovery batch review modal state
+  const [recoveryModalOpen, setRecoveryModalOpen] = useState(false);
+  const [selectedRecoveryItem, setSelectedRecoveryItem] = useState<CostEfficiencyItem | null>(null);
   
   // Handle URL params for deep linking
   useEffect(() => {
@@ -135,19 +140,10 @@ export default function ZombieSpendPage() {
     strategicData.valueActivation.totalUnutilized +
     strategicData.portfolioRebalancing.totalReallocationPotential;
 
-  // Handle Cost Efficiency action
+  // Handle Cost Efficiency action - opens the batch review modal
   const handleInitiateRecovery = (item: CostEfficiencyItem) => {
-    setSelectedOpportunity({
-      id: item.id,
-      title: `Recover: ${item.issue}`,
-      category: item.category,
-      type: 'hard_savings',
-      valueOpportunity: item.recoveryAmount,
-      rootCause: item.issueType,
-      effort: 'medium',
-      timeToImpact: '2-4 weeks',
-    });
-    setActionModalOpen(true);
+    setSelectedRecoveryItem(item);
+    setRecoveryModalOpen(true);
   };
 
   // Handle Value Activation action
@@ -416,6 +412,12 @@ export default function ZombieSpendPage() {
           onOpenChange={setActionModalOpen}
           opportunity={selectedOpportunity}
           onCreateAction={handleCreateAction}
+        />
+        
+        <RecoveryBatchReviewModal
+          open={recoveryModalOpen}
+          onOpenChange={setRecoveryModalOpen}
+          item={selectedRecoveryItem}
         />
       </PageLayout>
     </PageConfidenceGate>

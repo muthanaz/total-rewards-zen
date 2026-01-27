@@ -6,8 +6,30 @@ import {
   CostEfficiencyItem, 
   ValueActivationItem, 
   PortfolioRebalanceItem,
-  StrategicOptimizationData 
+  StrategicOptimizationData,
+  AffectedEmployee,
 } from './types';
+
+// Generate mock affected employees
+function generateAffectedEmployees(count: number, baseAmount: number): AffectedEmployee[] {
+  const departments = ['Engineering', 'Sales', 'Operations', 'Marketing', 'Finance', 'HR'];
+  const names = [
+    'Ahmed Al-Rashid', 'Fatima Hassan', 'Mohammed Khan', 'Sara Al-Maktoum', 
+    'Omar Abdullah', 'Layla Mahmoud', 'Yusuf Ibrahim', 'Noor Al-Farsi',
+    'Hassan Ali', 'Mariam Khalid', 'Karim Nasser', 'Zainab Ahmed',
+    'Tariq Hussein', 'Aisha Saleh', 'Rashid Hamdan', 'Huda Omar',
+    'Sami Yousef', 'Dina Khalifa', 'Waleed Majid', 'Rania Jamal',
+    'Faisal Al-Nahyan', 'Lina Saeed', 'Majid Hamza', 'Amira Farouk',
+  ];
+  
+  return Array.from({ length: count }, (_, i) => ({
+    id: `emp-${i + 1}`,
+    name: names[i % names.length],
+    employeeId: `EMP-${String(1000 + i).padStart(4, '0')}`,
+    department: departments[i % departments.length],
+    amount: Math.round(baseAmount / count * (0.7 + Math.random() * 0.6)),
+  }));
+}
 
 export const COST_EFFICIENCY_ITEMS: CostEfficiencyItem[] = [
   {
@@ -18,15 +40,18 @@ export const COST_EFFICIENCY_ITEMS: CostEfficiencyItem[] = [
     recoveryAmount: 184000,
     confidence: 'high',
     issueType: 'duplicate_coverage',
+    affectedEmployees: generateAffectedEmployees(23, 184000),
   },
   {
     id: 'ce-2',
     category: 'Transport',
-    issue: 'Vendor Rate Discrepancy',
+    issue: 'ENOC: Rate Discrepancy',
     description: 'Fuel card vendor charging 8% above market rate',
     recoveryAmount: 67000,
     confidence: 'medium',
     issueType: 'vendor_overcharge',
+    vendorName: 'ENOC',
+    affectedEmployees: generateAffectedEmployees(45, 67000),
   },
   {
     id: 'ce-3',
@@ -36,6 +61,7 @@ export const COST_EFFICIENCY_ITEMS: CostEfficiencyItem[] = [
     recoveryAmount: 225000,
     confidence: 'high',
     issueType: 'unclaimed_cashout',
+    affectedEmployees: generateAffectedEmployees(15, 225000),
   },
   {
     id: 'ce-4',
@@ -45,6 +71,7 @@ export const COST_EFFICIENCY_ITEMS: CostEfficiencyItem[] = [
     recoveryAmount: 89000,
     confidence: 'medium',
     issueType: 'duplicate_coverage',
+    affectedEmployees: generateAffectedEmployees(42, 89000),
   },
   {
     id: 'ce-5',
@@ -54,6 +81,18 @@ export const COST_EFFICIENCY_ITEMS: CostEfficiencyItem[] = [
     recoveryAmount: 32000,
     confidence: 'high',
     issueType: 'unclaimed_cashout',
+    affectedEmployees: generateAffectedEmployees(8, 32000),
+  },
+  {
+    id: 'ce-6',
+    category: 'Health Insurance',
+    issue: 'AXA Insurance: Premium Overcharge',
+    description: 'Group policy renewed at 12% above negotiated rate',
+    recoveryAmount: 156000,
+    confidence: 'high',
+    issueType: 'vendor_overcharge',
+    vendorName: 'AXA Insurance',
+    affectedEmployees: generateAffectedEmployees(312, 156000),
   },
 ];
 
