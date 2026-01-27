@@ -42,7 +42,7 @@ export function BoardPackExportButton({ metrics, period = 'FY 2024' }: BoardPack
   const [isExporting, setIsExporting] = useState(false);
   const [lastExport, setLastExport] = useState<string | null>(null);
 
-  const handleExport = async (format: 'pdf' | 'pptx' | 'email') => {
+  const handleExport = async (format: 'pdf' | 'pptx' | 'email' | 'board') => {
     setIsExporting(true);
     
     // Simulate export generation
@@ -52,6 +52,7 @@ export function BoardPackExportButton({ metrics, period = 'FY 2024' }: BoardPack
       pdf: 'PDF Report',
       pptx: 'PowerPoint Deck',
       email: 'Email Summary',
+      board: 'Executive Board Brief',
     };
     
     // In production, this would generate actual files
@@ -71,11 +72,17 @@ export function BoardPackExportButton({ metrics, period = 'FY 2024' }: BoardPack
     setIsExporting(false);
     setLastExport(format);
     
-    toast.success(`${formatLabels[format]} generated`, {
-      description: format === 'email' 
-        ? 'Summary sent to your email' 
-        : 'Download will start shortly',
-    });
+    if (format === 'board') {
+      toast.success('Generating Board Brief PDF...', {
+        description: 'This may take a moment.',
+      });
+    } else {
+      toast.success(`${formatLabels[format]} generated`, {
+        description: format === 'email' 
+          ? 'Summary sent to your email' 
+          : 'Download will start shortly',
+      });
+    }
     
     // Reset last export indicator after 3 seconds
     setTimeout(() => setLastExport(null), 3000);
@@ -118,6 +125,13 @@ export function BoardPackExportButton({ metrics, period = 'FY 2024' }: BoardPack
           <div className="flex flex-col">
             <span>PowerPoint Deck</span>
             <span className="text-xs text-muted-foreground">Editable slides</span>
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleExport('board')} className="gap-2">
+          <FileText className="w-4 h-4" />
+          <div className="flex flex-col">
+            <span>Executive Board Brief</span>
+            <span className="text-xs text-muted-foreground">One-page summary for leadership</span>
           </div>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

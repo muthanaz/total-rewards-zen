@@ -31,11 +31,21 @@ const routeLabels: Record<string, string> = {
   recommendations: 'Recommendations',
 };
 
+// Root pages where breadcrumbs should be hidden
+const EMPLOYER_ROOT_PAGES = [
+  '/employer',
+  '/employer/spend',
+  '/employer/segments',
+  '/employer/optimization',
+  '/employer/actions',
+];
+
 export function Breadcrumbs() {
   const location = useLocation();
   const pathSegments = location.pathname.split('/').filter(Boolean);
 
-  if (pathSegments.length <= 1) {
+  // Hide breadcrumbs on root pages
+  if (pathSegments.length <= 1 || EMPLOYER_ROOT_PAGES.includes(location.pathname)) {
     return null;
   }
 

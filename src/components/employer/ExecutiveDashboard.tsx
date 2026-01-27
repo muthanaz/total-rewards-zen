@@ -292,9 +292,6 @@ export function ExecutiveDashboard() {
                 budgetVariance: metrics.totalInvestment - budgetAllocated,
               }}
             />
-            
-            {/* Summary/Detailed toggle */}
-            <ExecModeToggle />
           </div>
         </div>
 
