@@ -8,6 +8,7 @@ export { ActionFilters } from './ActionFilters';
 export { HROpsDashboard } from './HROpsDashboard';
 export { UnifiedWorkbench } from './UnifiedWorkbench';
 export { FloatingActionBar } from './FloatingActionBar';
+export { TeamWorkloadCard } from './TeamWorkloadCard';
 export { PayrollCountdownCard } from './PayrollCountdownCard';
 export { DataQualityBadge, DataConfidenceIndicator } from './DataQualityBadge';
 export { DataConfidenceBadge, useDataCoverageMetrics } from './DataConfidenceBadge';
