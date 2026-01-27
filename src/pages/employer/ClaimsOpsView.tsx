@@ -88,7 +88,7 @@ import { cn, formatCurrencyAED, formatDate, formatDateTime, formatRelativeTime }
 import { format } from 'date-fns';
 import { useRequiredDocsForCategory } from '@/hooks/useClaimDocumentStatus';
 
-// Missing Docs Badge component - uses unified hook
+// Missing Docs Badge component - uses unified hook with clickable popover
 function MissingDocsBadge({ 
   category, 
   missingDocsFromDb 
@@ -110,22 +110,36 @@ function MissingDocsBadge({
   }
   
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Badge className="bg-amber-500/10 text-amber-600 border-0 text-xs gap-1 cursor-help">
+    <Popover>
+      <PopoverTrigger asChild>
+        <Badge 
+          className="bg-amber-500/10 text-amber-600 border-amber-500/30 border text-xs gap-1 cursor-pointer hover:bg-amber-500/20 transition-colors"
+        >
           <FileQuestion className="w-3 h-3" />
           {missingCount} missing
         </Badge>
-      </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-xs">
-        <p className="font-medium text-xs mb-1">Missing Documents (policy):</p>
-        <ul className="text-xs space-y-0.5">
-          {missingDocs.map((doc) => (
-            <li key={doc}>• {doc}</li>
-          ))}
-        </ul>
-      </TooltipContent>
-    </Tooltip>
+      </PopoverTrigger>
+      <PopoverContent side="top" className="w-64 p-3">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-amber-600">
+            <AlertCircle className="w-4 h-4" />
+            <span className="font-medium text-sm">Missing Documents</span>
+          </div>
+          <Separator />
+          <ul className="text-sm space-y-1.5">
+            {missingDocs.map((doc) => (
+              <li key={doc} className="flex items-start gap-2">
+                <XCircle className="w-3.5 h-3.5 text-destructive mt-0.5 shrink-0" />
+                <span>{doc}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-muted-foreground mt-2 pt-2 border-t">
+            Request these documents from the employee to proceed.
+          </p>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
