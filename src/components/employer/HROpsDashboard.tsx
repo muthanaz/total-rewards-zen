@@ -32,7 +32,7 @@ import { DataConfidenceBadge, useDataCoverageMetrics } from './DataConfidenceBad
 import { PageConfidenceGate } from './PageConfidenceGate';
 import { HROpsKPIStrip } from './HROpsKPIStrip';
 import { TopFrictionReasonsPanel, FrictionReason } from './TopFrictionReasonsPanel';
-import { DeflectedInquiriesKPI } from './DeflectedInquiriesKPI';
+import { PayrollCountdownCard } from './PayrollCountdownCard';
 import { useClaimMetrics, useRecentActivity } from '@/hooks/useEmployerDashboard';
 import { useOrganizationRequests } from '@/hooks/useSharedRequests';
 import { useOrgSettings } from '@/hooks/useOrgSettings';
@@ -377,14 +377,28 @@ export function HROpsDashboard() {
                             </div>
                           </div>
 
-                          {/* Amount */}
-                          {request.amount && (
+                          {/* Amount - show Days for leave, Claimed/Cap for others */}
+                          {request.category?.toLowerCase().includes('leave') ? (
                             <div className="text-right shrink-0">
                               <span className="font-semibold text-sm tabular-nums">
-                                {formatCurrencyAED(request.amount)}
+                                {(request as any).duration_days || '—'} Days
                               </span>
                             </div>
-                          )}
+                          ) : request.amount ? (
+                            <div className="text-right shrink-0">
+                              <span className={cn(
+                                'font-semibold text-sm tabular-nums',
+                                (request as any).cap_limit && request.amount > (request as any).cap_limit && 'text-destructive'
+                              )}>
+                                {formatCurrencyAED(request.amount)}
+                                {(request as any).cap_limit && (
+                                  <span className="text-muted-foreground font-normal text-xs">
+                                    {' / '}{formatCurrencyAED((request as any).cap_limit)}
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                          ) : null}
 
                           {/* SLA / Missing Docs Indicator */}
                           <div className="shrink-0 w-20 text-right">
@@ -436,10 +450,12 @@ export function HROpsDashboard() {
               totalIssues={frictionReasons.reduce((sum, r) => sum + r.count, 0)}
             />
 
-            {/* Deflected Inquiries KPI */}
-            <DeflectedInquiriesKPI
-              deflectedCount={null}
-              isConfigured={false}
+            {/* Payroll Countdown */}
+            <PayrollCountdownCard
+              daysRemaining={4}
+              claimsPending={requests.filter(r => ['pending', 'submitted', 'in_review'].includes(r.status || '')).length || 28}
+              totalQueueSize={requests.length || 45}
+              cutoffLabel="January Payroll"
             />
 
             {/* Quick Actions */}

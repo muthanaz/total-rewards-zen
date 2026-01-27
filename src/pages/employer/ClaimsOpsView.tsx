@@ -1201,7 +1201,7 @@ export function ClaimsOpsView() {
                     <th className="text-left py-3 px-3 font-medium">Employee</th>
                     <th className="text-left py-3 px-3 font-medium">Type / Category</th>
                     <th className="text-left py-3 px-2 font-medium">Policy</th>
-                    <th className="text-right py-3 px-3 font-medium">Amount</th>
+                    <th className="text-right py-3 px-3 font-medium">Amount / Cap</th>
                     <th className="text-center py-3 px-2 font-medium">Days</th>
                     {slaEnabled && (
                       <th className="text-left py-3 px-3 font-medium">SLA</th>
@@ -1268,15 +1268,50 @@ export function ClaimsOpsView() {
                           )}
                         </td>
                         <td className="py-3 px-3 text-right">
-                          {request.amount ? (
-                            <span className={cn(
-                              'font-mono text-sm',
-                              request.amount >= HIGH_VALUE_THRESHOLD && 'text-amber-600 font-medium'
-                            )}>
-                              {request.currency || 'AED'} {request.amount.toLocaleString()}
+                          {/* Leave requests show Days instead of Amount */}
+                          {request.category?.toLowerCase().includes('leave') ? (
+                            <span className="font-medium text-sm">
+                              {request.duration_days || '—'} {request.duration_days === 1 ? 'Day' : 'Days'}
                             </span>
+                          ) : request.amount ? (
+                            <div className="text-right">
+                              {/* Show Claimed / Cap format */}
+                              {request.cap_limit ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className={cn(
+                                      'font-mono text-sm cursor-help',
+                                      request.amount > request.cap_limit 
+                                        ? 'text-destructive font-semibold' 
+                                        : request.amount >= HIGH_VALUE_THRESHOLD 
+                                        ? 'text-amber-600 font-medium'
+                                        : ''
+                                    )}>
+                                      {request.currency || 'AED'} {request.amount.toLocaleString()}
+                                      <span className="text-muted-foreground font-normal"> / {request.cap_limit.toLocaleString()}</span>
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="left" className="text-xs">
+                                    {request.amount > request.cap_limit ? (
+                                      <span className="text-destructive font-medium">
+                                        Exceeds cap by {request.currency || 'AED'} {(request.amount - request.cap_limit).toLocaleString()}
+                                      </span>
+                                    ) : (
+                                      <span>Within policy cap</span>
+                                    )}
+                                  </TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <span className={cn(
+                                  'font-mono text-sm',
+                                  request.amount >= HIGH_VALUE_THRESHOLD && 'text-amber-600 font-medium'
+                                )}>
+                                  {request.currency || 'AED'} {request.amount.toLocaleString()}
+                                </span>
+                              )}
+                            </div>
                           ) : (
-                            <span className="text-muted-foreground">-</span>
+                            <span className="text-muted-foreground">—</span>
                           )}
                         </td>
                         <td className="py-3 px-2 text-center">
