@@ -91,6 +91,8 @@ import { ClaimCaseSummary } from '@/components/employer/ClaimCaseSummary';
 import { PolicyCheckBanner } from '@/components/employer/PolicyCheckBanner';
 import { ComplianceStatusBanner } from '@/components/employer/ComplianceStatusBanner';
 import { RequestDocumentsChecklist } from '@/components/employer/RequestDocumentsChecklist';
+import { PolicyContextWidget } from '@/components/employer/PolicyContextWidget';
+import { QuickActionFooter } from '@/components/employer/QuickActionFooter';
 import { 
   getStatusBadgeStyle, 
   getStatusDisplayLabel,
@@ -647,7 +649,24 @@ export function ClaimReviewSheet({
               />
 
               {/* Overview Tab */}
-              <TabsContent value="overview" className="space-y-4 mt-4">
+              <TabsContent value="overview" className="space-y-4 mt-4 pb-24">
+                {/* Policy Context Widget - Quick employee context */}
+                <PolicyContextWidget
+                  employeeId={request?.user_id || null}
+                  employeeName={request?.employeeName || null}
+                  employeeGrade={request?.employeeGrade || entitlementCheck?.employeeGrade || null}
+                  category={request?.category || null}
+                  currentRequestId={request?.id || null}
+                  organizationId={organizationId}
+                  entitlement={entitlementCheck ? {
+                    annualAllowance: entitlementCheck.annualAllowance,
+                    utilizedAmount: entitlementCheck.utilizedAmount,
+                    remainingAmount: entitlementCheck.remainingAmount,
+                    utilizationRate: entitlementCheck.utilizationRate,
+                  } : null}
+                  isLoading={entitlementLoading}
+                />
+
                 {/* Compliance Status Banner - shows frozen status from submission */}
                 <ComplianceStatusBanner
                   status={(request as any)?.compliance_status}
@@ -1262,7 +1281,19 @@ export function ClaimReviewSheet({
           </div>
         </ScrollArea>
 
-        {/* Assign Dialog */}
+        {/* Quick Action Footer - Fixed at bottom */}
+        <QuickActionFooter
+          canProcess={canProcess}
+          hasBlockers={validation.blockers.length > 0}
+          blockerMessage={validation.blockers[0]?.message}
+          isProcessing={isProcessing}
+          onApprove={handleApprove}
+          onReject={() => setActiveTab('decision')}
+          onRequestInfo={() => setActiveTab('decision')}
+          claimAmount={request?.amount}
+          currency={request?.currency || 'AED'}
+        />
+
         <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
           <DialogContent>
             <DialogHeader>
