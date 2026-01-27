@@ -11,6 +11,9 @@ export { AnimatedRadarChart } from './AnimatedRadarChart';
 export { StackedAreaChart } from './StackedAreaChart';
 export { ProgressBarList } from './ProgressBarList';
 
+// Executive charts
+export { ExecutiveSpendChart } from './ExecutiveSpendChart';
+
 // Waterfall chart
 export { WaterfallChart, CategoryWaterfallChart } from './WaterfallChart';
 
