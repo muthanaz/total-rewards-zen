@@ -2,6 +2,7 @@
  * AI Watchlist Strip
  * 
  * Horizontal scrollable strip of pre-defined smart segments.
+ * Uses behavioral gap styling instead of risk scores.
  */
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,8 +15,11 @@ import {
   Flag, 
   Bookmark,
   Brain,
+  TrendingUp,
+  CheckCircle,
+  Target,
 } from 'lucide-react';
-import { SavedSegment } from './types';
+import { SavedSegment, BehavioralGapType } from './types';
 import { AI_WATCHLIST_SEGMENTS } from './mockData';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -32,12 +36,16 @@ const ICON_MAP: Record<string, React.ElementType> = {
   UserPlus,
   Flag,
   Bookmark,
+  TrendingUp,
+  CheckCircle,
+  Target,
 };
 
-const riskConfig = {
-  high: { className: 'border-destructive/30 bg-destructive/5' },
-  medium: { className: 'border-warning/30 bg-warning/5' },
-  low: { className: 'border-success/30 bg-success/5' },
+const gapConfig: Record<BehavioralGapType, { className: string }> = {
+  'high-engagement-low-cost': { className: 'border-success/30 bg-success/5' },
+  'concentrated-spend': { className: 'border-warning/30 bg-warning/5' },
+  'balanced': { className: 'border-primary/30 bg-primary/5' },
+  'low-engagement': { className: 'border-destructive/30 bg-destructive/5' },
 };
 
 export function AIWatchlistStrip({ selectedId, onSelect, savedSegments }: AIWatchlistStripProps) {
@@ -64,7 +72,7 @@ export function AIWatchlistStrip({ selectedId, onSelect, savedSegments }: AIWatc
             {allSegments.map((segment, index) => {
               const Icon = ICON_MAP[segment.icon] || Bookmark;
               const isSelected = selectedId === segment.id;
-              const risk = riskConfig[segment.riskScore];
+              const gapStyle = gapConfig[segment.behavioralGap] || gapConfig['balanced'];
 
               return (
                 <motion.button
@@ -77,7 +85,7 @@ export function AIWatchlistStrip({ selectedId, onSelect, savedSegments }: AIWatc
                     "flex items-center gap-2 px-3 py-2 rounded-lg border transition-all whitespace-nowrap",
                     isSelected
                       ? "ring-2 ring-accent border-accent bg-accent/10"
-                      : cn("hover:border-accent/50", risk.className)
+                      : cn("hover:border-accent/50", gapStyle.className)
                   )}
                 >
                   <Icon className={cn(

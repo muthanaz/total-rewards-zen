@@ -2,10 +2,11 @@
  * Segment Builder Hook
  * 
  * Manages filter state and computes live segment metrics.
+ * Uses OBJECTIVE BEHAVIORAL DATA - Budget Usage & Participation Rate.
  */
 
 import { useState, useMemo, useCallback } from 'react';
-import { SegmentFilters, SegmentMetrics, SavedSegment, MockEmployee, SALARY_MIN, SALARY_MAX } from './types';
+import { SegmentFilters, SegmentMetrics, SavedSegment, BehavioralGapType, SALARY_MIN, SALARY_MAX } from './types';
 import { MOCK_EMPLOYEES, AI_WATCHLIST_SEGMENTS } from './mockData';
 
 const DEFAULT_FILTERS: SegmentFilters = {
@@ -15,6 +16,43 @@ const DEFAULT_FILTERS: SegmentFilters = {
   salaryRange: [SALARY_MIN, SALARY_MAX],
   tenure: null,
 };
+
+/**
+ * Determine behavioral gap type based on participation vs budget usage
+ */
+function calculateBehavioralGap(participationRate: number, budgetUsage: number): {
+  type: BehavioralGapType;
+  insight: string;
+} {
+  const highParticipation = participationRate >= 60;
+  const highBudgetUsage = budgetUsage >= 60;
+  
+  if (highParticipation && !highBudgetUsage) {
+    return {
+      type: 'high-engagement-low-cost',
+      insight: 'Highly valued perk with minimal financial load. Consider expanding this benefit category.',
+    };
+  }
+  
+  if (!highParticipation && highBudgetUsage) {
+    return {
+      type: 'concentrated-spend',
+      insight: 'Benefit value limited to few individuals. Review equity and consider awareness campaigns.',
+    };
+  }
+  
+  if (highParticipation && highBudgetUsage) {
+    return {
+      type: 'balanced',
+      insight: 'Well-balanced benefit with high value realization across the workforce.',
+    };
+  }
+  
+  return {
+    type: 'low-engagement',
+    insight: 'Low adoption and utilization. Investigate barriers: awareness, process friction, or relevance.',
+  };
+}
 
 export function useSegmentBuilder() {
   const [filters, setFilters] = useState<SegmentFilters>(DEFAULT_FILTERS);
@@ -53,30 +91,39 @@ export function useSegmentBuilder() {
     });
   }, [filters]);
 
-  // Compute metrics for filtered employees
+  // Compute metrics for filtered employees (OBJECTIVE BEHAVIORAL DATA)
   const metrics: SegmentMetrics = useMemo(() => {
     if (filteredEmployees.length === 0) {
       return {
         matches: 0,
         totalSpend: 0,
-        utilizationRate: 0,
-        riskScore: 'low' as const,
-        happyCount: 0,
-        frustratedCount: 0,
+        totalBudget: 0,
+        budgetUsage: 0,
+        participationRate: 0,
+        participatingCount: 0,
+        behavioralGap: 'low-engagement' as const,
+        behavioralGapInsight: 'No employees match current filters.',
         benefitMix: [],
         topNeeds: [],
       };
     }
 
-    const totalSpend = filteredEmployees.reduce((sum, emp) => sum + emp.totalSpend, 0);
-    const avgUtilization = filteredEmployees.reduce((sum, emp) => sum + emp.utilizationRate, 0) / filteredEmployees.length;
+    // Calculate objective metrics
+    const totalSpend = filteredEmployees.reduce((sum, emp) => sum + emp.amountSpent, 0);
+    const totalBudget = filteredEmployees.reduce((sum, emp) => sum + emp.budgetAllocated, 0);
+    const participatingCount = filteredEmployees.filter(emp => emp.hasMadeClaim).length;
     
-    const happyCount = filteredEmployees.filter(emp => emp.satisfaction === 'happy').length;
-    const frustratedCount = filteredEmployees.filter(emp => emp.satisfaction === 'frustrated').length;
+    // Budget Usage: (Total Spent / Total Budget) %
+    const budgetUsage = totalBudget > 0 ? Math.round((totalSpend / totalBudget) * 100) : 0;
     
-    // Calculate risk score based on frustrated ratio
-    const frustratedRatio = frustratedCount / filteredEmployees.length;
-    const riskScore = frustratedRatio > 0.3 ? 'high' : frustratedRatio > 0.15 ? 'medium' : 'low';
+    // Participation Rate: % of eligible who made at least 1 claim
+    const participationRate = Math.round((participatingCount / filteredEmployees.length) * 100);
+    
+    // Calculate behavioral gap
+    const { type: behavioralGap, insight: behavioralGapInsight } = calculateBehavioralGap(
+      participationRate, 
+      budgetUsage
+    );
     
     // Aggregate benefit mix
     const benefitAggregates: Record<string, { total: number; amount: number }> = {};
@@ -86,7 +133,7 @@ export function useSegmentBuilder() {
           benefitAggregates[b.name] = { total: 0, amount: 0 };
         }
         benefitAggregates[b.name].total += b.percentage;
-        benefitAggregates[b.name].amount += emp.totalSpend * (b.percentage / 100);
+        benefitAggregates[b.name].amount += emp.amountSpent * (b.percentage / 100);
       });
     });
     
@@ -115,10 +162,12 @@ export function useSegmentBuilder() {
     return {
       matches: filteredEmployees.length,
       totalSpend,
-      utilizationRate: Math.round(avgUtilization),
-      riskScore,
-      happyCount,
-      frustratedCount,
+      totalBudget,
+      budgetUsage,
+      participationRate,
+      participatingCount,
+      behavioralGap,
+      behavioralGapInsight,
       benefitMix,
       topNeeds,
     };
@@ -188,7 +237,7 @@ export function useSegmentBuilder() {
       isAI: false,
       icon: 'Bookmark',
       matchCount: metrics.matches,
-      riskScore: metrics.riskScore,
+      behavioralGap: metrics.behavioralGap,
     };
     setSavedSegments(prev => [...prev, newSegment]);
     return newSegment;
