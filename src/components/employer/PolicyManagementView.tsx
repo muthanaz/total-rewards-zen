@@ -250,7 +250,8 @@ export function PolicyManagementView() {
     if (!policy.is_active) {
       return <Badge className="bg-muted text-muted-foreground border-border">Archived</Badge>;
     }
-    return <Badge className="bg-muted text-muted-foreground">No Version</Badge>;
+    // No version yet - show as Draft (V1.0) in gray
+    return <Badge className="bg-muted/50 text-muted-foreground border-border">Draft (V1.0)</Badge>;
   };
 
   const filteredPolicies = useMemo(() => {
@@ -923,11 +924,12 @@ export function PolicyManagementView() {
                     <TableRow>
                       <TableHead>Policy Name</TableHead>
                       <TableHead>Owner</TableHead>
-                      <TableHead>Life Area</TableHead>
+                      <TableHead>Benefit Category</TableHead>
                       <TableHead>Version</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Effective Date</TableHead>
                       <TableHead>Last Updated</TableHead>
+                      <TableHead>Next Review</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -968,6 +970,14 @@ export function PolicyManagementView() {
                             ? format(new Date(policy.currentVersion.updated_at), 'MMM d, yyyy')
                             : format(new Date(policy.updated_at), 'MMM d, yyyy')
                           }
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {(() => {
+                            const lastUpdated = policy.currentVersion?.updated_at || policy.updated_at;
+                            const nextReview = new Date(lastUpdated);
+                            nextReview.setFullYear(nextReview.getFullYear() + 1);
+                            return format(nextReview, 'MMM d, yyyy');
+                          })()}
                         </TableCell>
                         <TableCell>
                           <div className="flex justify-end gap-1">

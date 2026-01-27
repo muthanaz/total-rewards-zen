@@ -10,18 +10,18 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Inbox, FileQuestion, Flame, Info } from 'lucide-react';
+import { Inbox, FileQuestion, Flame, Info, Clock, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RequestWithDetails } from '@/hooks/useSharedRequests';
 
 interface ClaimsQueueCountersProps {
   requests: RequestWithDetails[];
   slaEnabled: boolean;
-  onCounterClick?: (filter: 'active' | 'needs_info' | 'at_risk') => void;
+  onCounterClick?: (filter: 'active' | 'needs_info' | 'at_risk' | 'pending_7d') => void;
 }
 
 interface CounterConfig {
-  key: 'active' | 'needs_info' | 'at_risk';
+  key: 'active' | 'needs_info' | 'at_risk' | 'pending_7d';
   label: string;
   icon: React.ReactNode;
   count: number;
@@ -52,6 +52,14 @@ export function ClaimsQueueCounters({
     const hoursRemaining = (new Date(r.sla_due_at).getTime() - Date.now()) / (1000 * 60 * 60);
     return hoursRemaining <= 24;
   }).length;
+  
+  // NEW: Pending > 7 days (critical SLA breach)
+  const pending7dCount = requests.filter(r => {
+    if (!activeStatuses.includes(r.status || '')) return false;
+    const createdAt = new Date(r.created_at).getTime();
+    const daysAgo = (Date.now() - createdAt) / (1000 * 60 * 60 * 24);
+    return daysAgo > 7;
+  }).length;
 
   const counters: CounterConfig[] = [
     {
@@ -69,6 +77,14 @@ export function ClaimsQueueCounters({
       count: needsInfoCount,
       variant: needsInfoCount > 0 ? 'warning' : 'default',
       tooltip: 'Items with missing documentation or awaiting employee response',
+    },
+    {
+      key: 'pending_7d',
+      label: 'Pending > 7 Days',
+      icon: <AlertTriangle className="w-4 h-4" />,
+      count: pending7dCount,
+      variant: pending7dCount > 0 ? 'danger' : 'default',
+      tooltip: 'Critical SLA breach: items pending for more than 7 days',
     },
     {
       key: 'at_risk',

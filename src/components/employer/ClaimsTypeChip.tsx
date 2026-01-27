@@ -25,24 +25,28 @@ type DisplayType = 'request' | 'claim' | 'settlement';
 
 const TYPE_CONFIG: Record<DisplayType, {
   label: string;
+  badgeLabel: string;
   description: string;
   icon: React.ReactNode;
   className: string;
 }> = {
   request: {
     label: 'Request',
-    description: 'Pre-approval required before spending',
+    badgeLabel: 'REQUEST',
+    description: 'Pre-approval required before spending (Advance)',
     icon: <FileText className="w-3 h-3" />,
-    className: 'bg-primary/10 text-primary border-primary/20',
+    className: 'bg-info/10 text-info border-info/20',
   },
   claim: {
     label: 'Claim',
+    badgeLabel: 'CLAIM',
     description: 'Reimbursement after spending',
     icon: <Receipt className="w-3 h-3" />,
     className: 'bg-accent/10 text-accent-foreground border-accent/20',
   },
   settlement: {
     label: 'Settlement',
+    badgeLabel: 'SETTLE',
     description: 'Post-trip reconciliation',
     icon: <Receipt className="w-3 h-3" />,
     className: 'bg-muted text-muted-foreground border-muted',
@@ -81,13 +85,13 @@ export function ClaimsTypeChip({
     <Badge
       variant="outline"
       className={cn(
-        'gap-1 font-medium',
+        'gap-1 font-semibold uppercase tracking-wide',
         config.className,
-        size === 'sm' && 'text-[10px] px-1.5 py-0'
+        size === 'sm' && 'text-[9px] px-1.5 py-0'
       )}
     >
       {config.icon}
-      {config.label}
+      {config.badgeLabel}
     </Badge>
   );
   
