@@ -103,7 +103,7 @@ export default function CommunicationsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">89%</p>
-                <p className="text-xs text-muted-foreground">Avg. Open Rate</p>
+                <p className="text-xs text-muted-foreground">Avg. Action Rate</p>
               </div>
             </div>
           </CardContent>
