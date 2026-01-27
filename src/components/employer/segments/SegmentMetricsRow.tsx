@@ -41,15 +41,17 @@ export function SegmentMetricsRow({ metrics, title }: SegmentMetricsRowProps) {
 
   return (
     <div className="space-y-4">
-      {/* Dynamic Title */}
-      <motion.h2
-        key={title}
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-lg font-semibold"
-      >
-        {title}
-      </motion.h2>
+      {/* Dynamic Title - only show if provided */}
+      {title && (
+        <motion.h2
+          key={title}
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-lg font-semibold"
+        >
+          {title}
+        </motion.h2>
+      )}
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

@@ -2,12 +2,13 @@
  * People Intelligence Engine
  * 
  * Dynamic segment builder with customizable filters, live preview,
- * and AI-powered watchlist for workforce analytics.
+ * AI-powered watchlist, and dual-view tabs for Exec/HR modes.
  */
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   DataConfidenceBadge, 
   PageConfidenceGate, 
@@ -20,20 +21,25 @@ import {
   SegmentCharts,
   AIWatchlistStrip,
   SaveSegmentModal,
+  SegmentMemberTable,
+  BulletChart,
 } from '@/components/employer/segments';
-import { Rocket, ArrowRight, Download } from 'lucide-react';
+import { Rocket, Download, BarChart3, Users } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
 export default function SegmentsPage() {
   const navigate = useNavigate();
   const coverageMetrics = useDataCoverageMetrics();
   const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'insights' | 'members'>('insights');
 
   const {
     filters,
     updateFilter,
     resetFilters,
     metrics,
+    filteredEmployees,
     dynamicTitle,
     hasActiveFilters,
     savedSegments,
@@ -57,27 +63,56 @@ export default function SegmentsPage() {
     navigate(`/employer/actions?create=true&source=segments&segment=${encodeURIComponent(segmentName)}`);
   };
 
-  const handleExportSegment = () => {
-    toast.success('Exporting segment data...', {
-      description: 'Download will start shortly',
+  const handleExportReport = () => {
+    toast.success('Exporting segment report...', {
+      description: `${metrics.matches} employees included`,
     });
   };
 
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-display font-bold text-foreground">
-              People Intelligence Engine
-            </h1>
-            <p className="text-muted-foreground">
-              Build custom segments and uncover workforce insights
+        {/* Header with Dynamic Title and Actions */}
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-2xl font-display font-bold text-foreground">
+                People Intelligence Engine
+              </h1>
+              <DataConfidenceBadge metrics={coverageMetrics} />
+            </div>
+            <motion.p
+              key={dynamicTitle}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="text-lg font-medium text-accent"
+            >
+              {dynamicTitle}
+            </motion.p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {metrics.matches} employees match current filters
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <DataConfidenceBadge metrics={coverageMetrics} />
+          
+          {/* Header Actions */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={handleExportReport}
+              disabled={metrics.matches === 0}
+            >
+              <Download className="h-4 w-4" />
+              Export Report
+            </Button>
+            <Button 
+              className="gap-2" 
+              onClick={handleLaunchCampaign}
+              disabled={metrics.matches === 0}
+            >
+              <Rocket className="h-4 w-4" />
+              Launch Campaign
+            </Button>
           </div>
         </div>
 
@@ -88,55 +123,60 @@ export default function SegmentsPage() {
           savedSegments={savedSegments}
         />
 
-        {/* Main Content: Split View */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Panel: The Slicer */}
-          <div className="lg:col-span-4 xl:col-span-3">
-            <div className="lg:sticky lg:top-6">
-              <SegmentFilterPanel
-                filters={filters}
-                onFilterChange={updateFilter}
-                onReset={resetFilters}
-                onSave={() => setSaveModalOpen(true)}
-                hasActiveFilters={hasActiveFilters}
+        {/* View Tabs - Strategic Insights vs Member List */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'insights' | 'members')}>
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="insights" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Strategic Insights
+            </TabsTrigger>
+            <TabsTrigger value="members" className="gap-2">
+              <Users className="h-4 w-4" />
+              Member List
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Main Content: Split View */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+            {/* Left Panel: The Slicer */}
+            <div className="lg:col-span-4 xl:col-span-3">
+              <div className="lg:sticky lg:top-6">
+                <SegmentFilterPanel
+                  filters={filters}
+                  onFilterChange={updateFilter}
+                  onReset={resetFilters}
+                  onSave={() => setSaveModalOpen(true)}
+                  hasActiveFilters={hasActiveFilters}
+                />
+              </div>
+            </div>
+
+            {/* Right Panel: Tab Content */}
+            <div className="lg:col-span-8 xl:col-span-9 space-y-6">
+              {/* Metrics Row (visible in both tabs) */}
+              <SegmentMetricsRow 
+                metrics={metrics} 
+                title="" 
               />
+
+              {/* Tab Content */}
+              <TabsContent value="insights" className="mt-0 space-y-6">
+                {/* Strategic Insights - Executive View */}
+                
+                {/* Bullet Chart for Usage vs Adoption */}
+                <BulletChart metrics={metrics} />
+                
+                {/* Behavioral Gap + Charts */}
+                <SegmentCharts metrics={metrics} />
+              </TabsContent>
+
+              <TabsContent value="members" className="mt-0">
+                {/* Member List - HR Ops View */}
+                <SegmentMemberTable employees={filteredEmployees} />
+              </TabsContent>
             </div>
           </div>
-
-          {/* Right Panel: Live Preview */}
-          <div className="lg:col-span-8 xl:col-span-9 space-y-6">
-            {/* Metrics Row */}
-            <SegmentMetricsRow 
-              metrics={metrics} 
-              title={dynamicTitle} 
-            />
-
-            {/* Charts & Visualizations */}
-            <SegmentCharts metrics={metrics} />
-
-            {/* Action Bar */}
-            {metrics.matches > 0 && (
-              <div className="flex flex-col sm:flex-row gap-3 p-4 rounded-lg bg-muted/50 border">
-                <Button 
-                  className="flex-1 gap-2" 
-                  onClick={handleLaunchCampaign}
-                >
-                  <Rocket className="h-4 w-4" />
-                  Launch Targeted Campaign
-                  <ArrowRight className="h-4 w-4 ml-auto" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="gap-2"
-                  onClick={handleExportSegment}
-                >
-                  <Download className="h-4 w-4" />
-                  Export
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
+        </Tabs>
 
         {/* Save Segment Modal */}
         <SaveSegmentModal

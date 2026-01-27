@@ -10,3 +10,5 @@ export * from './SegmentMetricsRow';
 export * from './SegmentCharts';
 export * from './AIWatchlistStrip';
 export * from './SaveSegmentModal';
+export * from './SegmentMemberTable';
+export * from './BulletChart';
