@@ -39,7 +39,7 @@ interface CFORecoveryKPIGridProps {
 const METRIC_DEFINITIONS = {
   unrealizedValue: {
     formula: 'Entitled Value - Claimed Amount',
-    dataSource: 'benefit_entitlements + requests',
+    dataSource: 'Budgeted funds blocked by policy or process friction',
   },
   estimatedRecoverable: {
     formula: 'Unrealized × Confidence Factor (High=100%, Med=70%, Low=40%)',
@@ -56,7 +56,7 @@ const METRIC_DEFINITIONS = {
 };
 
 const causeConfig: Record<RecoveryCauseType, { label: string; color: string; bgColor: string }> = {
-  awareness: { label: 'Awareness Gap', color: 'text-info', bgColor: 'bg-info/10' },
+  awareness: { label: 'Low Awareness', color: 'text-info', bgColor: 'bg-info/10' },
   eligibility: { label: 'Eligibility', color: 'text-purple-500', bgColor: 'bg-purple-500/10' },
   friction: { label: 'Process Friction', color: 'text-warning', bgColor: 'bg-warning/10' },
   policy: { label: 'Policy Design', color: 'text-destructive', bgColor: 'bg-destructive/10' },

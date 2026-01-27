@@ -80,16 +80,22 @@ export function QuickWinsCard({ wins, onTakeAction, className }: QuickWinsCardPr
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <p className="font-medium text-sm">{win.title}</p>
-                    {/* Prominent Effort Level Badge */}
+                    {/* Prominent Effort Level Badge based on time */}
                     <Badge 
                       className={cn(
                         "text-[10px] px-2 py-0.5 font-semibold",
-                        win.effort === 'low' && "bg-success text-success-foreground",
-                        win.effort === 'medium' && "bg-warning text-warning-foreground",
-                        win.effort === 'high' && "bg-destructive text-destructive-foreground"
+                        win.timeToImpact.includes('1 week') || win.timeToImpact.includes('days') 
+                          ? "bg-success text-success-foreground"
+                          : win.timeToImpact.includes('2') || win.timeToImpact.includes('3') || win.timeToImpact.includes('4 weeks')
+                            ? "bg-warning text-warning-foreground"
+                            : "bg-destructive text-destructive-foreground"
                       )}
                     >
-                      {win.effort.charAt(0).toUpperCase() + win.effort.slice(1)} Effort
+                      {win.timeToImpact.includes('1 week') || win.timeToImpact.includes('days') 
+                        ? 'Low Effort'
+                        : win.timeToImpact.includes('2') || win.timeToImpact.includes('3') || win.timeToImpact.includes('4 weeks')
+                          ? 'Medium Effort'
+                          : 'High Effort'}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -109,13 +115,13 @@ export function QuickWinsCard({ wins, onTakeAction, className }: QuickWinsCardPr
                   {formatCurrencyAED(win.estimatedRecovery, { abbreviate: true })}
                 </p>
                 <Button 
-                  variant="ghost" 
+                  variant="outline" 
                   size="sm" 
-                  className="h-6 px-2 text-xs mt-1"
+                  className="h-7 px-3 text-xs gap-1 font-medium hover:bg-primary hover:text-primary-foreground"
                   onClick={() => onTakeAction?.(win.id)}
                 >
                   Take action
-                  <ArrowRight className="h-3 w-3 ml-1" />
+                  <ArrowRight className="h-3 w-3" />
                 </Button>
               </div>
             </div>
