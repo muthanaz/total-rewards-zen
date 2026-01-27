@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
+  LayoutGrid,
   BarChart3,
   TrendingUp,
   KanbanSquare,
@@ -18,6 +19,8 @@ import {
   LineChart,
   Banknote,
   TableProperties,
+  Megaphone,
+  CalendarDays,
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useEmployerViewMode, ViewMode } from '@/contexts/EmployerViewModeContext';
@@ -58,6 +61,20 @@ interface NavGroup {
 
 const unifiedNavigation: NavGroup[] = [
   {
+    id: 'operations',
+    label: 'Operations',
+    labelAr: 'العمليات',
+    items: [
+      { label: 'Workbench', labelAr: 'منضدة العمل', path: '/employer/ops', icon: LayoutGrid },
+      { label: 'Claims & Requests', labelAr: 'المطالبات والطلبات', path: '/employer/claims', icon: Inbox },
+      { label: 'Settlements', labelAr: 'التسويات', path: '/employer/settlements', icon: Banknote },
+      { label: 'Communications', labelAr: 'الاتصالات', path: '/employer/communications', icon: Megaphone },
+      { label: 'Calendar', labelAr: 'التقويم', path: '/employer/calendar', icon: CalendarDays },
+      { label: 'Employee Directory', labelAr: 'دليل الموظفين', path: '/employer/employees', icon: Users },
+      { label: 'Reports', labelAr: 'التقارير', path: '/employer/reports', icon: TableProperties },
+    ],
+  },
+  {
     id: 'strategy',
     label: 'Strategy',
     labelAr: 'الاستراتيجية',
@@ -68,17 +85,6 @@ const unifiedNavigation: NavGroup[] = [
       { label: 'ROI & Savings', labelAr: 'العائد والتوفير', path: '/employer/optimization', icon: TrendingUp },
       { label: 'Benchmarks', labelAr: 'المقارنات المعيارية', path: '/employer/benchmarks', icon: LineChart },
       { label: 'Action Plan', labelAr: 'خطة العمل', path: '/employer/actions', icon: KanbanSquare, showPendingBadge: true },
-    ],
-  },
-  {
-    id: 'operations',
-    label: 'Operations',
-    labelAr: 'العمليات',
-    items: [
-      { label: 'Claims & Requests', labelAr: 'المطالبات والطلبات', path: '/employer/claims', icon: Inbox },
-      { label: 'Settlements', labelAr: 'التسويات', path: '/employer/settlements', icon: Banknote },
-      { label: 'Reports', labelAr: 'التقارير', path: '/employer/reports', icon: TableProperties },
-      { label: 'Employee Directory', labelAr: 'دليل الموظفين', path: '/employer/employees', icon: Users },
     ],
   },
   {
@@ -247,7 +253,7 @@ export function EmployerSidebar() {
   const getDefaultExpandedSections = () => {
     const path = location.pathname;
     // Always expand operations when on ops-related pages
-    const opsPages = ['/employer/claims', '/employer/settlements', '/employer/reports', '/employer/employees', '/employer/ops'];
+    const opsPages = ['/employer/claims', '/employer/settlements', '/employer/reports', '/employer/employees', '/employer/ops', '/employer/communications', '/employer/calendar'];
     if (opsPages.some(p => path.startsWith(p))) {
       return unifiedNavigation.map(s => s.id); // All expanded, but operations is guaranteed
     }
@@ -259,7 +265,7 @@ export function EmployerSidebar() {
   // Update expanded sections when route changes to ensure relevant section is open
   useEffect(() => {
     const path = location.pathname;
-    const opsPages = ['/employer/claims', '/employer/settlements', '/employer/reports', '/employer/employees', '/employer/ops'];
+    const opsPages = ['/employer/claims', '/employer/settlements', '/employer/reports', '/employer/employees', '/employer/ops', '/employer/communications', '/employer/calendar'];
     if (opsPages.some(p => path.startsWith(p))) {
       setExpandedSections(prev => prev.includes('operations') ? prev : [...prev, 'operations']);
     }
