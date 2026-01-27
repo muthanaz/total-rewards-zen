@@ -166,8 +166,17 @@ export default function SegmentsPage() {
                 {/* Bullet Chart for Usage vs Adoption */}
                 <BulletChart metrics={metrics} />
                 
-                {/* Behavioral Gap + Charts */}
-                <SegmentCharts metrics={metrics} />
+                {/* Behavioral Gap + Charts with Drill-Down */}
+                <SegmentCharts 
+                  metrics={metrics} 
+                  onBenefitClick={(benefitName) => {
+                    updateFilter('benefitType', benefitName);
+                    setActiveTab('members');
+                    toast.info(`Showing ${benefitName} users`, {
+                      description: 'Switched to Member List view',
+                    });
+                  }}
+                />
               </TabsContent>
 
               <TabsContent value="members" className="mt-0">

@@ -2,7 +2,7 @@
  * AI Watchlist Strip
  * 
  * Horizontal scrollable strip of pre-defined smart segments.
- * Uses behavioral gap styling instead of risk scores.
+ * Uses behavioral gap styling with trend indicators.
  */
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,10 +12,11 @@ import {
   AlertTriangle, 
   Star, 
   UserPlus, 
-  Flag, 
   Bookmark,
   Brain,
   TrendingUp,
+  TrendingDown,
+  Minus,
   CheckCircle,
   Target,
 } from 'lucide-react';
@@ -34,7 +35,6 @@ const ICON_MAP: Record<string, React.ElementType> = {
   AlertTriangle,
   Star,
   UserPlus,
-  Flag,
   Bookmark,
   TrendingUp,
   CheckCircle,
@@ -46,6 +46,12 @@ const gapConfig: Record<BehavioralGapType, { className: string }> = {
   'concentrated-spend': { className: 'border-warning/30 bg-warning/5' },
   'balanced': { className: 'border-primary/30 bg-primary/5' },
   'low-engagement': { className: 'border-destructive/30 bg-destructive/5' },
+};
+
+const trendConfig = {
+  up: { icon: TrendingUp, className: 'text-destructive', label: '↗' },
+  down: { icon: TrendingDown, className: 'text-success', label: '↘' },
+  stable: { icon: Minus, className: 'text-muted-foreground', label: '→' },
 };
 
 export function AIWatchlistStrip({ selectedId, onSelect, savedSegments }: AIWatchlistStripProps) {
@@ -63,7 +69,7 @@ export function AIWatchlistStrip({ selectedId, onSelect, savedSegments }: AIWatc
           </div>
           <div>
             <h3 className="text-sm font-semibold">AI Watchlist</h3>
-            <p className="text-xs text-muted-foreground">Smart segments auto-updated</p>
+            <p className="text-xs text-muted-foreground">Smart segments with trend tracking</p>
           </div>
         </div>
 
@@ -73,6 +79,7 @@ export function AIWatchlistStrip({ selectedId, onSelect, savedSegments }: AIWatc
               const Icon = ICON_MAP[segment.icon] || Bookmark;
               const isSelected = selectedId === segment.id;
               const gapStyle = gapConfig[segment.behavioralGap] || gapConfig['balanced'];
+              const trend = segment.trend ? trendConfig[segment.trend] : null;
 
               return (
                 <motion.button
@@ -82,10 +89,10 @@ export function AIWatchlistStrip({ selectedId, onSelect, savedSegments }: AIWatc
                   transition={{ delay: index * 0.05 }}
                   onClick={() => onSelect(segment.id)}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-2 rounded-lg border transition-all whitespace-nowrap",
+                    "flex items-center gap-2 px-3 py-2 rounded-lg border transition-all whitespace-nowrap group",
                     isSelected
                       ? "ring-2 ring-accent border-accent bg-accent/10"
-                      : cn("hover:border-accent/50", gapStyle.className)
+                      : cn("hover:border-accent/50 hover:shadow-sm", gapStyle.className)
                   )}
                 >
                   <Icon className={cn(
@@ -93,6 +100,17 @@ export function AIWatchlistStrip({ selectedId, onSelect, savedSegments }: AIWatc
                     segment.isAI ? 'text-accent' : 'text-primary'
                   )} />
                   <span className="text-sm font-medium">{segment.name}</span>
+                  
+                  {/* Trend Indicator */}
+                  {trend && segment.isAI && (
+                    <span className={cn(
+                      "text-sm font-bold transition-transform group-hover:scale-110",
+                      trend.className
+                    )}>
+                      {trend.label}
+                    </span>
+                  )}
+                  
                   {segment.isAI && (
                     <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 bg-accent/10 border-accent/30">
                       AI

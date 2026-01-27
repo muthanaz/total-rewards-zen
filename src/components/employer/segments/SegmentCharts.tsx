@@ -1,7 +1,7 @@
 /**
  * Segment Charts
  * 
- * Visualizations for the segment builder.
+ * Visualizations for the segment builder with interactive drill-down.
  * Uses OBJECTIVE BEHAVIORAL DATA - Budget vs Participation comparison.
  */
 
@@ -10,11 +10,12 @@ import { Badge } from '@/components/ui/badge';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { SegmentMetrics } from './types';
 import { formatCurrencyAED, formatPercent, cn } from '@/lib/utils';
-import { Lightbulb, TrendingUp, Target, AlertTriangle, CheckCircle, DollarSign, UserCheck } from 'lucide-react';
+import { Lightbulb, TrendingUp, Target, AlertTriangle, CheckCircle, DollarSign, UserCheck, MousePointerClick } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface SegmentChartsProps {
   metrics: SegmentMetrics;
+  onBenefitClick?: (benefitName: string) => void;
 }
 
 const COLORS = ['hsl(var(--accent))', 'hsl(var(--primary))', 'hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--chart-5))', 'hsl(var(--chart-6))'];
@@ -33,7 +34,7 @@ const gapColors = {
   'low-engagement': 'text-destructive',
 };
 
-export function SegmentCharts({ metrics }: SegmentChartsProps) {
+export function SegmentCharts({ metrics, onBenefitClick }: SegmentChartsProps) {
   if (metrics.matches === 0) {
     return (
       <Card className="border-dashed">
@@ -49,6 +50,12 @@ export function SegmentCharts({ metrics }: SegmentChartsProps) {
   }
 
   const GapIcon = gapIcons[metrics.behavioralGap];
+
+  const handleBarClick = (data: any) => {
+    if (onBenefitClick && data?.name) {
+      onBenefitClick(data.name);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -104,15 +111,23 @@ export function SegmentCharts({ metrics }: SegmentChartsProps) {
 
       {/* Chart Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Benefit Mix Stacked Bar */}
+        {/* Benefit Mix Stacked Bar - Interactive */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <Card>
+          <Card className="relative">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Benefit Mix</CardTitle>
+              <CardTitle className="text-sm flex items-center gap-2">
+                Benefit Mix
+                {onBenefitClick && (
+                  <Badge variant="outline" className="text-[10px] gap-1 bg-accent/10 border-accent/30">
+                    <MousePointerClick className="h-3 w-3" />
+                    Click to drill-down
+                  </Badge>
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-48">
@@ -143,18 +158,34 @@ export function SegmentCharts({ metrics }: SegmentChartsProps) {
                         fontSize: '12px',
                       }}
                     />
-                    <Bar dataKey="percentage" name="Share" radius={[0, 4, 4, 0]}>
+                    <Bar 
+                      dataKey="percentage" 
+                      name="Share" 
+                      radius={[0, 4, 4, 0]}
+                      onClick={handleBarClick}
+                      className={onBenefitClick ? 'cursor-pointer' : ''}
+                    >
                       {metrics.benefitMix.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={COLORS[index % COLORS.length]}
+                          className={onBenefitClick ? 'hover:opacity-80 transition-opacity' : ''}
+                        />
                       ))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+              {onBenefitClick && (
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  Click a bar to see employees with that benefit
+                </p>
+              )}
             </CardContent>
           </Card>
         </motion.div>
-        {/* Top 3 Requests - Moved to full width */}
+        
+        {/* Top 3 Requests */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
