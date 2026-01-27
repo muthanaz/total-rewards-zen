@@ -65,7 +65,7 @@ const unifiedNavigation: NavGroup[] = [
     label: 'Operations',
     labelAr: 'العمليات',
     items: [
-      { label: 'Workbench', labelAr: 'منضدة العمل', path: '/employer/ops', icon: LayoutGrid },
+      { label: 'Operations Hub', labelAr: 'مركز العمليات', path: '/employer/ops', icon: LayoutGrid },
       { label: 'Settlements', labelAr: 'التسويات', path: '/employer/settlements', icon: Banknote },
       { label: 'Communications', labelAr: 'الاتصالات', path: '/employer/communications', icon: Megaphone },
       { label: 'Calendar', labelAr: 'التقويم', path: '/employer/calendar', icon: CalendarDays },

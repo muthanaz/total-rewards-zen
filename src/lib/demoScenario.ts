@@ -262,7 +262,7 @@ export const DEMO_ZOMBIE_OPPORTUNITIES = [
 ] as const;
 
 // ============================================
-// HR OPS CLAIMS QUEUE (12 requests, 3 at SLA risk)
+// HR OPS CLAIMS & REQUESTS (12 requests, 3 at SLA risk)
 // ============================================
 
 export const DEMO_CLAIMS_QUEUE = [

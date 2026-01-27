@@ -903,7 +903,7 @@ export function ClaimsOpsView() {
   return (
     <TooltipProvider>
       <PageLayout
-        title="Claims Queue"
+        title="Claims & Requests"
         description="Process employee requests and claims efficiently"
         icon={ClipboardList}
         badge={slaEnabled ? {

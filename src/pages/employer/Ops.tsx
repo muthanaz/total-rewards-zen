@@ -1,7 +1,7 @@
 /**
- * Operations Workbench Page
+ * Operations Hub Page
  * 
- * Unified view merging the former Workbench and Claims Queue into a single page.
+ * Unified view merging Claims & Requests into a single page.
  * This is the primary operational hub for HR Ops users.
  */
 

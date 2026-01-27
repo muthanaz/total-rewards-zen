@@ -160,11 +160,11 @@ function DemoControlDialog({
           <div className="space-y-2 text-sm">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-success" />
-              <span>Employer/Executive: Budget, Zombie Spend, SLA Risk</span>
+              <span>Employer/Executive: Budget, Budget Leakage, SLA Risk</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-success" />
-              <span>HR Ops: Claims Queue, Policy Publish</span>
+              <span>HR Ops: Claims & Requests, Policy Publish</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-success" />

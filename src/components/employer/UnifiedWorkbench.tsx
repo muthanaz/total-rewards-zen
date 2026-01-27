@@ -1,9 +1,9 @@
 /**
- * Unified Operations Workbench
+ * Unified Operations Hub
  * 
  * Merged view combining:
  * - KPI metrics strip (top)
- * - Full Claims Queue with filters, tabs, pagination (main 75%)
+ * - Full Claims & Requests with filters, tabs, pagination (main 75%)
  * - Friction Reasons + Payroll Countdown (side panel 25%)
  */
 
@@ -780,7 +780,7 @@ export function UnifiedWorkbench() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">
-                Operations Workbench
+                Operations Hub
               </h1>
               <p className="text-muted-foreground mt-1 flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
@@ -812,7 +812,7 @@ export function UnifiedWorkbench() {
 
           {/* Two-Column Layout: Main (75%) | Side Panel (25%) */}
           <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-            {/* Main Content - Claims Queue */}
+            {/* Main Content - Claims & Requests */}
             <div className="xl:col-span-3 space-y-4">
               {/* Queue Counters */}
               <ClaimsQueueCounters 

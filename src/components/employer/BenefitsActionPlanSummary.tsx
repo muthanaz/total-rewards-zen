@@ -1,7 +1,7 @@
 /**
  * BenefitsActionPlanSummary - Aggregated action plan with cross-portal integration
  * 
- * Displays summary of actions from multiple sources (Zombie Spend, Spend, Claims, Policies)
+ * Displays summary of actions from multiple sources (Budget Leakage, Spend, Claims, Policies)
  * with deep links and audit logging.
  */
 
@@ -363,7 +363,7 @@ export function generateSampleActionPlan(data: {
       title: `Launch ${data.topCategory.name} awareness campaign`,
       category: data.topCategory.name,
       rationale: 'Low claim velocity despite high eligibility indicates awareness gap',
-      expectedImpact: 'Recover 20-30% of unused value',
+      expectedImpact: 'Recover 20-30% of unutilized budget',
       expectedImpactAED: data.topCategory.unused * 0.25,
       owner: 'Comms',
       priority: 'P1',
@@ -379,14 +379,14 @@ export function generateSampleActionPlan(data: {
       id: 'action-2',
       title: `Process ${data.processFriction.pendingCount} pending claims`,
       category: 'Claims Operations',
-      rationale: 'Backlog may discourage future claims and affect satisfaction',
+      rationale: 'Backlog may discourage future claims and affect adoption',
       expectedImpact: 'Clear queue within SLA',
       owner: 'HR Ops',
       priority: 'P0',
       status: 'in_progress',
       sourceType: 'claims',
       deepLinks: [
-        { label: 'Open Claims Queue', path: '/employer/claims', params: { status: 'pending' } },
+        { label: 'Open Claims & Requests', path: '/employer/claims', params: { status: 'pending' } },
       ],
       isDemo: true,
     },

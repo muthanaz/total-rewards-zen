@@ -487,7 +487,7 @@ function generateInsightsForSegment(dimension: SegmentDimension, value: SegmentV
     });
     suggestedActions.push({
       id: 'review-zombie',
-      title: 'Review Zombie Spend',
+      title: 'Review Budget Leakage',
       type: 'zombie_review',
       routePath: '/employer/zombie',
       routeParams: { filter_segment: value.id },

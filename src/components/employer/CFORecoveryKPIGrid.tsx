@@ -1,5 +1,5 @@
 /**
- * CFORecoveryKPIGrid - Executive-grade KPI Grid for Recovery Opportunities
+ * CFORecoveryKPIGrid - Executive-grade KPI Grid for ROI & Savings
  * 
  * Displays 4 core metrics a CFO needs to see for recovery:
  * 1. Unrealized Value (the problem)

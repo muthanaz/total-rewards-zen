@@ -2,12 +2,12 @@
  * Investment Analysis Page (Spend & Utilization)
  * 
  * CEO/CFO-grade layout following leading practices:
- * 1. 4 Core KPIs (Budget vs Spend, Usage Rate, Unused Value, YoY Change)
+ * 1. 4 Core KPIs (Budget vs Spend, Usage Rate, Unutilized Budget, YoY Change)
  * 2. Spend vs Utilization Matrix Chart (visual diagnosis)
  * 3. Action Required link (drive decisions)
  * 
  * Uses unified metrics from executiveMetricsConstants for cross-page consistency.
- * 
+ *
  * @module Spend
  */
 
