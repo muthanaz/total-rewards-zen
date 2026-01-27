@@ -4,6 +4,10 @@
  * X-axis: Utilization %
  * Y-axis: Spend (AED)
  * Bubble size: Entitled value (represents opportunity size)
+ * 
+ * Supports two view modes:
+ * - Spend Risk: Colors by quadrant position (default)
+ * - Rejection Rate: Colors by rejection % (Red = High, Green = Low)
  */
 
 import { useState } from 'react';
@@ -11,6 +15,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
@@ -25,9 +31,10 @@ import {
   ReferenceLine,
   Cell,
 } from 'recharts';
-import { formatCurrencyAED, formatPercent, cn } from '@/lib/utils';
-import { ArrowRight, AlertTriangle, FileX, Lightbulb } from 'lucide-react';
+import { formatCurrencyAED, formatPercent, formatInteger, cn } from '@/lib/utils';
+import { ArrowRight, AlertTriangle, FileX, Lightbulb, Download, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export interface CategoryBubble {
   id: string;
@@ -35,6 +42,8 @@ export interface CategoryBubble {
   spend: number;
   entitled: number;
   utilization: number;
+  rejectionRate?: number; // Overall rejection rate for this category
+  nonUserCount?: number; // Employees with AED 0 utilization
   topSegments?: { name: string; spend: number; utilization: number }[];
   rejectionReasons?: { reason: string; count: number; percentage: number }[];
   suggestedAction?: string;
@@ -47,12 +56,21 @@ interface SpendUtilizationMatrixProps {
   onCategoryClick?: (category: CategoryBubble) => void;
 }
 
+type ViewMode = 'spend_risk' | 'rejection_rate';
+
 const QUADRANT_COLORS = {
   highSpendHighUtil: 'hsl(var(--success))',      // Good: Well utilized
   highSpendLowUtil: 'hsl(var(--destructive))',   // Bad: Overspend/waste
   lowSpendHighUtil: 'hsl(var(--chart-2))',       // Efficient
   lowSpendLowUtil: 'hsl(var(--warning))',        // Underutilized
 };
+
+// Rejection rate color scale: Green (low) -> Yellow (medium) -> Red (high)
+function getRejectionRateColor(rejectionRate: number): string {
+  if (rejectionRate >= 15) return 'hsl(var(--destructive))';    // High rejection = Policy Friction
+  if (rejectionRate >= 8) return 'hsl(var(--warning))';          // Medium
+  return 'hsl(var(--success))';                                   // Low rejection = Awareness issue
+}
 
 function getQuadrantColor(utilization: number, spend: number, medianSpend: number): string {
   const isHighSpend = spend >= medianSpend;
@@ -66,6 +84,7 @@ function getQuadrantColor(utilization: number, spend: number, medianSpend: numbe
 
 export function SpendUtilizationMatrix({ data, isDemo, className, onCategoryClick }: SpendUtilizationMatrixProps) {
   const [selectedCategory, setSelectedCategory] = useState<CategoryBubble | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('spend_risk');
   
   // Calculate median for quadrant lines
   const medianSpend = data.length > 0 
@@ -79,6 +98,22 @@ export function SpendUtilizationMatrix({ data, isDemo, className, onCategoryClic
     y: item.spend,
     z: item.entitled / 100000, // Scale for bubble size
   }));
+
+  // Get bubble color based on current view mode
+  const getBubbleColor = (item: CategoryBubble): string => {
+    if (viewMode === 'rejection_rate') {
+      return getRejectionRateColor(item.rejectionRate ?? 10);
+    }
+    return getQuadrantColor(item.utilization, item.spend, medianSpend);
+  };
+
+  // Handle export non-users
+  const handleExportNonUsers = (category: CategoryBubble) => {
+    const nonUserCount = category.nonUserCount ?? Math.round((1 - category.utilization / 100) * 312 * 0.3);
+    toast.success(`Exporting ${nonUserCount} non-users from ${category.name}`, {
+      description: 'Download will start shortly...',
+    });
+  };
   
   const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload?.length) return null;
@@ -100,6 +135,18 @@ export function SpendUtilizationMatrix({ data, isDemo, className, onCategoryClic
             <span className="text-muted-foreground">Entitled:</span>
             <span className="font-medium">{formatCurrencyAED(item.entitled, { abbreviate: true })}</span>
           </div>
+          {viewMode === 'rejection_rate' && item.rejectionRate !== undefined && (
+            <div className="flex justify-between gap-4 pt-1 border-t">
+              <span className="text-muted-foreground">Rejection Rate:</span>
+              <span className={cn(
+                "font-medium",
+                item.rejectionRate >= 15 ? "text-destructive" : 
+                item.rejectionRate >= 8 ? "text-warning" : "text-success"
+              )}>
+                {formatPercent(item.rejectionRate)}
+              </span>
+            </div>
+          )}
         </div>
         <p className="text-xs text-muted-foreground pt-2 border-t">Click to drill down</p>
       </div>
@@ -121,7 +168,20 @@ export function SpendUtilizationMatrix({ data, isDemo, className, onCategoryClic
               </CardTitle>
               <CardDescription>Click any bubble to see category drilldown</CardDescription>
             </div>
-            {isDemo && <Badge variant="outline" className="text-xs">Demo</Badge>}
+            <div className="flex items-center gap-3">
+              {/* View Mode Toggle */}
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border/50">
+                <Label htmlFor="view-mode" className="text-xs text-muted-foreground cursor-pointer">
+                  View by Rejection Rate
+                </Label>
+                <Switch 
+                  id="view-mode" 
+                  checked={viewMode === 'rejection_rate'}
+                  onCheckedChange={(checked) => setViewMode(checked ? 'rejection_rate' : 'spend_risk')}
+                />
+              </div>
+              {isDemo && <Badge variant="outline" className="text-xs">Demo</Badge>}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -197,39 +257,59 @@ export function SpendUtilizationMatrix({ data, isDemo, className, onCategoryClic
                     }
                   }}
                 >
-                  {chartData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={getQuadrantColor(entry.utilization, entry.spend, medianSpend)}
-                      fillOpacity={0.7}
-                      stroke={getQuadrantColor(entry.utilization, entry.spend, medianSpend)}
-                      strokeWidth={2}
-                    />
-                  ))}
+                  {chartData.map((entry, index) => {
+                    const color = getBubbleColor(entry);
+                    return (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={color}
+                        fillOpacity={0.7}
+                        stroke={color}
+                        strokeWidth={2}
+                      />
+                    );
+                  })}
                 </Scatter>
               </ScatterChart>
             </ResponsiveContainer>
           </div>
           
-          {/* Legend */}
-          <div className="flex flex-wrap justify-center gap-4 mt-4 text-xs">
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: QUADRANT_COLORS.highSpendHighUtil }} />
-              <span className="text-muted-foreground">Well Utilized</span>
+          {/* Legend - Dynamic based on view mode */}
+          {viewMode === 'spend_risk' ? (
+            <div className="flex flex-wrap justify-center gap-4 mt-4 text-xs">
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: QUADRANT_COLORS.highSpendHighUtil }} />
+                <span className="text-muted-foreground">Well Utilized</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: QUADRANT_COLORS.lowSpendHighUtil }} />
+                <span className="text-muted-foreground">Efficient</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: QUADRANT_COLORS.lowSpendLowUtil }} />
+                <span className="text-muted-foreground">Underutilized</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: QUADRANT_COLORS.highSpendLowUtil }} />
+                <span className="text-muted-foreground">Overspend Risk</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: QUADRANT_COLORS.lowSpendHighUtil }} />
-              <span className="text-muted-foreground">Efficient</span>
+          ) : (
+            <div className="flex flex-wrap justify-center gap-4 mt-4 text-xs">
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-success" />
+                <span className="text-muted-foreground">Low Rejection (&lt;8%) — Awareness Issue</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-warning" />
+                <span className="text-muted-foreground">Medium (8-15%)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-destructive" />
+                <span className="text-muted-foreground">High Rejection (&gt;15%) — Policy Friction</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: QUADRANT_COLORS.lowSpendLowUtil }} />
-              <span className="text-muted-foreground">Underutilized</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: QUADRANT_COLORS.highSpendLowUtil }} />
-              <span className="text-muted-foreground">Overspend Risk</span>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
@@ -310,13 +390,41 @@ export function SpendUtilizationMatrix({ data, isDemo, className, onCategoryClic
               </div>
             )}
 
-            {/* Action Button */}
-            <Button asChild className="w-full">
-              <Link to={`/employer/recommendations?category=${selectedCategory?.id}&source=spend-matrix`}>
-                Create Action for {selectedCategory?.name}
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
-            </Button>
+            {/* Export Non-Users Action */}
+            {selectedCategory && (
+              <div className="p-3 rounded-lg bg-muted/50 border border-border/50">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">Non-Users</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatInteger(selectedCategory.nonUserCount ?? Math.round((1 - selectedCategory.utilization / 100) * 312 * 0.3))} employees with AED 0 utilization
+                      </p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-1.5"
+                    onClick={() => handleExportNonUsers(selectedCategory)}
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    Export Non-Users
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-2">
+              <Button asChild className="flex-1">
+                <Link to={`/employer/recommendations?category=${selectedCategory?.id}&source=spend-matrix`}>
+                  Create Action for {selectedCategory?.name}
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

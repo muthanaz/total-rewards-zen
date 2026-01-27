@@ -272,24 +272,32 @@ export function Spend() {
   }).slice(0, 3), [overallUtilization, topUnderutilized]);
 
   // Generate matrix chart data
-  const matrixData: CategoryBubble[] = useMemo(() => spendByBenefitType.map(b => ({
-    id: b.id,
-    name: b.name,
-    spend: b.spend,
-    entitled: b.entitled,
-    utilization: (b.spend / b.entitled) * 100,
-    topSegments: [
-      { name: 'Engineering', spend: b.spend * 0.4, utilization: 75 },
-      { name: 'Sales', spend: b.spend * 0.3, utilization: 68 },
-      { name: 'Operations', spend: b.spend * 0.2, utilization: 55 },
-    ],
-    rejectionReasons: [
-      { reason: 'Missing documentation', count: Math.round(b.rejectionRate * 0.4), percentage: b.rejectionRate * 0.4 },
-      { reason: 'Exceeded limit', count: Math.round(b.rejectionRate * 0.35), percentage: b.rejectionRate * 0.35 },
-      { reason: 'Policy mismatch', count: Math.round(b.rejectionRate * 0.25), percentage: b.rejectionRate * 0.25 },
-    ],
-    suggestedAction: `Review ${b.name} policy requirements and consider targeted employee communication to improve utilization.`,
-  })), []);
+  const matrixData: CategoryBubble[] = useMemo(() => spendByBenefitType.map(b => {
+    const utilization = (b.spend / b.entitled) * 100;
+    // Calculate non-users: employees with 0 utilization for this category
+    const nonUserCount = Math.round((1 - utilization / 100) * b.employees * 0.6);
+    
+    return {
+      id: b.id,
+      name: b.name,
+      spend: b.spend,
+      entitled: b.entitled,
+      utilization,
+      rejectionRate: b.rejectionRate, // Pass rejection rate for bubble coloring
+      nonUserCount, // Employees with AED 0 utilization
+      topSegments: [
+        { name: 'Engineering', spend: b.spend * 0.4, utilization: 75 },
+        { name: 'Sales', spend: b.spend * 0.3, utilization: 68 },
+        { name: 'Operations', spend: b.spend * 0.2, utilization: 55 },
+      ],
+      rejectionReasons: [
+        { reason: 'Missing documentation', count: Math.round(b.rejectionRate * 0.4), percentage: b.rejectionRate * 0.4 },
+        { reason: 'Exceeded limit', count: Math.round(b.rejectionRate * 0.35), percentage: b.rejectionRate * 0.35 },
+        { reason: 'Policy mismatch', count: Math.round(b.rejectionRate * 0.25), percentage: b.rejectionRate * 0.25 },
+      ],
+      suggestedAction: `Review ${b.name} policy requirements and consider targeted employee communication to improve utilization.`,
+    };
+  }), []);
 
   // Calculate friction metrics for panel
   const frictionMetrics = useMemo(() => {
