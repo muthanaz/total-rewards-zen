@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
@@ -16,6 +16,8 @@ import {
   Eye,
   PieChart,
   LineChart,
+  Banknote,
+  TableProperties,
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useEmployerViewMode, ViewMode } from '@/contexts/EmployerViewModeContext';
@@ -73,9 +75,10 @@ const unifiedNavigation: NavGroup[] = [
     label: 'Operations',
     labelAr: 'العمليات',
     items: [
-      { label: 'Claims Queue', labelAr: 'قائمة المطالبات', path: '/employer/claims', icon: Inbox },
+      { label: 'Claims & Requests', labelAr: 'المطالبات والطلبات', path: '/employer/claims', icon: Inbox },
+      { label: 'Settlements', labelAr: 'التسويات', path: '/employer/settlements', icon: Banknote },
+      { label: 'Reports', labelAr: 'التقارير', path: '/employer/reports', icon: TableProperties },
       { label: 'Employee Directory', labelAr: 'دليل الموظفين', path: '/employer/employees', icon: Users },
-      { label: 'Audit Logs', labelAr: 'سجلات التدقيق', path: '/employer/audit', icon: ShieldAlert },
     ],
   },
   {
@@ -86,6 +89,7 @@ const unifiedNavigation: NavGroup[] = [
       { label: 'Policy Management', labelAr: 'إدارة السياسات', path: '/employer/policies', icon: BookOpen },
       { label: 'Integrations', labelAr: 'التكاملات', path: '/employer/integrations', icon: Cable },
       { label: 'Data Quality', labelAr: 'جودة البيانات', path: '/employer/data-quality', icon: Database },
+      { label: 'Audit Logs', labelAr: 'سجلات التدقيق', path: '/employer/audit', icon: ShieldAlert },
     ],
   },
 ];
@@ -237,10 +241,29 @@ export function EmployerSidebar() {
   const { pendingApprovals } = useActionApprovals();
   const pendingCount = pendingApprovals?.length || 0;
 
-  // Unified navigation uses collapsible sections
-  const [expandedSections, setExpandedSections] = useState<string[]>(
-    unifiedNavigation.map((s) => s.id)
-  );
+  const location = useLocation();
+
+  // Determine which sections should be expanded by default
+  const getDefaultExpandedSections = () => {
+    const path = location.pathname;
+    // Always expand operations when on ops-related pages
+    const opsPages = ['/employer/claims', '/employer/settlements', '/employer/reports', '/employer/employees', '/employer/ops'];
+    if (opsPages.some(p => path.startsWith(p))) {
+      return unifiedNavigation.map(s => s.id); // All expanded, but operations is guaranteed
+    }
+    return unifiedNavigation.map(s => s.id);
+  };
+
+  const [expandedSections, setExpandedSections] = useState<string[]>(getDefaultExpandedSections);
+
+  // Update expanded sections when route changes to ensure relevant section is open
+  useEffect(() => {
+    const path = location.pathname;
+    const opsPages = ['/employer/claims', '/employer/settlements', '/employer/reports', '/employer/employees', '/employer/ops'];
+    if (opsPages.some(p => path.startsWith(p))) {
+      setExpandedSections(prev => prev.includes('operations') ? prev : [...prev, 'operations']);
+    }
+  }, [location.pathname]);
 
   const visibleNavigation = useMemo(() => {
     return unifiedNavigation.filter((section) => {
