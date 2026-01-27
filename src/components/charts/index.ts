@@ -13,6 +13,7 @@ export { ProgressBarList } from './ProgressBarList';
 
 // Executive charts
 export { ExecutiveSpendChart } from './ExecutiveSpendChart';
+export { BudgetVsActualChart } from './BudgetVsActualChart';
 
 // Waterfall chart
 export { WaterfallChart, CategoryWaterfallChart } from './WaterfallChart';

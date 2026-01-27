@@ -110,7 +110,36 @@ export function ExecKPICards({
   // Define navigable KPIs
   const navigableKpis = new Set(['totalInvestment', 'utilizationRate']);
 
-  const kpis: (KPICardData & { navigateTo?: string })[] = [
+  // Determine card health status for border colors
+  const getCardHealthStatus = (kpiId: string): 'critical' | 'warning' | 'success' | 'neutral' => {
+    if (kpiId === 'totalInvestment') {
+      return isOverBudget ? 'critical' : 'success';
+    }
+    if (kpiId === 'utilizationRate') {
+      // Mid-year check: if utilization < 50%, it's a warning
+      return utilizationRate < 50 ? 'warning' : utilizationRate >= utilizationTarget ? 'success' : 'neutral';
+    }
+    if (kpiId === 'unrealizedValue') {
+      return unrealizedValue > totalInvestment * 0.3 ? 'critical' : 'warning';
+    }
+    if (kpiId === 'satisfactionScore') {
+      return satisfactionScore >= satisfactionBenchmark ? 'success' : 'warning';
+    }
+    return 'neutral';
+  };
+
+  const healthBorderColors = {
+    critical: 'border-l-4 border-l-destructive',
+    warning: 'border-l-4 border-l-warning',
+    success: 'border-l-4 border-l-success',
+    neutral: '',
+  };
+
+  // Calculate projected year-end spend (simple projection based on current run rate)
+  const monthsElapsed = new Date().getMonth() + 1; // 1-12
+  const projectedYearEnd = (totalInvestment / monthsElapsed) * 12;
+
+  const kpis: (KPICardData & { navigateTo?: string; projectedValue?: number })[] = [
     {
       id: 'totalInvestment',
       label: 'YTD Total Spend',
@@ -133,6 +162,7 @@ export function ExecKPICards({
           : `${Math.round(variancePercent)}% ${isOverBudget ? 'over' : 'under'} budget`,
         status: variancePercent < 5 ? 'success' : isOverBudget ? 'warning' : 'success',
       },
+      projectedValue: projectedYearEnd,
       navigateTo: '/employer/spend',
     },
     {
@@ -216,11 +246,14 @@ export function ExecKPICards({
           }
         };
 
+        const healthStatus = getCardHealthStatus(kpi.id);
+
         return (
           <Card 
             key={kpi.id}
             className={cn(
               'border-border/50 transition-all duration-200',
+              healthBorderColors[healthStatus],
               (onKPIClick || isNavigable) && 'cursor-pointer hover:shadow-md hover:border-accent/30'
             )}
             onClick={handleClick}
@@ -246,10 +279,17 @@ export function ExecKPICards({
                 </div>
               </div>
 
-              {/* Value */}
-              <p className="text-2xl lg:text-3xl font-bold tracking-tight tabular-nums">
-                {kpi.value}
-              </p>
+              {/* Value with optional projected value */}
+              <div className="flex items-baseline gap-2">
+                <p className="text-2xl lg:text-3xl font-bold tracking-tight tabular-nums">
+                  {kpi.value}
+                </p>
+                {kpi.projectedValue && (
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    Proj. {formatCurrencyAED(kpi.projectedValue, { abbreviate: true })}
+                  </span>
+                )}
+              </div>
 
               {/* Label */}
               <p className="text-sm text-muted-foreground mt-1">{kpi.label}</p>

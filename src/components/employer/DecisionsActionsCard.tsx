@@ -96,12 +96,43 @@ export function DecisionsActionsCard({ actions, className, strategicOnly = false
   const [selectedAction, setSelectedAction] = useState<ActionItem | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  // Filter to only High Priority (blocked or in_progress with high impact) items if strategicOnly
-  const filteredActions = strategicOnly
-    ? actions.filter(a => a.status === 'blocked' || (a.status === 'in_progress' && a.expectedImpact > 50000))
-    : actions;
-  
-  const top3 = filteredActions.slice(0, 3);
+  // High-stakes executive actions (mock data for strategic view)
+  const executiveActions: ActionItem[] = strategicOnly ? [
+    {
+      id: 'budget-adjustment',
+      title: 'Approve FY25 Budget Adjustment',
+      expectedImpact: 450000,
+      owner: 'CFO Office',
+      status: 'blocked',
+    },
+    {
+      id: 'compliance-review',
+      title: 'Compliance Review: Health Insurance Caps',
+      expectedImpact: 280000,
+      owner: 'Legal & Compliance',
+      status: 'in_progress',
+    },
+    {
+      id: 'vendor-renewal',
+      title: 'Sign-off: Vendor Renewal',
+      expectedImpact: 120000,
+      owner: 'Procurement',
+      status: 'backlog',
+    },
+  ] : actions;
+
+  // Priority badge mapping
+  const getPriorityBadge = (action: ActionItem): { label: string; className: string } => {
+    if (action.status === 'blocked' || action.id === 'budget-adjustment') {
+      return { label: 'Critical', className: 'bg-destructive/10 text-destructive border-destructive/30' };
+    }
+    if (action.status === 'in_progress' || action.id === 'compliance-review') {
+      return { label: 'High', className: 'bg-warning/10 text-warning border-warning/30' };
+    }
+    return { label: 'Medium', className: 'bg-muted text-muted-foreground' };
+  };
+
+  const top3 = executiveActions.slice(0, 3);
 
   const handleOpenAction = (action: ActionItem) => {
     setSelectedAction(action);
@@ -133,7 +164,7 @@ export function DecisionsActionsCard({ actions, className, strategicOnly = false
           <div className="flex items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
               <CalendarDays className="w-4 h-4 text-accent" />
-              Strategic Decisions & Alerts
+              Executive Approvals & Alerts
               <Badge variant="secondary" className="ml-2 text-xs">
                 Next 30 days
               </Badge>
@@ -153,6 +184,7 @@ export function DecisionsActionsCard({ actions, className, strategicOnly = false
               const statusConfig = STATUS_CONFIG[action.status];
               const StatusIcon = statusConfig.icon;
               const impactValue = Math.abs(action.expectedImpact);
+              const priorityBadge = getPriorityBadge(action);
 
               return (
                 <div 
@@ -160,20 +192,28 @@ export function DecisionsActionsCard({ actions, className, strategicOnly = false
                   className="flex items-center justify-between p-4 rounded-lg border bg-card"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{action.title}</p>
-                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <User className="w-3 h-3" />
-                          <span>{action.owner}</span>
-                        </div>
-                        <span>•</span>
-                        <span className="font-medium text-success tabular-nums">
-                          {impactValue > 0 
-                            ? `Recoverable: ${formatCurrencyAED(impactValue, { abbreviate: true })}`
-                            : 'Process Efficiency'
-                          }
-                        </span>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-medium text-sm truncate">{action.title}</p>
+                      <Badge 
+                        variant="outline" 
+                        className={cn("text-[10px] shrink-0", priorityBadge.className)}
+                      >
+                        {priorityBadge.label}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        <span>{action.owner}</span>
                       </div>
+                      <span>•</span>
+                      <span className="font-medium text-success tabular-nums">
+                        {impactValue > 0 
+                          ? `Impact: ${formatCurrencyAED(impactValue, { abbreviate: true })}`
+                          : 'Process Efficiency'
+                        }
+                      </span>
+                    </div>
                   </div>
                   <div className="flex items-center gap-3 ml-4">
                     <Badge 

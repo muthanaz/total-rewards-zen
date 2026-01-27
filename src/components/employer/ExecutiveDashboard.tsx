@@ -24,7 +24,7 @@ import {
   ArrowRight,
   Settings2,
 } from 'lucide-react';
-import { ChartWrapper, CHART_EXPLANATIONS, ExecutiveSpendChart } from '@/components/charts';
+import { ChartWrapper, CHART_EXPLANATIONS, BudgetVsActualChart } from '@/components/charts';
 import { DataConfidenceBadge, useDataCoverageMetrics } from './DataConfidenceBadge';
 import { PageConfidenceGate } from './PageConfidenceGate';
 import { 
@@ -96,13 +96,35 @@ export function ExecutiveDashboard() {
     }));
   }, [spendAllocation, metrics]);
 
-  // Prepare chart data with amounts
-  const spendChartData = spendAllocation?.map((s, i) => ({
-    name: s.name,
-    value: s.value,
-    amount: s.amount || s.value * 50000,
-    color: `hsl(var(--chart-${(i % 6) + 1}))`,
-  })) || [];
+  // Prepare Budget vs Actual chart data
+  const budgetVsActualData = useMemo(() => {
+    if (!spendAllocation || !metrics) return [];
+    const totalBudget = metrics.totalInvestment * 1.05; // Total budget slightly higher than spend
+    
+    // Demo utilization values per category (determines actual vs budget)
+    const utilizationMap: Record<string, number> = {
+      'Health': 85,
+      'Housing': 78,
+      'Education': 72,
+      'Transport': 65,
+      'Wellbeing': 58,
+      'Learning': 50,
+      'Other': 45,
+    };
+    
+    return spendAllocation.map((item, i) => {
+      const utilization = utilizationMap[item.name] || 60;
+      const budget = (item.amount || item.value * 50000) * 1.2; // Budget is 20% higher than typical spend
+      const actual = budget * (utilization / 100);
+      
+      return {
+        name: item.name,
+        budget,
+        actual,
+        color: `hsl(var(--chart-${(i % 6) + 1}))`,
+      };
+    });
+  }, [spendAllocation, metrics]);
 
   // Prepare top drivers
   const topDrivers = useMemo(() => {
@@ -321,18 +343,16 @@ export function ExecutiveDashboard() {
 
         {/* 6. WHERE THE MONEY GOES + AT-RISK SEGMENTS (2 columns) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left: Investment Allocation donut + table */}
+          {/* Left: Budget vs Actual chart + table */}
           <div className="space-y-4">
             <ChartWrapper 
-              title="Where Money Goes" 
-              formula="Category Spend / Total Spend × 100"
-              dataSource="Finance"
+              title="Budget vs Actual" 
+              formula="Actual Spend / Allocated Budget × 100"
+              dataSource="Finance + HR Budget"
               explanation={CHART_EXPLANATIONS.spendDistribution}
             >
-              <ExecutiveSpendChart 
-                data={spendChartData} 
-                totalAmount={metrics.totalInvestment}
-                showRank={true}
+              <BudgetVsActualChart 
+                data={budgetVsActualData} 
                 maxItems={6}
               />
             </ChartWrapper>
