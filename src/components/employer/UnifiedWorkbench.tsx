@@ -54,6 +54,7 @@ import {
   RefreshCw,
   Settings,
   Calendar,
+  Wand2,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
@@ -161,6 +162,39 @@ const TYPE_FILTERS = [
 ];
 
 const HIGH_VALUE_THRESHOLD = 5000;
+const FAST_TRACK_AMOUNT_THRESHOLD = 500;
+
+/**
+ * Fast Track Candidate Detection
+ * A claim is considered "Fast Track" / "Low Risk" if:
+ * 1. Amount is under AED 500
+ * 2. Documents are complete (no missing docs)
+ * 3. Within policy cap (amount <= cap_limit or no cap defined)
+ */
+function isFastTrackCandidate(request: RequestWithDetails): boolean {
+  // Skip non-monetary requests (e.g., leave)
+  if (!request.amount || request.category?.toLowerCase().includes('leave')) {
+    return false;
+  }
+  
+  // Condition 1: Under threshold
+  if (request.amount >= FAST_TRACK_AMOUNT_THRESHOLD) {
+    return false;
+  }
+  
+  // Condition 2: Documents complete
+  const missingDocs = Array.isArray(request.missing_docs) ? request.missing_docs : [];
+  if (missingDocs.length > 0) {
+    return false;
+  }
+  
+  // Condition 3: Within policy cap (or no cap defined)
+  if (request.cap_limit && request.amount > request.cap_limit) {
+    return false;
+  }
+  
+  return true;
+}
 
 const CATEGORIES = [
   'All Categories',
@@ -1084,7 +1118,24 @@ export function UnifiedWorkbench() {
                               <td className="py-3 px-3">
                                 <MissingDocsBadge category={request.category} missingDocsFromDb={request.missing_docs} />
                               </td>
-                              <td className="py-3 px-3">{getStatusBadge(request.status)}</td>
+                              <td className="py-3 px-3">
+                                <div className="flex items-center gap-1.5">
+                                  {getStatusBadge(request.status)}
+                                  {isFastTrackCandidate(request) && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-violet-500/10 text-violet-600 cursor-help">
+                                          <Wand2 className="w-3 h-3" />
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="max-w-[200px]">
+                                        <p className="font-medium text-xs">Fast Track Candidate</p>
+                                        <p className="text-xs text-muted-foreground">Low Risk, Documents Verified.</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  )}
+                                </div>
+                              </td>
                               <td className="py-3 px-3">
                                 {request.assigned_to ? (
                                   <Badge variant="outline" className="text-xs gap-1">
