@@ -236,7 +236,7 @@ export default function ZombieSpendPage() {
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
       <PageLayout
-        title="Recovery Opportunities"
+        title="Optimization Opportunities"
         description={`FY ${ORG_BASELINE.fiscalYear} · ${formatCurrencyAED(consistentUnrealizedValue, { abbreviate: true })} unrealized · ${formatCurrencyAED(consistentRecoverable, { abbreviate: true })} recoverable`}
         icon={Target}
         iconClassName="bg-success/10 text-success"
@@ -343,10 +343,10 @@ export default function ZombieSpendPage() {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/30">
-                        <TableHead>Category</TableHead>
+                        <TableHead>Benefit Type</TableHead>
                         <TableHead className="text-right">Allocated</TableHead>
                         <TableHead className="text-right">Claimed</TableHead>
-                        <TableHead className="text-right">Unrealized</TableHead>
+                        <TableHead className="text-right">Potential Recovery</TableHead>
                         <TableHead className="text-right">Utilization</TableHead>
                         <TableHead>Root Cause</TableHead>
                         <TableHead className="text-right">Action</TableHead>

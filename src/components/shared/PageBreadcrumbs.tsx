@@ -46,10 +46,12 @@ const ROUTE_LABELS: Record<string, { en: string; ar: string }> = {
   
   // Employer routes
   employer: { en: 'Dashboard', ar: 'لوحة التحكم' },
-  spend: { en: 'Spend Analytics', ar: 'تحليلات الإنفاق' },
-  zombie: { en: 'Budget Leakage', ar: 'تسرب الميزانية' },
+  spend: { en: 'Investment Analysis', ar: 'تحليل الاستثمار' },
+  zombie: { en: 'Optimization Opportunities', ar: 'فرص التحسين' },
+  optimization: { en: 'Optimization Opportunities', ar: 'فرص التحسين' },
   segments: { en: 'Segments', ar: 'الشرائح' },
   policies: { en: 'Policies', ar: 'السياسات' },
+  actions: { en: 'Action Plan', ar: 'خطة العمل' },
   recommendations: { en: 'Recommendations', ar: 'التوصيات' },
   integrations: { en: 'Integrations', ar: 'التكاملات' },
   
