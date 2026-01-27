@@ -42,9 +42,12 @@ export type ActionStatus = 'backlog' | 'in_progress' | 'blocked' | 'completed' |
 interface ActionItem {
   id: string;
   title: string;
+  subtitle?: string;
   expectedImpact: number;
+  impactLabel?: string;
   owner: string;
   status: ActionStatus;
+  tag?: 'critical' | 'strategic' | 'compliance' | 'high' | 'medium';
 }
 
 interface DecisionsActionsCardProps {
@@ -99,37 +102,51 @@ export function DecisionsActionsCard({ actions, className, strategicOnly = false
   // High-stakes executive actions (mock data for strategic view)
   const executiveActions: ActionItem[] = strategicOnly ? [
     {
-      id: 'budget-adjustment',
-      title: 'Approve FY25 Budget Adjustment',
-      expectedImpact: 450000,
-      owner: 'CFO Office',
+      id: 'policy-exception',
+      title: 'Policy Exception: Housing Cap Breach (New Hire: VP Sales)',
+      subtitle: 'Request: AED 220k (Cap: AED 180k). HR Recommendation: Approve.',
+      expectedImpact: 40000,
+      impactLabel: 'Cost Impact: AED +40k',
+      owner: 'HR Director',
       status: 'blocked',
+      tag: 'critical',
     },
     {
-      id: 'compliance-review',
-      title: 'Compliance Review: Health Insurance Caps',
-      expectedImpact: 280000,
-      owner: 'Legal & Compliance',
+      id: 'budget-reallocation',
+      title: 'Authorize Budget Reallocation',
+      subtitle: "Move AED 150k from 'Unutilized L&D' to 'Wellness Program'.",
+      expectedImpact: 0,
+      impactLabel: 'Zero Net Cost. Est. Engagement +15%.',
+      owner: 'CFO Office',
       status: 'in_progress',
+      tag: 'strategic',
     },
     {
-      id: 'vendor-renewal',
-      title: 'Sign-off: Vendor Renewal',
-      expectedImpact: 120000,
-      owner: 'Procurement',
+      id: 'governance-signoff',
+      title: 'Governance Sign-off: 2026 Health Policy v2.0',
+      subtitle: "Includes new 'Mental Health' coverage. Approved by Legal.",
+      expectedImpact: 0,
+      impactLabel: 'Publish to 312 Employees.',
+      owner: 'Legal & Compliance',
       status: 'backlog',
+      tag: 'compliance',
     },
   ] : actions;
 
-  // Priority badge mapping
-  const getPriorityBadge = (action: ActionItem): { label: string; className: string } => {
-    if (action.status === 'blocked' || action.id === 'budget-adjustment') {
-      return { label: 'Critical', className: 'bg-destructive/10 text-destructive border-destructive/30' };
+  // Tag badge mapping for governance scenarios
+  const getTagBadge = (action: ActionItem): { label: string; className: string } => {
+    switch (action.tag) {
+      case 'critical':
+        return { label: 'Critical', className: 'bg-destructive/10 text-destructive border-destructive/30' };
+      case 'strategic':
+        return { label: 'Strategic', className: 'bg-purple-500/10 text-purple-600 border-purple-500/30' };
+      case 'compliance':
+        return { label: 'Compliance', className: 'bg-orange-500/10 text-orange-600 border-orange-500/30' };
+      case 'high':
+        return { label: 'High', className: 'bg-warning/10 text-warning border-warning/30' };
+      default:
+        return { label: 'Medium', className: 'bg-muted text-muted-foreground' };
     }
-    if (action.status === 'in_progress' || action.id === 'compliance-review') {
-      return { label: 'High', className: 'bg-warning/10 text-warning border-warning/30' };
-    }
-    return { label: 'Medium', className: 'bg-muted text-muted-foreground' };
   };
 
   const top3 = executiveActions.slice(0, 3);
@@ -164,9 +181,9 @@ export function DecisionsActionsCard({ actions, className, strategicOnly = false
           <div className="flex items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
               <CalendarDays className="w-4 h-4 text-accent" />
-              Executive Approvals & Alerts
+              Governance & Exceptions
               <Badge variant="secondary" className="ml-2 text-xs">
-                Next 30 days
+                Awaiting Decision
               </Badge>
             </CardTitle>
             <Link 
@@ -183,8 +200,7 @@ export function DecisionsActionsCard({ actions, className, strategicOnly = false
             {top3.map((action) => {
               const statusConfig = STATUS_CONFIG[action.status];
               const StatusIcon = statusConfig.icon;
-              const impactValue = Math.abs(action.expectedImpact);
-              const priorityBadge = getPriorityBadge(action);
+              const tagBadge = getTagBadge(action);
 
               return (
                 <div 
@@ -193,25 +209,31 @@ export function DecisionsActionsCard({ actions, className, strategicOnly = false
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium text-sm truncate">{action.title}</p>
+                      <p className="font-medium text-sm">{action.title}</p>
                       <Badge 
                         variant="outline" 
-                        className={cn("text-[10px] shrink-0", priorityBadge.className)}
+                        className={cn("text-[10px] shrink-0", tagBadge.className)}
                       >
-                        {priorityBadge.label}
+                        {tagBadge.label}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
+                    {action.subtitle && (
+                      <p className="text-xs text-muted-foreground mb-1.5 line-clamp-1">
+                        {action.subtitle}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-3 text-xs">
+                      <div className="flex items-center gap-1 text-muted-foreground">
                         <User className="w-3 h-3" />
                         <span>{action.owner}</span>
                       </div>
-                      <span>•</span>
-                      <span className="font-medium text-success tabular-nums">
-                        {impactValue > 0 
-                          ? `Impact: ${formatCurrencyAED(impactValue, { abbreviate: true })}`
-                          : 'Process Efficiency'
-                        }
+                      <span className="text-muted-foreground">•</span>
+                      <span className={cn(
+                        "font-semibold tabular-nums",
+                        action.tag === 'critical' ? 'text-destructive' : 
+                        action.tag === 'strategic' ? 'text-purple-600' : 'text-foreground'
+                      )}>
+                        {action.impactLabel || 'Process Efficiency'}
                       </span>
                     </div>
                   </div>
