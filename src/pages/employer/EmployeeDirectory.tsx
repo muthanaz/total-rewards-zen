@@ -1,243 +1,372 @@
-import { useState } from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
+/**
+ * Employee Directory
+ * 
+ * Comprehensive employee list with avatar, role, grade, status, total value, and utilization.
+ */
+
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Users, Building2, MapPin, Filter, Download, UserPlus } from 'lucide-react';
-import { cn, formatInteger } from '@/lib/utils';
+import { Search, Eye, Building2 } from 'lucide-react';
+import { cn, formatCurrencyAED } from '@/lib/utils';
 import { DemoModeBadge } from '@/components/shared/DemoDataGate';
+import { toast } from 'sonner';
 
-// Demo employee data
-const DEMO_EMPLOYEES = [
-  { id: '1', name: 'Sarah Ahmed', email: 'sarah.ahmed@company.com', department: 'Engineering', location: 'Dubai HQ', grade: 'G5', status: 'active', startDate: '2021-03-15' },
-  { id: '2', name: 'Mohammed Al-Rashid', email: 'mohammed.r@company.com', department: 'Finance', location: 'Dubai HQ', grade: 'G6', status: 'active', startDate: '2020-08-01' },
-  { id: '3', name: 'Fatima Khan', email: 'fatima.k@company.com', department: 'HR', location: 'Abu Dhabi', grade: 'G4', status: 'active', startDate: '2022-01-10' },
-  { id: '4', name: 'Ali Hassan', email: 'ali.h@company.com', department: 'Operations', location: 'Field Ops', grade: 'G3', status: 'active', startDate: '2019-06-20' },
-  { id: '5', name: 'Layla Omar', email: 'layla.o@company.com', department: 'Marketing', location: 'Dubai HQ', grade: 'G5', status: 'on_leave', startDate: '2021-11-05' },
-  { id: '6', name: 'Khalid Ibrahim', email: 'khalid.i@company.com', department: 'Engineering', location: 'Remote', grade: 'G4', status: 'active', startDate: '2023-02-14' },
-  { id: '7', name: 'Amira Saleh', email: 'amira.s@company.com', department: 'Legal', location: 'Dubai HQ', grade: 'G7', status: 'active', startDate: '2018-04-22' },
-  { id: '8', name: 'Omar Youssef', email: 'omar.y@company.com', department: 'IT', location: 'Abu Dhabi', grade: 'G5', status: 'probation', startDate: '2024-01-08' },
+// Employee status type
+type EmployeeStatus = 'active' | 'on_leave' | 'probation';
+
+// Employee interface
+interface Employee {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  avatarUrl?: string;
+  jobTitle: string;
+  department: string;
+  grade: string;
+  status: EmployeeStatus;
+  totalValue: number; // Annual total compensation value
+  utilizationPercent: number; // YTD benefit utilization 0-100
+}
+
+// Nexa Holdings Demo Dataset - realistic employee data
+const DEMO_EMPLOYEES: Employee[] = [
+  {
+    id: 'emp-001',
+    firstName: 'Sarah',
+    lastName: 'Ahmed',
+    email: 'sarah.ahmed@nexaholdings.ae',
+    jobTitle: 'Senior Software Engineer',
+    department: 'Technology',
+    grade: 'G5',
+    status: 'active',
+    totalValue: 245000,
+    utilizationPercent: 72,
+  },
+  {
+    id: 'emp-002',
+    firstName: 'Mohammed',
+    lastName: 'Al-Rashid',
+    email: 'mohammed.r@nexaholdings.ae',
+    jobTitle: 'Finance Director',
+    department: 'Finance',
+    grade: 'M2',
+    status: 'active',
+    totalValue: 385000,
+    utilizationPercent: 88,
+  },
+  {
+    id: 'emp-003',
+    firstName: 'Fatima',
+    lastName: 'Khan',
+    email: 'fatima.k@nexaholdings.ae',
+    jobTitle: 'HR Business Partner',
+    department: 'Human Resources',
+    grade: 'G4',
+    status: 'active',
+    totalValue: 185000,
+    utilizationPercent: 65,
+  },
+  {
+    id: 'emp-004',
+    firstName: 'Ali',
+    lastName: 'Hassan',
+    email: 'ali.h@nexaholdings.ae',
+    jobTitle: 'Operations Manager',
+    department: 'Operations',
+    grade: 'M1',
+    status: 'on_leave',
+    totalValue: 295000,
+    utilizationPercent: 45,
+  },
+  {
+    id: 'emp-005',
+    firstName: 'Layla',
+    lastName: 'Omar',
+    email: 'layla.o@nexaholdings.ae',
+    jobTitle: 'Marketing Lead',
+    department: 'Marketing',
+    grade: 'G5',
+    status: 'active',
+    totalValue: 225000,
+    utilizationPercent: 82,
+  },
+  {
+    id: 'emp-006',
+    firstName: 'Khalid',
+    lastName: 'Ibrahim',
+    email: 'khalid.i@nexaholdings.ae',
+    jobTitle: 'Data Analyst',
+    department: 'Technology',
+    grade: 'G3',
+    status: 'probation',
+    totalValue: 145000,
+    utilizationPercent: 12,
+  },
+  {
+    id: 'emp-007',
+    firstName: 'Amira',
+    lastName: 'Saleh',
+    email: 'amira.s@nexaholdings.ae',
+    jobTitle: 'Legal Counsel',
+    department: 'Legal',
+    grade: 'M2',
+    status: 'active',
+    totalValue: 365000,
+    utilizationPercent: 91,
+  },
+  {
+    id: 'emp-008',
+    firstName: 'Omar',
+    lastName: 'Youssef',
+    email: 'omar.y@nexaholdings.ae',
+    jobTitle: 'IT Support Specialist',
+    department: 'Technology',
+    grade: 'G2',
+    status: 'active',
+    totalValue: 125000,
+    utilizationPercent: 38,
+  },
+  {
+    id: 'emp-009',
+    firstName: 'Nadia',
+    lastName: 'Mansour',
+    email: 'nadia.m@nexaholdings.ae',
+    jobTitle: 'Product Manager',
+    department: 'Product',
+    grade: 'G5',
+    status: 'active',
+    totalValue: 275000,
+    utilizationPercent: 67,
+  },
+  {
+    id: 'emp-010',
+    firstName: 'Yusuf',
+    lastName: 'Al-Farsi',
+    email: 'yusuf.f@nexaholdings.ae',
+    jobTitle: 'Accountant',
+    department: 'Finance',
+    grade: 'G3',
+    status: 'active',
+    totalValue: 155000,
+    utilizationPercent: 54,
+  },
 ];
 
-const DEPARTMENTS = ['All', 'Engineering', 'Finance', 'HR', 'Operations', 'Marketing', 'Legal', 'IT'];
-const LOCATIONS = ['All', 'Dubai HQ', 'Abu Dhabi', 'Field Ops', 'Remote'];
-const STATUSES = ['All', 'active', 'on_leave', 'probation'];
+// Unique departments for filter
+const DEPARTMENTS = ['All Departments', ...new Set(DEMO_EMPLOYEES.map(e => e.department))];
+
+// Status badge configuration
+const STATUS_CONFIG: Record<EmployeeStatus, { label: string; className: string }> = {
+  active: {
+    label: 'Active',
+    className: 'bg-success/10 text-success border-success/20',
+  },
+  on_leave: {
+    label: 'On Leave',
+    className: 'bg-warning/10 text-warning border-warning/20',
+  },
+  probation: {
+    label: 'Probation',
+    className: 'bg-primary/10 text-primary border-primary/20',
+  },
+};
 
 export default function EmployeeDirectory() {
-  const { language, direction } = useLanguage();
-  const isRTL = direction === 'rtl';
-  
   const [searchQuery, setSearchQuery] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState('All');
-  const [locationFilter, setLocationFilter] = useState('All');
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [departmentFilter, setDepartmentFilter] = useState('All Departments');
 
-  const filteredEmployees = DEMO_EMPLOYEES.filter(emp => {
-    const matchesSearch = emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          emp.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesDept = departmentFilter === 'All' || emp.department === departmentFilter;
-    const matchesLoc = locationFilter === 'All' || emp.location === locationFilter;
-    const matchesStatus = statusFilter === 'All' || emp.status === statusFilter;
-    return matchesSearch && matchesDept && matchesLoc && matchesStatus;
-  });
+  // Filter employees
+  const filteredEmployees = useMemo(() => {
+    return DEMO_EMPLOYEES.filter(emp => {
+      const fullName = `${emp.firstName} ${emp.lastName}`.toLowerCase();
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch = 
+        fullName.includes(searchLower) ||
+        emp.email.toLowerCase().includes(searchLower) ||
+        emp.id.toLowerCase().includes(searchLower);
+      const matchesDept = departmentFilter === 'All Departments' || emp.department === departmentFilter;
+      return matchesSearch && matchesDept;
+    });
+  }, [searchQuery, departmentFilter]);
 
-  const stats = {
-    total: DEMO_EMPLOYEES.length,
-    active: DEMO_EMPLOYEES.filter(e => e.status === 'active').length,
-    onLeave: DEMO_EMPLOYEES.filter(e => e.status === 'on_leave').length,
-    probation: DEMO_EMPLOYEES.filter(e => e.status === 'probation').length,
+  // Get initials for avatar fallback
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge variant="outline" className="bg-success/10 text-success border-success/20">Active</Badge>;
-      case 'on_leave':
-        return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">On Leave</Badge>;
-      case 'probation':
-        return <Badge variant="outline" className="bg-accent/10 text-accent-foreground border-accent/20">Probation</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
+  // Handle view action
+  const handleView = (employee: Employee) => {
+    toast.info(`Viewing ${employee.firstName} ${employee.lastName}`, {
+      description: `Employee ID: ${employee.id}`,
+    });
   };
 
   return (
-    <div className="p-6">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className={cn('flex items-center justify-between', isRTL && 'flex-row-reverse')}>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">
-              {language === 'ar' ? 'دليل الموظفين' : 'Employee Directory'}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {language === 'ar' ? 'عرض وإدارة سجلات الموظفين' : 'View and manage employee records'}
+            <h1 className="text-2xl font-display font-bold text-foreground">Employee Directory</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {filteredEmployees.length} of {DEMO_EMPLOYEES.length} employees
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <DemoModeBadge />
-            <Button variant="outline" size="sm" className="gap-2">
-              <Download className="w-4 h-4" />
-              Export
-            </Button>
-            <Button size="sm" className="gap-2">
-              <UserPlus className="w-4 h-4" />
-              Add Employee
-            </Button>
+          <DemoModeBadge />
+        </div>
+
+        {/* Controls */}
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, email, or ID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-9"
+            />
           </div>
+          <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+            <SelectTrigger className="w-[180px] h-9">
+              <Building2 className="w-4 h-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Department" />
+            </SelectTrigger>
+            <SelectContent>
+              {DEPARTMENTS.map(dept => (
+                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-
-        {/* Summary Stats */}
-        <div className="grid grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Users className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{formatInteger(stats.total)}</p>
-                  <p className="text-xs text-muted-foreground">Total Employees</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-success/10">
-                  <Users className="w-5 h-5 text-success" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{formatInteger(stats.active)}</p>
-                  <p className="text-xs text-muted-foreground">Active</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-warning/10">
-                  <Users className="w-5 h-5 text-warning" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{formatInteger(stats.onLeave)}</p>
-                  <p className="text-xs text-muted-foreground">On Leave</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-accent/10">
-                  <Users className="w-5 h-5 text-accent-foreground" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{formatInteger(stats.probation)}</p>
-                  <p className="text-xs text-muted-foreground">Probation</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filters */}
-        <Card>
-          <CardContent className="pt-4">
-            <div className={cn('flex items-center gap-4', isRTL && 'flex-row-reverse')}>
-              <div className="relative flex-1">
-                <Search className={cn('absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground', isRTL ? 'right-3' : 'left-3')} />
-                <Input
-                  placeholder={language === 'ar' ? 'بحث بالاسم أو البريد...' : 'Search by name or email...'}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={cn('h-9', isRTL ? 'pr-10' : 'pl-10')}
-                />
-              </div>
-              <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-                <SelectTrigger className="w-[160px] h-9">
-                  <Building2 className="w-4 h-4 mr-2 text-muted-foreground" />
-                  <SelectValue placeholder="Department" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DEPARTMENTS.map(d => (
-                    <SelectItem key={d} value={d}>{d}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={locationFilter} onValueChange={setLocationFilter}>
-                <SelectTrigger className="w-[160px] h-9">
-                  <MapPin className="w-4 h-4 mr-2 text-muted-foreground" />
-                  <SelectValue placeholder="Location" />
-                </SelectTrigger>
-                <SelectContent>
-                  {LOCATIONS.map(l => (
-                    <SelectItem key={l} value={l}>{l}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[140px] h-9">
-                  <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUSES.map(s => (
-                    <SelectItem key={s} value={s}>{s === 'All' ? 'All' : s.replace('_', ' ')}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Employee Table */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-medium">
-              {language === 'ar' ? 'سجلات الموظفين' : 'Employee Records'}
-              <span className="ml-2 text-sm font-normal text-muted-foreground">
-                ({filteredEmployees.length} of {DEMO_EMPLOYEES.length})
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Department</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Grade</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Start Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEmployees.map(emp => (
-                  <TableRow key={emp.id} className="cursor-pointer hover:bg-muted/50">
-                    <TableCell className="font-medium">{emp.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{emp.email}</TableCell>
-                    <TableCell>{emp.department}</TableCell>
-                    <TableCell>{emp.location}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="font-mono">{emp.grade}</Badge>
-                    </TableCell>
-                    <TableCell>{getStatusBadge(emp.status)}</TableCell>
-                    <TableCell className="text-muted-foreground">{emp.startDate}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
       </div>
+
+      {/* Employee Table */}
+      <Card className="card-elevated">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-medium">Employee Records</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[280px]">Employee</TableHead>
+                <TableHead className="w-[200px]">Role</TableHead>
+                <TableHead className="w-[80px]">Grade</TableHead>
+                <TableHead className="w-[100px]">Status</TableHead>
+                <TableHead className="w-[130px] text-right">Total Value</TableHead>
+                <TableHead className="w-[150px]">Utilization</TableHead>
+                <TableHead className="w-[80px] text-center">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredEmployees.map(emp => (
+                <TableRow key={emp.id} className="group">
+                  {/* Employee: Avatar + Name + Email */}
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={emp.avatarUrl} alt={`${emp.firstName} ${emp.lastName}`} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+                          {getInitials(emp.firstName, emp.lastName)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground truncate">
+                          {emp.firstName} {emp.lastName}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {emp.email}
+                        </p>
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  {/* Role: Job Title + Department */}
+                  <TableCell>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {emp.jobTitle}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {emp.department}
+                      </p>
+                    </div>
+                  </TableCell>
+
+                  {/* Grade Badge */}
+                  <TableCell>
+                    <Badge variant="secondary" className="font-mono text-xs">
+                      {emp.grade}
+                    </Badge>
+                  </TableCell>
+
+                  {/* Status Badge */}
+                  <TableCell>
+                    <Badge 
+                      variant="outline" 
+                      className={cn('text-xs', STATUS_CONFIG[emp.status].className)}
+                    >
+                      {STATUS_CONFIG[emp.status].label}
+                    </Badge>
+                  </TableCell>
+
+                  {/* Total Value */}
+                  <TableCell className="text-right font-medium tabular-nums">
+                    {formatCurrencyAED(emp.totalValue)}
+                  </TableCell>
+
+                  {/* Utilization Progress */}
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Progress 
+                        value={emp.utilizationPercent} 
+                        className={cn(
+                          "h-2 flex-1",
+                          emp.utilizationPercent >= 80 && "[&>div]:bg-success",
+                          emp.utilizationPercent >= 50 && emp.utilizationPercent < 80 && "[&>div]:bg-primary",
+                          emp.utilizationPercent < 50 && "[&>div]:bg-warning"
+                        )}
+                      />
+                      <span className="text-xs text-muted-foreground w-8 text-right tabular-nums">
+                        {emp.utilizationPercent}%
+                      </span>
+                    </div>
+                  </TableCell>
+
+                  {/* Action Button */}
+                  <TableCell className="text-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleView(emp)}
+                    >
+                      <Eye className="h-4 w-4" />
+                      <span className="sr-only">View {emp.firstName}</span>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+
+              {filteredEmployees.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-32 text-center">
+                    <p className="text-muted-foreground">No employees found matching your criteria.</p>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }
