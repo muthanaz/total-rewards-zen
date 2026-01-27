@@ -15,6 +15,7 @@ import {
   Briefcase,
   Eye,
   PieChart,
+  LineChart,
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useEmployerViewMode, ViewMode } from '@/contexts/EmployerViewModeContext';
@@ -62,7 +63,8 @@ const unifiedNavigation: NavGroup[] = [
       { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/employer', icon: LayoutDashboard },
       { label: 'Investment Analysis', labelAr: 'تحليل الاستثمار', path: '/employer/spend', icon: BarChart3 },
       { label: 'Segments', labelAr: 'الشرائح', path: '/employer/segments', icon: PieChart },
-      { label: 'Optimization', labelAr: 'التحسين', path: '/employer/optimization', icon: TrendingUp },
+      { label: 'ROI & Savings', labelAr: 'العائد والتوفير', path: '/employer/optimization', icon: TrendingUp },
+      { label: 'Benchmarks', labelAr: 'المقارنات المعيارية', path: '/employer/benchmarks', icon: LineChart },
       { label: 'Action Plan', labelAr: 'خطة العمل', path: '/employer/actions', icon: KanbanSquare, showPendingBadge: true },
     ],
   },
@@ -88,12 +90,13 @@ const unifiedNavigation: NavGroup[] = [
   },
 ];
 
-// CEO-OPTIMIZED EXECUTIVE NAVIGATION (5 flat items - no collapsible sections)
+// CEO-OPTIMIZED EXECUTIVE NAVIGATION (6 flat items - no collapsible sections)
 const execNavItems: NavItem[] = [
   { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/employer', icon: LayoutDashboard },
   { label: 'Investment Analysis', labelAr: 'تحليل الاستثمار', path: '/employer/spend', icon: BarChart3 },
   { label: 'Segments', labelAr: 'الشرائح', path: '/employer/segments', icon: PieChart },
-  { label: 'Optimization', labelAr: 'التحسين', path: '/employer/optimization', icon: TrendingUp },
+  { label: 'ROI & Savings', labelAr: 'العائد والتوفير', path: '/employer/optimization', icon: TrendingUp },
+  { label: 'Benchmarks', labelAr: 'المقارنات المعيارية', path: '/employer/benchmarks', icon: LineChart },
   { label: 'Action Plan', labelAr: 'خطة العمل', path: '/employer/actions', icon: KanbanSquare, showPendingBadge: true },
 ];
 
