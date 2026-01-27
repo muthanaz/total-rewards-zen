@@ -2,12 +2,14 @@
  * Policy Owner Display
  * 
  * Shows policy owner with avatar and name.
+ * If no owner is assigned, shows an "Unassigned" warning badge.
  * Used in policy list table.
  */
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { User } from 'lucide-react';
+import { User, AlertCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -33,12 +35,23 @@ export function PolicyOwnerDisplay({ ownerUserId, compact = false }: PolicyOwner
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
+  // No owner assigned - show warning badge
   if (!ownerUserId || !owner) {
     return (
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <User className="w-4 h-4" />
-        {!compact && <span className="text-sm">Unassigned</span>}
-      </div>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge 
+            variant="outline" 
+            className="gap-1 bg-warning/10 text-warning border-warning/30 cursor-help"
+          >
+            <AlertCircle className="w-3 h-3" />
+            {!compact && <span className="text-xs">Unassigned</span>}
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p className="text-xs">No policy owner assigned. Assign an owner for accountability.</p>
+        </TooltipContent>
+      </Tooltip>
     );
   }
 

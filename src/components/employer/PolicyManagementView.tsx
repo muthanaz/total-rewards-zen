@@ -33,6 +33,7 @@ import {
   Trash2,
   ShieldCheck,
   BookOpen,
+  BarChart3,
 } from 'lucide-react';
 import { 
   DropdownMenu, 
@@ -75,6 +76,7 @@ import { PolicyArchiveDeleteDialog } from './PolicyArchiveDeleteDialog';
 import { PolicyApprovalDialog } from './PolicyApprovalDialog';
 import { PolicyVersionHistoryDrawer } from './PolicyVersionHistoryDrawer';
 import { PolicyOwnerDisplay } from './PolicyOwnerDisplay';
+import { PolicyInsightsDrawer } from './PolicyInsightsDrawer';
 
 interface PolicyRow {
   id: string;
@@ -136,6 +138,8 @@ export function PolicyManagementView() {
   // Version history drawer
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
   const [versionHistoryPolicy, setVersionHistoryPolicy] = useState<PolicyRow | null>(null);
+  // Policy insights drawer
+  const [insightsDrawerOpen, setInsightsDrawerOpen] = useState(false);
   const { hasPermission } = useEmployerPermissions();
   const { user, role } = useAuth();
   const queryClient = useQueryClient();
@@ -817,6 +821,16 @@ export function PolicyManagementView() {
               </Tooltip>
             )}
             
+            {/* Policy Insights Button */}
+            <Button 
+              variant="outline" 
+              className="gap-2" 
+              onClick={() => setInsightsDrawerOpen(true)}
+            >
+              <BarChart3 className="w-4 h-4" />
+              Policy Insights
+            </Button>
+            
             <PermissionGate 
               permission="can_manage_policies"
               fallback={
@@ -1280,6 +1294,12 @@ export function PolicyManagementView() {
         policyTitle={versionHistoryPolicy?.title || ''}
         open={versionHistoryOpen}
         onOpenChange={setVersionHistoryOpen}
+      />
+
+      {/* Policy Insights Drawer */}
+      <PolicyInsightsDrawer
+        open={insightsDrawerOpen}
+        onOpenChange={setInsightsDrawerOpen}
       />
       </PageLayout>
     </TooltipProvider>
