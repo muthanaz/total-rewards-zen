@@ -40,10 +40,17 @@ const settlementBatches = [
 ];
 
 const statusConfig = {
-  ready: { label: 'Ready to Export', color: 'bg-success/10 text-success border-success/30', icon: CheckCircle2 },
-  pending_review: { label: 'Pending Review', color: 'bg-warning/10 text-warning border-warning/30', icon: Clock },
-  exported: { label: 'Exported', color: 'bg-muted text-muted-foreground', icon: FileText },
+  ready: { label: 'Ready to Export', color: 'bg-success/10 text-success border-success/30', icon: CheckCircle2, step: 1 },
+  pending_review: { label: 'Pending Review', color: 'bg-warning/10 text-warning border-warning/30', icon: Clock, step: 0 },
+  exported: { label: 'Exported', color: 'bg-blue-500/10 text-blue-600 border-blue-500/30', icon: FileText, step: 2 },
+  paid: { label: 'Paid', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30', icon: CheckCircle2, step: 3 },
 };
+
+const statusSteps = [
+  { key: 'ready', label: 'Ready' },
+  { key: 'exported', label: 'Exported' },
+  { key: 'paid', label: 'Paid' },
+];
 
 export default function SettlementsPage() {
   const { language, direction } = useLanguage();
@@ -148,6 +155,32 @@ export default function SettlementsPage() {
                       </p>
                     </div>
                   </div>
+                  {/* Status Tracker */}
+                  <div className="hidden md:flex items-center gap-1 mr-4">
+                    {statusSteps.map((step, idx) => {
+                      const currentStep = config.step;
+                      const isCompleted = currentStep > idx;
+                      const isCurrent = currentStep === idx + 1;
+                      return (
+                        <div key={step.key} className="flex items-center">
+                          <div className={cn(
+                            "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium border transition-colors",
+                            isCompleted && "bg-emerald-500 text-white border-emerald-500",
+                            isCurrent && "bg-primary text-primary-foreground border-primary",
+                            !isCompleted && !isCurrent && "bg-muted text-muted-foreground border-border"
+                          )}>
+                            {isCompleted ? '✓' : idx + 1}
+                          </div>
+                          {idx < statusSteps.length - 1 && (
+                            <div className={cn(
+                              "w-4 h-0.5 mx-0.5",
+                              isCompleted ? "bg-emerald-500" : "bg-border"
+                            )} />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <p className="font-semibold tabular-nums">
@@ -165,6 +198,12 @@ export default function SettlementsPage() {
                       <Button size="sm" variant="outline" className="gap-1">
                         Review
                         <ArrowRight className="w-3 h-3" />
+                      </Button>
+                    )}
+                    {batch.status === 'exported' && (
+                      <Button size="sm" className="gap-1 bg-emerald-600 hover:bg-emerald-700 text-white">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Mark as Paid
                       </Button>
                     )}
                   </div>

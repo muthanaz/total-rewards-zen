@@ -23,6 +23,7 @@ const reportTemplates = [
     icon: FileSpreadsheet,
     format: 'Excel',
     lastGenerated: '2026-01-25',
+    isAutoScheduled: true,
   },
   {
     id: 'employee-benefits',
@@ -32,6 +33,7 @@ const reportTemplates = [
     icon: Users,
     format: 'Excel',
     lastGenerated: '2026-01-20',
+    isAutoScheduled: false,
   },
   {
     id: 'budget-variance',
@@ -41,6 +43,7 @@ const reportTemplates = [
     icon: TrendingUp,
     format: 'Excel',
     lastGenerated: '2026-01-15',
+    isAutoScheduled: true,
   },
   {
     id: 'settlements-export',
@@ -50,6 +53,7 @@ const reportTemplates = [
     icon: Banknote,
     format: 'CSV',
     lastGenerated: '2026-01-27',
+    isAutoScheduled: false,
   },
   {
     id: 'headcount-report',
@@ -59,6 +63,7 @@ const reportTemplates = [
     icon: Users,
     format: 'Excel',
     lastGenerated: '2026-01-10',
+    isAutoScheduled: false,
   },
 ];
 
@@ -143,9 +148,16 @@ export default function ReportsPage() {
                       <Icon className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-medium text-sm">
-                        {language === 'ar' ? report.nameAr : report.name}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-sm">
+                          {language === 'ar' ? report.nameAr : report.name}
+                        </p>
+                        {report.isAutoScheduled && (
+                          <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px]">
+                            Auto-Scheduled
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground mt-0.5 max-w-md">
                         {report.description}
                       </p>
