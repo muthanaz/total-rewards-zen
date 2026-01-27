@@ -4,7 +4,7 @@
  * Displays 4 core metrics a CFO needs to see first:
  * 1. Budget vs Spend (variance)
  * 2. Usage Rate (efficiency)
- * 3. Unused Value (waste)
+ * 3. Unutilized Budget (waste)
  * 4. YoY Change (trajectory)
  */
 
@@ -108,7 +108,7 @@ export function CFOKPIGrid({ metrics, onKPIClick }: CFOKPIGridProps) {
     },
     {
       id: 'unusedValue',
-      label: 'Unused Value',
+      label: 'Unutilized Budget',
       value: <Currency amount={metrics.unusedValue} abbreviate />,
       valueColor: 'text-warning',
       subtitle: 'Entitled but unclaimed',

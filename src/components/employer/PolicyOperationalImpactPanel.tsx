@@ -151,7 +151,7 @@ export function PolicyOperationalImpactPanel({ policyId, organizationId }: Polic
               Connect claims to this policy to unlock insights on volume, rejection rates, and common issues.
             </p>
             <Button variant="outline" size="sm">
-              View Claims Queue
+              View Claims & Requests
             </Button>
           </div>
         </CardContent>

@@ -408,7 +408,7 @@ export function UnifiedActionModal({
     switch (prefill.type) {
       case 'policy_insight': return { label: 'Policy Insight', icon: FileText, color: 'text-blue-600' };
       case 'marketplace_opportunity': return { label: 'Marketplace', icon: ShoppingBag, color: 'text-purple-600' };
-      case 'zombie_spend': return { label: 'Zombie Spend', icon: TrendingDown, color: 'text-amber-600' };
+      case 'zombie_spend': return { label: 'Budget Leakage', icon: TrendingDown, color: 'text-amber-600' };
       case 'segment_insight': return { label: 'Segment Analysis', icon: Users, color: 'text-teal-600' };
       case 'metric_evidence': return { label: 'Metric Evidence', icon: Target, color: 'text-primary' };
       default: return null;

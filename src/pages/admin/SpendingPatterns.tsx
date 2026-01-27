@@ -167,7 +167,7 @@ export default function AdminSpendingPatterns() {
           <TabsTrigger value="overview">{t('Overview', 'نظرة عامة')}</TabsTrigger>
           <TabsTrigger value="by-org">{t('By Organization', 'حسب المنظمة')}</TabsTrigger>
           <TabsTrigger value="by-category">{t('By Category', 'حسب الفئة')}</TabsTrigger>
-          <TabsTrigger value="zombie">{t('Zombie Spend', 'الإنفاق الميت')}</TabsTrigger>
+          <TabsTrigger value="zombie">{t('Budget Leakage', 'تسرب الميزانية')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -340,7 +340,7 @@ export default function AdminSpendingPatterns() {
         </TabsContent>
 
         <TabsContent value="zombie" className="space-y-6">
-          {/* Zombie Spend Alert */}
+          {/* Budget Leakage Alert */}
           <Card className="border-destructive/50 bg-destructive/5">
             <CardContent className="p-6">
               <div className={cn("flex items-start gap-4", isRTL && "flex-row-reverse")}>
@@ -348,7 +348,7 @@ export default function AdminSpendingPatterns() {
                   <AlertTriangle className="w-6 h-6 text-destructive" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-1">{t('Zombie Spend Detected', 'تم اكتشاف الإنفاق الميت')}</h3>
+                  <h3 className="font-semibold text-lg mb-1">{t('Budget Leakage Detected', 'تم اكتشاف تسرب الميزانية')}</h3>
                   <p className="text-muted-foreground mb-2">
                     {t('Benefits allocated but significantly underutilized across the platform', 'مزايا مخصصة ولكنها غير مستخدمة بشكل كبير عبر المنصة')}
                   </p>
@@ -360,7 +360,7 @@ export default function AdminSpendingPatterns() {
             </CardContent>
           </Card>
 
-          {/* Zombie Spend Details */}
+          {/* Budget Leakage Details */}
           <Card>
             <CardHeader>
               <CardTitle>{t('Underutilized Benefits Analysis', 'تحليل المزايا غير المستغلة')}</CardTitle>

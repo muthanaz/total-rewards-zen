@@ -112,7 +112,7 @@ export function ActionFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Sources</SelectItem>
-            <SelectItem value="zombie_spend">Zombie Spend</SelectItem>
+            <SelectItem value="zombie_spend">Budget Leakage</SelectItem>
             <SelectItem value="segments">Segments</SelectItem>
             <SelectItem value="claims">Claims</SelectItem>
             <SelectItem value="policies">Policies</SelectItem>

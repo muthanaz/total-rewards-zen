@@ -1,10 +1,10 @@
 /**
- * HR Ops Dashboard - Queue-First Workbench
+ * HR Ops Dashboard - Queue-First Operations Hub
  * 
  * Operational dashboard focused on:
  * - What needs attention now
  * - SLA and bottleneck visibility
- * - Claims/Requests queue as primary content
+ * - Claims & Requests as primary content
  * - Friction reasons analysis
  */
 
@@ -234,7 +234,7 @@ export function HROpsDashboard() {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">
-              Operations Workbench
+              Operations Hub
             </h1>
             <p className="text-muted-foreground mt-1 flex items-center gap-2">
               <Calendar className="w-4 h-4" />
@@ -466,7 +466,7 @@ export function HROpsDashboard() {
                   <Link to="/employer/claims" className="block">
                     <Button variant="outline" size="sm" className="w-full justify-start h-9 text-xs">
                       <FileCheck className="w-4 h-4 mr-2" />
-                      Process Claims Queue
+                      Process Claims & Requests
                     </Button>
                   </Link>
                   <Link to="/employer/policies" className="block">

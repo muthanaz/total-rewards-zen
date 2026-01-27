@@ -142,7 +142,7 @@ export function CostEfficiencyTab({
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg flex items-center gap-2">
-                Cost Recovery Opportunities
+                ROI & Savings Opportunities
                 <InfoTooltip 
                   formula="Identified waste × Confidence Factor" 
                   dataSource="Policy rules + Claims analysis" 
@@ -162,7 +162,7 @@ export function CostEfficiencyTab({
           {items.length === 0 ? (
             <div className="py-12 text-center text-muted-foreground">
               <AlertTriangle className="h-8 w-8 mx-auto mb-3 opacity-50" />
-              <p>No cost recovery opportunities identified</p>
+              <p>No ROI & Savings opportunities identified</p>
             </div>
           ) : (
             <div className="rounded-lg border overflow-hidden">

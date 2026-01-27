@@ -350,7 +350,7 @@ export function generateUtilizationInsight(
       ? `Still ${gapToTarget.toFixed(1)}pp below target. Unrealized value may indicate awareness or accessibility gaps.`
       : `Exceeding target by ${Math.abs(gapToTarget).toFixed(1)}pp. Strong employee engagement with benefits.`,
     action: gapToTarget > 5 
-      ? 'Review low-utilization benefits in Zombie Spend analysis'
+      ? 'Review low-utilization benefits in Budget Leakage analysis'
       : 'Monitor and maintain current engagement levels',
     actionPath: gapToTarget > 5 ? '/employer/zombie-spend' : undefined,
     trend: isPositive ? 'up' : 'down',

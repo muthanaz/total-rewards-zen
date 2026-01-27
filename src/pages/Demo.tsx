@@ -27,8 +27,8 @@ const DEMO_STEPS = [
   
   // Employer Portal (4 min)
   { portal: 'employer', step: 4, title: 'Executive Dashboard', path: '/employer/dashboard', duration: '60s', highlights: ['AED 24.6M investment overview', '68% utilization rate', 'SLA compliance alert'] },
-  { portal: 'employer', step: 5, title: 'Zombie Spend Analysis', path: '/employer/zombie', duration: '45s', highlights: ['AED 2.95M recovery opportunity', 'L&D at 36% utilization', 'Action recommendations'] },
-  { portal: 'employer', step: 6, title: 'Claims Queue', path: '/employer/claims', duration: '45s', highlights: ['8 urgent claims', 'SLA countdown timers', 'One-click approval'] },
+  { portal: 'employer', step: 5, title: 'Budget Leakage Analysis', path: '/employer/zombie', duration: '45s', highlights: ['AED 2.95M recovery opportunity', 'L&D at 36% utilization', 'Action recommendations'] },
+  { portal: 'employer', step: 6, title: 'Claims & Requests', path: '/employer/claims', duration: '45s', highlights: ['8 urgent claims', 'SLA countdown timers', 'One-click approval'] },
   { portal: 'employer', step: 7, title: 'Policy Management', path: '/employer/policies', duration: '30s', highlights: ['Version comparison', 'Publish workflow', 'Audit trail'] },
   
   // Admin Portal (2 min)

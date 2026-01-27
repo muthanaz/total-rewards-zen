@@ -1,7 +1,7 @@
 /**
- * Deflected Inquiries KPI
+ * Self-Service Resolution KPI
  * 
- * Shows the "Deflected Inquiries" metric with clear definition.
+ * Shows the "Self-Service Resolution" metric with clear definition.
  * Only displays if data exists; otherwise shows "Not yet measured" with setup guidance.
  */
 
@@ -52,7 +52,7 @@ export function DeflectedInquiriesKPI({
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-medium text-muted-foreground">Deflected Inquiries</span>
+                <span className="text-sm font-medium text-muted-foreground">Self-Service Resolution</span>
                 <Badge variant="outline" className="text-[10px] bg-muted/50">
                   Not measured
                 </Badge>
@@ -87,7 +87,7 @@ export function DeflectedInquiriesKPI({
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-medium">Deflected Inquiries</span>
+                <span className="text-sm font-medium">Self-Service Resolution</span>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button className="p-0.5 rounded hover:bg-muted/50">

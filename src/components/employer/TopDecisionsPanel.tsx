@@ -96,7 +96,7 @@ const DEFAULT_DECISIONS: TopDecision[] = [
     impactRange: { min: 15, max: 25, unit: 'percent' },
     confidence: 'medium',
     evidenceLinks: [
-      { label: 'Claims queue', path: '/employer/claims?category=learning' },
+      { label: 'Claims & Requests', path: '/employer/claims?category=learning' },
       { label: 'L&D Policy', path: '/employer/policies' },
     ],
     category: 'policy',

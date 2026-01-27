@@ -208,7 +208,7 @@ const DEFAULT_TOP_DRIVERS: TopDriver[] = [
     impact: 12,
     direction: 'up',
     description: 'Annual school fee claims processing',
-    actionLabel: 'View claims queue',
+    actionLabel: 'View Claims & Requests',
     actionLink: '/employer/claims',
   },
   {

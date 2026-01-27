@@ -210,7 +210,7 @@ export const METRIC_LABELS = {
   TOTAL_INVESTMENT: 'Total Benefits Investment',
   COST_PER_EMPLOYEE: 'Benefits Cost per Employee',
   WORKFORCE_UTILIZATION: 'Workforce Utilization Rate',
-  SATISFACTION_SCORE: 'Employee Satisfaction Score',
+  ADOPTION_RATE: 'Benefits Adoption Rate',
   CLAIMS_VOLUME: 'Claims Volume',
   PROCESSING_TIME: 'Average Processing Time',
   

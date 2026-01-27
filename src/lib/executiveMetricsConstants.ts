@@ -4,7 +4,7 @@
  * Single source of truth for consistent demo numbers across:
  * - Executive Dashboard
  * - Investment Analysis (Spend)
- * - Recovery Opportunities (Zombie)
+ * - ROI & Savings (Budget Leakage)
  * 
  * CEO/CFO-grade consistency: All pages show identical figures for overlapping metrics.
  */

@@ -1,7 +1,7 @@
 /**
- * Claims Queue Counters
+ * Claims & Requests Counters
  * 
- * Compact 3-counter strip for Claims & Approvals:
+ * Compact 3-counter strip for Claims & Requests:
  * - Active in Queue (pending/submitted/in_review)
  * - Needs Info (missing docs or info requested)
  * - At Risk (SLA urgent/breached) - only if SLA enabled

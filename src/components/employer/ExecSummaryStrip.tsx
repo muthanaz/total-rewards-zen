@@ -60,7 +60,7 @@ export function ExecSummaryStrip({
     },
     {
       icon: AlertTriangle,
-      label: 'Unused Value',
+      label: 'Unutilized Budget',
       value: formatCurrencyAED(recoverableValue, { abbreviate: true }),
       sublabel: 'Opportunity to recapture',
       status: recoverableValue > totalInvestment * 0.2 ? 'destructive' : 'warning',
