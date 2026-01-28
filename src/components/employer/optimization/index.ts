@@ -4,3 +4,6 @@ export * from './CostEfficiencyTab';
 export * from './ValueActivationTab';
 export * from './PortfolioRebalancingTab';
 export * from './RecoveryBatchReviewModal';
+export * from './OptimizationRecommendationCard';
+export * from './OptimizationSimulatorModal';
+export * from './TabDefinitionBanner';
