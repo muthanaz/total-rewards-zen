@@ -81,9 +81,50 @@ export function SegmentCharts({ metrics, onBenefitClick, onInsightClick }: Segme
     navigate(`/employer/communications?template=education&topic=${encodeURIComponent(need)}`);
   };
 
+  // Determine recommended lever based on behavioral gap
+  const getLeverRecommendation = (): { lever: string; icon: React.ElementType; confidence: 'high' | 'medium' | 'low' } => {
+    switch (metrics.behavioralGap) {
+      case 'low-engagement':
+        return { lever: 'Comms Campaign', icon: Mail, confidence: 'high' };
+      case 'concentrated-spend':
+        return { lever: 'Policy Tweak', icon: FileEdit, confidence: 'medium' };
+      case 'high-engagement-low-cost':
+        return { lever: 'Vendor Offer', icon: DollarSign, confidence: 'high' };
+      default:
+        return { lever: 'Monitor', icon: Target, confidence: 'low' };
+    }
+  };
+
+  // Determine impact estimate
+  const getImpactEstimate = (): { level: 'small' | 'medium' | 'large'; confidence: 'high' | 'medium' | 'low' } => {
+    if (metrics.behavioralGap === 'low-engagement' && metrics.matches > 20) {
+      return { level: 'medium', confidence: 'medium' };
+    }
+    if (metrics.behavioralGap === 'concentrated-spend') {
+      return { level: 'medium', confidence: 'low' };
+    }
+    return { level: 'small', confidence: 'medium' };
+  };
+
+  const leverRec = getLeverRecommendation();
+  const impactEst = getImpactEstimate();
+  const LeverIcon = leverRec.icon;
+
+  const confidenceStyles = {
+    high: 'bg-success/10 text-success border-success/30',
+    medium: 'bg-warning/10 text-warning border-warning/30',
+    low: 'bg-destructive/10 text-destructive border-destructive/30',
+  };
+
+  const impactLabels = {
+    small: 'Small',
+    medium: 'Medium',
+    large: 'Large',
+  };
+
   return (
     <div className="space-y-4">
-      {/* Behavioral Gap Insight - Prominent & Clickable */}
+      {/* Behavioral Gap Insight - Structured Output */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -121,23 +162,59 @@ export function SegmentCharts({ metrics, onBenefitClick, onInsightClick }: Segme
                     Click for details
                   </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground">{metrics.behavioralGapInsight}</p>
                 
-                {/* Visual comparison */}
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div className="flex items-center gap-2">
-                    <UserCheck className="h-4 w-4 text-success" />
-                    <span className="text-sm">
-                      <span className="font-semibold">{formatPercent(metrics.participationRate)}</span>{' '}
-                      <span className="text-muted-foreground">Participation</span>
-                    </span>
+                {/* Structured Finding */}
+                <div className="space-y-3">
+                  {/* Finding (1 line) */}
+                  <p className="text-sm font-medium">{metrics.behavioralGapInsight}</p>
+                  
+                  {/* Structured Recommendation */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 rounded-lg bg-background/50 border border-border/50">
+                    {/* Recommended Lever */}
+                    <div className="flex items-center gap-2">
+                      <LeverIcon className="h-4 w-4 text-accent shrink-0" />
+                      <div>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Lever</p>
+                        <p className="text-sm font-medium">{leverRec.lever}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Expected Impact */}
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-success shrink-0" />
+                      <div>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Impact</p>
+                        <p className="text-sm font-medium">{impactLabels[impactEst.level]}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Confidence */}
+                    <div className="flex items-center gap-2">
+                      <Badge 
+                        variant="outline" 
+                        className={cn("text-xs capitalize", confidenceStyles[impactEst.confidence])}
+                      >
+                        {impactEst.confidence} confidence
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-accent" />
-                    <span className="text-sm">
-                      <span className="font-semibold">{formatPercent(metrics.budgetUsage)}</span>{' '}
-                      <span className="text-muted-foreground">Budget Usage</span>
-                    </span>
+                  
+                  {/* Visual comparison */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center gap-2">
+                      <UserCheck className="h-4 w-4 text-success" />
+                      <span className="text-sm">
+                        <span className="font-semibold">{formatPercent(metrics.participationRate)}</span>{' '}
+                        <span className="text-muted-foreground">Participation</span>
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-accent" />
+                      <span className="text-sm">
+                        <span className="font-semibold">{formatPercent(metrics.budgetUsage)}</span>{' '}
+                        <span className="text-muted-foreground">Budget Usage</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
