@@ -12,3 +12,7 @@ export * from './AIWatchlistStrip';
 export * from './SaveSegmentModal';
 export * from './SegmentMemberTable';
 export * from './BulletChart';
+
+// Drilldown & Playbook
+export * from './SegmentDrilldownDrawer';
+export * from './SegmentPlaybookPanel';
