@@ -1,63 +1,44 @@
 /**
- * Executive Dashboard
+ * Executive Dashboard (Refactored)
  * 
- * CEO/CFO-grade landing page answering:
- * "Are we spending wisely? Where is waste? What are the top drivers? What decisions do I make now?"
+ * 4 vertical sections, max 12 visible metrics:
+ * 1. Bottom Line (4 KPI cards) - YTD Spend, Projected, Variance, Leakage+Recovery
+ * 2. Top Drivers (2 panels) - Spend Drivers, Leakage Drivers with CTAs
+ * 3. Decisions (Action Plan preview) - 3 highest-impact recommended actions
+ * 4. Risks & Exceptions - SLA breach, Settlement backlog, Policy compliance
  * 
- * Layout (top-to-bottom):
- * 1. Page header with toggles + Board Pack Export
- * 2. Executive Summary strip (one-line headline)
- * 3. Executive Highlights strip (confidence + freshness + sources)
- * 4. KPI row (exactly 4 cards)
- * 5. Two-column: "Where the money goes" + At-Risk Segments
- * 6. "Decisions & Actions" section
+ * Uses MetricsContract component for all KPIs
  */
 
-import { useState, useMemo } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { 
-  CheckCircle2,
-  AlertTriangle,
-  ArrowRight,
-  Settings2,
-} from 'lucide-react';
-import { ChartWrapper, CHART_EXPLANATIONS, BudgetVsActualChart } from '@/components/charts';
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DataConfidenceBadge, useDataCoverageMetrics } from './DataConfidenceBadge';
 import { PageConfidenceGate } from './PageConfidenceGate';
+import { ExecHighlightsStrip, ConfidenceLevel } from './ExecHighlightsStrip';
 import { 
   useExecutiveMetrics, 
   useSpendAllocation,
   useClaimMetrics,
 } from '@/hooks/useEmployerDashboard';
 import { useEmployerActions } from '@/hooks/useEmployerActions';
-import { cn, formatCurrencyAED } from '@/lib/utils';
-import { KPIDrilldownSheet, KPIMetricData } from '@/components/shared';
-import { addDays } from 'date-fns';
 import { useGlobalMetrics } from '@/contexts/DemoDataContext';
+import { addDays } from 'date-fns';
 
-// New components
-import { ExecModeToggle } from './ExecModeToggle';
-import { useExecMode } from './ExecModeContext';
-import { ExecHighlightsStrip, ConfidenceLevel } from './ExecHighlightsStrip';
-import { ExecSummaryStrip } from './ExecSummaryStrip';
-import { ExecKPICards } from './ExecKPICards';
-import { InvestmentAllocationTable } from './InvestmentAllocationTable';
-import { TopDriversList, DriverType } from './TopDriversList';
-import { DecisionsActionsCard, ActionStatus } from './DecisionsActionsCard';
-import { AtRiskSegmentsCard, AtRiskSegment } from './AtRiskSegmentsCard';
-import { BoardPackExportButton } from './BoardPackExportButton';
+// New dashboard components
+import {
+  ExecBottomLineKPIs,
+  ExecTopDriversPanel,
+  ExecDecisionsPanel,
+  ExecRisksPanel,
+  GenerateExecBriefButton,
+  type SpendDriver,
+  type LeakageDriver,
+  type RecommendedAction,
+  type RiskIndicator,
+} from './dashboard';
 
 export function ExecutiveDashboard() {
-  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [drilldownMetric, setDrilldownMetric] = useState<KPIMetricData | null>(null);
-  const [isDrilldownOpen, setIsDrilldownOpen] = useState(false);
-  const { isBoard, isCFO } = useExecMode();
-  
-  // Get global metrics from shared context (reactive updates)
   const globalMetrics = useGlobalMetrics();
   
   // Fetch data
@@ -66,13 +47,12 @@ export function ExecutiveDashboard() {
   const { data: spendAllocation } = useSpendAllocation();
   const { data: claimMetrics } = useClaimMetrics();
   const { filteredActions } = useEmployerActions();
-  
+
   // Merge global metrics with fetched metrics for reactive updates
   const effectiveMetrics = useMemo(() => {
     if (!metrics) return null;
     return {
       ...metrics,
-      // Override with global context values for reactivity
       totalInvestment: globalMetrics.totalBudget,
       budgetUtilized: globalMetrics.ytdSpend,
       utilizationRate: globalMetrics.utilizationRate,
@@ -91,78 +71,66 @@ export function ExecutiveDashboard() {
     return 'low';
   }, [coverageMetrics]);
 
-  // Prepare allocation table data
-  const allocationTableData = useMemo(() => {
+  // Bottom Line Metrics
+  const bottomLineMetrics = useMemo(() => {
+    if (!effectiveMetrics) return null;
+    const monthsElapsed = new Date().getMonth() + 1;
+    const ytdSpend = effectiveMetrics.totalInvestment;
+    const projectedYearEnd = (ytdSpend / monthsElapsed) * 12;
+    const budgetAllocated = ytdSpend * 0.95; // Demo: assume 5% variance
+    const budgetLeakage = globalMetrics.unutilizedBudget;
+    const recoveryPotential = Math.round(budgetLeakage * 0.65);
+    
+    return {
+      ytdSpend,
+      projectedYearEnd,
+      budgetAllocated,
+      budgetLeakage,
+      recoveryPotential,
+    };
+  }, [effectiveMetrics, globalMetrics]);
+
+  // Spend Drivers (top 5 benefits by spend)
+  const spendDrivers: SpendDriver[] = useMemo(() => {
     if (!spendAllocation || !effectiveMetrics) return [];
     const total = effectiveMetrics.totalInvestment;
-    // Demo utilization values per category
-    const utilizationMap: Record<string, number> = {
-      'Health': 85,
-      'Housing': 78,
-      'Education': 72,
-      'Transport': 65,
-      'Wellbeing': 58,
-      'Learning': 50,
-      'Other': 45,
-    };
-    return spendAllocation.map(item => ({
-      category: item.name,
-      amount: item.amount || item.value * 50000,
-      percentOfTotal: total > 0 ? ((item.amount || item.value * 50000) / total) * 100 : 0,
-      utilization: utilizationMap[item.name] || 60,
-    }));
-  }, [spendAllocation, effectiveMetrics]);
-
-  // Prepare Budget vs Actual chart data
-  const budgetVsActualData = useMemo(() => {
-    if (!spendAllocation || !effectiveMetrics) return [];
     
-    // Demo utilization values per category (determines actual vs budget)
-    const utilizationMap: Record<string, number> = {
-      'Health': 85,
-      'Housing': 78,
-      'Education': 72,
-      'Transport': 65,
-      'Wellbeing': 58,
-      'Learning': 50,
-      'Other': 45,
-    };
-    
-    return spendAllocation.map((item, i) => {
-      const utilization = utilizationMap[item.name] || 60;
-      const budget = (item.amount || item.value * 50000) * 1.2; // Budget is 20% higher than typical spend
-      const actual = budget * (utilization / 100);
-      
-      return {
-        name: item.name,
-        budget,
-        actual,
-        color: `hsl(var(--chart-${(i % 6) + 1}))`,
-      };
-    });
-  }, [spendAllocation, effectiveMetrics]);
-
-  // Prepare top drivers
-  const topDrivers = useMemo(() => {
-    if (!spendAllocation) return [];
-    const driverConfigs: Array<{ type: DriverType; delta: number }> = [
-      { type: 'spend', delta: 12.5 },
-      { type: 'waste', delta: -8.2 },
-      { type: 'spend', delta: 5.3 },
-      { type: 'segment', delta: -3.1 },
-      { type: 'waste', delta: 15.7 },
-    ];
     return spendAllocation.slice(0, 5).map((item, idx) => ({
       id: item.name.toLowerCase().replace(/\s+/g, '-'),
       name: item.name,
-      value: item.amount || item.value * 50000,
-      delta: driverConfigs[idx % driverConfigs.length].delta,
-      type: driverConfigs[idx % driverConfigs.length].type,
+      spend: item.amount || item.value * 50000,
+      percentOfTotal: total > 0 ? ((item.amount || item.value * 50000) / total) * 100 : 0,
+      delta: [8.5, -2.3, 5.1, 12.4, -4.7][idx] || 0,
     }));
-  }, [spendAllocation]);
+  }, [spendAllocation, effectiveMetrics]);
 
-  // Prepare actions for the decisions card
-  const upcomingActions = useMemo(() => {
+  // Leakage Drivers (top 5 benefits by leakage)
+  const leakageDrivers: LeakageDriver[] = useMemo(() => {
+    if (!spendAllocation) return [];
+    const totalLeakage = globalMetrics.unutilizedBudget;
+    const causes: Array<'awareness' | 'friction' | 'eligibility' | 'policy'> = 
+      ['awareness', 'friction', 'eligibility', 'awareness', 'policy'];
+    
+    // Demo: Learning & Wellbeing typically have highest leakage
+    const leakageData = [
+      { name: 'Learning', leakage: 130000 },
+      { name: 'Wellbeing', leakage: 60000 },
+      { name: 'Transport', leakage: 80000 },
+      { name: 'Housing', leakage: 300000 },
+      { name: 'Health', leakage: 50000 },
+    ].sort((a, b) => b.leakage - a.leakage);
+
+    return leakageData.map((item, idx) => ({
+      id: item.name.toLowerCase(),
+      name: item.name,
+      leakage: item.leakage,
+      percentOfTotal: totalLeakage > 0 ? (item.leakage / totalLeakage) * 100 : 0,
+      cause: causes[idx],
+    }));
+  }, [spendAllocation, globalMetrics]);
+
+  // Recommended Actions (3 highest impact)
+  const recommendedActions: RecommendedAction[] = useMemo(() => {
     const thirtyDaysFromNow = addDays(new Date(), 30);
     return filteredActions
       .filter(a => !['completed', 'cancelled'].includes(a.status))
@@ -171,127 +139,53 @@ export function ExecutiveDashboard() {
       .map(a => ({
         id: a.id,
         title: a.title,
-        expectedImpact: a.expectedImpact.costAvoidance || 0,
+        description: a.description,
+        impactAED: a.expectedImpact.costAvoidance || 0,
+        effort: 'medium' as 'low' | 'medium' | 'high',
         owner: a.owner,
-        status: a.status as ActionStatus,
+        dueDate: a.dueDate,
       }));
   }, [filteredActions]);
 
-  // At-risk segments data
-  const atRiskSegments: AtRiskSegment[] = useMemo(() => [
+  // Risk Indicators
+  const riskIndicators: RiskIndicator[] = useMemo(() => [
     {
-      id: 'grade-a',
-      name: 'Grade A (Executives)',
-      dimension: 'grade',
-      headcount: 45,
-      utilizationRate: 52,
-      unusedEntitlement: 890000,
-      retentionRisk: 'high',
-      topDriver: 'Awareness Gap',
+      id: 'sla',
+      type: 'sla_breach' as const,
+      label: 'Claims at SLA Risk',
+      value: 8,
+      status: 'warning' as const,
+      trend: -15,
+      trendLabel: 'vs last week',
+      linkTo: '/employer/ops?tab=sla_risk',
+      linkLabel: 'View SLA Breaches',
     },
     {
-      id: 'dept-tech',
-      name: 'Technology',
-      dimension: 'department',
-      headcount: 120,
-      utilizationRate: 58,
-      unusedEntitlement: 720000,
-      retentionRisk: 'high',
-      topDriver: 'Process Friction',
+      id: 'settlements',
+      type: 'settlement_backlog' as const,
+      label: 'Pending Export',
+      value: 'AED 125K',
+      status: 'warning' as const,
+      trend: 12,
+      trendLabel: 'vs last week',
+      linkTo: '/employer/settlements',
+      linkLabel: 'View Settlements',
     },
     {
-      id: 'tenure-new',
-      name: 'New Joiners (<1 year)',
-      dimension: 'joiner_cohort',
-      headcount: 85,
-      utilizationRate: 45,
-      unusedEntitlement: 480000,
-      retentionRisk: 'medium',
-      topDriver: 'Eligibility Confusion',
+      id: 'compliance',
+      type: 'policy_compliance' as const,
+      label: 'Compliance Rate',
+      value: '94%',
+      status: 'healthy' as const,
+      trend: 2,
+      trendLabel: 'vs last month',
+      linkTo: '/employer/data-quality',
+      linkLabel: 'View Data Quality',
     },
   ], []);
 
-  // Priority actions count (P0 = critical, P1 = high priority)
-  const priorityActionsCount = useMemo(() => 
-    filteredActions.filter(a => 
-      (a.priority === 'P0' || a.priority === 'P1') && 
-      !['completed', 'cancelled'].includes(a.status)
-    ).length,
-  [filteredActions]);
-
-  // Satisfaction score (from metrics or default)
-  const satisfactionScore = effectiveMetrics?.esatScore || 78;
-
-  // Drilldown handlers
-  const openDrilldown = (metricKey: string) => {
-    // Create metric data for drilldown
-    if (!effectiveMetrics) return;
-    const metricData: Record<string, KPIMetricData> = {
-      totalInvestment: {
-        key: 'totalInvestment',
-        name: 'Total Investment',
-        value: effectiveMetrics.totalInvestment,
-        formattedValue: formatCurrencyAED(effectiveMetrics.totalInvestment),
-        unit: 'currency',
-        trend: { value: 8, higherIsBetter: true, period: 'vs last year' },
-        formula: 'SUM(org_budgets.annual_budget) for current fiscal year',
-        dataSource: 'org_budgets table',
-      },
-      utilizationRate: {
-        key: 'utilizationRate',
-        name: 'Utilization Rate',
-        value: effectiveMetrics.utilizationRate,
-        formattedValue: `${effectiveMetrics.utilizationRate}%`,
-        unit: 'percent',
-        trend: { value: 5.3, higherIsBetter: true, period: 'vs last quarter' },
-        formula: '(Claimed Amount / Entitled Amount) × 100',
-        dataSource: 'benefit_entitlements + requests',
-      },
-      unrealizedValue: {
-        key: 'unrealizedValue',
-        name: 'Unrealized Value',
-        value: globalMetrics.unutilizedBudget,
-        formattedValue: formatCurrencyAED(globalMetrics.unutilizedBudget),
-        unit: 'currency',
-        trend: { value: -12.4, higherIsBetter: false, period: 'vs last quarter' },
-        formula: 'Total Entitled - Total Claimed (for cap-based benefits)',
-        dataSource: 'benefit_entitlements',
-      },
-      satisfactionScore: {
-        key: 'satisfactionScore',
-        name: 'Employee Satisfaction',
-        value: satisfactionScore,
-        formattedValue: `${satisfactionScore}%`,
-        unit: 'percent',
-        trend: { value: 3.2, higherIsBetter: true, period: 'vs last month' },
-        formula: '(Average Rating ÷ 5) × 100',
-        dataSource: 'employee_satisfaction_ratings table',
-      },
-    };
-    const metric = metricData[metricKey];
-    if (metric) {
-      setDrilldownMetric(metric);
-      setIsDrilldownOpen(true);
-      setSearchParams(prev => {
-        const next = new URLSearchParams(prev);
-        next.set('drilldown', metricKey);
-        return next;
-      });
-    }
-  };
-
-  const closeDrilldown = () => {
-    setIsDrilldownOpen(false);
-    setDrilldownMetric(null);
-    setSearchParams(prev => {
-      const next = new URLSearchParams(prev);
-      next.delete('drilldown');
-      return next;
-    });
-  };
-
   // Loading state
-  if (metricsLoading || !metrics) {
+  if (metricsLoading || !metrics || !bottomLineMetrics) {
     return (
       <div className="space-y-6 animate-pulse">
         <div className="h-16 bg-muted rounded-xl" />
@@ -299,110 +193,101 @@ export function ExecutiveDashboard() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => <div key={i} className="h-40 bg-muted rounded-xl" />)}
         </div>
+        <div className="grid grid-cols-2 gap-6">
+          <div className="h-64 bg-muted rounded-xl" />
+          <div className="h-64 bg-muted rounded-xl" />
+        </div>
       </div>
     );
   }
 
-  // Calculate metrics
-  const unrealizedValue = metrics.zombieSpend || (metrics.totalInvestment * (1 - metrics.utilizationRate / 100));
-  const budgetAllocated = metrics.totalInvestment * 0.95; // Assume 5% variance for demo
+  // Exec Brief data
+  const execBriefData = {
+    ytdSpend: bottomLineMetrics.ytdSpend,
+    projectedYearEnd: bottomLineMetrics.projectedYearEnd,
+    budgetVariance: bottomLineMetrics.ytdSpend - bottomLineMetrics.budgetAllocated,
+    utilizationRate: effectiveMetrics?.utilizationRate || 72,
+    budgetLeakage: bottomLineMetrics.budgetLeakage,
+    recoveryPotential: bottomLineMetrics.recoveryPotential,
+    slaCompliance: claimMetrics?.slaCompliance || 94,
+    pendingActions: recommendedActions.length,
+  };
 
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
       <div className="space-y-6">
-        {/* 1. PAGE HEADER */}
+        {/* PAGE HEADER */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">
-              Benefits Investment Summary
+              Executive Dashboard
             </h1>
             <p className="text-muted-foreground mt-1">
-              FY 2024 · 312 employees · AED 78.8K per head
+              FY 2024 · {globalMetrics.activeEmployees} employees · Benefits portfolio overview
             </p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
-            {/* Export Button */}
-            <BoardPackExportButton 
-              metrics={{
-                totalInvestment: metrics.totalInvestment,
-                utilizationRate: metrics.utilizationRate,
-                unrealizedValue,
-                satisfactionScore,
-                budgetVariance: metrics.totalInvestment - budgetAllocated,
-              }}
-            />
+            <GenerateExecBriefButton data={execBriefData} />
           </div>
         </div>
 
-        {/* 2. DATA VERIFICATION (minimal line) */}
+        {/* DATA VERIFICATION STRIP */}
         <ExecHighlightsStrip
           confidence={confidenceLevel}
           lastSync={coverageMetrics.lastSyncTime}
           sourcesCount={3}
         />
 
-        {/* 4. KPI ROW (exactly 4 cards) */}
-        <ExecKPICards
-          totalInvestment={metrics.totalInvestment}
-          utilizationRate={metrics.utilizationRate}
-          unrealizedValue={unrealizedValue}
-          satisfactionScore={satisfactionScore}
-          budgetAllocated={budgetAllocated}
-          utilizationTarget={metrics.targetUtilization}
-          satisfactionBenchmark={metrics.esatBenchmark || 80}
-          onKPIClick={openDrilldown}
-          onNavigate={(path) => navigate(path)}
-        />
-
-        {/* 5. STRATEGIC DECISIONS & ALERTS (moved up for CEO priority) */}
-        <DecisionsActionsCard actions={upcomingActions} strategicOnly />
-
-        {/* 6. WHERE THE MONEY GOES + AT-RISK SEGMENTS (2 columns) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left: Budget vs Actual chart + table */}
-          <div className="space-y-4">
-            <ChartWrapper 
-              title="Budget vs Actual" 
-              formula="Actual Spend / Allocated Budget × 100"
-              dataSource="Finance + HR Budget"
-              explanation={CHART_EXPLANATIONS.spendDistribution}
-            >
-              <BudgetVsActualChart 
-                data={budgetVsActualData} 
-                maxItems={6}
-              />
-            </ChartWrapper>
-            
-            {/* Allocation Table (hidden in Board mode for density) */}
-            {!isBoard && (
-              <InvestmentAllocationTable data={allocationTableData} />
-            )}
-          </div>
-
-          {/* Right: At-Risk Segments (replaces Top Drivers in board mode) */}
-          {isBoard ? (
-            <AtRiskSegmentsCard segments={atRiskSegments} />
-          ) : (
-            <div className="space-y-4">
-              <TopDriversList drivers={topDrivers} />
-              <AtRiskSegmentsCard segments={atRiskSegments} />
-            </div>
-          )}
+        {/* SECTION 1: BOTTOM LINE (4 KPI cards) */}
+        <div>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
+            Bottom Line
+          </h2>
+          <ExecBottomLineKPIs
+            metrics={bottomLineMetrics}
+            lastUpdated={new Date()}
+            onKPIClick={(kpiId) => {
+              if (kpiId === 'ytdSpend' || kpiId === 'projected' || kpiId === 'variance') {
+                navigate('/employer/spend');
+              } else if (kpiId === 'leakage') {
+                navigate('/employer/optimization');
+              }
+            }}
+          />
         </div>
 
-        {/* KPI Drilldown Sheet */}
-        <KPIDrilldownSheet
-          open={isDrilldownOpen}
-          onOpenChange={(open) => {
-            if (!open) closeDrilldown();
-          }}
-          metric={drilldownMetric}
-          relatedLinks={[
-            { label: 'View Spend & Forecast', href: '/employer/spend' },
-            { label: 'View Optimization', href: '/employer/optimization' },
-            { label: 'View Drivers & Segments', href: '/employer/segments' },
-          ]}
-        />
+        {/* SECTION 2: TOP DRIVERS (2 panels) */}
+        <div>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
+            Top Drivers
+          </h2>
+          <ExecTopDriversPanel
+            spendDrivers={spendDrivers}
+            leakageDrivers={leakageDrivers}
+            totalSpend={bottomLineMetrics.ytdSpend}
+            totalLeakage={bottomLineMetrics.budgetLeakage}
+          />
+        </div>
+
+        {/* SECTION 3: DECISIONS (Action Plan Preview) */}
+        <div>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
+            Decisions
+          </h2>
+          <ExecDecisionsPanel
+            actions={recommendedActions}
+            onAssignAction={(actionId) => navigate(`/employer/actions?open=${actionId}`)}
+            onCreateAction={() => navigate('/employer/actions?create=true')}
+          />
+        </div>
+
+        {/* SECTION 4: RISKS & EXCEPTIONS */}
+        <div>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
+            Risks & Exceptions
+          </h2>
+          <ExecRisksPanel risks={riskIndicators} />
+        </div>
       </div>
     </PageConfidenceGate>
   );
