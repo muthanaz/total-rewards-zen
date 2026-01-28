@@ -66,6 +66,7 @@ import MarketplaceAnalyticsPage from "./pages/employer/MarketplaceAnalytics";
 import PoliciesPage from "./pages/employer/Policies";
 import IntegrationsPage from "./pages/employer/Integrations";
 import RecommendationsPage from "./pages/employer/Recommendations";
+import ActionPlanPage from "./pages/employer/ActionPlan";
 import EmployerDataQualityRules from "./pages/employer/DataQualityRules";
 import EmployerSyncMonitor from "./pages/employer/SyncMonitor";
 import EmployeeDirectoryPage from "./pages/employer/EmployeeDirectory";
@@ -257,7 +258,7 @@ function AppRoutes() {
         <Route path="spend" element={<SpendPage />} />
         <Route path="optimization" element={<ZombieSpendPage />} />
         <Route path="zombie" element={<ZombieSpendPage />} />
-        <Route path="actions" element={<RecommendationsPage />} />
+        <Route path="actions" element={<ActionPlanPage />} />
         <Route path="segments" element={<SegmentsPage />} />
         <Route path="benchmarks" element={<BenchmarksPage />} />
         <Route path="claims" element={<Navigate to="/employer/ops" replace />} />
