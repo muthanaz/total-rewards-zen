@@ -111,7 +111,7 @@ const CONFIDENCE_STYLES: Record<DataConfidence, {
   },
 };
 
-// Size configurations (following 8px grid)
+// Size configurations (following 8px grid) - with enforced min-heights
 const SIZE_CONFIG = {
   sm: {
     card: 'p-4',

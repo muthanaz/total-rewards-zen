@@ -143,30 +143,66 @@ export function ExecTopDriversPanel({
   totalLeakage,
   className,
 }: ExecTopDriversPanelProps) {
-  const top5Spend = spendDrivers.slice(0, 5);
-  const top5Leakage = leakageDrivers.slice(0, 5);
-  const maxSpend = top5Spend.length > 0 ? Math.max(...top5Spend.map(d => d.spend)) : 1;
-  const maxLeakage = top5Leakage.length > 0 ? Math.max(...top5Leakage.map(d => d.leakage)) : 1;
+  // Ensure exactly 5 rows for consistent card heights
+  const prepareDrivers = <T extends { id: string; name: string }>(
+    drivers: T[],
+    getValue: (d: T) => number,
+    total: number
+  ): (T | { id: string; name: string; isOther: true; value: number; percentOfTotal: number })[] => {
+    if (drivers.length === 0) return [];
+    
+    const top4 = drivers.slice(0, 4);
+    const remaining = drivers.slice(4);
+    
+    if (remaining.length === 0 && top4.length < 5) {
+      // Fewer than 5 items - pad with empty or return as-is
+      return top4 as any;
+    }
+    
+    if (remaining.length > 0) {
+      // Aggregate remaining into "Other"
+      const otherValue = remaining.reduce((sum, d) => sum + getValue(d), 0);
+      const otherPercent = total > 0 ? (otherValue / total) * 100 : 0;
+      return [
+        ...top4,
+        { id: 'other', name: 'Other', isOther: true, value: otherValue, percentOfTotal: otherPercent }
+      ] as any;
+    }
+    
+    return top4 as any;
+  };
 
-  // Dynamic title based on actual row count
-  const spendTitle = top5Spend.length === 5 
-    ? 'Top 5 by Spend' 
-    : `Top Drivers by Spend (showing ${top5Spend.length})`;
-  
-  const leakageTitle = top5Leakage.length === 5 
-    ? 'Top 5 by Leakage' 
-    : `Top Drivers by Leakage (showing ${top5Leakage.length})`;
+  const displaySpendDrivers = prepareDrivers(
+    spendDrivers,
+    d => d.spend,
+    totalSpend
+  );
+  const displayLeakageDrivers = prepareDrivers(
+    leakageDrivers,
+    d => d.leakage,
+    totalLeakage
+  );
+
+  const maxSpend = displaySpendDrivers.length > 0 
+    ? Math.max(...spendDrivers.slice(0, 5).map(d => d.spend)) 
+    : 1;
+  const maxLeakage = displayLeakageDrivers.length > 0 
+    ? Math.max(...leakageDrivers.slice(0, 5).map(d => d.leakage)) 
+    : 1;
+
+  // Fixed row height for consistent list item sizing
+  const ROW_HEIGHT = 'min-h-[68px]';
 
   return (
-    <div className={cn('grid grid-cols-1 lg:grid-cols-2 gap-6', className)}>
+    <div className={cn('grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6', className)}>
       {/* Spend Drivers */}
-      <Card className="border-border/50">
+      <Card className="border-border/50 flex flex-col">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-base flex items-center gap-2">
                 <DollarSign className="w-4 h-4 text-primary" />
-                {spendTitle}
+                Top 5 by Spend
               </CardTitle>
               {/* Scope label */}
               <p className="text-[10px] text-muted-foreground mt-1">
@@ -178,60 +214,75 @@ export function ExecTopDriversPanel({
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {top5Spend.length === 0 ? (
+        <CardContent className="flex-1 flex flex-col">
+          {displaySpendDrivers.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
               No spend data available
             </p>
           ) : (
-            top5Spend.map((driver, index) => (
-              <div key={driver.id} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-muted-foreground w-4">
-                      {index + 1}
-                    </span>
-                    <span className="text-sm font-medium">{driver.name}</span>
+            <div className="flex-1 flex flex-col justify-between space-y-2">
+              {displaySpendDrivers.map((driver: any, index) => {
+                const isOther = 'isOther' in driver && driver.isOther;
+                const spend = isOther ? driver.value : driver.spend;
+                const percentOfTotal = driver.percentOfTotal;
+                
+                return (
+                  <div key={driver.id} className={cn('space-y-1.5', ROW_HEIGHT)}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-muted-foreground w-4">
+                          {index + 1}
+                        </span>
+                        <span className={cn(
+                          "text-sm font-medium",
+                          isOther && "text-muted-foreground italic"
+                        )}>
+                          {driver.name}
+                        </span>
+                      </div>
+                      <span className="text-sm font-semibold tabular-nums">
+                        {formatCurrencyAED(spend, { abbreviate: true })}
+                      </span>
+                    </div>
+                    <DriverBar value={spend} maxValue={maxSpend} color="bg-primary" />
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">
+                        {percentOfTotal.toFixed(1)}% of total
+                      </span>
+                      {!isOther && (
+                        <div className="flex gap-1">
+                          <Link to={`/employer/policies?benefit=${driver.id}`}>
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1">
+                              <FileText className="w-3 h-3" />
+                              Policy
+                            </Button>
+                          </Link>
+                          <Link to={`/employer/optimization?category=${driver.id}`}>
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1">
+                              <Lightbulb className="w-3 h-3" />
+                              Optimize
+                            </Button>
+                          </Link>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <span className="text-sm font-semibold tabular-nums">
-                    {formatCurrencyAED(driver.spend, { abbreviate: true })}
-                  </span>
-                </div>
-                <DriverBar value={driver.spend} maxValue={maxSpend} color="bg-primary" />
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">
-                    {driver.percentOfTotal.toFixed(1)}% of total
-                  </span>
-                  <div className="flex gap-1">
-                    <Link to={`/employer/policies?benefit=${driver.id}`}>
-                      <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1">
-                        <FileText className="w-3 h-3" />
-                        Policy
-                      </Button>
-                    </Link>
-                    <Link to={`/employer/optimization?category=${driver.id}`}>
-                      <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1">
-                        <Lightbulb className="w-3 h-3" />
-                        Optimize
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))
+                );
+              })}
+            </div>
           )}
         </CardContent>
       </Card>
 
       {/* Leakage Drivers */}
-      <Card className="border-border/50">
+      <Card className="border-border/50 flex flex-col">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
                 <CardTitle className="text-base flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-warning" />
-                  {leakageTitle}
+                  Top 5 by Leakage
                 </CardTitle>
                 {/* "At risk" definition tooltip */}
                 <Tooltip>
@@ -258,48 +309,65 @@ export function ExecTopDriversPanel({
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {top5Leakage.length === 0 ? (
+        <CardContent className="flex-1 flex flex-col">
+          {displayLeakageDrivers.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
               No leakage data available
             </p>
           ) : (
-            top5Leakage.map((driver, index) => (
-              <div key={driver.id} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-muted-foreground w-4">
-                      {index + 1}
-                    </span>
-                    <span className="text-sm font-medium">{driver.name}</span>
-                    <LeakageCauseBadge cause={driver.cause} />
+            <div className="flex-1 flex flex-col justify-between space-y-2">
+              {displayLeakageDrivers.map((driver: any, index) => {
+                const isOther = 'isOther' in driver && driver.isOther;
+                const leakage = isOther ? driver.value : driver.leakage;
+                const percentOfTotal = driver.percentOfTotal;
+                
+                return (
+                  <div key={driver.id} className={cn('space-y-1.5', ROW_HEIGHT)}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-muted-foreground w-4">
+                          {index + 1}
+                        </span>
+                        <span className={cn(
+                          "text-sm font-medium",
+                          isOther && "text-muted-foreground italic"
+                        )}>
+                          {driver.name}
+                        </span>
+                        {!isOther && driver.cause && (
+                          <LeakageCauseBadge cause={driver.cause} />
+                        )}
+                      </div>
+                      <span className="text-sm font-semibold tabular-nums text-warning">
+                        {formatCurrencyAED(leakage, { abbreviate: true })}
+                      </span>
+                    </div>
+                    <DriverBar value={leakage} maxValue={maxLeakage} color="bg-warning" />
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">
+                        {percentOfTotal.toFixed(1)}% of leakage
+                      </span>
+                      {!isOther && (
+                        <div className="flex gap-1">
+                          <Link to={`/employer/policies?benefit=${driver.id}`}>
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1">
+                              <FileText className="w-3 h-3" />
+                              Policy
+                            </Button>
+                          </Link>
+                          <Link to={`/employer/optimization?category=${driver.id}`}>
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1">
+                              <Lightbulb className="w-3 h-3" />
+                              Optimize
+                            </Button>
+                          </Link>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <span className="text-sm font-semibold tabular-nums text-warning">
-                    {formatCurrencyAED(driver.leakage, { abbreviate: true })}
-                  </span>
-                </div>
-                <DriverBar value={driver.leakage} maxValue={maxLeakage} color="bg-warning" />
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">
-                    {driver.percentOfTotal.toFixed(1)}% of leakage
-                  </span>
-                  <div className="flex gap-1">
-                    <Link to={`/employer/policies?benefit=${driver.id}`}>
-                      <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1">
-                        <FileText className="w-3 h-3" />
-                        Policy
-                      </Button>
-                    </Link>
-                    <Link to={`/employer/optimization?category=${driver.id}`}>
-                      <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1">
-                        <Lightbulb className="w-3 h-3" />
-                        Optimize
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))
+                );
+              })}
+            </div>
           )}
         </CardContent>
       </Card>

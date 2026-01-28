@@ -139,7 +139,7 @@ export function ExecRisksPanel({ risks, className }: ExecRisksPanelProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {displayRisks.map((risk) => {
             const config = RISK_CONFIG[risk.type];
             const statusStyle = STATUS_STYLES[risk.status];
@@ -153,37 +153,38 @@ export function ExecRisksPanel({ risks, className }: ExecRisksPanelProps) {
               <div 
                 key={risk.id}
                 className={cn(
-                  'flex items-center gap-4 p-4 rounded-lg border',
+                  'flex flex-col p-4 rounded-lg border min-h-[140px]',
                   statusStyle.bg
                 )}
               >
-                {/* Icon */}
-                <div className={cn(
-                  'w-10 h-10 rounded-lg flex items-center justify-center shrink-0',
-                  risk.status === 'healthy' ? 'bg-success/10' : 
-                  risk.status === 'critical' ? 'bg-destructive/10' : 'bg-warning/10'
-                )}>
-                  <Icon className={cn('w-5 h-5', statusStyle.icon)} />
+                {/* Header: Icon + Status Badge */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className={cn(
+                    'w-10 h-10 rounded-lg flex items-center justify-center shrink-0',
+                    risk.status === 'healthy' ? 'bg-success/10' : 
+                    risk.status === 'critical' ? 'bg-destructive/10' : 'bg-warning/10'
+                  )}>
+                    <Icon className={cn('w-5 h-5', statusStyle.icon)} />
+                  </div>
+                  <Badge 
+                    variant="outline" 
+                    className={cn('text-[10px]', statusStyle.badge)}
+                  >
+                    {risk.status === 'healthy' ? 'Healthy' : 
+                     risk.status === 'critical' ? 'Critical' : 'Attention'}
+                  </Badge>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 min-w-0">
+                <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <p className="font-medium text-sm">{risk.label}</p>
-                    {/* SSOT Tooltip for SLA Compliance */}
                     {config.metricKey && (
                       <SSOTTooltip metricKey={config.metricKey} size="sm" />
                     )}
-                    <Badge 
-                      variant="outline" 
-                      className={cn('text-[10px]', statusStyle.badge)}
-                    >
-                      {risk.status === 'healthy' ? 'Healthy' : 
-                       risk.status === 'critical' ? 'Critical' : 'Attention'}
-                    </Badge>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="font-semibold text-foreground tabular-nums">
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                    <span className="font-semibold text-foreground text-lg tabular-nums">
                       {risk.value}
                     </span>
                     {risk.trend !== undefined && (
@@ -195,17 +196,14 @@ export function ExecRisksPanel({ risks, className }: ExecRisksPanelProps) {
                         <span className="tabular-nums">
                           {risk.trend > 0 ? '+' : ''}{risk.trend}%
                         </span>
-                        {risk.trendLabel && (
-                          <span className="text-muted-foreground">{risk.trendLabel}</span>
-                        )}
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* CTA */}
-                <Link to={risk.linkTo}>
-                  <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
+                <Link to={risk.linkTo} className="mt-auto">
+                  <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs">
                     {risk.linkLabel}
                     <ArrowRight className="w-3 h-3" />
                   </Button>
