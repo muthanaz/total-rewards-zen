@@ -1,8 +1,10 @@
 /**
- * People Intelligence Engine
+ * Drivers & Segments Page
  * 
  * Dynamic segment builder with customizable filters, live preview,
  * AI-powered watchlist, and dual-view tabs for Exec/HR modes.
+ * 
+ * Renamed from "People Intelligence Engine" for clearer executive communication.
  */
 
 import { useState } from 'react';
@@ -76,10 +78,10 @@ export default function SegmentsPage() {
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-2xl font-display font-bold text-foreground">
-                People Intelligence Engine
-              </h1>
-              <DataConfidenceBadge metrics={coverageMetrics} />
+            <h1 className="text-2xl font-display font-bold text-foreground">
+              Drivers & Segments
+            </h1>
+            <DataConfidenceBadge metrics={coverageMetrics} />
             </div>
             <motion.p
               key={dynamicTitle}

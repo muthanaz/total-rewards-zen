@@ -370,8 +370,8 @@ export function generateSampleActionPlan(data: {
       status: 'open',
       sourceType: 'zombie_spend',
       deepLinks: [
-        { label: 'View Category', path: '/employer/zombie-spend', params: { category: data.topCategory.name.toLowerCase() } },
-        { label: 'Create Comms', path: '/employer/recommendations', params: { type: 'comms' } },
+        { label: 'View Category', path: '/employer/optimization', params: { category: data.topCategory.name.toLowerCase() } },
+        { label: 'Create Comms', path: '/employer/actions', params: { type: 'comms' } },
       ],
       isDemo: true,
     },

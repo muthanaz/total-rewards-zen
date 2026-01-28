@@ -350,9 +350,9 @@ export function generateUtilizationInsight(
       ? `Still ${gapToTarget.toFixed(1)}pp below target. Unrealized value may indicate awareness or accessibility gaps.`
       : `Exceeding target by ${Math.abs(gapToTarget).toFixed(1)}pp. Strong employee engagement with benefits.`,
     action: gapToTarget > 5 
-      ? 'Review low-utilization benefits in Budget Leakage analysis'
+      ? 'Review low-utilization benefits in Optimization'
       : 'Monitor and maintain current engagement levels',
-    actionPath: gapToTarget > 5 ? '/employer/zombie-spend' : undefined,
+    actionPath: gapToTarget > 5 ? '/employer/optimization' : undefined,
     trend: isPositive ? 'up' : 'down',
     trendIsPositive: isPositive,
     confidence: 'high',
@@ -385,23 +385,23 @@ export function generateSpendInsight(
   };
 }
 
-export function generateZombieInsight(
-  zombieAmount: number,
+export function generateLeakageInsight(
+  leakageAmount: number,
   recoveryPotential: number,
   topCategory: string
 ): NarrativeInsight {
   return {
-    id: 'zombie-recovery',
+    id: 'leakage-recovery',
     change: `${topCategory} has highest unrealized value`,
-    metricValue: `AED ${(zombieAmount / 1000).toFixed(0)}K`,
+    metricValue: `AED ${(leakageAmount / 1000).toFixed(0)}K`,
     impact: `Recovery potential of AED ${(recoveryPotential / 1000).toFixed(0)}K if addressed. This represents budget that could be reallocated or employee value that could be unlocked.`,
     action: 'Launch targeted recovery playbook for this category',
-    actionPath: '/employer/zombie-spend',
+    actionPath: '/employer/optimization',
     actionLabel: 'View playbooks',
     trend: 'down',
     trendIsPositive: false,
     confidence: 'medium',
-    category: 'zombie',
+    category: 'leakage',
   };
 }
 

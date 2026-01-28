@@ -1,5 +1,5 @@
 /**
- * Strategic Decision Support Page (formerly "Optimization Opportunities")
+ * Optimization Page (Strategic Decision Support)
  * 
  * Three executive-focused tabs that guide strategic budget decisions:
  * 
@@ -9,7 +9,7 @@
  * 
  * Uses enterprise-grade language without false retention promises.
  * 
- * @module StrategicDecisionSupport
+ * @module Optimization
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -215,7 +215,7 @@ export default function ZombieSpendPage() {
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
       <PageLayout
-        title="Strategic Decision Support"
+        title="Optimization"
         description={`FY ${ORG_BASELINE.fiscalYear} · ${formatCurrencyAED(totalOpportunity, { abbreviate: true })} total optimization potential`}
         icon={Target}
         iconClassName="bg-success/10 text-success"

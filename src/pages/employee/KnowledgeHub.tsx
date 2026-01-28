@@ -119,7 +119,7 @@ const pageTranslations = {
 const glossaryTerms = {
   en: [
     { term: 'Annual Allowance', definition: 'The total amount allocated to you each year for a specific benefit category. This resets at the start of each fiscal year.', category: 'General', related: ['Utilization', 'Remaining Balance'] },
-    { term: 'Utilization Rate', definition: 'The percentage of your allocated benefits that you have used. A higher utilization rate means you are making good use of your benefits.', category: 'General', related: ['Annual Allowance', 'Zombie Spend'] },
+    { term: 'Utilization Rate', definition: 'The percentage of your allocated benefits that you have used. A higher utilization rate means you are making good use of your benefits.', category: 'General', related: ['Annual Allowance', 'Budget Leakage'] },
     { term: 'Housing Allowance', definition: 'A monthly or annual cash benefit to help cover accommodation costs. Can be used for rent, mortgage, or housing-related expenses.', category: 'Housing', related: ['DEWA', 'Ejari'] },
     { term: 'DEWA', definition: 'Dubai Electricity and Water Authority. Utility bills that may be covered under your housing allowance.', category: 'Housing', related: ['Housing Allowance'] },
     { term: 'Ejari', definition: 'Dubai\'s online registration system for rental contracts. Required to formalize tenancy agreements in Dubai.', category: 'Housing', related: ['Housing Allowance'] },

@@ -143,7 +143,7 @@ export const zombieOperationalLevers: OperationalLever[] = [
     description: 'Target 45 employees with unused learning budget',
     type: 'communication',
     status: 'pending',
-    impact: 'Recover AED 75K zombie spend',
+    impact: 'Recover AED 75K budget leakage',
   },
   {
     id: '2',

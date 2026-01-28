@@ -232,13 +232,13 @@ export function useDemoInvoices() {
 export function getDemoDeepLinks() {
   return {
     // From Exec Dashboard
-    zombieSpend: '/employer/zombie',
-    claimsQueue: '/employer/claims?status=pending&priority=urgent',
-    spendAnalysis: '/employer/spend',
-    recommendations: '/employer/recommendations',
+    budgetLeakage: '/employer/optimization',
+    opsHub: '/employer/ops',
+    spendForecast: '/employer/spend',
+    actionPlan: '/employer/actions',
     
     // From HR Ops
-    urgentClaim: `/employer/claims?id=${DEMO_CLAIMS_QUEUE[1].id}`, // Most urgent
+    urgentClaim: `/employer/ops?id=${DEMO_CLAIMS_QUEUE[1].id}`, // Most urgent
     policyEditor: `/employer/policies?id=${DEMO_POLICIES[0].id}`,
     
     // From Employee
@@ -270,10 +270,10 @@ export const DEMO_SCRIPT_STEPS = [
   {
     portal: 'employer',
     step: 2,
-    title: 'Zombie Spend Analysis',
-    description: 'Drill into underutilized benefits',
-    path: '/employer/zombie',
-    highlights: ['AED 2.95M zombie spend', 'L&D at 36%', 'Recovery actions'],
+    title: 'Budget Leakage Analysis',
+    description: 'Drill into underutilized benefits and optimization opportunities',
+    path: '/employer/optimization',
+    highlights: ['AED 2.95M recovery opportunity', 'L&D at 36%', 'Recovery actions'],
     duration: '60s',
   },
   {

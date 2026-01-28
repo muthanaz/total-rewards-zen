@@ -157,7 +157,7 @@ const METRIC_DEFINITIONS: MetricDefinition[] = [
     },
     relatedMetrics: ['utilization-rate', 'cost-per-employee', 'budget-variance'],
     usedIn: [
-      { page: 'Zombie Spend', path: '/employer/zombie' },
+      { page: 'Optimization', path: '/employer/optimization' },
       { page: 'Executive Dashboard', path: '/employer' },
     ],
     dataOwner: 'Finance',

@@ -39,12 +39,12 @@ export {
   NarrativeInsights, 
   generateUtilizationInsight,
   generateSpendInsight,
-  generateZombieInsight,
+  generateLeakageInsight,
   generateSatisfactionInsight,
 } from './NarrativeInsights';
 export type { NarrativeInsight } from './NarrativeInsights';
 
-// Zombie Spend and Forecast components
+// Budget Leakage and Forecast components
 export { ZombieSpendCandidates, detectZombieCandidates } from './ZombieSpendCandidates';
 export { ForecastWidget } from './ForecastWidget';
 export { ZombieCategoryDrawer } from './ZombieCategoryDrawer';

@@ -31,7 +31,7 @@ export const UI_ELEMENTS_CONFIG = {
       { key: 'segment_comparison', label: 'Segment Comparison Radar', labelAr: 'رادار مقارنة القطاعات' },
       { key: 'cumulative_spend', label: 'Cumulative Spend Chart', labelAr: 'مخطط الإنفاق التراكمي' },
       { key: 'top_benefits', label: 'Top & Least Used Benefits', labelAr: 'أكثر وأقل المزايا استخداماً' },
-      { key: 'zombie_spend', label: 'Zombie Spend Alert', labelAr: 'تنبيه الإنفاق الخامل' },
+      { key: 'zombie_spend', label: 'Budget Leakage Alert', labelAr: 'تنبيه تسرب الميزانية' },
       { key: 'recommendations', label: 'Recommendations Section', labelAr: 'قسم التوصيات' },
     ],
   },

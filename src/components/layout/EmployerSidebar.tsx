@@ -1,3 +1,13 @@
+/**
+ * Employer Sidebar - Market-Leader Navigation
+ * 
+ * Two distinct modes with no overlap:
+ * - Executive View: Flat, 6 strategic items only
+ * - HR Ops View: Grouped sections (Operations, Governance)
+ * 
+ * Mode toggle is in EmployerLayout header.
+ */
+
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -7,13 +17,11 @@ import {
   BarChart3,
   TrendingUp,
   KanbanSquare,
-  Inbox,
   Users,
   ShieldAlert,
   BookOpen,
   Cable,
   Database,
-  Briefcase,
   Eye,
   PieChart,
   LineChart,
@@ -21,9 +29,13 @@ import {
   TableProperties,
   Megaphone,
   CalendarDays,
+  Workflow,
+  UsersRound,
+  Shield,
+  Target,
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useEmployerViewMode, ViewMode } from '@/contexts/EmployerViewModeContext';
+import { useEmployerViewMode } from '@/contexts/EmployerViewModeContext';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { useActionApprovals } from '@/hooks/useActionApprovals';
 
@@ -56,13 +68,26 @@ interface NavGroup {
 }
 
 // ============================================================================
-// UNIFIED NAVIGATION (3 Groups: Strategy, Operations, Configuration)
+// EXECUTIVE VIEW NAVIGATION (Flat, 6 items - CEO-optimized)
 // ============================================================================
 
-const unifiedNavigation: NavGroup[] = [
+const execNavItems: NavItem[] = [
+  { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/employer', icon: LayoutDashboard },
+  { label: 'Spend & Forecast', labelAr: 'الإنفاق والتوقعات', path: '/employer/spend', icon: BarChart3 },
+  { label: 'Drivers & Segments', labelAr: 'المحركات والشرائح', path: '/employer/segments', icon: PieChart },
+  { label: 'Optimization', labelAr: 'التحسين', path: '/employer/optimization', icon: Target },
+  { label: 'Benchmarks', labelAr: 'المقارنات المعيارية', path: '/employer/benchmarks', icon: LineChart },
+  { label: 'Action Plan', labelAr: 'خطة العمل', path: '/employer/actions', icon: KanbanSquare, showPendingBadge: true },
+];
+
+// ============================================================================
+// HR OPS VIEW NAVIGATION (Grouped sections)
+// ============================================================================
+
+const opsNavigation: NavGroup[] = [
   {
     id: 'operations',
-    label: 'Operations',
+    label: 'OPERATIONS',
     labelAr: 'العمليات',
     items: [
       { label: 'Operations Hub', labelAr: 'مركز العمليات', path: '/employer/ops', icon: LayoutGrid },
@@ -74,40 +99,18 @@ const unifiedNavigation: NavGroup[] = [
     ],
   },
   {
-    id: 'strategy',
-    label: 'Strategy',
-    labelAr: 'الاستراتيجية',
-    items: [
-      // In HR Ops mode, this is labeled "Executive Overview" to differentiate from operational work
-      { label: 'Executive Overview', labelAr: 'نظرة تنفيذية', path: '/employer', icon: LayoutDashboard },
-      { label: 'Investment Analysis', labelAr: 'تحليل الاستثمار', path: '/employer/spend', icon: BarChart3 },
-      { label: 'Segments', labelAr: 'الشرائح', path: '/employer/segments', icon: PieChart },
-      { label: 'ROI & Savings', labelAr: 'العائد والتوفير', path: '/employer/optimization', icon: TrendingUp },
-      { label: 'Benchmarks', labelAr: 'المقارنات المعيارية', path: '/employer/benchmarks', icon: LineChart },
-      { label: 'Action Plan', labelAr: 'خطة العمل', path: '/employer/actions', icon: KanbanSquare, showPendingBadge: true },
-    ],
-  },
-  {
-    id: 'system-governance',
-    label: 'System & Governance',
-    labelAr: 'النظام والحوكمة',
+    id: 'governance',
+    label: 'GOVERNANCE',
+    labelAr: 'الحوكمة',
     items: [
       { label: 'Policy Management', labelAr: 'إدارة السياسات', path: '/employer/policies', icon: BookOpen },
+      { label: 'Workflows', labelAr: 'سير العمل', path: '/employer/settings/workflows', icon: Workflow },
+      { label: 'Approver Groups', labelAr: 'مجموعات الموافقة', path: '/employer/settings/approver-groups', icon: UsersRound },
       { label: 'Integrations', labelAr: 'التكاملات', path: '/employer/integrations', icon: Cable },
-      { label: 'Data Quality', labelAr: 'جودة البيانات', path: '/employer/data-quality', icon: Database },
-      { label: 'Audit Logs', labelAr: 'سجلات التدقيق', path: '/employer/audit', icon: ShieldAlert },
+      { label: 'Data Quality & Controls', labelAr: 'جودة البيانات والضوابط', path: '/employer/data-quality', icon: Database },
+      { label: 'Security Audit', labelAr: 'التدقيق الأمني', path: '/employer/audit', icon: Shield },
     ],
   },
-];
-
-// CEO-OPTIMIZED EXECUTIVE NAVIGATION (6 flat items - no collapsible sections)
-const execNavItems: NavItem[] = [
-  { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/employer', icon: LayoutDashboard },
-  { label: 'Investment Analysis', labelAr: 'تحليل الاستثمار', path: '/employer/spend', icon: BarChart3 },
-  { label: 'Segments', labelAr: 'الشرائح', path: '/employer/segments', icon: PieChart },
-  { label: 'ROI & Savings', labelAr: 'العائد والتوفير', path: '/employer/optimization', icon: TrendingUp },
-  { label: 'Benchmarks', labelAr: 'المقارنات المعيارية', path: '/employer/benchmarks', icon: LineChart },
-  { label: 'Action Plan', labelAr: 'خطة العمل', path: '/employer/actions', icon: KanbanSquare, showPendingBadge: true },
 ];
 
 // ============================================================================
@@ -148,59 +151,13 @@ function ExecNavItem({ item, pendingCount }: { item: NavItem; pendingCount: numb
 }
 
 // ============================================================================
-// VIEW MODE TOGGLE COMPONENT
+// EXECUTIVE FOOTER
 // ============================================================================
 
-function ViewModeToggle() {
-  const navigate = useNavigate();
-  const { direction } = useLanguage();
-  const { viewMode, setViewMode, isExecutive } = useEmployerViewMode();
-  const isRTL = direction === 'rtl';
-
-  const handleModeChange = (mode: ViewMode) => {
-    setViewMode(mode);
-    if (mode === 'operational') {
-      navigate('/employer/claims');
-    } else {
-      navigate('/employer');
-    }
-  };
-
-  return (
-    <div className="mt-3 p-1 bg-sidebar-accent/50 rounded-xl">
-      <div className="grid grid-cols-2 gap-1">
-        <button
-          onClick={() => handleModeChange('operational')}
-          className={cn(
-            'flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200',
-            !isExecutive
-              ? 'bg-sidebar-background text-sidebar-foreground shadow-sm'
-              : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
-          )}
-        >
-          <Briefcase className="w-3.5 h-3.5" />
-          <span>HR Ops</span>
-        </button>
-        <button
-          onClick={() => handleModeChange('executive')}
-          className={cn(
-            'flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200',
-            isExecutive
-              ? 'bg-sidebar-background text-sidebar-foreground shadow-sm'
-              : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
-          )}
-        >
-          <Eye className="w-3.5 h-3.5" />
-          <span>Executive</span>
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// EXECUTIVE FOOTER (Clean - export is in dashboard header)
-// ============================================================================
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { LogOut } from 'lucide-react';
+import { SidebarSection, SidebarItem } from './sidebar';
 
 function ExecSidebarFooter() {
   const navigate = useNavigate();
@@ -236,11 +193,6 @@ function ExecSidebarFooter() {
 // MAIN COMPONENT
 // ============================================================================
 
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
-import { SidebarSection, SidebarItem } from './sidebar';
-
 export function EmployerSidebar() {
   const { flags } = useFeatureFlags();
   const { isExecutive } = useEmployerViewMode();
@@ -255,9 +207,9 @@ export function EmployerSidebar() {
     // Always expand operations when on ops-related pages
     const opsPages = ['/employer/settlements', '/employer/reports', '/employer/employees', '/employer/ops', '/employer/communications', '/employer/calendar'];
     if (opsPages.some(p => path.startsWith(p))) {
-      return unifiedNavigation.map(s => s.id);
+      return ['operations', 'governance'];
     }
-    return unifiedNavigation.map(s => s.id);
+    return ['operations', 'governance'];
   };
 
   const [expandedSections, setExpandedSections] = useState<string[]>(getDefaultExpandedSections);
@@ -269,10 +221,14 @@ export function EmployerSidebar() {
     if (opsPages.some(p => path.startsWith(p))) {
       setExpandedSections(prev => prev.includes('operations') ? prev : [...prev, 'operations']);
     }
+    const govPages = ['/employer/policies', '/employer/integrations', '/employer/data-quality', '/employer/audit', '/employer/settings'];
+    if (govPages.some(p => path.startsWith(p))) {
+      setExpandedSections(prev => prev.includes('governance') ? prev : [...prev, 'governance']);
+    }
   }, [location.pathname]);
 
   const visibleNavigation = useMemo(() => {
-    return unifiedNavigation.filter((section) => {
+    return opsNavigation.filter((section) => {
       if (section.featureFlag) {
         return flags[section.featureFlag];
       }
@@ -290,7 +246,8 @@ export function EmployerSidebar() {
 
   return (
     <SidebarShell>
-      <SidebarHeader extraContent={<ViewModeToggle />} />
+      {/* Mode toggle is now in EmployerLayout header - sidebar only shows navigation */}
+      <SidebarHeader />
 
       <SidebarNav>
         {isExecutive ? (
@@ -305,7 +262,7 @@ export function EmployerSidebar() {
             ))}
           </div>
         ) : (
-          // OPERATIONAL MODE: Collapsible sections (Strategy, Operations, System & Governance)
+          // HR OPS MODE: Collapsible sections (Operations, Governance)
           visibleNavigation.map((group) => (
             <SidebarSection
               key={group.id}
@@ -333,7 +290,7 @@ export function EmployerSidebar() {
         )}
       </SidebarNav>
 
-      {/* Executive mode gets special footer with Board Pack export */}
+      {/* Executive mode gets special footer */}
       {isExecutive ? <ExecSidebarFooter /> : <SidebarFooter />}
     </SidebarShell>
   );

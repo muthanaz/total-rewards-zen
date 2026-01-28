@@ -470,7 +470,7 @@ function generateInsightsForSegment(dimension: SegmentDimension, value: SegmentV
       title: 'Launch Awareness Campaign',
       type: 'launch_playbook',
       playbookId: 'awareness_campaign',
-      routePath: '/employer/zombie',
+      routePath: '/employer/optimization',
       routeParams: { prefill_segment: value.id, prefill_playbook: 'awareness_campaign' },
     });
   }
@@ -478,7 +478,7 @@ function generateInsightsForSegment(dimension: SegmentDimension, value: SegmentV
   // High unused entitlement
   if (value.unusedEntitlement > 100000) {
     insights.push({
-      id: 'high-zombie',
+      id: 'high-leakage',
       title: 'Significant unrealized value',
       description: `${formatCurrencyAED(value.unusedEntitlement)} in unused entitlements`,
       metric: formatCurrencyAED(value.unusedEntitlement),
@@ -486,10 +486,10 @@ function generateInsightsForSegment(dimension: SegmentDimension, value: SegmentV
       drivers: value.topCategories.slice(0, 2).map(c => `${c} underutilization`),
     });
     suggestedActions.push({
-      id: 'review-zombie',
+      id: 'review-leakage',
       title: 'Review Budget Leakage',
-      type: 'zombie_review',
-      routePath: '/employer/zombie',
+      type: 'zombie_review', // Keep type for compatibility
+      routePath: '/employer/optimization',
       routeParams: { filter_segment: value.id },
     });
   }
@@ -533,7 +533,7 @@ function generateInsightsForSegment(dimension: SegmentDimension, value: SegmentV
       title: 'Launch Friction Fix',
       type: 'launch_playbook',
       playbookId: 'friction_fix',
-      routePath: '/employer/zombie',
+      routePath: '/employer/optimization',
       routeParams: { prefill_playbook: 'friction_fix' },
     });
   }

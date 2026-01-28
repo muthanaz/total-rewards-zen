@@ -61,7 +61,7 @@ const impactMappings: Record<string, { insight: string; icon: React.ElementType;
     { insight: 'Coverage Gaps', icon: Target, confidence: 'medium' },
   ],
   'claims': [
-    { insight: 'Zombie Spend Accuracy', icon: Ghost, confidence: 'high' },
+    { insight: 'Budget Leakage Accuracy', icon: Ghost, confidence: 'high' },
     { insight: 'Processing Time', icon: Clock, confidence: 'high' },
     { insight: 'Policy Clarity Signals', icon: FileText, confidence: 'medium' },
   ],

@@ -192,7 +192,7 @@ function DemoControlDialog({
             <div className="font-semibold">47 (8 urgent)</div>
           </div>
           <div className="rounded-lg border p-3">
-            <div className="text-muted-foreground">Zombie Spend</div>
+            <div className="text-muted-foreground">Budget Leakage</div>
             <div className="font-semibold">AED 2.95M</div>
           </div>
         </div>
