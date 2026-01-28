@@ -28,7 +28,9 @@ import { AdminLayout } from "./components/layout/AdminLayout";
 import { VendorLayout } from "./components/layout/VendorLayout";
 
 import EmployeeDashboard from "./pages/employee/Dashboard";
-import RequestsPage from "./pages/employee/Requests";
+import ClaimsListPage from "./pages/employee/ClaimsList";
+import ClaimsNewWizard from "./pages/employee/ClaimsNew";
+import ClaimDetailPage from "./pages/employee/ClaimDetail";
 import HousingPage from "./pages/employee/Housing";
 import SchoolingPage from "./pages/employee/Schooling";
 import HealthPage from "./pages/employee/Health";
@@ -221,9 +223,11 @@ function AppRoutes() {
         <Route path="money-planner" element={<MoneyPlannerPage />} />
         <Route path="benefits" element={<BenefitsPage />} />
 
-        {/* NEW: Requests */}
-        <Route path="requests" element={<RequestsPage />} />
-
+        {/* Requests/Claims - new routes */}
+        <Route path="requests" element={<ClaimsListPage />} />
+        <Route path="requests/new" element={<ClaimsNewWizard />} />
+        <Route path="requests/:id" element={<ClaimDetailPage />} />
+        
         <Route path="housing" element={<HousingPage />} />
         <Route path="schooling" element={<SchoolingPage />} />
         <Route path="health" element={<HealthPage />} />
