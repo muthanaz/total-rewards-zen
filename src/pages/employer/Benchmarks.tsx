@@ -1,81 +1,220 @@
+/**
+ * Benchmarks Page
+ * 
+ * Executive-ready benchmarking module with peer group definitions,
+ * percentile bands, and gap explanations.
+ */
+
+import { useState } from 'react';
 import { ExecPageHeader } from '@/components/employer/ExecPageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, TrendingUp, Building2, Users } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { 
+  BarChart3, 
+  TrendingUp, 
+  TrendingDown,
+  Building2,
+  Activity,
+  Timer,
+  Download,
+  RefreshCw,
+  Info
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { 
+  BenchmarkCategorySection,
+  BenchmarkMetadataCard,
+  BENCHMARK_CATEGORIES,
+  PEER_GROUP_DEFAULT,
+  DATA_SOURCE_DEFAULT
+} from '@/components/employer/benchmarks';
 
 export default function Benchmarks() {
+  const [activeTab, setActiveTab] = useState('all');
+
+  // Calculate overall benchmark position
+  const allMetrics = BENCHMARK_CATEGORIES.flatMap(c => c.metrics);
+  const avgPercentile = Math.round(
+    allMetrics.reduce((sum, m) => sum + m.yourPercentile, 0) / allMetrics.length
+  );
+  
+  const metricsAboveMedian = allMetrics.filter(m => m.yourPercentile > 50).length;
+  const metricsBelowMedian = allMetrics.filter(m => m.yourPercentile <= 50).length;
+
+  // Filter categories by tab
+  const filteredCategories = activeTab === 'all' 
+    ? BENCHMARK_CATEGORIES 
+    : BENCHMARK_CATEGORIES.filter(c => c.id === activeTab);
+
   return (
     <div className="space-y-6">
       <ExecPageHeader
         title="Benchmarks"
         titleAr="المقارنات المعيارية"
-        description="Compare your benefits performance against industry standards"
-        descriptionAr="قارن أداء مزاياك بمعايير الصناعة"
+        description="Compare your benefits performance against industry peers with confidence indicators"
+        descriptionAr="قارن أداء مزاياك بأقرانك في الصناعة مع مؤشرات الثقة"
       />
 
-      <div className="grid gap-6 md:grid-cols-3">
+      {/* Summary Header */}
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Industry Avg Spend</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-accent" />
+              Overall Position
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">AED 42,500</div>
-            <p className="text-xs text-muted-foreground">
-              Per employee annually
-            </p>
-            <div className="mt-2 flex items-center text-xs text-success">
-              <TrendingUp className="mr-1 h-3 w-3" />
-              You're 12% below average (cost efficient)
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-bold tabular-nums">P{avgPercentile}</span>
+              <Badge 
+                variant="outline" 
+                className={cn(
+                  "text-[10px]",
+                  avgPercentile > 50 
+                    ? 'bg-success/10 text-success border-success/30'
+                    : 'bg-warning/10 text-warning border-warning/30'
+                )}
+              >
+                {avgPercentile > 50 ? 'Above Median' : 'Below Median'}
+              </Badge>
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Average across {allMetrics.length} metrics
+            </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Adoption Rate Benchmark</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-success" />
+              Above Median
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">68%</div>
-            <p className="text-xs text-muted-foreground">
-              Industry average participation
-            </p>
-            <div className="mt-2 flex items-center text-xs text-warning">
-              Your rate: 54% (room for improvement)
+            <div className="text-2xl font-bold tabular-nums text-success">
+              {metricsAboveMedian}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Metrics performing well
+            </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Benefits Portfolio Score</CardTitle>
-            <LineChart className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <TrendingDown className="h-4 w-4 text-warning" />
+              Below Median
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">B+</div>
-            <p className="text-xs text-muted-foreground">
-              Compared to similar companies
-            </p>
-            <div className="mt-2 text-xs text-muted-foreground">
-              Top quartile in Healthcare coverage
+            <div className="text-2xl font-bold tabular-nums text-warning">
+              {metricsBelowMedian}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Improvement opportunities
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-accent" />
+              Peer Group
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg font-bold">{PEER_GROUP_DEFAULT.sampleSize}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {PEER_GROUP_DEFAULT.industry} • {PEER_GROUP_DEFAULT.region}
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <LineChart className="h-5 w-5" />
-            Coming Soon: Full Benchmark Analysis
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Detailed industry comparisons, peer group analysis, and competitive positioning insights 
-            will be available here. This includes salary benchmarks, benefits competitiveness scores, 
-            and regional market data.
-          </p>
+      {/* Global Metadata (Compact) */}
+      <Card className="bg-muted/30 border-border/50">
+        <CardContent className="py-3">
+          <BenchmarkMetadataCard 
+            peerGroup={PEER_GROUP_DEFAULT}
+            dataSource={DATA_SOURCE_DEFAULT}
+            confidence={{
+              level: 'high',
+              coveragePercent: 85,
+              completenessPercent: 78,
+              reason: 'Aggregated confidence across all benchmark categories',
+            }}
+            compact
+          />
+        </CardContent>
+      </Card>
+
+      {/* Category Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="flex items-center justify-between">
+          <TabsList>
+            <TabsTrigger value="all" className="gap-1.5">
+              <BarChart3 className="h-3.5 w-3.5" />
+              All Categories
+            </TabsTrigger>
+            <TabsTrigger value="total-rewards" className="gap-1.5">
+              <Activity className="h-3.5 w-3.5" />
+              Total Rewards
+            </TabsTrigger>
+            <TabsTrigger value="utilization" className="gap-1.5">
+              <TrendingUp className="h-3.5 w-3.5" />
+              Utilization
+            </TabsTrigger>
+            <TabsTrigger value="operational" className="gap-1.5">
+              <Timer className="h-3.5 w-3.5" />
+              Operational
+            </TabsTrigger>
+          </TabsList>
+
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm">
+              <RefreshCw className="h-3.5 w-3.5 mr-1" />
+              Refresh Data
+            </Button>
+            <Button variant="outline" size="sm">
+              <Download className="h-3.5 w-3.5 mr-1" />
+              Export Report
+            </Button>
+          </div>
+        </div>
+
+        <TabsContent value={activeTab} className="mt-4 space-y-4">
+          {filteredCategories.map((category, index) => (
+            <BenchmarkCategorySection 
+              key={category.id}
+              category={category}
+              defaultExpanded={index === 0}
+            />
+          ))}
+        </TabsContent>
+      </Tabs>
+
+      {/* Methodology Note */}
+      <Card className="bg-muted/30 border-border/50">
+        <CardContent className="py-4">
+          <div className="flex items-start gap-3">
+            <Info className="h-5 w-5 text-muted-foreground shrink-0" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Benchmark Methodology</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                All benchmarks are derived from the {DATA_SOURCE_DEFAULT.name} conducted by {DATA_SOURCE_DEFAULT.provider}. 
+                Data represents {PEER_GROUP_DEFAULT.sampleSize} organizations in the {PEER_GROUP_DEFAULT.industry} sector 
+                across {PEER_GROUP_DEFAULT.region} ({PEER_GROUP_DEFAULT.countries.join(', ')}). 
+                Percentile calculations use weighted averages normalized for company size ({PEER_GROUP_DEFAULT.headcountRange}). 
+                Click any metric card to see detailed gap analysis and recommended actions.
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
