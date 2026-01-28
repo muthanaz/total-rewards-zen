@@ -2,21 +2,18 @@
  * Operations Hub Page
  * 
  * Primary operational hub for HR Ops users combining:
- * - Backlog: Pending claims queue
- * - SLA Performance: Processing metrics
- * - Throughput: Completion rates
- * - Exceptions: Escalations and anomalies
- * - Payments Pipeline: Settlement lifecycle
- * 
- * NOTE: This is the "Operations Hub" (replaces deprecated "Workbench" terminology).
+ * - My Team Queue with SLA risk sorting (default)
+ * - Comprehensive filters (Type, Category, Amount, SLA, Docs, Assigned)
+ * - Inline actions (Approve, Reject, Request Docs, Assign, View Timeline)
+ * - Timeline drawer showing request_events audit trail
  */
 
-import { UnifiedWorkbench } from '@/components/employer/UnifiedWorkbench';
+import { OperationsHub } from '@/components/employer/opsHub';
 
 export default function OpsPage() {
   return (
     <div className="animate-fade-in">
-      <UnifiedWorkbench />
+      <OperationsHub />
     </div>
   );
 }
