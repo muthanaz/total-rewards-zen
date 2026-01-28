@@ -57,10 +57,10 @@ const confidenceConfig: Record<Confidence, { label: string; color: string; bgCol
 };
 
 const sourceConfig: Record<SourceType, { label: string; path: string }> = {
-  zombie_spend: { label: 'Zombie Spend', path: '/employer/zombie-spend' },
-  segments: { label: 'Employee Segments', path: '/employer/segments' },
-  claims: { label: 'Claims Analysis', path: '/employer/claims' },
-  policies: { label: 'Policy Insights', path: '/employer/policy-insights' },
+  zombie_spend: { label: 'Budget Leakage', path: '/employer/optimization' },
+  segments: { label: 'Drivers & Segments', path: '/employer/segments' },
+  claims: { label: 'Operations Hub', path: '/employer/ops' },
+  policies: { label: 'Policy Insights', path: '/employer/policies' },
   survey: { label: 'Employee Survey', path: '/employer/dashboard' },
   manual: { label: 'Manual', path: '' },
 };

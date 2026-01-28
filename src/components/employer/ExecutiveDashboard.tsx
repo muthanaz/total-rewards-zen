@@ -398,9 +398,9 @@ export function ExecutiveDashboard() {
           }}
           metric={drilldownMetric}
           relatedLinks={[
-            { label: 'View Spend Analysis', href: '/employer/spend' },
-            { label: 'View Unrealized Value', href: '/employer/zombie' },
-            { label: 'View Segments', href: '/employer/segments' },
+            { label: 'View Spend & Forecast', href: '/employer/spend' },
+            { label: 'View Optimization', href: '/employer/optimization' },
+            { label: 'View Drivers & Segments', href: '/employer/segments' },
           ]}
         />
       </div>

@@ -37,13 +37,13 @@ interface TopDriversListProps {
 
 const DRIVER_ROUTES: Record<DriverType, string> = {
   spend: '/employer/spend',
-  waste: '/employer/zombie',
+  waste: '/employer/optimization',
   segment: '/employer/segments',
 };
 
 const DRIVER_LABELS: Record<DriverType, string> = {
   spend: 'Spend',
-  waste: 'Waste',
+  waste: 'Leakage',
   segment: 'Segment',
 };
 

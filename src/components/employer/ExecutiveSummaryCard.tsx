@@ -140,10 +140,10 @@ export function ExecutiveSummaryCard({ className, variant = 'full' }: ExecutiveS
               <p className="text-xs text-muted-foreground">{t(`${utilizationGap}% below target`, `${utilizationGap}% أقل من الهدف`)}</p>
             </div>
             
-            {/* Zombie Spend */}
+            {/* Budget Leakage */}
             <div className={cn("text-center p-4 rounded-xl bg-background/50 border border-border/40", isRTL && "text-right")}>
               <AlertTriangle className="w-8 h-8 text-warning mx-auto mb-2" />
-              <p className="text-xs text-muted-foreground mb-1">{t('Unused Spend', 'الإنفاق غير المستخدم')}</p>
+              <p className="text-xs text-muted-foreground mb-1">{t('Budget Leakage', 'تسرب الميزانية')}</p>
               <div className="text-2xl font-bold text-warning"><Currency amount={metrics.zombieSpend} /></div>
               <p className="text-xs text-muted-foreground">{t('Recovery opportunity', 'فرصة استرداد')}</p>
             </div>
@@ -279,7 +279,7 @@ export function ExecutiveSummaryCard({ className, variant = 'full' }: ExecutiveS
           <Button 
             variant="outline" 
             className="flex-1"
-            onClick={() => navigate('/employer/zombie')}
+            onClick={() => navigate('/employer/optimization')}
           >
             {t('View Opportunities', 'عرض الفرص')}
           </Button>

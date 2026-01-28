@@ -262,7 +262,7 @@ export function generateSpendRecommendedActions(data: {
       priority: 'high',
       icon: AlertCircle,
       deepLink: {
-        path: '/employer/zombie-spend',
+        path: '/employer/optimization',
         params: { action: 'playbook' },
       },
     });

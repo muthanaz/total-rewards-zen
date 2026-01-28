@@ -83,7 +83,7 @@ const DEFAULT_DECISIONS: TopDecision[] = [
     impactRange: { min: 840000, max: 1260000, unit: 'currency' },
     confidence: 'high',
     evidenceLinks: [
-      { label: 'Unrealized Value breakdown', path: '/employer/zombie?category=housing' },
+      { label: 'Unrealized Value breakdown', path: '/employer/optimization?category=housing' },
       { label: 'Housing policy', path: '/employer/policies' },
     ],
     category: 'spend',

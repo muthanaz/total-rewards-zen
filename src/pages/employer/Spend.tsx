@@ -1,5 +1,5 @@
 /**
- * Investment Analysis Page (Spend & Utilization)
+ * Spend & Forecast Page
  * 
  * CEO/CFO-grade layout following leading practices:
  * 1. 4 Core KPIs (Budget vs Spend, Usage Rate, Unutilized Budget, YoY Change)
@@ -8,7 +8,7 @@
  * 
  * Uses unified metrics from executiveMetricsConstants for cross-page consistency.
  *
- * @module Spend
+ * @module SpendForecast
  */
 
 import { useState, useMemo } from 'react';
@@ -317,7 +317,7 @@ export function Spend() {
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
       <PageLayout
-        title="Investment Analysis"
+        title="Spend & Forecast"
         description={`FY ${ORG_BASELINE.fiscalYear} · ${formatInteger(ORG_BASELINE.employeeCount)} employees · AED ${(INVESTMENT_METRICS.costPerEmployee / 1000).toFixed(1)}K per head`}
         icon={DollarSign}
         iconClassName="bg-primary/10 text-primary"
@@ -392,7 +392,7 @@ export function Spend() {
                 </div>
               </div>
               <Button 
-                onClick={() => window.location.href = '/employer/zombie'}
+                onClick={() => window.location.href = '/employer/optimization'}
                 className="gap-2"
               >
                 View Opportunities

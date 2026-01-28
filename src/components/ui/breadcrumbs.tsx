@@ -23,12 +23,28 @@ const routeLabels: Record<string, string> = {
   documents: 'HR Documents',
   'gov-connect': 'Gov Connect',
   profile: 'Smart Profile',
-  spend: 'Spend Analytics',
+  // Executive View pages
+  spend: 'Spend & Forecast',
+  segments: 'Drivers & Segments',
+  optimization: 'Optimization',
+  benchmarks: 'Benchmarks',
+  actions: 'Action Plan',
+  // HR Ops View pages
+  ops: 'Operations Hub',
+  settlements: 'Settlements',
+  communications: 'Communications',
+  calendar: 'Calendar',
+  employees: 'Employee Directory',
+  reports: 'Reports',
+  // Governance pages
+  policies: 'Policy Management',
+  integrations: 'Integrations',
+  'data-quality': 'Data Quality & Controls',
+  audit: 'Security Audit',
+  // Legacy/fallback
   zombie: 'Budget Leakage',
-  segments: 'Employee Segments',
-  claims: 'Claims Management',
-  policies: 'Policies',
-  recommendations: 'Recommendations',
+  claims: 'Operations Hub',
+  recommendations: 'Action Plan',
 };
 
 // Root pages where breadcrumbs should be hidden
@@ -38,6 +54,8 @@ const EMPLOYER_ROOT_PAGES = [
   '/employer/segments',
   '/employer/optimization',
   '/employer/actions',
+  '/employer/ops',
+  '/employer/benchmarks',
 ];
 
 export function Breadcrumbs() {

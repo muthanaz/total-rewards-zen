@@ -3,6 +3,8 @@
  * 
  * Quick navigation and actions across the entire platform.
  * Supports role-based commands and bilingual search.
+ * 
+ * Employer mode now has 8 default actions per requirements.
  */
 
 import * as React from 'react';
@@ -28,6 +30,13 @@ import {
   Bell,
   HelpCircle,
   LogOut,
+  BarChart3,
+  PieChart,
+  Target,
+  LineChart,
+  KanbanSquare,
+  LayoutGrid,
+  Banknote,
 } from 'lucide-react';
 import {
   CommandDialog,
@@ -42,7 +51,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 
-interface CommandItem {
+interface CommandItemData {
   id: string;
   label: string;
   labelAr: string;
@@ -53,7 +62,7 @@ interface CommandItem {
   roles?: string[];
 }
 
-const EMPLOYEE_COMMANDS: CommandItem[] = [
+const EMPLOYEE_COMMANDS: CommandItemData[] = [
   { id: 'dashboard', label: 'Dashboard', labelAr: 'لوحة التحكم', icon: LayoutDashboard, path: '/employee', keywords: ['home', 'main'] },
   { id: 'my-actions', label: 'My Actions', labelAr: 'إجراءاتي', icon: Bell, path: '/employee/my-actions', keywords: ['tasks', 'todo'] },
   { id: 'benefits', label: 'Benefits Overview', labelAr: 'نظرة عامة على المزايا', icon: Gift, path: '/employee/benefits', keywords: ['allowances', 'perks'] },
@@ -70,16 +79,19 @@ const EMPLOYEE_COMMANDS: CommandItem[] = [
   { id: 'profile', label: 'My Profile', labelAr: 'ملفي الشخصي', icon: Users, path: '/employee/profile', keywords: ['account', 'settings', 'personal'] },
 ];
 
-const EMPLOYER_COMMANDS: CommandItem[] = [
-  { id: 'emp-dashboard', label: 'Dashboard', labelAr: 'لوحة التحكم', icon: LayoutDashboard, path: '/employer', keywords: ['home', 'main'] },
-  { id: 'emp-claims', label: 'Claims Management', labelAr: 'إدارة المطالبات', icon: Receipt, path: '/employer/claims', keywords: ['requests', 'approvals', 'queue'] },
-  { id: 'emp-policies', label: 'Policies', labelAr: 'السياسات', icon: Shield, path: '/employer/policies', keywords: ['rules', 'benefits', 'governance'] },
-  { id: 'emp-analytics', label: 'Spend Analytics', labelAr: 'تحليلات الإنفاق', icon: ChartBar, path: '/employer/spend', keywords: ['budget', 'costs', 'reports'] },
-  { id: 'emp-segments', label: 'Employee Segments', labelAr: 'شرائح الموظفين', icon: Users, path: '/employer/segments', keywords: ['groups', 'cohorts'] },
-  { id: 'emp-integrations', label: 'Integrations', labelAr: 'التكاملات', icon: Settings, path: '/employer/integrations', keywords: ['hris', 'payroll', 'sync'] },
+// 8 Default Employer Commands (per requirements)
+const EMPLOYER_COMMANDS: CommandItemData[] = [
+  { id: 'emp-dashboard', label: 'Executive Dashboard', labelAr: 'لوحة التحكم التنفيذية', icon: LayoutDashboard, path: '/employer', keywords: ['home', 'main', 'overview'] },
+  { id: 'emp-ops', label: 'Operations Hub', labelAr: 'مركز العمليات', icon: LayoutGrid, path: '/employer/ops', keywords: ['queue', 'claims', 'requests', 'process'] },
+  { id: 'emp-spend', label: 'Spend & Forecast', labelAr: 'الإنفاق والتوقعات', icon: BarChart3, path: '/employer/spend', keywords: ['budget', 'costs', 'analytics', 'investment'] },
+  { id: 'emp-segments', label: 'Drivers & Segments', labelAr: 'المحركات والشرائح', icon: PieChart, path: '/employer/segments', keywords: ['groups', 'cohorts', 'employees', 'people'] },
+  { id: 'emp-optimization', label: 'Optimization', labelAr: 'التحسين', icon: Target, path: '/employer/optimization', keywords: ['roi', 'savings', 'leakage', 'recovery'] },
+  { id: 'emp-actions', label: 'Action Plan', labelAr: 'خطة العمل', icon: KanbanSquare, path: '/employer/actions', keywords: ['tasks', 'recommendations', 'todo'] },
+  { id: 'emp-settlements', label: 'Settlements', labelAr: 'التسويات', icon: Banknote, path: '/employer/settlements', keywords: ['payments', 'payroll', 'batch'] },
+  { id: 'emp-policies', label: 'Policy Management', labelAr: 'إدارة السياسات', icon: Shield, path: '/employer/policies', keywords: ['rules', 'benefits', 'governance'] },
 ];
 
-const ADMIN_COMMANDS: CommandItem[] = [
+const ADMIN_COMMANDS: CommandItemData[] = [
   { id: 'admin-dashboard', label: 'Dashboard', labelAr: 'لوحة التحكم', icon: LayoutDashboard, path: '/admin', keywords: ['home', 'main'] },
   { id: 'admin-orgs', label: 'Organizations', labelAr: 'المنظمات', icon: Building2, path: '/admin/organizations', keywords: ['clients', 'companies'] },
   { id: 'admin-users', label: 'Users & Roles', labelAr: 'المستخدمون والأدوار', icon: Users, path: '/admin/users', keywords: ['accounts', 'permissions'] },
@@ -98,7 +110,6 @@ export function CommandPalette() {
 
   // Determine user role for filtering commands
   const userRole = React.useMemo(() => {
-    // This would come from user profile in real app
     const path = window.location.pathname;
     if (path.startsWith('/admin')) return 'admin';
     if (path.startsWith('/employer')) return 'employer';
@@ -130,7 +141,7 @@ export function CommandPalette() {
     return () => document.removeEventListener('keydown', down);
   }, []);
 
-  const handleSelect = (item: CommandItem) => {
+  const handleSelect = (item: CommandItemData) => {
     setOpen(false);
     if (item.path) {
       navigate(item.path);
@@ -175,7 +186,6 @@ export function CommandPalette() {
             value="help support"
             onSelect={() => {
               setOpen(false);
-              // Could open help modal
             }}
             className="gap-3"
           >
@@ -198,8 +208,6 @@ export function CommandPalette() {
 
 // Hook to open command palette programmatically
 export function useCommandPalette() {
-  const [, forceUpdate] = React.useState({});
-  
   const open = React.useCallback(() => {
     // Dispatch keyboard event to open palette
     const event = new KeyboardEvent('keydown', {
