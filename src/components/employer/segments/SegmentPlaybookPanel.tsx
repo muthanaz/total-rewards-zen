@@ -310,7 +310,7 @@ export function SegmentPlaybookPanel({
                       </p>
                       
                       {/* Actionable Metadata Row */}
-                      <div className="flex items-center gap-3 text-[10px] flex-wrap">
+                      <div className="flex items-center gap-2 text-[10px] flex-wrap">
                         {/* Lever Type */}
                         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted">
                           <span className="text-muted-foreground">Lever:</span>
@@ -329,9 +329,9 @@ export function SegmentPlaybookPanel({
                           <span className={cn('font-medium', effort.className)}>{effort.label}</span>
                         </span>
                         
-                        {/* Impact + Confidence */}
+                        {/* Impact Type (Financial vs Experience) + Confidence */}
                         <Badge variant="outline" className={cn('text-[10px] px-1.5 py-0', confidence.bgClass)}>
-                          {impactConfig[intervention.impactRange]} impact · {confidence.label} conf.
+                          {intervention.impactRange === 'large' ? 'Financial' : 'Experience'} · {impactConfig[intervention.impactRange]} · {confidence.label} conf.
                         </Badge>
                       </div>
                     </div>
