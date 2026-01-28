@@ -1,76 +1,114 @@
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Banknote, 
+  Plus, 
   Download, 
-  CheckCircle2, 
-  Clock, 
-  FileText,
-  ArrowRight,
+  RefreshCw,
+  FileSpreadsheet,
+  AlertTriangle,
 } from 'lucide-react';
-import { cn, formatCurrencyAED } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
-
-const settlementBatches = [
-  {
-    id: 'BATCH-2026-001',
-    period: 'Jan 2026',
-    status: 'ready',
-    claimsCount: 47,
-    totalAmount: 284500,
-    createdAt: '2026-01-25',
-  },
-  {
-    id: 'BATCH-2026-002',
-    period: 'Jan 2026 (Week 4)',
-    status: 'pending_review',
-    claimsCount: 23,
-    totalAmount: 156200,
-    createdAt: '2026-01-27',
-  },
-  {
-    id: 'BATCH-2025-052',
-    period: 'Dec 2025',
-    status: 'exported',
-    claimsCount: 89,
-    totalAmount: 512800,
-    createdAt: '2025-12-31',
-  },
-  {
-    id: 'BATCH-2025-051',
-    period: 'Dec 2025',
-    status: 'paid',
-    claimsCount: 112,
-    totalAmount: 687400,
-    createdAt: '2025-12-15',
-  },
-  {
-    id: 'BATCH-2025-050',
-    period: 'Nov 2025',
-    status: 'paid',
-    claimsCount: 95,
-    totalAmount: 543200,
-    createdAt: '2025-11-30',
-  },
-];
-
-const statusConfig = {
-  ready: { label: 'Ready to Export', color: 'bg-success/10 text-success border-success/30', icon: CheckCircle2, step: 1 },
-  pending_review: { label: 'Pending Review', color: 'bg-warning/10 text-warning border-warning/30', icon: Clock, step: 0 },
-  exported: { label: 'Exported', color: 'bg-blue-500/10 text-blue-600 border-blue-500/30', icon: FileText, step: 2 },
-  paid: { label: 'Paid', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30', icon: CheckCircle2, step: 3 },
-};
-
-const statusSteps = [
-  { key: 'ready', label: 'Ready' },
-  { key: 'exported', label: 'Exported' },
-  { key: 'paid', label: 'Paid' },
-];
+import { toast } from 'sonner';
+import {
+  SettlementStats,
+  BatchTable,
+  BatchFiltersComponent,
+  ExceptionsPanel,
+  ReconciliationPanel,
+  CreateBatchModal,
+  MarkPaidModal,
+  mockBatches,
+  mockPendingClaims,
+  mockExceptions,
+  getLifecycleStats,
+} from '@/components/employer/settlements';
+import type { SettlementBatch, BatchFilters } from '@/components/employer/settlements';
 
 export default function SettlementsPage() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
+
+  const [activeTab, setActiveTab] = useState<'batches' | 'exceptions'>('batches');
+  const [filters, setFilters] = useState<BatchFilters>({ status: 'all', reconciliation: 'all' });
+  const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>([]);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [markPaidModalOpen, setMarkPaidModalOpen] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState<SettlementBatch | null>(null);
+
+  const stats = useMemo(() => getLifecycleStats(mockBatches), []);
+
+  const filteredBatches = useMemo(() => {
+    return mockBatches.filter(batch => {
+      if (filters.status && filters.status !== 'all' && batch.status !== filters.status) {
+        return false;
+      }
+      if (filters.reconciliation && filters.reconciliation !== 'all' && 
+          batch.reconciliation.status !== filters.reconciliation) {
+        return false;
+      }
+      if (filters.search) {
+        const search = filters.search.toLowerCase();
+        return (
+          batch.batchRef.toLowerCase().includes(search) ||
+          batch.period.toLowerCase().includes(search)
+        );
+      }
+      return true;
+    });
+  }, [filters]);
+
+  const handleStageClick = (stage: 'ready' | 'exported' | 'paid' | 'exceptions') => {
+    if (stage === 'exceptions') {
+      setActiveTab('exceptions');
+    } else {
+      setActiveTab('batches');
+      setFilters({ ...filters, status: stage });
+    }
+  };
+
+  const handleExport = (batch: SettlementBatch) => {
+    toast.success(`Exporting ${batch.batchRef}...`, {
+      description: 'File will be ready for download shortly',
+    });
+  };
+
+  const handleMarkPaid = (batch: SettlementBatch) => {
+    setSelectedBatch(batch);
+    setMarkPaidModalOpen(true);
+  };
+
+  const handleConfirmPaid = (bankRef: string, paymentDate: string, notes?: string) => {
+    toast.success('Batch marked as paid', {
+      description: `${selectedBatch?.batchRef} - ${bankRef}`,
+    });
+  };
+
+  const handleRunReconciliation = (batch: SettlementBatch) => {
+    toast.info('Running reconciliation...', {
+      description: 'Matching transactions with bank statement',
+    });
+  };
+
+  const handleViewDetails = (batch: SettlementBatch) => {
+    setSelectedBatch(batch);
+    toast.info(`Viewing ${batch.batchRef}`, {
+      description: 'Detail drawer coming soon',
+    });
+  };
+
+  const handleCreateBatch = (claimIds: string[]) => {
+    toast.success(`Batch created with ${claimIds.length} claims`, {
+      description: 'Batch is ready for export',
+    });
+  };
+
+  const resetFilters = () => {
+    setFilters({ status: 'all', reconciliation: 'all' });
+  };
 
   return (
     <div className={cn('p-6 space-y-6 animate-fade-in', isRTL && 'text-right')}>
@@ -82,174 +120,153 @@ export default function SettlementsPage() {
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
             {language === 'ar' 
-              ? 'دفعات المطالبات المعتمدة للتصدير إلى الرواتب/المالية'
-              : 'Batch approved claims for payroll/finance export'
+              ? 'إدارة دفعات المطالبات ومطابقة البنك'
+              : 'Manage claim payments and bank reconciliation'
             }
           </p>
         </div>
-        <Button className="gap-2">
-          <Banknote className="w-4 h-4" />
-          Create New Batch
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" className="gap-2">
+            <FileSpreadsheet className="w-4 h-4" />
+            Export Report
+          </Button>
+          <Button className="gap-2" onClick={() => setCreateModalOpen(true)}>
+            <Plus className="w-4 h-4" />
+            Create Batch
+          </Button>
+        </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-success/10">
-                <CheckCircle2 className="w-5 h-5 text-success" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Ready to Export</p>
-                <p className="text-2xl font-bold tabular-nums">
-                  {settlementBatches.filter(b => b.status === 'ready').length} Batch
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <Clock className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Pending Payment</p>
-                <p className="text-2xl font-bold tabular-nums">
-                  {formatCurrencyAED(
-                    settlementBatches
-                      .filter(b => b.status === 'exported')
-                      .reduce((sum, b) => sum + b.totalAmount, 0),
-                    { abbreviate: true }
-                  )}
-                </p>
-                <p className="text-[10px] text-muted-foreground">
-                  {settlementBatches.filter(b => b.status === 'exported').length} batch(es) with Finance
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/10">
-                <Banknote className="w-5 h-5 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Paid YTD</p>
-                <p className="text-2xl font-bold tabular-nums">
-                  {formatCurrencyAED(
-                    settlementBatches
-                      .filter(b => b.status === 'paid')
-                      .reduce((sum, b) => sum + b.totalAmount, 0),
-                    { abbreviate: true }
-                  )}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Lifecycle Stats */}
+      <SettlementStats stats={stats} onStageClick={handleStageClick} />
 
-      {/* Batches List */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Settlement Batches</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {settlementBatches.map((batch) => {
-              const config = statusConfig[batch.status as keyof typeof statusConfig];
-              const StatusIcon = config.icon;
+      {/* Main Content */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+        <TabsList>
+          <TabsTrigger value="batches" className="gap-2">
+            <Banknote className="w-4 h-4" />
+            Batches
+          </TabsTrigger>
+          <TabsTrigger value="exceptions" className="gap-2">
+            <AlertTriangle className="w-4 h-4" />
+            Exceptions
+            {mockExceptions.length > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 text-[10px] font-medium bg-destructive text-destructive-foreground rounded-full">
+                {mockExceptions.length}
+              </span>
+            )}
+          </TabsTrigger>
+        </TabsList>
 
-              return (
-                <div 
-                  key={batch.id}
-                  className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors"
+        <TabsContent value="batches" className="space-y-4 mt-4">
+          {/* Filters */}
+          <BatchFiltersComponent
+            filters={filters}
+            onChange={setFilters}
+            onReset={resetFilters}
+          />
+
+          {/* Batch Actions Bar */}
+          {selectedBatchIds.length > 0 && (
+            <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg border border-primary/30">
+              <span className="text-sm font-medium">
+                {selectedBatchIds.length} batch{selectedBatchIds.length > 1 ? 'es' : ''} selected
+              </span>
+              <div className="flex-1" />
+              <Button variant="outline" size="sm" className="gap-1">
+                <Download className="w-3 h-3" />
+                Export Selected
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1">
+                <RefreshCw className="w-3 h-3" />
+                Run Reconciliation
+              </Button>
+            </div>
+          )}
+
+          {/* Batch Table */}
+          <BatchTable
+            batches={filteredBatches}
+            selectedIds={selectedBatchIds}
+            onSelectionChange={setSelectedBatchIds}
+            onExport={handleExport}
+            onMarkPaid={handleMarkPaid}
+            onRunReconciliation={handleRunReconciliation}
+            onViewDetails={handleViewDetails}
+          />
+
+          {/* Pending Claims Summary */}
+          {mockPendingClaims.length > 0 && (
+            <Card className="border-warning/30 bg-warning/5">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Banknote className="w-4 h-4 text-warning" />
+                  {mockPendingClaims.length} Approved Claims Awaiting Batch
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2"
+                  onClick={() => setCreateModalOpen(true)}
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 rounded-lg bg-muted">
-                      <FileText className="w-5 h-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-sm">{batch.id}</p>
-                        <Badge variant="outline" className={cn('text-[10px]', config.color)}>
-                          <StatusIcon className="w-3 h-3 mr-1" />
-                          {config.label}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {batch.period} • {batch.claimsCount} claims
-                      </p>
-                    </div>
-                  </div>
-                  {/* Status Tracker */}
-                  <div className="hidden md:flex items-center gap-1 mr-4">
-                    {statusSteps.map((step, idx) => {
-                      const currentStep = config.step;
-                      const isCompleted = currentStep > idx;
-                      const isCurrent = currentStep === idx + 1;
-                      return (
-                        <div key={step.key} className="flex items-center">
-                          <div className={cn(
-                            "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium border transition-colors",
-                            isCompleted && "bg-emerald-500 text-white border-emerald-500",
-                            isCurrent && "bg-primary text-primary-foreground border-primary",
-                            !isCompleted && !isCurrent && "bg-muted text-muted-foreground border-border"
-                          )}>
-                            {isCompleted ? '✓' : idx + 1}
-                          </div>
-                          {idx < statusSteps.length - 1 && (
-                            <div className={cn(
-                              "w-4 h-0.5 mx-0.5",
-                              isCompleted ? "bg-emerald-500" : "bg-border"
-                            )} />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="font-semibold tabular-nums">
-                        {formatCurrencyAED(batch.totalAmount, { abbreviate: true })}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{batch.createdAt}</p>
-                    </div>
-                    {batch.status === 'ready' && (
-                      <Button size="sm" variant="outline" className="gap-1">
-                        <Download className="w-3 h-3" />
-                        Export
-                      </Button>
-                    )}
-                    {batch.status === 'pending_review' && (
-                      <Button size="sm" variant="outline" className="gap-1">
-                        Review
-                        <ArrowRight className="w-3 h-3" />
-                      </Button>
-                    )}
-                    {batch.status === 'exported' && (
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="gap-1 border-emerald-500 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950"
-                      >
-                        <CheckCircle2 className="w-3 h-3" />
-                        Mark as Paid
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                  <Plus className="w-4 h-4" />
+                  Create New Batch
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="exceptions" className="mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Exceptions List */}
+            <div className="lg:col-span-2">
+              <ExceptionsPanel
+                exceptions={mockExceptions}
+                onResolve={(exc) => {
+                  toast.success('Exception resolved', {
+                    description: exc.claimId,
+                  });
+                }}
+                onViewClaim={(claimId) => {
+                  toast.info(`Opening claim ${claimId}`);
+                }}
+              />
+            </div>
+
+            {/* Reconciliation Panel for Selected Batch */}
+            <div className="space-y-4">
+              {mockBatches
+                .filter(b => b.status === 'exported')
+                .slice(0, 2)
+                .map(batch => (
+                  <ReconciliationPanel
+                    key={batch.id}
+                    batch={batch}
+                    onRunReconciliation={() => handleRunReconciliation(batch)}
+                  />
+                ))}
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Modals */}
+      <CreateBatchModal
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+        claims={mockPendingClaims}
+        onCreateBatch={handleCreateBatch}
+      />
+
+      <MarkPaidModal
+        open={markPaidModalOpen}
+        onOpenChange={setMarkPaidModalOpen}
+        batch={selectedBatch}
+        onConfirm={handleConfirmPaid}
+      />
     </div>
   );
 }
