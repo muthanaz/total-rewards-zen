@@ -147,7 +147,7 @@ export function ExecutiveDashboard() {
       }));
   }, [filteredActions]);
 
-  // Risk Indicators
+  // Risk Indicators - renamed "Compliance Rate" to "SLA Compliance" for clarity
   const riskIndicators: RiskIndicator[] = useMemo(() => [
     {
       id: 'sla',
@@ -174,12 +174,12 @@ export function ExecutiveDashboard() {
     {
       id: 'compliance',
       type: 'policy_compliance' as const,
-      label: 'Compliance Rate',
+      label: 'SLA Compliance',
       value: '94%',
       status: 'healthy' as const,
       trend: 2,
       trendLabel: 'vs last month',
-      linkTo: '/employer/data-quality',
+      linkTo: '/employer/data-controls',
       linkLabel: 'View Data Quality',
     },
   ], []);
