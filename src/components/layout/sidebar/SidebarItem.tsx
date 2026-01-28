@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useSidebarShell } from './SidebarShell';
 import { FlaskConical } from 'lucide-react';
 
-interface SidebarItemProps {
+export interface SidebarItemProps {
   /** Navigation path */
   path: string;
   /** Display label */
@@ -24,6 +24,8 @@ interface SidebarItemProps {
   indent?: number;
   /** Optional custom active check */
   isActiveOverride?: boolean;
+  /** Whether this is the primary nav item in a group */
+  isPrimary?: boolean;
 }
 
 /**
@@ -40,6 +42,7 @@ export function SidebarItem({
   isBeta = false,
   indent = 0,
   isActiveOverride,
+  isPrimary = false,
 }: SidebarItemProps) {
   const location = useLocation();
   const { language, direction } = useLanguage();
@@ -75,11 +78,12 @@ export function SidebarItem({
       className={cn(
         'nav-item',
         finalActive && 'nav-item-active',
+        isPrimary && !finalActive && 'font-medium',
         isRTL && 'flex-row-reverse text-right',
         indentClass
       )}
     >
-      <Icon className="w-4 h-4 shrink-0" />
+      <Icon className={cn('w-4 h-4 shrink-0', isPrimary && finalActive && 'text-primary')} />
       <span className={cn('text-sm flex-1', isRTL && 'text-right')}>{displayLabel}</span>
       {badge && (
         <Badge

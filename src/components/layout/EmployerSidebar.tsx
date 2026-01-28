@@ -15,16 +15,14 @@ import {
   LayoutDashboard,
   LayoutGrid,
   BarChart3,
-  TrendingUp,
+  PieChart,
+  LineChart,
+  Target,
   KanbanSquare,
   Users,
-  ShieldAlert,
   BookOpen,
   Cable,
   Database,
-  Eye,
-  PieChart,
-  LineChart,
   Banknote,
   TableProperties,
   Megaphone,
@@ -32,18 +30,22 @@ import {
   Workflow,
   UsersRound,
   Shield,
-  Target,
+  LogOut,
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useEmployerViewMode } from '@/contexts/EmployerViewModeContext';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { useActionApprovals } from '@/hooks/useActionApprovals';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
 
 import {
   SidebarShell,
   SidebarHeader,
   SidebarNav,
   SidebarFooter,
+  SidebarSection,
+  SidebarItem,
 } from './sidebar';
 
 // ============================================================================
@@ -57,6 +59,7 @@ interface NavItem {
   icon: React.ElementType;
   badge?: string;
   showPendingBadge?: boolean;
+  isPrimary?: boolean;
 }
 
 interface NavGroup {
@@ -69,10 +72,11 @@ interface NavGroup {
 
 // ============================================================================
 // EXECUTIVE VIEW NAVIGATION (Flat, 6 items - CEO-optimized)
+// Order: Dashboard, Spend & Forecast, Drivers & Segments, Optimization, Benchmarks, Action Plan
 // ============================================================================
 
 const execNavItems: NavItem[] = [
-  { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/employer', icon: LayoutDashboard },
+  { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/employer', icon: LayoutDashboard, isPrimary: true },
   { label: 'Spend & Forecast', labelAr: 'الإنفاق والتوقعات', path: '/employer/spend', icon: BarChart3 },
   { label: 'Drivers & Segments', labelAr: 'المحركات والشرائح', path: '/employer/segments', icon: PieChart },
   { label: 'Optimization', labelAr: 'التحسين', path: '/employer/optimization', icon: Target },
@@ -82,6 +86,8 @@ const execNavItems: NavItem[] = [
 
 // ============================================================================
 // HR OPS VIEW NAVIGATION (Grouped sections)
+// OPERATIONS: Operations Hub, Settlements, Communications, Calendar, Employee Directory, Reports
+// GOVERNANCE: Policy Management, Workflows, Approver Groups, Integrations, Data Quality & Controls, Security Audit
 // ============================================================================
 
 const opsNavigation: NavGroup[] = [
@@ -90,7 +96,7 @@ const opsNavigation: NavGroup[] = [
     label: 'OPERATIONS',
     labelAr: 'العمليات',
     items: [
-      { label: 'Operations Hub', labelAr: 'مركز العمليات', path: '/employer/ops', icon: LayoutGrid },
+      { label: 'Operations Hub', labelAr: 'مركز العمليات', path: '/employer/ops', icon: LayoutGrid, isPrimary: true },
       { label: 'Settlements', labelAr: 'التسويات', path: '/employer/settlements', icon: Banknote },
       { label: 'Communications', labelAr: 'الاتصالات', path: '/employer/communications', icon: Megaphone },
       { label: 'Calendar', labelAr: 'التقويم', path: '/employer/calendar', icon: CalendarDays },
@@ -107,7 +113,7 @@ const opsNavigation: NavGroup[] = [
       { label: 'Workflows', labelAr: 'سير العمل', path: '/employer/settings/workflows', icon: Workflow },
       { label: 'Approver Groups', labelAr: 'مجموعات الموافقة', path: '/employer/settings/approver-groups', icon: UsersRound },
       { label: 'Integrations', labelAr: 'التكاملات', path: '/employer/integrations', icon: Cable },
-      { label: 'Data Quality & Controls', labelAr: 'جودة البيانات والضوابط', path: '/employer/data-quality', icon: Database },
+      { label: 'Data Quality & Controls', labelAr: 'جودة البيانات والضوابط', path: '/employer/data-controls', icon: Database },
       { label: 'Security Audit', labelAr: 'التدقيق الأمني', path: '/employer/audit', icon: Shield },
     ],
   },
@@ -136,11 +142,12 @@ function ExecNavItem({ item, pendingCount }: { item: NavItem; pendingCount: numb
       className={cn(
         'nav-item',
         finalActive && 'nav-item-active',
+        item.isPrimary && !finalActive && 'font-semibold',
         isRTL && 'flex-row-reverse text-right'
       )}
     >
-      <Icon className="w-4 h-4 shrink-0" />
-      <span className={cn('text-sm font-semibold flex-1', isRTL && 'text-right')}>{displayLabel}</span>
+      <Icon className={cn('w-4 h-4 shrink-0', item.isPrimary && finalActive && 'text-primary')} />
+      <span className={cn('text-sm font-medium flex-1', isRTL && 'text-right')}>{displayLabel}</span>
       {item.showPendingBadge && pendingCount > 0 && (
         <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-warning text-warning-foreground">
           {pendingCount}
@@ -153,11 +160,6 @@ function ExecNavItem({ item, pendingCount }: { item: NavItem; pendingCount: numb
 // ============================================================================
 // EXECUTIVE FOOTER
 // ============================================================================
-
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
-import { SidebarSection, SidebarItem } from './sidebar';
 
 function ExecSidebarFooter() {
   const navigate = useNavigate();
@@ -221,7 +223,7 @@ export function EmployerSidebar() {
     if (opsPages.some(p => path.startsWith(p))) {
       setExpandedSections(prev => prev.includes('operations') ? prev : [...prev, 'operations']);
     }
-    const govPages = ['/employer/policies', '/employer/integrations', '/employer/data-quality', '/employer/audit', '/employer/settings'];
+    const govPages = ['/employer/policies', '/employer/integrations', '/employer/data-controls', '/employer/audit', '/employer/settings'];
     if (govPages.some(p => path.startsWith(p))) {
       setExpandedSections(prev => prev.includes('governance') ? prev : [...prev, 'governance']);
     }
@@ -283,6 +285,7 @@ export function EmployerSidebar() {
                   icon={item.icon}
                   badge={item.badge}
                   badgeCount={item.showPendingBadge ? pendingCount : undefined}
+                  isPrimary={item.isPrimary}
                 />
               ))}
             </SidebarSection>
