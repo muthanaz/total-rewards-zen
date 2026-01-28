@@ -1,188 +1,180 @@
+/**
+ * Reports Page
+ * 
+ * Curated executive and operations report library with
+ * one-click generation, filtering, and preset saving.
+ */
+
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { 
-  TableProperties, 
-  Download, 
-  FileSpreadsheet,
-  Calendar,
-  Users,
-  Banknote,
-  TrendingUp,
-  Clock,
-} from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FileText, History, BookMarked } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
-
-const reportTemplates = [
-  {
-    id: 'claims-summary',
-    name: 'Claims Summary Report',
-    nameAr: 'تقرير ملخص المطالبات',
-    description: 'Monthly breakdown of all claims by category, status, and department',
-    icon: FileSpreadsheet,
-    format: 'Excel',
-    lastGenerated: '2026-01-25',
-    isAutoScheduled: true,
-  },
-  {
-    id: 'employee-benefits',
-    name: 'Employee Benefits Utilization',
-    nameAr: 'استخدام مزايا الموظفين',
-    description: 'Per-employee benefit usage and remaining allowances',
-    icon: Users,
-    format: 'Excel',
-    lastGenerated: '2026-01-20',
-    isAutoScheduled: false,
-  },
-  {
-    id: 'budget-variance',
-    name: 'Budget Variance Report',
-    nameAr: 'تقرير انحراف الميزانية',
-    description: 'Actual vs. budgeted spend by benefit category',
-    icon: TrendingUp,
-    format: 'Excel',
-    lastGenerated: '2026-01-15',
-    isAutoScheduled: true,
-  },
-  {
-    id: 'settlements-export',
-    name: 'Settlements Export (Payroll)',
-    nameAr: 'تصدير التسويات (الرواتب)',
-    description: 'Approved claims formatted for payroll system import',
-    icon: Banknote,
-    format: 'CSV',
-    lastGenerated: '2026-01-27',
-    isAutoScheduled: false,
-  },
-  {
-    id: 'headcount-report',
-    name: 'Headcount & Eligibility',
-    nameAr: 'تقرير عدد الموظفين والأهلية',
-    description: 'Active employees with benefit eligibility status',
-    icon: Users,
-    format: 'Excel',
-    lastGenerated: '2026-01-10',
-    isAutoScheduled: false,
-  },
-];
-
-const scheduledReports = [
-  { name: 'Weekly Claims Summary', frequency: 'Every Monday', nextRun: '2026-02-03' },
-  { name: 'Monthly Budget Report', frequency: '1st of month', nextRun: '2026-02-01' },
-];
+import {
+  ReportsStats,
+  ReportCard,
+  ReportGenerationDrawer,
+  RecentReportsTable,
+  DEFAULT_REPORTS,
+  SAVED_PRESETS,
+  RECENT_REPORTS,
+  ReportDefinition,
+} from '@/components/employer/reports';
 
 export default function ReportsPage() {
   const { language, direction } = useLanguage();
   const isRTL = direction === 'rtl';
+  
+  const [selectedReport, setSelectedReport] = useState<ReportDefinition | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('library');
+
+  const handleGenerate = (report: ReportDefinition) => {
+    setSelectedReport(report);
+    setDrawerOpen(true);
+  };
+
+  const handleConfigure = (report: ReportDefinition) => {
+    setSelectedReport(report);
+    setDrawerOpen(true);
+  };
+
+  // Stats
+  const scheduledCount = DEFAULT_REPORTS.filter((r) => r.schedulable).length;
 
   return (
     <div className={cn('p-6 space-y-6 animate-fade-in', isRTL && 'text-right')}>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {language === 'ar' ? 'التقارير' : 'Reports'}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {language === 'ar' 
-              ? 'تصدير البيانات التشغيلية بتنسيق Excel/CSV'
-              : 'Export operational data in Excel/CSV format'
-            }
-          </p>
-        </div>
-        <Button variant="outline" className="gap-2">
-          <Calendar className="w-4 h-4" />
-          Schedule Report
-        </Button>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">
+          {language === 'ar' ? 'مكتبة التقارير' : 'Report Library'}
+        </h1>
+        <p className="text-muted-foreground text-sm mt-1">
+          {language === 'ar'
+            ? 'تقارير جاهزة للتنفيذيين وفرق العمليات'
+            : 'Curated reports for executives and operations teams'}
+        </p>
       </div>
 
-      {/* Scheduled Reports */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Clock className="w-4 h-4 text-muted-foreground" />
-            Scheduled Reports
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {scheduledReports.map((report) => (
-              <div 
-                key={report.name}
-                className="flex items-center justify-between p-3 rounded-lg border bg-muted/30"
-              >
-                <div>
-                  <p className="font-medium text-sm">{report.name}</p>
-                  <p className="text-xs text-muted-foreground">{report.frequency}</p>
-                </div>
-                <Badge variant="secondary" className="text-xs">
-                  Next: {report.nextRun}
-                </Badge>
-              </div>
+      {/* Stats */}
+      <ReportsStats
+        totalReports={DEFAULT_REPORTS.length}
+        recentGenerations={RECENT_REPORTS.length}
+        savedPresets={SAVED_PRESETS.length}
+        scheduledReports={scheduledCount}
+      />
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="library" className="gap-2">
+            <FileText className="w-4 h-4" />
+            Report Library
+          </TabsTrigger>
+          <TabsTrigger value="recent" className="gap-2">
+            <History className="w-4 h-4" />
+            Recent
+          </TabsTrigger>
+          <TabsTrigger value="presets" className="gap-2">
+            <BookMarked className="w-4 h-4" />
+            Saved Presets
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Library Tab */}
+        <TabsContent value="library" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {DEFAULT_REPORTS.map((report) => (
+              <ReportCard
+                key={report.id}
+                report={report}
+                onGenerate={handleGenerate}
+                onConfigure={handleConfigure}
+              />
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </TabsContent>
 
-      {/* Report Templates */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <TableProperties className="w-4 h-4 text-muted-foreground" />
-            Report Templates
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {reportTemplates.map((report) => {
-              const Icon = report.icon;
+        {/* Recent Tab */}
+        <TabsContent value="presets" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <History className="w-4 h-4 text-muted-foreground" />
+                Recently Generated Reports
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RecentReportsTable reports={RECENT_REPORTS} />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-              return (
-                <div 
-                  key={report.id}
-                  className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <Icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-sm">
-                          {language === 'ar' ? report.nameAr : report.name}
-                        </p>
-                        {report.isAutoScheduled && (
-                          <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px]">
-                            Auto-Scheduled
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5 max-w-md">
-                        {report.description}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <Badge variant="outline" className="text-[10px]">
-                        {report.format}
-                      </Badge>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Last: {report.lastGenerated}
-                      </p>
-                    </div>
-                    <Button size="sm" className="gap-1">
-                      <Download className="w-3 h-3" />
-                      Generate
-                    </Button>
-                  </div>
+        {/* Presets Tab */}
+        <TabsContent value="recent" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <BookMarked className="w-4 h-4 text-muted-foreground" />
+                Saved Filter Presets
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {SAVED_PRESETS.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <BookMarked className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No saved presets yet</p>
+                  <p className="text-xs mt-1">
+                    Generate a report with custom filters and save them as a preset
+                  </p>
                 </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+              ) : (
+                <div className="space-y-3">
+                  {SAVED_PRESETS.map((preset) => {
+                    const report = DEFAULT_REPORTS.find(
+                      (r) => r.id === preset.reportId
+                    );
+                    return (
+                      <div
+                        key={preset.id}
+                        className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors cursor-pointer"
+                        onClick={() => {
+                          if (report) {
+                            setSelectedReport(report);
+                            setDrawerOpen(true);
+                          }
+                        }}
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm">{preset.name}</p>
+                            {preset.isDefault && (
+                              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+                                Default
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {report?.name} • Created by {preset.createdBy}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Generation Drawer */}
+      <ReportGenerationDrawer
+        report={selectedReport}
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+      />
     </div>
   );
 }
