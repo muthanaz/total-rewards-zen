@@ -176,8 +176,14 @@ export function EmployerSidebar() {
 
       <SidebarNav>
         {isExecutive ? (
-          // EXECUTIVE MODE: Flat navigation using same SidebarItem as Employee
-          <div className="space-y-0.5">
+          // EXECUTIVE MODE: Single section like Employee sidebar
+          <SidebarSection
+            id="executive"
+            label="Strategic"
+            labelAr="استراتيجي"
+            isOpen={true}
+            onToggle={() => {}}
+          >
             {execNavItems.map((item) => (
               <SidebarItem
                 key={item.path}
@@ -189,7 +195,7 @@ export function EmployerSidebar() {
                 badgeCount={item.showPendingBadge ? pendingCount : undefined}
               />
             ))}
-          </div>
+          </SidebarSection>
         ) : (
           // HR OPS MODE: Collapsible sections (Operations, Governance)
           visibleNavigation.map((group) => (
@@ -200,8 +206,6 @@ export function EmployerSidebar() {
               labelAr={group.labelAr}
               isOpen={expandedSections.includes(group.id)}
               onToggle={() => toggleSection(group.id)}
-              // Highlight Operations group with subtle background in Ops mode
-              className={group.id === 'operations' ? 'bg-sidebar-accent/5 rounded-lg mx-1 px-1' : undefined}
             >
               {group.items.map((item) => (
                 <SidebarItem
