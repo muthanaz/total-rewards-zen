@@ -46,12 +46,18 @@ interface ExecRisksPanelProps {
   className?: string;
 }
 
-const RISK_CONFIG = {
+const RISK_CONFIG: Record<string, {
+  icon: typeof Clock;
+  title: string;
+  healthyLabel: string;
+  metricKey: string | null;
+  subtitle?: string;
+}> = {
   sla_breach: {
     icon: Clock,
     title: 'SLA Breach Risk',
     healthyLabel: 'All on track',
-    metricKey: null, // No SSOT metric for this
+    metricKey: null,
   },
   settlement_backlog: {
     icon: Banknote,
@@ -61,9 +67,10 @@ const RISK_CONFIG = {
   },
   policy_compliance: {
     icon: CheckCircle2,
-    title: 'SLA Compliance',
+    title: 'Data Quality Compliance',
     healthyLabel: 'Compliant',
-    metricKey: 'sla_compliance',
+    metricKey: 'data_quality_compliance',
+    subtitle: '% of data checks passing',
   },
 };
 
@@ -113,7 +120,7 @@ export function ExecRisksPanel({ risks, className }: ExecRisksPanelProps) {
     {
       id: 'compliance',
       type: 'policy_compliance',
-      label: 'SLA Compliance',
+      label: 'Data Quality Compliance',
       value: '94%',
       status: 'healthy',
       trend: 2,
@@ -177,12 +184,15 @@ export function ExecRisksPanel({ risks, className }: ExecRisksPanelProps) {
 
                 {/* Content */}
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-0.5">
                     <p className="font-medium text-sm">{risk.label}</p>
                     {config.metricKey && (
                       <SSOTTooltip metricKey={config.metricKey} size="sm" />
                     )}
                   </div>
+                  {config.subtitle && (
+                    <p className="text-[10px] text-muted-foreground mb-1">{config.subtitle}</p>
+                  )}
                   <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
                     <span className="font-semibold text-foreground text-lg tabular-nums">
                       {risk.value}
