@@ -103,6 +103,15 @@ export const STATUS_LABELS: Record<RequestStatus, StatusLabelConfig> = {
     slaPaused: true,
     colorToken: 'green',
   },
+  ready_for_payment: {
+    label: 'Ready for Payment',
+    labelAr: 'جاهز للدفع',
+    description: 'Approved and queued for payment processing',
+    descriptionAr: 'تمت الموافقة عليه وفي انتظار معالجة الدفع',
+    waitingOn: 'system',
+    slaPaused: true,
+    colorToken: 'green',
+  },
   rejected: {
     label: 'Rejected',
     labelAr: 'مرفوض',
@@ -248,9 +257,10 @@ export function getHRWaitingOnMessage(status: RequestStatus | string | null, isA
 
 export const EMPLOYEE_ACTION_STATUSES: RequestStatus[] = ['draft', 'pending_employee', 'info_requested'];
 export const HR_ACTION_STATUSES: RequestStatus[] = ['submitted', 'pending', 'in_review', 'escalated'];
-export const SLA_PAUSED_STATUSES: RequestStatus[] = ['draft', 'pending_employee', 'info_requested', 'approved', 'rejected', 'paid', 'closed', 'cancelled'];
+export const SLA_PAUSED_STATUSES: RequestStatus[] = ['draft', 'pending_employee', 'info_requested', 'approved', 'ready_for_payment', 'rejected', 'paid', 'closed', 'cancelled'];
 export const TERMINAL_STATUSES: RequestStatus[] = ['closed', 'cancelled'];
-export const COMPLETED_STATUSES: RequestStatus[] = ['approved', 'paid', 'closed'];
+export const COMPLETED_STATUSES: RequestStatus[] = ['approved', 'ready_for_payment', 'paid', 'closed'];
+export const SETTLEMENT_STATUSES: RequestStatus[] = ['approved', 'ready_for_payment', 'paid'];
 
 /**
  * Check if status is actionable by employee

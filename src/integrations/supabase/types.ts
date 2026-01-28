@@ -688,6 +688,42 @@ export type Database = {
           },
         ]
       }
+      claim_status_transitions: {
+        Row: {
+          auto_transition: boolean | null
+          created_at: string | null
+          description: string | null
+          from_status: string
+          id: string
+          min_reason_length: number | null
+          requires_reason: boolean | null
+          requires_role: string | null
+          to_status: string
+        }
+        Insert: {
+          auto_transition?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          from_status: string
+          id?: string
+          min_reason_length?: number | null
+          requires_reason?: boolean | null
+          requires_role?: string | null
+          to_status: string
+        }
+        Update: {
+          auto_transition?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          from_status?: string
+          id?: string
+          min_reason_length?: number | null
+          requires_reason?: boolean | null
+          requires_role?: string | null
+          to_status?: string
+        }
+        Relationships: []
+      }
       data_access_requests: {
         Row: {
           created_at: string
@@ -3467,6 +3503,8 @@ export type Database = {
       request_events: {
         Row: {
           action: string | null
+          action_reason_code: string | null
+          action_reason_text: string | null
           actor_name: string | null
           actor_role: string | null
           actor_user_id: string
@@ -3483,6 +3521,8 @@ export type Database = {
         }
         Insert: {
           action?: string | null
+          action_reason_code?: string | null
+          action_reason_text?: string | null
           actor_name?: string | null
           actor_role?: string | null
           actor_user_id: string
@@ -3499,6 +3539,8 @@ export type Database = {
         }
         Update: {
           action?: string | null
+          action_reason_code?: string | null
+          action_reason_text?: string | null
           actor_name?: string | null
           actor_role?: string | null
           actor_user_id?: string
@@ -3525,11 +3567,14 @@ export type Database = {
       }
       requests: {
         Row: {
+          action_reason_code: string | null
+          action_reason_text: string | null
           amount: number | null
           approved_amount: number | null
           assigned_owner_name: string | null
           assigned_to: string | null
           assigned_to_user_id: string | null
+          bank_routing_json: Json | null
           category: string
           checklist_snapshot_json: Json | null
           compliance_reasons_json: Json | null
@@ -3540,8 +3585,10 @@ export type Database = {
           decision_at: string | null
           department: string | null
           description: string | null
+          eligible_amount_aed: number | null
           employee_code: string | null
           employee_context_json: Json | null
+          employee_copay_aed: number | null
           escalated_at: string | null
           escalation_reason: string | null
           grade: string | null
@@ -3554,6 +3601,7 @@ export type Database = {
           paid_amount: number | null
           paid_at: string | null
           parent_request_id: string | null
+          payable_amount_aed: number | null
           policy_id: string | null
           policy_ref: string | null
           policy_selection_reason: string | null
@@ -3562,11 +3610,16 @@ export type Database = {
           prorated_amount: number | null
           proration_factor: number | null
           proration_reason: string | null
+          remaining_entitlement_aed: number | null
           request_type: Database["public"]["Enums"]["request_type"]
           required_docs: Json | null
           reviewed_at: string | null
           reviewed_by: string | null
           reviewer_notes: string | null
+          settlement_batch_id: string | null
+          settlement_method: string | null
+          settlement_readiness_json: Json | null
+          settlement_ready_at: string | null
           sla_due_at: string | null
           sla_hours: number | null
           source_system: string | null
@@ -3581,11 +3634,14 @@ export type Database = {
           workflow_definition_id: string | null
         }
         Insert: {
+          action_reason_code?: string | null
+          action_reason_text?: string | null
           amount?: number | null
           approved_amount?: number | null
           assigned_owner_name?: string | null
           assigned_to?: string | null
           assigned_to_user_id?: string | null
+          bank_routing_json?: Json | null
           category: string
           checklist_snapshot_json?: Json | null
           compliance_reasons_json?: Json | null
@@ -3596,8 +3652,10 @@ export type Database = {
           decision_at?: string | null
           department?: string | null
           description?: string | null
+          eligible_amount_aed?: number | null
           employee_code?: string | null
           employee_context_json?: Json | null
+          employee_copay_aed?: number | null
           escalated_at?: string | null
           escalation_reason?: string | null
           grade?: string | null
@@ -3610,6 +3668,7 @@ export type Database = {
           paid_amount?: number | null
           paid_at?: string | null
           parent_request_id?: string | null
+          payable_amount_aed?: number | null
           policy_id?: string | null
           policy_ref?: string | null
           policy_selection_reason?: string | null
@@ -3618,11 +3677,16 @@ export type Database = {
           prorated_amount?: number | null
           proration_factor?: number | null
           proration_reason?: string | null
+          remaining_entitlement_aed?: number | null
           request_type: Database["public"]["Enums"]["request_type"]
           required_docs?: Json | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           reviewer_notes?: string | null
+          settlement_batch_id?: string | null
+          settlement_method?: string | null
+          settlement_readiness_json?: Json | null
+          settlement_ready_at?: string | null
           sla_due_at?: string | null
           sla_hours?: number | null
           source_system?: string | null
@@ -3637,11 +3701,14 @@ export type Database = {
           workflow_definition_id?: string | null
         }
         Update: {
+          action_reason_code?: string | null
+          action_reason_text?: string | null
           amount?: number | null
           approved_amount?: number | null
           assigned_owner_name?: string | null
           assigned_to?: string | null
           assigned_to_user_id?: string | null
+          bank_routing_json?: Json | null
           category?: string
           checklist_snapshot_json?: Json | null
           compliance_reasons_json?: Json | null
@@ -3652,8 +3719,10 @@ export type Database = {
           decision_at?: string | null
           department?: string | null
           description?: string | null
+          eligible_amount_aed?: number | null
           employee_code?: string | null
           employee_context_json?: Json | null
+          employee_copay_aed?: number | null
           escalated_at?: string | null
           escalation_reason?: string | null
           grade?: string | null
@@ -3666,6 +3735,7 @@ export type Database = {
           paid_amount?: number | null
           paid_at?: string | null
           parent_request_id?: string | null
+          payable_amount_aed?: number | null
           policy_id?: string | null
           policy_ref?: string | null
           policy_selection_reason?: string | null
@@ -3674,11 +3744,16 @@ export type Database = {
           prorated_amount?: number | null
           proration_factor?: number | null
           proration_reason?: string | null
+          remaining_entitlement_aed?: number | null
           request_type?: Database["public"]["Enums"]["request_type"]
           required_docs?: Json | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           reviewer_notes?: string | null
+          settlement_batch_id?: string | null
+          settlement_method?: string | null
+          settlement_readiness_json?: Json | null
+          settlement_ready_at?: string | null
           sla_due_at?: string | null
           sla_hours?: number | null
           source_system?: string | null
@@ -4566,6 +4641,11 @@ export type Database = {
         Args: { p_action: string; p_policy_id: string; p_reason?: string }
         Returns: Json
       }
+      check_settlement_readiness: {
+        Args: { p_request_id: string }
+        Returns: Json
+      }
+      compute_payable_amount: { Args: { p_request_id: string }; Returns: Json }
       create_policy_with_draft_version: {
         Args: {
           p_benefit_type?: string
@@ -4618,6 +4698,16 @@ export type Database = {
           p_email: string
           p_org_id?: string
           p_role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: Json
+      }
+      execute_claim_transition: {
+        Args: {
+          p_action_reason_code?: string
+          p_action_reason_text?: string
+          p_actor_user_id?: string
+          p_request_id: string
+          p_to_status: string
         }
         Returns: Json
       }
@@ -4768,6 +4858,16 @@ export type Database = {
         Args: { p_note?: string; p_policy_version_id: string }
         Returns: Json
       }
+      validate_claim_status_transition: {
+        Args: {
+          p_action_reason_code?: string
+          p_action_reason_text?: string
+          p_from_status: string
+          p_request_id: string
+          p_to_status: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       benefit_type:
@@ -4797,6 +4897,7 @@ export type Database = {
       request_status:
         | "pending"
         | "approved"
+        | "ready_for_payment"
         | "rejected"
         | "draft"
         | "submitted"
@@ -4967,6 +5068,7 @@ export const Constants = {
       request_status: [
         "pending",
         "approved",
+        "ready_for_payment",
         "rejected",
         "draft",
         "submitted",

@@ -39,6 +39,7 @@ export const REQUEST_STATUSES = {
   INFO_REQUESTED: 'info_requested' as RequestStatus,
   ESCALATED: 'escalated' as RequestStatus,
   APPROVED: 'approved' as RequestStatus,
+  READY_FOR_PAYMENT: 'ready_for_payment' as RequestStatus,
   REJECTED: 'rejected' as RequestStatus,
   PAID: 'paid' as RequestStatus,
   CLOSED: 'closed' as RequestStatus,
@@ -54,6 +55,7 @@ export const WORKFLOW_STAGES = [
   { key: 'in_review', label: 'In Review', statuses: ['in_review'] },
   { key: 'escalated', label: 'Escalated', statuses: ['escalated'] },
   { key: 'approved', label: 'Approved', statuses: ['approved'] },
+  { key: 'ready_for_payment', label: 'Ready for Payment', statuses: ['ready_for_payment'] },
   { key: 'rejected', label: 'Rejected', statuses: ['rejected'] },
   { key: 'paid', label: 'Paid/Closed', statuses: ['paid', 'closed'] },
   { key: 'cancelled', label: 'Cancelled', statuses: ['cancelled'] },
@@ -66,8 +68,9 @@ export const STATUS_GROUPS = {
   ACTIVE: [REQUEST_STATUSES.PENDING, REQUEST_STATUSES.SUBMITTED, REQUEST_STATUSES.PENDING_EMPLOYEE, REQUEST_STATUSES.INFO_REQUESTED, REQUEST_STATUSES.IN_REVIEW, REQUEST_STATUSES.ESCALATED] as RequestStatus[],
   PENDING_ACTION: [REQUEST_STATUSES.PENDING, REQUEST_STATUSES.SUBMITTED, REQUEST_STATUSES.IN_REVIEW, REQUEST_STATUSES.ESCALATED] as RequestStatus[],
   WAITING_EMPLOYEE: [REQUEST_STATUSES.PENDING_EMPLOYEE, REQUEST_STATUSES.INFO_REQUESTED] as RequestStatus[],
-  COMPLETED: [REQUEST_STATUSES.APPROVED, REQUEST_STATUSES.PAID, REQUEST_STATUSES.CLOSED] as RequestStatus[],
-  TERMINAL: [REQUEST_STATUSES.APPROVED, REQUEST_STATUSES.REJECTED, REQUEST_STATUSES.PAID, REQUEST_STATUSES.CLOSED, REQUEST_STATUSES.CANCELLED] as RequestStatus[],
+  COMPLETED: [REQUEST_STATUSES.APPROVED, REQUEST_STATUSES.READY_FOR_PAYMENT, REQUEST_STATUSES.PAID, REQUEST_STATUSES.CLOSED] as RequestStatus[],
+  SETTLEMENT: [REQUEST_STATUSES.APPROVED, REQUEST_STATUSES.READY_FOR_PAYMENT, REQUEST_STATUSES.PAID] as RequestStatus[],
+  TERMINAL: [REQUEST_STATUSES.APPROVED, REQUEST_STATUSES.READY_FOR_PAYMENT, REQUEST_STATUSES.REJECTED, REQUEST_STATUSES.PAID, REQUEST_STATUSES.CLOSED, REQUEST_STATUSES.CANCELLED] as RequestStatus[],
 } as const;
 
 /**
@@ -103,6 +106,7 @@ export function getStatusDisplayLabel(status: RequestStatus | string | null): st
     case 'in_review': return 'In Review';
     case 'escalated': return 'Escalated';
     case 'approved': return 'Approved';
+    case 'ready_for_payment': return 'Ready for Payment';
     case 'rejected': return 'Rejected';
     case 'paid': return 'Paid';
     case 'closed': return 'Closed';
@@ -132,6 +136,7 @@ export function getStatusBadgeStyle(status: RequestStatus | string | null): {
     case 'escalated':
       return { variant: 'secondary', className: 'bg-orange-500/10 text-orange-600 border-orange-500/20' };
     case 'approved':
+    case 'ready_for_payment':
     case 'paid':
       return { variant: 'secondary', className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' };
     case 'rejected':
