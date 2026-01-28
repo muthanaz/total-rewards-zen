@@ -193,25 +193,48 @@ export function ExecTopDriversPanel({
   // Fixed row height for consistent list item sizing
   const ROW_HEIGHT = 'min-h-[68px]';
 
+  // Compute sums for headers
+  const spendDriversSum = displaySpendDrivers.reduce((sum, d: any) => {
+    const val = 'isOther' in d && d.isOther ? d.value : d.spend;
+    return sum + val;
+  }, 0);
+  const spendDriversPct = totalSpend > 0 ? (spendDriversSum / totalSpend) * 100 : 0;
+
+  const leakageDriversSum = displayLeakageDrivers.reduce((sum, d: any) => {
+    const val = 'isOther' in d && d.isOther ? d.value : d.leakage;
+    return sum + val;
+  }, 0);
+  const leakageDriversPct = totalLeakage > 0 ? (leakageDriversSum / totalLeakage) * 100 : 0;
+
   return (
     <div className={cn('grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6', className)}>
       {/* Spend Drivers */}
       <Card className="border-border/50 flex flex-col">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
                 <DollarSign className="w-4 h-4 text-primary" />
                 Top 5 by Spend
               </CardTitle>
-              {/* Scope label */}
-              <p className="text-[10px] text-muted-foreground mt-1">
-                Scope: Category totals (YTD actuals)
+            </div>
+            {/* Two-line header with totals */}
+            <div className="text-xs text-muted-foreground space-y-0.5">
+              <p>
+                <span className="font-medium text-foreground">Total spend:</span>{' '}
+                <span className="tabular-nums">{formatCurrencyAED(totalSpend, { abbreviate: true })}</span>
+              </p>
+              <p>
+                <span className="font-medium text-foreground">Top drivers shown:</span>{' '}
+                <span className="tabular-nums">
+                  {formatCurrencyAED(spendDriversSum, { abbreviate: true })} ({spendDriversPct.toFixed(1)}%)
+                </span>
               </p>
             </div>
-            <Badge variant="secondary" className="text-xs tabular-nums">
-              {formatCurrencyAED(totalSpend, { abbreviate: true })} total
-            </Badge>
+            {/* Scope label */}
+            <p className="text-[10px] text-muted-foreground">
+              Scope: Category totals (YTD actuals)
+            </p>
           </div>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col">
@@ -277,36 +300,44 @@ export function ExecTopDriversPanel({
       {/* Leakage Drivers */}
       <Card className="border-border/50 flex flex-col">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-warning" />
-                  Top 5 by Leakage
-                </CardTitle>
-                {/* "At risk" definition tooltip */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button className="inline-flex">
-                      <Info className="w-3.5 h-3.5 text-muted-foreground" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-xs p-3">
-                    <p className="font-medium text-xs mb-1">"At Risk" Definition</p>
-                    <p className="text-xs text-muted-foreground">
-                      Budget allocated but likely to remain unutilized based on current claim patterns and historical trends.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              {/* Scope label */}
-              <p className="text-[10px] text-muted-foreground mt-1">
-                Scope: Cap-based benefits only (excludes coverage/deferred)
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-warning" />
+                Top 5 by Leakage
+              </CardTitle>
+              {/* "At risk" definition tooltip */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className="inline-flex">
+                    <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs p-3">
+                  <p className="font-medium text-xs mb-1">"At Risk" Definition</p>
+                  <p className="text-xs text-muted-foreground">
+                    Budget allocated but likely to remain unutilized based on current claim patterns and historical trends.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            {/* Two-line header with totals */}
+            <div className="text-xs text-muted-foreground space-y-0.5">
+              <p>
+                <span className="font-medium text-foreground">Total leakage at risk:</span>{' '}
+                <span className="tabular-nums text-warning">{formatCurrencyAED(totalLeakage, { abbreviate: true })}</span>
+              </p>
+              <p>
+                <span className="font-medium text-foreground">Top contributors shown:</span>{' '}
+                <span className="tabular-nums">
+                  {formatCurrencyAED(leakageDriversSum, { abbreviate: true })} ({leakageDriversPct.toFixed(1)}%)
+                </span>
               </p>
             </div>
-            <Badge variant="outline" className="text-xs tabular-nums bg-warning/10 text-warning border-warning/30">
-              {formatCurrencyAED(totalLeakage, { abbreviate: true })} at risk
-            </Badge>
+            {/* Scope label */}
+            <p className="text-[10px] text-muted-foreground">
+              Scope: Cap-based benefits only (excludes coverage/deferred)
+            </p>
           </div>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col">

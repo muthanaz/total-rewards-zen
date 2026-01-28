@@ -71,7 +71,8 @@ export function ExecDecisionsPanel({
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const top3 = actions.slice(0, 3);
-  const totalImpact = top3.reduce((sum, a) => sum + a.impactAED, 0);
+  // Only include actions with financial impact > 0 in the header total
+  const financialImpactTotal = top3.reduce((sum, a) => sum + (a.impactAED > 0 ? a.impactAED : 0), 0);
 
   const handleOpenAction = (action: RecommendedAction) => {
     setSelectedAction(action);
@@ -95,7 +96,7 @@ export function ExecDecisionsPanel({
             </CardTitle>
             <div className="flex items-center gap-3">
               <Badge variant="secondary" className="text-xs tabular-nums">
-                Est. {formatCurrencyAED(totalImpact, { abbreviate: true })} impact
+                Est. financial impact: {formatCurrencyAED(financialImpactTotal, { abbreviate: true })}
               </Badge>
               <Link to="/employer/actions">
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
@@ -156,11 +157,19 @@ export function ExecDecisionsPanel({
 
                     {/* Impact Row */}
                     <div className="flex items-center gap-1">
-                      <Zap className="w-3 h-3 text-success" />
-                      <span className="text-xs font-semibold text-success tabular-nums">
-                        {formatCurrencyAED(action.impactAED, { abbreviate: true })}
-                      </span>
-                      <span className="text-xs text-muted-foreground">est. impact</span>
+                      <Zap className={cn('w-3 h-3', action.impactAED > 0 ? 'text-success' : 'text-muted-foreground')} />
+                      {action.impactAED > 0 ? (
+                        <>
+                          <span className="text-xs font-semibold text-success tabular-nums">
+                            {formatCurrencyAED(action.impactAED, { abbreviate: true })}
+                          </span>
+                          <span className="text-xs text-muted-foreground">est. impact</span>
+                        </>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          Financial impact: AED 0 (Experience/clarity improvement)
+                        </span>
+                      )}
                     </div>
                   </div>
 
