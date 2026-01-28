@@ -114,34 +114,20 @@ export function ExecDecisionsPanel({
               return (
                 <div 
                   key={action.id}
-                  className="flex items-center gap-4 p-4 rounded-lg border bg-card hover:border-accent/30 transition-colors"
+                  className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:border-accent/30 transition-colors min-h-[88px]"
                 >
                   {/* Rank indicator */}
                   <div className="flex items-center justify-center w-8 h-8 rounded-full bg-accent/10 text-accent font-bold text-sm shrink-0">
                     {index + 1}
                   </div>
 
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm mb-1 line-clamp-1">{action.title}</p>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      {/* Impact */}
-                      <div className="flex items-center gap-1">
-                        <Zap className="w-3 h-3 text-success" />
-                        <span className="font-semibold text-success tabular-nums">
-                          {formatCurrencyAED(action.impactAED, { abbreviate: true })}
-                        </span>
-                      </div>
-                      
-                      {/* Effort */}
-                      <Badge 
-                        variant="outline" 
-                        className={cn('text-[10px] gap-1', effortConfig.bg, effortConfig.color)}
-                      >
-                        <Clock className="w-2.5 h-2.5" />
-                        {effortConfig.label} Effort
-                      </Badge>
-
+                  {/* Content - Title row, Metadata row, organized structure */}
+                  <div className="flex-1 min-w-0 space-y-2">
+                    {/* Title Row */}
+                    <p className="font-medium text-sm line-clamp-1">{action.title}</p>
+                    
+                    {/* Metadata Row: Owner, Date, Effort */}
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                       {/* Owner */}
                       {action.owner && (
                         <div className="flex items-center gap-1">
@@ -157,13 +143,31 @@ export function ExecDecisionsPanel({
                           <span>{formatDueDate(action.dueDate)}</span>
                         </div>
                       )}
+                      
+                      {/* Effort */}
+                      <Badge 
+                        variant="outline" 
+                        className={cn('text-[10px] gap-1', effortConfig.bg, effortConfig.color)}
+                      >
+                        <Clock className="w-2.5 h-2.5" />
+                        {effortConfig.label} Effort
+                      </Badge>
+                    </div>
+
+                    {/* Impact Row */}
+                    <div className="flex items-center gap-1">
+                      <Zap className="w-3 h-3 text-success" />
+                      <span className="text-xs font-semibold text-success tabular-nums">
+                        {formatCurrencyAED(action.impactAED, { abbreviate: true })}
+                      </span>
+                      <span className="text-xs text-muted-foreground">est. impact</span>
                     </div>
                   </div>
 
-                  {/* CTA */}
+                  {/* CTA - Fixed size, consistent placement */}
                   <Button 
                     size="sm" 
-                    className="gap-1.5 shrink-0"
+                    className="gap-1.5 shrink-0 min-w-[80px]"
                     onClick={() => handleOpenAction(action)}
                   >
                     <UserPlus className="w-3.5 h-3.5" />

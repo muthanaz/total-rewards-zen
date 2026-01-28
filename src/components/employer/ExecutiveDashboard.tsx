@@ -215,7 +215,7 @@ export function ExecutiveDashboard() {
 
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* PAGE HEADER */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
@@ -238,8 +238,8 @@ export function ExecutiveDashboard() {
           sourcesCount={3}
         />
 
-        {/* SECTION 1: BOTTOM LINE (4 KPI cards) */}
-        <div>
+        {/* SECTION 1: BOTTOM LINE (4 KPI cards) - equal heights enforced */}
+        <section>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
             Bottom Line
           </h2>
@@ -254,10 +254,10 @@ export function ExecutiveDashboard() {
               }
             }}
           />
-        </div>
+        </section>
 
-        {/* SECTION 2: TOP DRIVERS (2 panels) */}
-        <div>
+        {/* SECTION 2: TOP DRIVERS (2 panels side-by-side, equal heights) */}
+        <section>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
             Top Drivers
           </h2>
@@ -267,10 +267,10 @@ export function ExecutiveDashboard() {
             totalSpend={bottomLineMetrics.ytdSpend}
             totalLeakage={bottomLineMetrics.budgetLeakage}
           />
-        </div>
+        </section>
 
         {/* SECTION 3: DECISIONS (Action Plan Preview) */}
-        <div>
+        <section>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
             Decisions
           </h2>
@@ -279,15 +279,15 @@ export function ExecutiveDashboard() {
             onAssignAction={(actionId) => navigate(`/employer/actions?open=${actionId}`)}
             onCreateAction={() => navigate('/employer/actions?create=true')}
           />
-        </div>
+        </section>
 
-        {/* SECTION 4: RISKS & EXCEPTIONS */}
-        <div>
+        {/* SECTION 4: RISKS & EXCEPTIONS (3 compact cards in grid) */}
+        <section>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
             Risks & Exceptions
           </h2>
           <ExecRisksPanel risks={riskIndicators} />
-        </div>
+        </section>
       </div>
     </PageConfidenceGate>
   );
