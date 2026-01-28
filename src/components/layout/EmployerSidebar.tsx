@@ -9,20 +9,16 @@
  */
 
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   LayoutGrid,
   BarChart3,
-  TrendingUp,
   KanbanSquare,
   Users,
-  ShieldAlert,
   BookOpen,
   Cable,
   Database,
-  Eye,
   PieChart,
   LineChart,
   Banknote,
@@ -34,7 +30,6 @@ import {
   Shield,
   Target,
 } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { useEmployerViewMode } from '@/contexts/EmployerViewModeContext';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { useActionApprovals } from '@/hooks/useActionApprovals';
@@ -44,6 +39,8 @@ import {
   SidebarHeader,
   SidebarNav,
   SidebarFooter,
+  SidebarSection,
+  SidebarItem,
 } from './sidebar';
 
 // ============================================================================
@@ -114,80 +111,8 @@ const opsNavigation: NavGroup[] = [
 ];
 
 // ============================================================================
-// EXECUTIVE NAV ITEM COMPONENT (flat, no sections)
+// MAIN COMPONENT
 // ============================================================================
-
-function ExecNavItem({ item, pendingCount }: { item: NavItem; pendingCount: number }) {
-  const location = useLocation();
-  const { language, direction } = useLanguage();
-  const isRTL = direction === 'rtl';
-  
-  const isActive = item.path === location.pathname || 
-    (item.path !== '/employer' && location.pathname.startsWith(item.path + '/'));
-  const isDashboard = item.path === '/employer';
-  const finalActive = isDashboard ? location.pathname === '/employer' : isActive;
-  
-  const displayLabel = language === 'ar' && item.labelAr ? item.labelAr : item.label;
-  const Icon = item.icon;
-  
-  return (
-    <Link
-      to={item.path}
-      className={cn(
-        'nav-item',
-        finalActive && 'nav-item-active',
-        isRTL && 'flex-row-reverse text-right'
-      )}
-    >
-      <Icon className="w-4 h-4 shrink-0" />
-      <span className={cn('text-sm font-semibold flex-1', isRTL && 'text-right')}>{displayLabel}</span>
-      {item.showPendingBadge && pendingCount > 0 && (
-        <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-warning text-warning-foreground">
-          {pendingCount}
-        </span>
-      )}
-    </Link>
-  );
-}
-
-// ============================================================================
-// EXECUTIVE FOOTER
-// ============================================================================
-
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
-import { SidebarSection, SidebarItem } from './sidebar';
-
-function ExecSidebarFooter() {
-  const navigate = useNavigate();
-  const { signOut } = useAuth();
-  const { language, direction } = useLanguage();
-  const isRTL = direction === 'rtl';
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
-  };
-
-  return (
-    <div className={cn('p-4 border-t border-sidebar-border', isRTL && 'text-right')}>
-      <Button
-        variant="ghost"
-        onClick={handleSignOut}
-        className={cn(
-          'w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent',
-          isRTL ? 'justify-start flex-row-reverse' : 'justify-start'
-        )}
-      >
-        <LogOut className={cn('w-4 h-4 shrink-0', isRTL ? 'ml-3' : 'mr-3')} />
-        <span className={isRTL ? 'text-right' : 'text-left'}>
-          {language === 'ar' ? 'تسجيل الخروج' : 'Sign Out'}
-        </span>
-      </Button>
-    </div>
-  );
-}
 
 // ============================================================================
 // MAIN COMPONENT
@@ -251,13 +176,17 @@ export function EmployerSidebar() {
 
       <SidebarNav>
         {isExecutive ? (
-          // EXECUTIVE MODE: Flat navigation (CEO-optimized)
-          <div className="space-y-1">
+          // EXECUTIVE MODE: Flat navigation using same SidebarItem as Employee
+          <div className="space-y-0.5">
             {execNavItems.map((item) => (
-              <ExecNavItem 
-                key={item.path} 
-                item={item} 
-                pendingCount={pendingCount}
+              <SidebarItem
+                key={item.path}
+                path={item.path}
+                label={item.label}
+                labelAr={item.labelAr}
+                icon={item.icon}
+                badge={item.badge}
+                badgeCount={item.showPendingBadge ? pendingCount : undefined}
               />
             ))}
           </div>
@@ -290,8 +219,8 @@ export function EmployerSidebar() {
         )}
       </SidebarNav>
 
-      {/* Executive mode gets special footer */}
-      {isExecutive ? <ExecSidebarFooter /> : <SidebarFooter />}
+      {/* Same footer for both modes - matches Employee sidebar */}
+      <SidebarFooter />
     </SidebarShell>
   );
 }
