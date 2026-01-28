@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { User, Building2, Loader2, Shield, Store } from 'lucide-react';
 import { z } from 'zod';
-import { isDevelopment } from '@/lib/env';
 import { supabase } from '@/integrations/supabase/client';
 import { PasswordStrengthIndicator, isPasswordStrong } from '@/components/auth/PasswordStrengthIndicator';
 import { MFAChallenge } from '@/components/auth/MFAChallenge';
@@ -132,7 +133,6 @@ export default function Auth() {
       const verifiedFactor = factors?.totp.find(f => f.status === 'verified');
       
       if (verifiedFactor) {
-        // Check if already authenticated at AAL2
         const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
         if (aal?.currentLevel !== 'aal2') {
           return { required: true, factorId: verifiedFactor.id };
@@ -166,7 +166,6 @@ export default function Auth() {
           return;
         }
 
-        // Check account lockout first
         const lockout = await checkAccountLockout(email);
         if (lockout.locked) {
           toast.error(lockout.message || 'Account temporarily locked');
@@ -174,7 +173,6 @@ export default function Auth() {
           return;
         }
 
-        // Check rate limit before attempting login
         const allowed = await checkRateLimit('login', email);
         if (!allowed) {
           setLoading(false);
@@ -183,14 +181,11 @@ export default function Auth() {
 
         const { error } = await signIn(email, password);
         if (error) {
-          // Record failed attempt
           await recordLoginAttempt(email, false);
           toast.error(error.message || 'Failed to sign in');
         } else {
-          // Record successful login
           await recordLoginAttempt(email, true);
           
-          // Check if MFA is required
           const mfa = await checkMFARequired();
           if (mfa.required && mfa.factorId) {
             setMfaFactorId(mfa.factorId);
@@ -216,14 +211,12 @@ export default function Auth() {
           return;
         }
 
-        // Check password strength for signup
         if (!isPasswordStrong(password)) {
           setErrors({ password: 'Please create a stronger password' });
           setLoading(false);
           return;
         }
 
-        // Check rate limit before attempting signup
         const allowed = await checkRateLimit('signup', email);
         if (!allowed) {
           setLoading(false);
@@ -282,7 +275,6 @@ export default function Auth() {
   const urlParams = new URLSearchParams(window.location.search);
   const accessParam = urlParams.get('access');
   
-  // Determine which roles to show based on access parameter
   const getAvailableRoles = (): UserRole[] => {
     if (accessParam === 'admin') return ['admin'];
     if (accessParam === 'vendor') return ['vendor'];
@@ -317,7 +309,7 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6 animate-fade-in">
-        {/* Logo */}
+        {/* Logo - Single Instance */}
         <div className="text-center">
           <div className="inline-flex items-center gap-2 mb-2">
             <div className="w-10 h-10 rounded-xl bg-gradient-accent flex items-center justify-center shadow-glow">
@@ -328,8 +320,8 @@ export default function Auth() {
           <p className="text-primary-foreground/70 text-sm">Your Total Rewards Platform</p>
         </div>
 
-        {/* Role Selection */}
-        <Tabs value={selectedRole} onValueChange={(v) => setSelectedRole(v as UserRole)}>
+        {/* Role Selection - Single Instance Above Card */}
+        <Tabs value={selectedRole} onValueChange={(v) => setSelectedRole(v as UserRole)} className="w-full">
           <TabsList className={`grid w-full h-12 bg-primary-foreground/10 backdrop-blur ${availableRoles.length === 4 ? 'grid-cols-4' : 'grid-cols-2'}`}>
             {availableRoles.map((role) => {
               const config = roleConfig[role];
@@ -346,103 +338,105 @@ export default function Auth() {
               );
             })}
           </TabsList>
+        </Tabs>
 
-          <TabsContent value={selectedRole} className="mt-4">
-            <Card className="border-0 shadow-xl">
-              <CardHeader className="space-y-1 pb-4">
-                <CardTitle className="text-xl font-display">
-                  {isLogin ? 'Welcome back' : 'Create account'}
-                </CardTitle>
-                <CardDescription>
-                  {isLogin 
-                    ? `Sign in to your ${selectedRole} account` 
-                    : `Register as ${selectedRole === 'employee' ? 'an employee' : selectedRole === 'admin' ? 'an admin' : `a ${selectedRole}`}`
-                  }
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  {!isLogin && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name</Label>
-                        <Input
-                          id="firstName"
-                          value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
-                          placeholder="John"
-                          className={errors.firstName ? 'border-destructive' : ''}
-                        />
-                        {errors.firstName && (
-                          <p className="text-xs text-destructive">{errors.firstName}</p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name</Label>
-                        <Input
-                          id="lastName"
-                          value={lastName}
-                          onChange={(e) => setLastName(e.target.value)}
-                          placeholder="Doe"
-                          className={errors.lastName ? 'border-destructive' : ''}
-                        />
-                        {errors.lastName && (
-                          <p className="text-xs text-destructive">{errors.lastName}</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  
+        {/* Single Login Card - No TabsContent wrapper */}
+        <Card className="border-0 shadow-xl">
+          <CardHeader className="space-y-1 pb-4">
+            <CardTitle className="text-xl font-display">
+              {isLogin ? 'Welcome back' : 'Create account'}
+            </CardTitle>
+            <CardDescription>
+              {isLogin 
+                ? `Sign in to your ${selectedRole} account` 
+                : `Register as ${selectedRole === 'employee' ? 'an employee' : selectedRole === 'admin' ? 'an admin' : `a ${selectedRole}`}`
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {!isLogin && (
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="firstName">First Name</Label>
                     <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@company.com"
-                      className={errors.email ? 'border-destructive' : ''}
+                      id="firstName"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="John"
+                      className={errors.firstName ? 'border-destructive' : ''}
                     />
-                    {errors.email && (
-                      <p className="text-xs text-destructive">{errors.email}</p>
+                    {errors.firstName && (
+                      <p className="text-xs text-destructive">{errors.firstName}</p>
                     )}
                   </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="lastName">Last Name</Label>
                     <Input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className={errors.password ? 'border-destructive' : ''}
+                      id="lastName"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Doe"
+                      className={errors.lastName ? 'border-destructive' : ''}
                     />
-                    {errors.password && (
-                      <p className="text-xs text-destructive">{errors.password}</p>
+                    {errors.lastName && (
+                      <p className="text-xs text-destructive">{errors.lastName}</p>
                     )}
-                    {/* Password strength indicator for signup */}
-                    {!isLogin && (
-                      <PasswordStrengthIndicator password={password} className="mt-3" />
-                    )}
-                  </div>
-
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    {isLogin ? 'Sign In' : 'Create Account'}
-                  </Button>
-                </form>
-
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">Or</span>
                   </div>
                 </div>
+              )}
+              
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  className={errors.email ? 'border-destructive' : ''}
+                />
+                {errors.email && (
+                  <p className="text-xs text-destructive">{errors.email}</p>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className={errors.password ? 'border-destructive' : ''}
+                />
+                {errors.password && (
+                  <p className="text-xs text-destructive">{errors.password}</p>
+                )}
+                {!isLogin && (
+                  <PasswordStrengthIndicator password={password} className="mt-3" />
+                )}
+              </div>
 
-                {/* UAE Pass Demo Login Button */}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {isLogin ? 'Sign In' : 'Create Account'}
+              </Button>
+            </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">Or</span>
+              </div>
+            </div>
+
+            {/* UAE Pass Button with Demo Badge and Tooltip */}
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Button
                   variant="outline"
                   className="w-full border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 hover:border-emerald-500/50"
@@ -466,41 +460,48 @@ export default function Auth() {
                       <span className="text-emerald-600 dark:text-emerald-400 font-medium">
                         Sign in with UAE PASS
                       </span>
-                      <span className="ml-1.5 text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">Demo</span>
+                      <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0 h-4">
+                        Demo
+                      </Badge>
                     </>
                   )}
                 </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs text-center">
+                <p className="text-xs">UAE PASS is disabled unless enabled for this tenant.</p>
+              </TooltipContent>
+            </Tooltip>
 
-                <p className="text-center text-sm text-muted-foreground">
-                  {isLogin ? "Don't have an account? " : 'Already have an account? '}
-                  <button
-                    type="button"
-                    onClick={() => setIsLogin(!isLogin)}
-                    className="text-accent hover:underline font-medium"
-                  >
-                    {isLogin ? 'Sign up' : 'Sign in'}
-                  </button>
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+            <p className="text-center text-sm text-muted-foreground">
+              {isLogin ? "Don't have an account? " : 'Already have an account? '}
+              <button
+                type="button"
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-accent hover:underline font-medium"
+              >
+                {isLogin ? 'Sign up' : 'Sign in'}
+              </button>
+            </p>
+          </CardContent>
+        </Card>
 
-        {/* Role-specific access hints */}
+        {/* Tertiary Access Links - Single Instance */}
         {!showAllRoles && (
-          <div className="flex flex-col items-center gap-1">
-            <p className="text-center text-xs text-primary-foreground/50">
-              Platform admin?{' '}
-              <a href="/auth?access=admin" className="underline hover:text-primary-foreground/80 transition-colors">
-                Access here
-              </a>
-            </p>
-            <p className="text-center text-xs text-primary-foreground/50">
-              Vendor partner?{' '}
-              <a href="/auth?access=vendor" className="underline hover:text-primary-foreground/80 transition-colors">
-                Access here
-              </a>
-            </p>
+          <div className="flex flex-col items-center gap-1.5 pt-2">
+            <a 
+              href="/auth?access=admin" 
+              className="text-xs text-primary-foreground/50 hover:text-primary-foreground/80 transition-colors flex items-center gap-1.5"
+            >
+              <Shield className="w-3 h-3" />
+              Platform admin? Access here
+            </a>
+            <a 
+              href="/auth?access=vendor" 
+              className="text-xs text-primary-foreground/50 hover:text-primary-foreground/80 transition-colors flex items-center gap-1.5"
+            >
+              <Store className="w-3 h-3" />
+              Vendor partner? Access here
+            </a>
           </div>
         )}
       </div>
