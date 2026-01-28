@@ -71,6 +71,8 @@ import EmployerDataQualityRules from "./pages/employer/DataQualityRules";
 import EmployerSyncMonitor from "./pages/employer/SyncMonitor";
 import EmployeeDirectoryPage from "./pages/employer/EmployeeDirectory";
 import AuditLogsPage from "./pages/employer/AuditLogs";
+import DataQualityControlsPage from "./pages/employer/DataQualityControls";
+import SecurityAuditLogsPage from "./pages/employer/SecurityAuditLogs";
 import ActionWorkflowsPage from "./pages/employer/settings/ActionWorkflows";
 import ApproverGroupsPage from "./pages/employer/settings/ApproverGroups";
 
@@ -268,7 +270,9 @@ function AppRoutes() {
         <Route path="calendar" element={<CalendarPage />} />
         <Route path="ops" element={<OpsPage />} />
         <Route path="employees" element={<EmployeeDirectoryPage />} />
-        <Route path="audit" element={<AuditLogsPage />} />
+        <Route path="audit" element={<SecurityAuditLogsPage />} />
+        <Route path="audit-legacy" element={<AuditLogsPage />} />
+        <Route path="data-controls" element={<DataQualityControlsPage />} />
         <Route path="marketplace" element={<MarketplaceAnalyticsPage />} />
         <Route path="policies" element={<PoliciesPage />} />
         <Route path="integrations" element={<IntegrationsPage />} />
