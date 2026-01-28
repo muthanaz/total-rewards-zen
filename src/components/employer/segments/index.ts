@@ -16,3 +16,6 @@ export * from './BulletChart';
 // Drilldown & Playbook
 export * from './SegmentDrilldownDrawer';
 export * from './SegmentPlaybookPanel';
+
+// AI Explainability
+export * from './AIWatchlistExplainer';

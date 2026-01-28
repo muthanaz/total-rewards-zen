@@ -29,95 +29,149 @@ import { BehavioralGapType, SegmentMetrics } from './types';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
+type OwnerRole = 'HR Ops' | 'Comp & Ben' | 'Vendor Manager' | 'IT';
+type EffortLevel = 'low' | 'medium' | 'high';
+type ConfidenceLevel = 'high' | 'medium' | 'low';
+
 interface InterventionType {
   id: 'policy_tweak' | 'education_comms' | 'vendor_offer' | 'workflow_change';
   label: string;
+  leverType: string;
   description: string;
   icon: React.ElementType;
   priority: 'high' | 'medium' | 'low';
   route: string;
+  ownerRole: OwnerRole;
+  effort: EffortLevel;
+  impactRange: 'small' | 'medium' | 'large';
+  confidence: ConfidenceLevel;
 }
 
-// Define intervention recommendations per behavioral gap
+// Define intervention recommendations per behavioral gap with full metadata
 const INTERVENTIONS: Record<BehavioralGapType, InterventionType[]> = {
   'low-engagement': [
     {
       id: 'education_comms',
-      label: 'Education Comms',
+      label: 'Awareness Campaign',
+      leverType: 'Comms Campaign',
       description: 'Launch awareness campaign to explain benefit value and how to claim',
       icon: Mail,
       priority: 'high',
       route: '/employer/communications?template=awareness',
+      ownerRole: 'HR Ops',
+      effort: 'low',
+      impactRange: 'medium',
+      confidence: 'high',
     },
     {
       id: 'workflow_change',
-      label: 'Workflow Change',
+      label: 'Process Simplification',
+      leverType: 'Workflow Change',
       description: 'Simplify claiming process to reduce friction barriers',
       icon: Settings2,
       priority: 'medium',
       route: '/employer/policies?focus=workflow',
+      ownerRole: 'Comp & Ben',
+      effort: 'medium',
+      impactRange: 'medium',
+      confidence: 'medium',
     },
     {
       id: 'vendor_offer',
-      label: 'Vendor Offer',
+      label: 'Onboarding Offers',
+      leverType: 'Vendor Offer',
       description: 'Partner with providers for special onboarding offers',
       icon: Gift,
       priority: 'low',
       route: '/employer/vendors?action=new-offer',
+      ownerRole: 'Vendor Manager',
+      effort: 'medium',
+      impactRange: 'small',
+      confidence: 'low',
     },
   ],
   'concentrated-spend': [
     {
       id: 'policy_tweak',
-      label: 'Policy Tweak',
+      label: 'Eligibility Review',
+      leverType: 'Policy Tweak',
       description: 'Review eligibility rules to improve benefit equity',
       icon: FileEdit,
       priority: 'high',
       route: '/employer/policies?action=review',
+      ownerRole: 'Comp & Ben',
+      effort: 'high',
+      impactRange: 'large',
+      confidence: 'medium',
     },
     {
       id: 'education_comms',
-      label: 'Education Comms',
+      label: 'Targeted Guidance',
+      leverType: 'Comms Campaign',
       description: 'Target under-utilizing groups with personalized guidance',
       icon: Mail,
       priority: 'high',
       route: '/employer/communications?template=targeted',
+      ownerRole: 'HR Ops',
+      effort: 'low',
+      impactRange: 'medium',
+      confidence: 'medium',
     },
     {
       id: 'workflow_change',
-      label: 'Workflow Change',
+      label: 'Pre-Approval Nudges',
+      leverType: 'Workflow Change',
       description: 'Add pre-approval nudges to prevent budget concentration',
       icon: Settings2,
       priority: 'medium',
       route: '/employer/policies?focus=approval',
+      ownerRole: 'IT',
+      effort: 'medium',
+      impactRange: 'small',
+      confidence: 'low',
     },
   ],
   'high-engagement-low-cost': [
     {
       id: 'vendor_offer',
-      label: 'Vendor Offer',
+      label: 'Volume Discounts',
+      leverType: 'Vendor Offer',
       description: 'Negotiate volume discounts with popular providers',
       icon: Gift,
       priority: 'high',
       route: '/employer/vendors?action=negotiate',
+      ownerRole: 'Vendor Manager',
+      effort: 'medium',
+      impactRange: 'medium',
+      confidence: 'high',
     },
     {
       id: 'policy_tweak',
-      label: 'Policy Tweak',
+      label: 'Category Expansion',
+      leverType: 'Policy Tweak',
       description: 'Consider expanding this benefit category',
       icon: FileEdit,
       priority: 'medium',
       route: '/employer/policies?action=expand',
+      ownerRole: 'Comp & Ben',
+      effort: 'high',
+      impactRange: 'large',
+      confidence: 'medium',
     },
   ],
   'balanced': [
     {
       id: 'workflow_change',
-      label: 'Workflow Change',
+      label: 'Operational Efficiency',
+      leverType: 'Workflow Change',
       description: 'Maintain current approach, focus on operational efficiency',
       icon: Settings2,
       priority: 'low',
       route: '/employer/ops',
+      ownerRole: 'HR Ops',
+      effort: 'low',
+      impactRange: 'small',
+      confidence: 'high',
     },
   ],
 };
@@ -126,6 +180,24 @@ const priorityConfig = {
   high: { className: 'bg-destructive/10 text-destructive border-destructive/30', label: 'High' },
   medium: { className: 'bg-warning/10 text-warning border-warning/30', label: 'Med' },
   low: { className: 'bg-muted text-muted-foreground', label: 'Low' },
+};
+
+const effortConfig: Record<EffortLevel, { className: string; label: string }> = {
+  low: { className: 'text-success', label: 'Low' },
+  medium: { className: 'text-warning', label: 'Med' },
+  high: { className: 'text-destructive', label: 'High' },
+};
+
+const confidenceConfig: Record<ConfidenceLevel, { className: string; bgClass: string; label: string }> = {
+  high: { className: 'text-success', bgClass: 'bg-success/10 border-success/30', label: 'High' },
+  medium: { className: 'text-warning', bgClass: 'bg-warning/10 border-warning/30', label: 'Med' },
+  low: { className: 'text-destructive', bgClass: 'bg-destructive/10 border-destructive/30', label: 'Low' },
+};
+
+const impactConfig: Record<string, string> = {
+  small: 'Small',
+  medium: 'Medium',
+  large: 'Large',
 };
 
 const gapConfig: Record<BehavioralGapType, { icon: React.ElementType; color: string; label: string }> = {
@@ -199,10 +271,12 @@ export function SegmentPlaybookPanel({
         </div>
 
         {/* Intervention List */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           {interventions.map((intervention, index) => {
             const Icon = intervention.icon;
             const priority = priorityConfig[intervention.priority];
+            const effort = effortConfig[intervention.effort];
+            const confidence = confidenceConfig[intervention.confidence];
             
             return (
               <motion.div
@@ -225,15 +299,41 @@ export function SegmentPlaybookPanel({
                       <Icon className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="font-medium text-sm">{intervention.label}</span>
                         <Badge variant="outline" className={cn('text-[10px] px-1.5 py-0', priority.className)}>
-                          {priority.label}
+                          {priority.label} Priority
                         </Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2">
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
                         {intervention.description}
                       </p>
+                      
+                      {/* Actionable Metadata Row */}
+                      <div className="flex items-center gap-3 text-[10px] flex-wrap">
+                        {/* Lever Type */}
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted">
+                          <span className="text-muted-foreground">Lever:</span>
+                          <span className="font-medium">{intervention.leverType}</span>
+                        </span>
+                        
+                        {/* Owner */}
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted">
+                          <span className="text-muted-foreground">Owner:</span>
+                          <span className="font-medium">{intervention.ownerRole}</span>
+                        </span>
+                        
+                        {/* Effort */}
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted">
+                          <span className="text-muted-foreground">Effort:</span>
+                          <span className={cn('font-medium', effort.className)}>{effort.label}</span>
+                        </span>
+                        
+                        {/* Impact + Confidence */}
+                        <Badge variant="outline" className={cn('text-[10px] px-1.5 py-0', confidence.bgClass)}>
+                          {impactConfig[intervention.impactRange]} impact · {confidence.label} conf.
+                        </Badge>
+                      </div>
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 mt-1 group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
                   </div>

@@ -31,6 +31,7 @@ import {
   SegmentDrilldownDrawer,
   SegmentPlaybookPanel,
   DrilldownContext,
+  AIWatchlistExplainer,
 } from '@/components/employer/segments';
 import { Rocket, Download, BarChart3, Users, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
@@ -182,6 +183,20 @@ export default function SegmentsPage() {
           onSelect={handleWatchlistClick}
           savedSegments={savedSegments}
         />
+
+        {/* AI Watchlist Explainer - Shows "Why this segment?" when AI segment selected */}
+        {selectedWatchlistId && (
+          <AIWatchlistExplainer
+            segment={
+              AI_WATCHLIST_SEGMENTS.find(s => s.id === selectedWatchlistId) 
+                ? {
+                    ...AI_WATCHLIST_SEGMENTS.find(s => s.id === selectedWatchlistId)!,
+                    trend: AI_WATCHLIST_SEGMENTS.find(s => s.id === selectedWatchlistId)!.trend,
+                  }
+                : null
+            }
+          />
+        )}
 
         {/* View Tabs - Strategic Insights vs Member List */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'insights' | 'members')}>
