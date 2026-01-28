@@ -77,6 +77,37 @@ export function ExecBottomLineKPIs({
     </span>
   );
 
+  // Format last updated for footer
+  const formatLastUpdated = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays === 1) return 'Yesterday';
+    return `${diffDays}d ago`;
+  };
+
+  // Confidence footer component
+  const ConfidenceFooter = ({ confidence }: { confidence: 'high' | 'medium' | 'low' }) => {
+    const styles = {
+      high: 'text-success',
+      medium: 'text-warning',
+      low: 'text-destructive',
+    };
+    const labels = { high: 'High', medium: 'Med', low: 'Low' };
+    
+    return (
+      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+        <span>
+          Confidence: <span className={cn('font-medium', styles[confidence])}>{labels[confidence]}</span>
+        </span>
+        <span>Last updated: {formatLastUpdated(lastUpdated)}</span>
+      </div>
+    );
+  };
+
   return (
     <MetricsContractGrid columns={4} className={className}>
       {/* 1. YTD Spend */}
@@ -97,6 +128,7 @@ export function ExecBottomLineKPIs({
           lastUpdated,
           confidence: getConfidence('ytdSpend'),
         }}
+        footer={<ConfidenceFooter confidence={getConfidence('ytdSpend')} />}
         onClick={() => onKPIClick?.('ytdSpend')}
       />
 
@@ -119,6 +151,7 @@ export function ExecBottomLineKPIs({
           confidence: getConfidence('projected'),
         }}
         subtitle="Based on current run rate"
+        footer={<ConfidenceFooter confidence={getConfidence('projected')} />}
         onClick={() => onKPIClick?.('projected')}
       />
 
@@ -138,21 +171,24 @@ export function ExecBottomLineKPIs({
           confidence: getConfidence('variance'),
         }}
         footer={
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">
-              {isOverBudget ? 'Over budget' : 'Under budget'}
-            </span>
-            <Badge 
-              variant="outline" 
-              className={cn(
-                'text-[10px]',
-                isOverBudget 
-                  ? 'bg-destructive/10 text-destructive border-destructive/30' 
-                  : 'bg-success/10 text-success border-success/30'
-              )}
-            >
-              {variancePercent}%
-            </Badge>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">
+                {isOverBudget ? 'Over budget' : 'Under budget'}
+              </span>
+              <Badge 
+                variant="outline" 
+                className={cn(
+                  'text-[10px]',
+                  isOverBudget 
+                    ? 'bg-destructive/10 text-destructive border-destructive/30' 
+                    : 'bg-success/10 text-success border-success/30'
+                )}
+              >
+                {variancePercent}%
+              </Badge>
+            </div>
+            <ConfidenceFooter confidence={getConfidence('variance')} />
           </div>
         }
         onClick={() => onKPIClick?.('variance')}
@@ -178,15 +214,18 @@ export function ExecBottomLineKPIs({
           confidenceReason: 'Based on 72% employee data coverage',
         }}
         footer={
-          <div className="flex items-center justify-between text-xs">
-            <span className="inline-flex items-center gap-1">
-              <span className="text-muted-foreground">Recovery Potential</span>
-              <SSOTTooltip metricKey="recovery_potential" size="sm" />
-              {isMetricEstimated('recovery_potential') && <EstimatedBadge />}
-            </span>
-            <span className="font-semibold text-success tabular-nums">
-              {formatCurrencyAED(recoveryPotential, { abbreviate: true })}
-            </span>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="inline-flex items-center gap-1">
+                <span className="text-muted-foreground">Recovery Potential</span>
+                <SSOTTooltip metricKey="recovery_potential" size="sm" />
+                {isMetricEstimated('recovery_potential') && <EstimatedBadge />}
+              </span>
+              <span className="font-semibold text-success tabular-nums">
+                {formatCurrencyAED(recoveryPotential, { abbreviate: true })}
+              </span>
+            </div>
+            <ConfidenceFooter confidence={getConfidence('leakage')} />
           </div>
         }
         onClick={() => onKPIClick?.('leakage')}

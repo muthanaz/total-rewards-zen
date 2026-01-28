@@ -4,25 +4,30 @@
  * Shows:
  * - SLA breach risk indicator + link to Ops Hub filtered view
  * - Settlement backlog risk + link to Settlements
- * - Policy compliance trend + link to Data Quality & Controls
+ * - SLA Compliance (renamed from "Compliance Rate") + link to Data Quality & Controls
  */
 
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { 
   ShieldAlert, 
   Clock, 
   Banknote, 
-  FileWarning,
+  CheckCircle2,
   ArrowRight,
   TrendingDown,
   TrendingUp,
-  AlertTriangle,
-  CheckCircle2,
+  Info,
 } from 'lucide-react';
 import { cn, formatCurrencyAED } from '@/lib/utils';
+import { SSOTTooltip } from '@/components/shared/SSOTTooltip';
 
 export interface RiskIndicator {
   id: string;
@@ -46,16 +51,19 @@ const RISK_CONFIG = {
     icon: Clock,
     title: 'SLA Breach Risk',
     healthyLabel: 'All on track',
+    metricKey: null, // No SSOT metric for this
   },
   settlement_backlog: {
     icon: Banknote,
     title: 'Settlement Backlog',
     healthyLabel: 'No backlog',
+    metricKey: null,
   },
   policy_compliance: {
-    icon: FileWarning,
-    title: 'Policy Compliance',
+    icon: CheckCircle2,
+    title: 'SLA Compliance',
     healthyLabel: 'Compliant',
+    metricKey: 'sla_compliance',
   },
 };
 
@@ -105,12 +113,12 @@ export function ExecRisksPanel({ risks, className }: ExecRisksPanelProps) {
     {
       id: 'compliance',
       type: 'policy_compliance',
-      label: 'Compliance Rate',
+      label: 'SLA Compliance',
       value: '94%',
       status: 'healthy',
       trend: 2,
       trendLabel: 'vs last month',
-      linkTo: '/employer/data-quality',
+      linkTo: '/employer/data-controls',
       linkLabel: 'View Data Quality',
     },
   ];
@@ -162,6 +170,10 @@ export function ExecRisksPanel({ risks, className }: ExecRisksPanelProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <p className="font-medium text-sm">{risk.label}</p>
+                    {/* SSOT Tooltip for SLA Compliance */}
+                    {config.metricKey && (
+                      <SSOTTooltip metricKey={config.metricKey} size="sm" />
+                    )}
                     <Badge 
                       variant="outline" 
                       className={cn('text-[10px]', statusStyle.badge)}
