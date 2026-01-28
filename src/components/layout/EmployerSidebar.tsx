@@ -78,7 +78,8 @@ const unifiedNavigation: NavGroup[] = [
     label: 'Strategy',
     labelAr: 'الاستراتيجية',
     items: [
-      { label: 'Dashboard', labelAr: 'لوحة التحكم', path: '/employer', icon: LayoutDashboard },
+      // In HR Ops mode, this is labeled "Executive Overview" to differentiate from operational work
+      { label: 'Executive Overview', labelAr: 'نظرة تنفيذية', path: '/employer', icon: LayoutDashboard },
       { label: 'Investment Analysis', labelAr: 'تحليل الاستثمار', path: '/employer/spend', icon: BarChart3 },
       { label: 'Segments', labelAr: 'الشرائح', path: '/employer/segments', icon: PieChart },
       { label: 'ROI & Savings', labelAr: 'العائد والتوفير', path: '/employer/optimization', icon: TrendingUp },
@@ -87,9 +88,9 @@ const unifiedNavigation: NavGroup[] = [
     ],
   },
   {
-    id: 'configuration',
-    label: 'Configuration',
-    labelAr: 'الإعدادات',
+    id: 'system-governance',
+    label: 'System & Governance',
+    labelAr: 'النظام والحوكمة',
     items: [
       { label: 'Policy Management', labelAr: 'إدارة السياسات', path: '/employer/policies', icon: BookOpen },
       { label: 'Integrations', labelAr: 'التكاملات', path: '/employer/integrations', icon: Cable },
@@ -304,7 +305,7 @@ export function EmployerSidebar() {
             ))}
           </div>
         ) : (
-          // OPERATIONAL MODE: Collapsible sections (Strategy, Operations, Configuration)
+          // OPERATIONAL MODE: Collapsible sections (Strategy, Operations, System & Governance)
           visibleNavigation.map((group) => (
             <SidebarSection
               key={group.id}
@@ -313,6 +314,8 @@ export function EmployerSidebar() {
               labelAr={group.labelAr}
               isOpen={expandedSections.includes(group.id)}
               onToggle={() => toggleSection(group.id)}
+              // Highlight Operations group with subtle background in Ops mode
+              className={group.id === 'operations' ? 'bg-sidebar-accent/5 rounded-lg mx-1 px-1' : undefined}
             >
               {group.items.map((item) => (
                 <SidebarItem

@@ -21,6 +21,8 @@ interface SidebarSectionProps {
   isOpen?: boolean;
   /** Callback when section is toggled */
   onToggle?: () => void;
+  /** Optional className for the wrapper */
+  className?: string;
 }
 
 /**
@@ -36,6 +38,7 @@ export function SidebarSection({
   children,
   isOpen: controlledOpen,
   onToggle,
+  className,
 }: SidebarSectionProps) {
   const { language, direction } = useLanguage();
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
@@ -54,7 +57,7 @@ export function SidebarSection({
   const displayLabel = language === 'ar' && labelAr ? labelAr : label;
 
   return (
-    <div className="mb-1 mt-4 first:mt-0">
+    <div className={cn('mb-1 mt-4 first:mt-0', className)}>
       {/* Section heading */}
       <button
         onClick={handleToggle}
