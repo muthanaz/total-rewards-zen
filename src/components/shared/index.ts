@@ -15,6 +15,8 @@ export { MetricTooltip } from './MetricTooltip';
 export { ConfidenceBadge, ConfidenceDot } from './ConfidenceBadge';
 export { MetricDefinitionsDrawer } from './MetricDefinitionsDrawer';
 
+// SSOT (Single Source of Truth) Tooltip
+export { SSOTTooltip, EstimatedBadge, MetricLabelWithTooltip } from './SSOTTooltip';
 // Golden Standard Metrics Contract Component
 export { 
   MetricsContract, 

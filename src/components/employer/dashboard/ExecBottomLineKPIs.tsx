@@ -7,6 +7,7 @@
  * 4. Budget Leakage (AED) + Recovery Potential (AED) as paired card
  * 
  * Uses MetricsContract component for consistent display
+ * Uses SSOT metrics dictionary for canonical definitions
  */
 
 import { DollarSign, TrendingUp, AlertTriangle, Wallet } from 'lucide-react';
@@ -14,6 +15,8 @@ import { MetricsContract, MetricsContractGrid } from '@/components/shared/Metric
 import { formatCurrencyAED } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { SSOTTooltip, EstimatedBadge } from '@/components/shared/SSOTTooltip';
+import { isMetricEstimated } from '@/lib/ssot';
 
 export interface BottomLineMetrics {
   ytdSpend: number;
@@ -65,11 +68,20 @@ export function ExecBottomLineKPIs({
     return 'medium';
   };
 
+  // Helper to render KPI title with SSOT tooltip
+  const renderKPITitle = (title: string, metricKey: string) => (
+    <span className="inline-flex items-center gap-1.5">
+      {title}
+      <SSOTTooltip metricKey={metricKey} lastUpdated={lastUpdated} />
+      {isMetricEstimated(metricKey) && <EstimatedBadge />}
+    </span>
+  );
+
   return (
     <MetricsContractGrid columns={4} className={className}>
       {/* 1. YTD Spend */}
       <MetricsContract
-        title="YTD Total Spend"
+        title={renderKPITitle("YTD Total Spend", "ytd_spend")}
         value={formatCurrencyAED(ytdSpend, { abbreviate: true })}
         icon={DollarSign}
         iconClassName="bg-primary/10 text-primary"
@@ -90,7 +102,7 @@ export function ExecBottomLineKPIs({
 
       {/* 2. Projected Year-End Spend */}
       <MetricsContract
-        title="Projected Year-End"
+        title={renderKPITitle("Projected Year-End", "projected_year_end")}
         value={formatCurrencyAED(projectedYearEnd, { abbreviate: true })}
         icon={TrendingUp}
         iconClassName="bg-accent/10 text-accent"
@@ -112,7 +124,7 @@ export function ExecBottomLineKPIs({
 
       {/* 3. Budget Variance */}
       <MetricsContract
-        title="Budget Variance"
+        title={renderKPITitle("Budget Variance", "budget_variance")}
         value={`${isOverBudget ? '+' : ''}${formatCurrencyAED(Math.abs(budgetVariance), { abbreviate: true })}`}
         icon={Wallet}
         iconClassName={cn(
@@ -148,7 +160,7 @@ export function ExecBottomLineKPIs({
 
       {/* 4. Budget Leakage + Recovery Potential (paired) */}
       <MetricsContract
-        title="Budget Leakage"
+        title={renderKPITitle("Budget Leakage", "budget_leakage")}
         value={formatCurrencyAED(budgetLeakage, { abbreviate: true })}
         icon={AlertTriangle}
         iconClassName="bg-warning/10 text-warning"
@@ -167,7 +179,11 @@ export function ExecBottomLineKPIs({
         }}
         footer={
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Recovery Potential</span>
+            <span className="inline-flex items-center gap-1">
+              <span className="text-muted-foreground">Recovery Potential</span>
+              <SSOTTooltip metricKey="recovery_potential" size="sm" />
+              {isMetricEstimated('recovery_potential') && <EstimatedBadge />}
+            </span>
             <span className="font-semibold text-success tabular-nums">
               {formatCurrencyAED(recoveryPotential, { abbreviate: true })}
             </span>

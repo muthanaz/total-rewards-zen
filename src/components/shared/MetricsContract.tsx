@@ -64,8 +64,8 @@ export interface MetricMetadata {
 }
 
 export interface MetricsContractProps {
-  /** Short KPI title */
-  title: string;
+  /** Short KPI title - can include tooltip components */
+  title: string | ReactNode;
   /** Formatted value to display */
   value: string | number;
   /** Optional icon */
