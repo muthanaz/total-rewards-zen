@@ -1,16 +1,19 @@
 /**
- * Optimization Page (Strategic Decision Support)
+ * Optimization Page (CFO-Defensible Strategic Decision Support)
  * 
- * Three executive-focused tabs that guide strategic budget decisions:
+ * Three executive-focused tabs with strict definitions:
  * 
- * Tab 1: "Cost Efficiency" (CFO View) - Hard financial waste recovery
- * Tab 2: "Value Activation" (CHRO View) - Low adoption awareness campaigns  
- * Tab 3: "Portfolio Rebalancing" (CEO View) - Moving idle money to high-demand areas
+ * Tab 1: "Cost Efficiency" (CFO View) - Budget Leakage, noncompliance, duplicates
+ * Tab 2: "Value Activation" (CHRO View) - Unused value, adoption barriers  
+ * Tab 3: "Portfolio Rebalancing" (CEO View) - Shift budget based on utilization
  * 
- * Uses enterprise-grade language without false retention promises.
- * 
- * NOTE: Uses "Budget Leakage" terminology (replaces deprecated "Zombie Spend").
- * NOTE: Uses "Operations Hub" terminology (replaces deprecated "Workbench").
+ * Every recommendation uses the standard card template with:
+ * - Verb-led title
+ * - Impact (AED range)
+ * - Confidence level
+ * - Mechanism + Risk/Downside
+ * - Primary CTA: "Simulate"
+ * - Secondary CTA: "Create Action" / "Open Policy"
  * 
  * @module Optimization
  */
@@ -26,10 +29,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
-  Target, ArrowRight,
-  Download, Calendar, Info,
+  Target, Download, Calendar, Info,
   Wallet, Users, Scale,
-  TrendingUp,
   CircleDollarSign,
 } from 'lucide-react';
 import { 
@@ -67,6 +68,8 @@ import {
   PortfolioRebalanceItem,
   StrategicTabType,
   RecoveryBatchReviewModal,
+  OptimizationSimulatorModal,
+  OptimizationRecommendation,
 } from '@/components/employer/optimization';
 
 // ============= MAIN COMPONENT =============
@@ -105,6 +108,10 @@ export default function ZombieSpendPage() {
   const [recoveryModalOpen, setRecoveryModalOpen] = useState(false);
   const [selectedRecoveryItem, setSelectedRecoveryItem] = useState<CostEfficiencyItem | null>(null);
   
+  // Simulator modal state
+  const [simulatorOpen, setSimulatorOpen] = useState(false);
+  const [simulatorRecommendation, setSimulatorRecommendation] = useState<OptimizationRecommendation | null>(null);
+  
   // Handle URL params for deep linking
   useEffect(() => {
     const tabParam = searchParams.get('tab');
@@ -137,26 +144,96 @@ export default function ZombieSpendPage() {
   const inActionPlanValue = consistentRecoverable * 0.35;
   const realizedValue = consistentRecoverable * 0.12;
 
-  // Calculate total opportunity across all tabs
-  const totalOpportunity = 
-    strategicData.costEfficiency.totalRecoverable +
-    strategicData.valueActivation.totalUnutilized +
-    strategicData.portfolioRebalancing.totalReallocationPotential;
+  // Calculate total opportunity across all tabs (use min values for display)
+  const totalOpportunityMin = 
+    strategicData.costEfficiency.totalRecoverableMin +
+    strategicData.valueActivation.totalUnutilizedMin +
+    strategicData.portfolioRebalancing.totalReallocationMin;
+    
+  const totalOpportunityMax = 
+    strategicData.costEfficiency.totalRecoverableMax +
+    strategicData.valueActivation.totalUnutilizedMax +
+    strategicData.portfolioRebalancing.totalReallocationMax;
 
-  // Handle Cost Efficiency action - opens the batch review modal
-  const handleInitiateRecovery = (item: CostEfficiencyItem) => {
-    setSelectedRecoveryItem(item);
-    setRecoveryModalOpen(true);
+  // ============= SIMULATE HANDLERS =============
+  
+  const handleSimulateCostEfficiency = (item: CostEfficiencyItem) => {
+    const rec: OptimizationRecommendation = {
+      id: item.id,
+      title: item.title,
+      category: item.category,
+      impactMin: item.recoveryAmountMin,
+      impactMax: item.recoveryAmountMax,
+      confidence: item.confidence,
+      mechanism: item.mechanism,
+      riskDownside: item.riskDownside,
+      type: 'cost_efficiency',
+      rootCause: item.rootCause,
+      affectedHeadcount: item.affectedEmployees?.length,
+      relatedPolicyId: item.relatedPolicyId,
+    };
+    setSimulatorRecommendation(rec);
+    setSimulatorOpen(true);
+  };
+  
+  const handleSimulateValueActivation = (item: ValueActivationItem) => {
+    const rec: OptimizationRecommendation = {
+      id: item.id,
+      title: item.title,
+      category: item.category,
+      impactMin: item.unutilizedValueMin,
+      impactMax: item.unutilizedValueMax,
+      confidence: item.awareness === 'low' ? 'high' : 'medium',
+      mechanism: item.mechanism,
+      riskDownside: item.riskDownside,
+      type: 'value_activation',
+      affectedHeadcount: item.eligibleCount - item.claimantCount,
+    };
+    setSimulatorRecommendation(rec);
+    setSimulatorOpen(true);
+  };
+  
+  const handleSimulatePortfolio = (item: PortfolioRebalanceItem) => {
+    const rec: OptimizationRecommendation = {
+      id: item.id,
+      title: item.title,
+      category: `${item.sourceCategory} → ${item.suggestedTarget}`,
+      impactMin: item.reallocationAmountMin,
+      impactMax: item.reallocationAmountMax,
+      confidence: item.targetDemand === 'high' ? 'high' : 'medium',
+      mechanism: item.mechanism,
+      riskDownside: item.riskDownside,
+      type: 'portfolio_rebalancing',
+      affectedHeadcount: item.employeeImpactEstimate,
+      relatedPolicyId: item.policyChangesRequired?.[0],
+    };
+    setSimulatorRecommendation(rec);
+    setSimulatorOpen(true);
   };
 
-  // Handle Value Activation action
-  const handleLaunchCampaign = (item: ValueActivationItem) => {
+  // ============= CREATE ACTION HANDLERS =============
+  
+  const handleCreateActionCostEfficiency = (item: CostEfficiencyItem) => {
     setSelectedOpportunity({
       id: item.id,
-      title: `Awareness Campaign: ${item.benefitName}`,
+      title: item.title,
+      category: item.category,
+      type: 'hard_savings',
+      valueOpportunity: item.recoveryAmountMin,
+      rootCause: item.rootCause || 'policy_gap',
+      effort: item.confidence === 'high' ? 'low' : 'medium',
+      timeToImpact: '2-4 weeks',
+    });
+    setActionModalOpen(true);
+  };
+  
+  const handleCreateActionValueActivation = (item: ValueActivationItem) => {
+    setSelectedOpportunity({
+      id: item.id,
+      title: item.title,
       category: item.category,
       type: 'value_realization',
-      valueOpportunity: item.unutilizedValue,
+      valueOpportunity: item.unutilizedValueMin,
       rootCause: 'awareness',
       effort: 'low',
       timeToImpact: '4-6 weeks',
@@ -164,19 +241,24 @@ export default function ZombieSpendPage() {
     setActionModalOpen(true);
   };
 
-  // Handle Portfolio Rebalancing action
-  const handleEvaluatePolicyShift = (item: PortfolioRebalanceItem) => {
+  const handleCreateActionPortfolio = (item: PortfolioRebalanceItem) => {
     setSelectedOpportunity({
       id: item.id,
-      title: `Policy Shift: ${item.sourceCategory} → ${item.suggestedTarget}`,
+      title: item.title,
       category: item.sourceCategory,
       type: 'value_realization',
-      valueOpportunity: item.reallocationAmount,
+      valueOpportunity: item.reallocationAmountMin,
       rootCause: 'policy',
       effort: 'high',
       timeToImpact: '8-12 weeks',
     });
     setActionModalOpen(true);
+  };
+
+  // ============= SUBMIT FOR APPROVAL =============
+  
+  const handleSubmitForApproval = (recommendation: OptimizationRecommendation) => {
+    navigate(`/employer/actions?action=new&opportunityId=${recommendation.id}&fromSimulator=true`);
   };
 
   // Handle action creation
@@ -215,11 +297,15 @@ export default function ZombieSpendPage() {
     });
   };
 
+  const handleOpenPolicy = (policyId: string) => {
+    navigate(`/employer/policies/${policyId}`);
+  };
+
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
       <PageLayout
         title="Optimization"
-        description={`FY ${ORG_BASELINE.fiscalYear} · ${formatCurrencyAED(totalOpportunity, { abbreviate: true })} total optimization potential`}
+        description={`FY ${ORG_BASELINE.fiscalYear} · ${formatCurrencyAED(totalOpportunityMin, { abbreviate: true })} – ${formatCurrencyAED(totalOpportunityMax, { abbreviate: true })} total potential`}
         icon={Target}
         iconClassName="bg-success/10 text-success"
         confidenceBadge={<DataConfidenceBadge metrics={coverageMetrics} />}
@@ -288,13 +374,13 @@ export default function ZombieSpendPage() {
                   />
                 </CardTitle>
                 <CardDescription>
-                  Three perspectives for strategic budget decisions
+                  CFO-defensible recommendations with impact simulations
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="secondary" className="gap-1">
                   <CircleDollarSign className="h-3 w-3" />
-                  {formatCurrencyAED(totalOpportunity, { abbreviate: true })} Total Opportunity
+                  {formatCurrencyAED(totalOpportunityMin, { abbreviate: true })} – {formatCurrencyAED(totalOpportunityMax, { abbreviate: true })}
                 </Badge>
               </div>
             </div>
@@ -307,7 +393,7 @@ export default function ZombieSpendPage() {
                   <span className="hidden sm:inline">Cost Efficiency</span>
                   <span className="sm:hidden">CFO</span>
                   <Badge variant="secondary" className="ml-1 text-xs hidden md:flex">
-                    {formatCurrencyAED(strategicData.costEfficiency.totalRecoverable, { abbreviate: true })}
+                    {formatCurrencyAED(strategicData.costEfficiency.totalRecoverableMin, { abbreviate: true })}
                   </Badge>
                 </TabsTrigger>
                 <TabsTrigger value="value_activation" className="gap-2">
@@ -323,68 +409,43 @@ export default function ZombieSpendPage() {
                   <span className="hidden sm:inline">Portfolio Rebalancing</span>
                   <span className="sm:hidden">CEO</span>
                   <Badge variant="secondary" className="ml-1 text-xs hidden md:flex">
-                    {formatCurrencyAED(strategicData.portfolioRebalancing.totalReallocationPotential, { abbreviate: true })}
+                    {formatCurrencyAED(strategicData.portfolioRebalancing.totalReallocationMin, { abbreviate: true })}
                   </Badge>
                 </TabsTrigger>
               </TabsList>
 
               {/* Tab 1: Cost Efficiency (CFO View) */}
               <TabsContent value="cost_efficiency" className="mt-0">
-                <div className="mb-4 p-3 rounded-lg bg-muted/30 border">
-                  <div className="flex items-center gap-2">
-                    <Wallet className="h-5 w-5 text-success" />
-                    <div>
-                      <p className="font-semibold text-sm">The CFO View</p>
-                      <p className="text-xs text-muted-foreground">
-                        Hard financial waste: Duplicate coverage, Vendor overcharges, Unclaimed cash-out options
-                      </p>
-                    </div>
-                  </div>
-                </div>
                 <CostEfficiencyTab 
                   items={strategicData.costEfficiency.items}
-                  totalRecoverable={strategicData.costEfficiency.totalRecoverable}
-                  onInitiateRecovery={handleInitiateRecovery}
+                  totalRecoverableMin={strategicData.costEfficiency.totalRecoverableMin}
+                  totalRecoverableMax={strategicData.costEfficiency.totalRecoverableMax}
+                  onSimulate={handleSimulateCostEfficiency}
+                  onCreateAction={handleCreateActionCostEfficiency}
+                  onOpenPolicy={handleOpenPolicy}
                 />
               </TabsContent>
 
               {/* Tab 2: Value Activation (CHRO View) */}
               <TabsContent value="value_activation" className="mt-0">
-                <div className="mb-4 p-3 rounded-lg bg-muted/30 border">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-info" />
-                    <div>
-                      <p className="font-semibold text-sm">The CHRO View</p>
-                      <p className="text-xs text-muted-foreground">
-                        Benefits with &lt;20% adoption rate - Ensuring employees know what they're entitled to
-                      </p>
-                    </div>
-                  </div>
-                </div>
                 <ValueActivationTab 
                   items={strategicData.valueActivation.items}
-                  totalUnutilized={strategicData.valueActivation.totalUnutilized}
-                  onLaunchCampaign={handleLaunchCampaign}
+                  totalUnutilizedMin={strategicData.valueActivation.totalUnutilizedMin}
+                  totalUnutilizedMax={strategicData.valueActivation.totalUnutilizedMax}
+                  onSimulate={handleSimulateValueActivation}
+                  onCreateAction={handleCreateActionValueActivation}
                 />
               </TabsContent>
 
               {/* Tab 3: Portfolio Rebalancing (CEO View) */}
               <TabsContent value="portfolio_rebalancing" className="mt-0">
-                <div className="mb-4 p-3 rounded-lg bg-muted/30 border">
-                  <div className="flex items-center gap-2">
-                    <Scale className="h-5 w-5 text-accent" />
-                    <div>
-                      <p className="font-semibold text-sm">The CEO View</p>
-                      <p className="text-xs text-muted-foreground">
-                        Moving idle money to high-demand areas - Aligning spend with what employees actually use
-                      </p>
-                    </div>
-                  </div>
-                </div>
                 <PortfolioRebalancingTab 
                   items={strategicData.portfolioRebalancing.items}
-                  totalReallocationPotential={strategicData.portfolioRebalancing.totalReallocationPotential}
-                  onEvaluatePolicyShift={handleEvaluatePolicyShift}
+                  totalReallocationMin={strategicData.portfolioRebalancing.totalReallocationMin}
+                  totalReallocationMax={strategicData.portfolioRebalancing.totalReallocationMax}
+                  onSimulate={handleSimulatePortfolio}
+                  onCreateAction={handleCreateActionPortfolio}
+                  onOpenPolicy={handleOpenPolicy}
                 />
               </TabsContent>
             </Tabs>
@@ -421,6 +482,14 @@ export default function ZombieSpendPage() {
           open={recoveryModalOpen}
           onOpenChange={setRecoveryModalOpen}
           item={selectedRecoveryItem}
+        />
+        
+        {/* Simulator Modal */}
+        <OptimizationSimulatorModal
+          open={simulatorOpen}
+          onOpenChange={setSimulatorOpen}
+          recommendation={simulatorRecommendation}
+          onSubmitForApproval={handleSubmitForApproval}
         />
       </PageLayout>
     </PageConfidenceGate>
