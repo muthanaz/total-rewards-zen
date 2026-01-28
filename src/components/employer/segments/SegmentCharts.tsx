@@ -3,19 +3,36 @@
  * 
  * Visualizations for the segment builder with interactive drill-down.
  * Uses OBJECTIVE BEHAVIORAL DATA - Budget vs Participation comparison.
+ * 
+ * EVERY CHART CLICK opens a drilldown with CTAs.
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { SegmentMetrics } from './types';
 import { formatCurrencyAED, formatPercent, cn } from '@/lib/utils';
-import { Lightbulb, TrendingUp, Target, AlertTriangle, CheckCircle, DollarSign, UserCheck, MousePointerClick } from 'lucide-react';
+import { 
+  Lightbulb, 
+  TrendingUp, 
+  Target, 
+  AlertTriangle, 
+  CheckCircle, 
+  DollarSign, 
+  UserCheck, 
+  MousePointerClick,
+  ChevronRight,
+  Mail,
+  FileEdit,
+} from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 interface SegmentChartsProps {
   metrics: SegmentMetrics;
   onBenefitClick?: (benefitName: string) => void;
+  onInsightClick?: () => void;
 }
 
 const COLORS = ['hsl(var(--accent))', 'hsl(var(--primary))', 'hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--chart-5))', 'hsl(var(--chart-6))'];
@@ -34,7 +51,9 @@ const gapColors = {
   'low-engagement': 'text-destructive',
 };
 
-export function SegmentCharts({ metrics, onBenefitClick }: SegmentChartsProps) {
+export function SegmentCharts({ metrics, onBenefitClick, onInsightClick }: SegmentChartsProps) {
+  const navigate = useNavigate();
+
   if (metrics.matches === 0) {
     return (
       <Card className="border-dashed">
@@ -57,20 +76,32 @@ export function SegmentCharts({ metrics, onBenefitClick }: SegmentChartsProps) {
     }
   };
 
+  // Handle request action click
+  const handleRequestAction = (need: string) => {
+    navigate(`/employer/communications?template=education&topic=${encodeURIComponent(need)}`);
+  };
+
   return (
     <div className="space-y-4">
-      {/* Behavioral Gap Insight - Prominent display */}
+      {/* Behavioral Gap Insight - Prominent & Clickable */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <Card className={cn(
-          'border-2',
-          metrics.behavioralGap === 'high-engagement-low-cost' ? 'border-success/30 bg-success/5' :
-          metrics.behavioralGap === 'concentrated-spend' ? 'border-warning/30 bg-warning/5' :
-          metrics.behavioralGap === 'balanced' ? 'border-primary/30 bg-primary/5' :
-          'border-destructive/30 bg-destructive/5'
-        )}>
+        <Card 
+          className={cn(
+            'border-2 transition-all cursor-pointer group',
+            'hover:shadow-md hover:scale-[1.01]',
+            metrics.behavioralGap === 'high-engagement-low-cost' ? 'border-success/30 bg-success/5' :
+            metrics.behavioralGap === 'concentrated-spend' ? 'border-warning/30 bg-warning/5' :
+            metrics.behavioralGap === 'balanced' ? 'border-primary/30 bg-primary/5' :
+            'border-destructive/30 bg-destructive/5'
+          )}
+          onClick={onInsightClick}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && onInsightClick?.()}
+        >
           <CardContent className="py-4">
             <div className="flex items-start gap-4">
               <div className={cn(
@@ -83,7 +114,13 @@ export function SegmentCharts({ metrics, onBenefitClick }: SegmentChartsProps) {
                 <GapIcon className={cn('h-6 w-6', gapColors[metrics.behavioralGap])} />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-base mb-1">Behavioral Gap Analysis</h3>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-semibold text-base">Behavioral Gap Analysis</h3>
+                  <Badge variant="outline" className="text-[10px] gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <MousePointerClick className="h-3 w-3" />
+                    Click for details
+                  </Badge>
+                </div>
                 <p className="text-sm text-muted-foreground">{metrics.behavioralGapInsight}</p>
                 
                 {/* Visual comparison */}
@@ -104,6 +141,7 @@ export function SegmentCharts({ metrics, onBenefitClick }: SegmentChartsProps) {
                   </div>
                 </div>
               </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0 mt-3 group-hover:translate-x-1 transition-transform" />
             </div>
           </CardContent>
         </Card>
@@ -185,7 +223,7 @@ export function SegmentCharts({ metrics, onBenefitClick }: SegmentChartsProps) {
           </Card>
         </motion.div>
         
-        {/* Top 3 Requests */}
+        {/* Top 3 Requests - Now with actionable CTAs */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -206,7 +244,7 @@ export function SegmentCharts({ metrics, onBenefitClick }: SegmentChartsProps) {
                     <div
                       key={need.need}
                       className={cn(
-                        "p-2 rounded-lg border text-sm",
+                        "p-2 rounded-lg border text-sm group hover:border-accent/50 transition-colors",
                         index === 0 ? 'bg-accent/10 border-accent/30' : 'bg-muted/50'
                       )}
                     >
@@ -214,10 +252,32 @@ export function SegmentCharts({ metrics, onBenefitClick }: SegmentChartsProps) {
                         <Badge variant="outline" className="shrink-0 text-xs">
                           #{index + 1}
                         </Badge>
-                        <span className="font-medium truncate">{need.need}</span>
-                        <span className="text-xs text-muted-foreground ml-auto">
+                        <span className="font-medium truncate flex-1">{need.need}</span>
+                        <span className="text-xs text-muted-foreground">
                           {need.count}
                         </span>
+                      </div>
+                      
+                      {/* Action buttons - visible on hover */}
+                      <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-7 text-xs gap-1 flex-1"
+                          onClick={() => handleRequestAction(need.need)}
+                        >
+                          <Mail className="h-3 w-3" />
+                          Send Comms
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-7 text-xs gap-1 flex-1"
+                          onClick={() => navigate(`/employer/policies?search=${encodeURIComponent(need.need)}`)}
+                        >
+                          <FileEdit className="h-3 w-3" />
+                          Review Policy
+                        </Button>
                       </div>
                     </div>
                   ))}

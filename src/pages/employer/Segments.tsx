@@ -4,10 +4,13 @@
  * Dynamic segment builder with customizable filters, live preview,
  * AI-powered watchlist, and dual-view tabs for Exec/HR modes.
  * 
- * Renamed from "People Intelligence Engine" for clearer executive communication.
+ * MISSION: Every insight leads to a target list and an action.
+ * - Every chart click opens a drilldown drawer
+ * - Segment Playbook recommends interventions
+ * - CTAs enforced on every insight
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -25,16 +28,28 @@ import {
   SaveSegmentModal,
   SegmentMemberTable,
   BulletChart,
+  SegmentDrilldownDrawer,
+  SegmentPlaybookPanel,
+  DrilldownContext,
 } from '@/components/employer/segments';
-import { Rocket, Download, BarChart3, Users } from 'lucide-react';
+import { Rocket, Download, BarChart3, Users, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { AI_WATCHLIST_SEGMENTS } from '@/components/employer/segments/mockData';
 
 export default function SegmentsPage() {
   const navigate = useNavigate();
   const coverageMetrics = useDataCoverageMetrics();
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'insights' | 'members'>('insights');
+  
+  // Drilldown drawer state
+  const [drilldownOpen, setDrilldownOpen] = useState(false);
+  const [drilldownContext, setDrilldownContext] = useState<DrilldownContext>({
+    title: 'Segment',
+    description: 'View segment details',
+    source: 'filter',
+  });
 
   const {
     filters,
@@ -51,6 +66,11 @@ export default function SegmentsPage() {
     applyWatchlistSegment,
   } = useSegmentBuilder();
 
+  // Get current segment name for CTAs
+  const currentSegmentName = selectedWatchlistId 
+    ? aiWatchlist.find(s => s.id === selectedWatchlistId)?.name || 'Custom'
+    : hasActiveFilters ? dynamicTitle.replace('Analysis: ', '') : 'All Employees';
+
   const handleSaveSegment = (name: string) => {
     saveSegment(name);
     toast.success('Segment saved', {
@@ -59,10 +79,7 @@ export default function SegmentsPage() {
   };
 
   const handleLaunchCampaign = () => {
-    const segmentName = selectedWatchlistId 
-      ? aiWatchlist.find(s => s.id === selectedWatchlistId)?.name || 'Custom'
-      : 'Custom Segment';
-    navigate(`/employer/actions?create=true&source=segments&segment=${encodeURIComponent(segmentName)}`);
+    navigate(`/employer/actions?create=true&source=segments&segment=${encodeURIComponent(currentSegmentName)}`);
   };
 
   const handleExportReport = () => {
@@ -70,6 +87,47 @@ export default function SegmentsPage() {
       description: `${metrics.matches} employees included`,
     });
   };
+
+  // Handle benefit chart click - opens drilldown drawer
+  const handleBenefitClick = useCallback((benefitName: string) => {
+    // Apply the filter
+    updateFilter('benefitType', benefitName);
+    
+    // Open drilldown drawer with benefit context
+    setDrilldownContext({
+      title: `${benefitName} Users`,
+      description: `Employees utilizing ${benefitName} benefits`,
+      source: 'benefit',
+      filterApplied: benefitName,
+    });
+    setDrilldownOpen(true);
+  }, [updateFilter]);
+
+  // Handle watchlist segment click - opens drilldown drawer
+  const handleWatchlistClick = useCallback((segmentId: string) => {
+    const segment = AI_WATCHLIST_SEGMENTS.find(s => s.id === segmentId);
+    if (segment) {
+      applyWatchlistSegment(segmentId);
+      
+      // Open drilldown drawer with watchlist context
+      setDrilldownContext({
+        title: segment.name,
+        description: segment.description,
+        source: 'watchlist',
+      });
+      setDrilldownOpen(true);
+    }
+  }, [applyWatchlistSegment]);
+
+  // Handle behavioral gap insight click
+  const handleInsightClick = useCallback(() => {
+    setDrilldownContext({
+      title: 'Behavioral Gap Analysis',
+      description: metrics.behavioralGapInsight,
+      source: 'chart',
+    });
+    setDrilldownOpen(true);
+  }, [metrics.behavioralGapInsight]);
 
   return (
     <PageConfidenceGate metrics={coverageMetrics} threshold={70}>
@@ -118,10 +176,10 @@ export default function SegmentsPage() {
           </div>
         </div>
 
-        {/* AI Watchlist Strip */}
+        {/* AI Watchlist Strip - now opens drilldown on click */}
         <AIWatchlistStrip
           selectedId={selectedWatchlistId}
-          onSelect={applyWatchlistSegment}
+          onSelect={handleWatchlistClick}
           savedSegments={savedSegments}
         />
 
@@ -140,9 +198,9 @@ export default function SegmentsPage() {
 
           {/* Main Content: Split View */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-            {/* Left Panel: The Slicer */}
-            <div className="lg:col-span-4 xl:col-span-3">
-              <div className="lg:sticky lg:top-6">
+            {/* Left Panel: The Slicer + Playbook */}
+            <div className="lg:col-span-4 xl:col-span-3 space-y-4">
+              <div className="lg:sticky lg:top-6 space-y-4">
                 <SegmentFilterPanel
                   filters={filters}
                   onFilterChange={updateFilter}
@@ -150,6 +208,14 @@ export default function SegmentsPage() {
                   onSave={() => setSaveModalOpen(true)}
                   hasActiveFilters={hasActiveFilters}
                 />
+                
+                {/* Segment Playbook - Always visible when segment is flagged */}
+                {metrics.matches > 0 && (
+                  <SegmentPlaybookPanel 
+                    metrics={metrics}
+                    segmentName={currentSegmentName}
+                  />
+                )}
               </div>
             </div>
 
@@ -165,20 +231,50 @@ export default function SegmentsPage() {
               <TabsContent value="insights" className="mt-0 space-y-6">
                 {/* Strategic Insights - Executive View */}
                 
-                {/* Bullet Chart for Usage vs Adoption */}
-                <BulletChart metrics={metrics} />
+                {/* Bullet Chart for Usage vs Adoption - Clickable */}
+                <div 
+                  onClick={handleInsightClick}
+                  className="cursor-pointer transition-transform hover:scale-[1.01]"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && handleInsightClick()}
+                >
+                  <BulletChart metrics={metrics} />
+                </div>
                 
                 {/* Behavioral Gap + Charts with Drill-Down */}
                 <SegmentCharts 
                   metrics={metrics} 
-                  onBenefitClick={(benefitName) => {
-                    updateFilter('benefitType', benefitName);
-                    setActiveTab('members');
-                    toast.info(`Showing ${benefitName} users`, {
-                      description: 'Switched to Member List view',
-                    });
-                  }}
+                  onBenefitClick={handleBenefitClick}
                 />
+                
+                {/* Quick CTA for non-empty segments */}
+                {metrics.matches > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center justify-center gap-4 p-4 rounded-lg border border-dashed bg-muted/30"
+                  >
+                    <Sparkles className="h-5 w-5 text-accent" />
+                    <span className="text-sm text-muted-foreground">
+                      Ready to take action on this segment?
+                    </span>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setDrilldownContext({
+                          title: currentSegmentName,
+                          description: `${metrics.matches} employees matching current filters`,
+                          source: 'filter',
+                        });
+                        setDrilldownOpen(true);
+                      }}
+                    >
+                      View & Act
+                    </Button>
+                  </motion.div>
+                )}
               </TabsContent>
 
               <TabsContent value="members" className="mt-0">
@@ -188,6 +284,17 @@ export default function SegmentsPage() {
             </div>
           </div>
         </Tabs>
+
+        {/* Drilldown Drawer - Opens on every chart/insight click */}
+        <SegmentDrilldownDrawer
+          open={drilldownOpen}
+          onOpenChange={setDrilldownOpen}
+          context={drilldownContext}
+          filters={filters}
+          metrics={metrics}
+          employees={filteredEmployees}
+          segmentName={currentSegmentName}
+        />
 
         {/* Save Segment Modal */}
         <SaveSegmentModal
