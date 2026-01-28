@@ -4,10 +4,13 @@
  * Three executive-focused tabs that guide strategic budget decisions:
  * 
  * Tab 1: "Cost Efficiency" (CFO View) - Hard financial waste recovery
- * Tab 2: "Value Activation" (CHRO View) - Low adoption awareness campaigns
+ * Tab 2: "Value Activation" (CHRO View) - Low adoption awareness campaigns  
  * Tab 3: "Portfolio Rebalancing" (CEO View) - Moving idle money to high-demand areas
  * 
  * Uses enterprise-grade language without false retention promises.
+ * 
+ * NOTE: Uses "Budget Leakage" terminology (replaces deprecated "Zombie Spend").
+ * NOTE: Uses "Operations Hub" terminology (replaces deprecated "Workbench").
  * 
  * @module Optimization
  */

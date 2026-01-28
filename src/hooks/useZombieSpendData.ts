@@ -1,8 +1,10 @@
 /**
- * Zombie Spend Data Hook
+ * Budget Leakage Data Hook
  * 
- * Provides zombie spend (unused entitlement) data with category breakdowns,
+ * Provides budget leakage (unused entitlement) data with category breakdowns,
  * root-cause analysis, and playbook tracking.
+ * 
+ * NOTE: "Budget Leakage" replaces the deprecated term "Zombie Spend" per terminology standards.
  */
 
 import { useState, useMemo, useCallback } from 'react';
