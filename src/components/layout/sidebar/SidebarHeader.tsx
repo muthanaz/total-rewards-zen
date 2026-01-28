@@ -63,6 +63,10 @@ export function SidebarHeader({
         <NotificationCenter />
         <LanguageSwitcher />
         <DarkModeToggle />
+        {/* Search hint */}
+        <div className="flex items-center gap-1.5 ml-auto px-2 py-1 rounded-md bg-sidebar-accent/30 text-sidebar-foreground/50 text-[10px] font-medium">
+          <span>⌘K</span>
+        </div>
       </div>
 
       {/* Extra content slot */}
