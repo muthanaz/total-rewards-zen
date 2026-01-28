@@ -56,7 +56,7 @@ export function SegmentMetricsRow({ metrics, title }: SegmentMetricsRowProps) {
         </motion.h2>
       )}
 
-      {/* Metrics Cards */}
+      {/* Metrics Cards - Equal height with min-height */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <AnimatePresence mode="wait">
           {/* Matches */}
@@ -66,8 +66,8 @@ export function SegmentMetricsRow({ metrics, title }: SegmentMetricsRowProps) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2 }}
           >
-            <Card className="card-elevated">
-              <CardContent className="p-4">
+            <Card className="card-elevated h-full min-h-[100px]">
+              <CardContent className="p-4 h-full flex items-center">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-primary/10">
                     <Users className="h-5 w-5 text-primary" />
@@ -90,8 +90,8 @@ export function SegmentMetricsRow({ metrics, title }: SegmentMetricsRowProps) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2, delay: 0.05 }}
           >
-            <Card className="card-elevated">
-              <CardContent className="p-4">
+            <Card className="card-elevated h-full min-h-[100px]">
+              <CardContent className="p-4 h-full flex items-center">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-accent/10">
                     <DollarSign className="h-5 w-5 text-accent" />
@@ -121,8 +121,8 @@ export function SegmentMetricsRow({ metrics, title }: SegmentMetricsRowProps) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2, delay: 0.1 }}
           >
-            <Card className="card-elevated">
-              <CardContent className="p-4">
+            <Card className="card-elevated h-full min-h-[100px]">
+              <CardContent className="p-4 h-full flex items-center">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-success/10">
                     <UserCheck className="h-5 w-5 text-success" />
@@ -153,8 +153,8 @@ export function SegmentMetricsRow({ metrics, title }: SegmentMetricsRowProps) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2, delay: 0.15 }}
           >
-            <Card className="card-elevated">
-              <CardContent className="p-4">
+            <Card className="card-elevated h-full min-h-[100px]">
+              <CardContent className="p-4 h-full flex items-center">
                 <div className="flex items-center gap-3">
                   <div className={cn(
                     "p-2 rounded-lg",

@@ -211,10 +211,10 @@ export default function SegmentsPage() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Main Content: Split View */}
+          {/* Main Content: Split View - 3 cols filters / 9 cols content */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-            {/* Left Panel: The Slicer + Playbook */}
-            <div className="lg:col-span-4 xl:col-span-3 space-y-4">
+            {/* Left Panel: The Slicer + Playbook - 3 cols */}
+            <div className="lg:col-span-3 space-y-4">
               <div className="lg:sticky lg:top-6 space-y-4">
                 <SegmentFilterPanel
                   filters={filters}
@@ -234,8 +234,8 @@ export default function SegmentsPage() {
               </div>
             </div>
 
-            {/* Right Panel: Tab Content */}
-            <div className="lg:col-span-8 xl:col-span-9 space-y-6">
+            {/* Right Panel: Tab Content - 9 cols */}
+            <div className="lg:col-span-9 space-y-6">
               {/* Metrics Row (visible in both tabs) */}
               <SegmentMetricsRow 
                 metrics={metrics} 

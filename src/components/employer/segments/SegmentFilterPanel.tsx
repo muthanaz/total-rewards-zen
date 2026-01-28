@@ -55,7 +55,7 @@ interface FilterGroupProps {
   activeCount?: number;
 }
 
-function FilterGroup({ title, icon: Icon, defaultOpen = true, children, activeCount = 0 }: FilterGroupProps) {
+function FilterGroup({ title, icon: Icon, defaultOpen = false, children, activeCount = 0 }: FilterGroupProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
@@ -109,6 +109,66 @@ export function SegmentFilterPanel({
     (filters.riskLevel ? 1 : 0) +
     (filters.benefitType ? 1 : 0);
 
+  // Compute applied filters for chips
+  const appliedFilters: { key: string; label: string; onClear: () => void }[] = [];
+  
+  if (filters.nationalities.length > 0) {
+    appliedFilters.push({
+      key: 'nationalities',
+      label: `${filters.nationalities.length} nationalit${filters.nationalities.length > 1 ? 'ies' : 'y'}`,
+      onClear: () => onFilterChange('nationalities', []),
+    });
+  }
+  if (filters.departments.length > 0) {
+    appliedFilters.push({
+      key: 'departments',
+      label: `${filters.departments.length} dept${filters.departments.length > 1 ? 's' : ''}`,
+      onClear: () => onFilterChange('departments', []),
+    });
+  }
+  if (filters.grades.length > 0) {
+    appliedFilters.push({
+      key: 'grades',
+      label: `${filters.grades.length} grade${filters.grades.length > 1 ? 's' : ''}`,
+      onClear: () => onFilterChange('grades', []),
+    });
+  }
+  if (filters.tenure) {
+    appliedFilters.push({
+      key: 'tenure',
+      label: filters.tenure,
+      onClear: () => onFilterChange('tenure', null),
+    });
+  }
+  if (filters.salaryRange[0] !== SALARY_MIN || filters.salaryRange[1] !== SALARY_MAX) {
+    appliedFilters.push({
+      key: 'salary',
+      label: 'Salary',
+      onClear: () => onFilterChange('salaryRange', [SALARY_MIN, SALARY_MAX]),
+    });
+  }
+  if (filters.utilizationRange) {
+    appliedFilters.push({
+      key: 'utilization',
+      label: `${filters.utilizationRange[0]}-${filters.utilizationRange[1]}%`,
+      onClear: () => onFilterChange('utilizationRange', null),
+    });
+  }
+  if (filters.riskLevel) {
+    appliedFilters.push({
+      key: 'risk',
+      label: filters.riskLevel,
+      onClear: () => onFilterChange('riskLevel', null),
+    });
+  }
+  if (filters.benefitType) {
+    appliedFilters.push({
+      key: 'benefit',
+      label: filters.benefitType,
+      onClear: () => onFilterChange('benefitType', null),
+    });
+  }
+
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-3">
@@ -118,16 +178,41 @@ export function SegmentFilterPanel({
             Segment Filters
           </CardTitle>
         </div>
-        {/* Reset Button - Always visible at top */}
+        
+        {/* Applied Filters Chips */}
+        {appliedFilters.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {appliedFilters.map((filter) => (
+              <Badge 
+                key={filter.key}
+                variant="secondary" 
+                className="text-xs gap-1 pr-1"
+              >
+                {filter.label}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    filter.onClear();
+                  }}
+                  className="ml-0.5 hover:bg-muted-foreground/20 rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        )}
+        
+        {/* Clear All + Reset Button Row */}
         {hasActiveFilters && (
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={onReset}
-            className="w-full mt-2 gap-2 text-destructive hover:text-destructive"
+            className="w-full mt-2 gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            Reset All Filters
+            Clear All
           </Button>
         )}
       </CardHeader>
@@ -190,12 +275,12 @@ export function SegmentFilterPanel({
               </div>
             </FilterGroup>
 
-            {/* Employment Group */}
+            {/* Employment Group - collapsed by default */}
             <FilterGroup 
               title="Employment" 
               icon={Briefcase}
               activeCount={employmentCount}
-              defaultOpen={true}
+              defaultOpen={false}
             >
               {/* Department Filter */}
               <div className="space-y-2">
