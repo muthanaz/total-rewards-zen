@@ -15,6 +15,59 @@ export { MetricTooltip } from './MetricTooltip';
 export { ConfidenceBadge, ConfidenceDot } from './ConfidenceBadge';
 export { MetricDefinitionsDrawer } from './MetricDefinitionsDrawer';
 
+// Golden Standard Metrics Contract Component
+export { 
+  MetricsContract, 
+  MetricsContractGrid, 
+  MetricExpandableDetails,
+} from './MetricsContract';
+export type { 
+  MetricsContractProps, 
+  MetricMetadata, 
+  MetricTrend,
+  DataConfidence,
+} from './MetricsContract';
+
+// Actionable Insight Card (enforces CTAs)
+export { 
+  ActionableInsightCard, 
+  InsightList, 
+  InsightGrid,
+} from './ActionableInsightCard';
+export type { 
+  ActionableInsightCardProps, 
+  InsightCTA, 
+  InsightType,
+} from './ActionableInsightCard';
+
+// Premium Grid & Layout Primitives
+export {
+  DisplayHeading,
+  H1,
+  H2,
+  H3,
+  H4,
+  Body,
+  Caption,
+  Label,
+  MetricValue,
+  KPIGrid,
+  ContentGrid,
+  Stack,
+  Inline,
+  PageSection as PremiumPageSection,
+  CardSection,
+  Spacer,
+  Divider,
+  SPACING,
+} from './PremiumGrid';
+export type {
+  KPIGridProps,
+  ContentGridProps,
+  StackProps,
+  InlineProps,
+} from './PremiumGrid';
+
 // Drill Down / Detail Views
 export { DrillDownSheet, DrillDownSummaryGrid } from './DrillDownSheet';
 export { KPIDrilldownSheet, useKPIDrilldown } from './KPIDrilldownSheet';

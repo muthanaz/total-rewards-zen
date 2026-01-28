@@ -1,10 +1,13 @@
 /**
- * Unified Operations Hub
+ * Operations Hub (Unified)
  * 
- * Merged view combining:
- * - KPI metrics strip (top)
- * - Full Claims & Requests with filters, tabs, pagination (main 75%)
- * - Friction Reasons + Payroll Countdown (side panel 25%)
+ * Primary operational interface for HR Ops teams combining:
+ * - Backlog: Operational KPIs strip (top)
+ * - SLA Performance: Full Claims & Requests with filters, tabs, pagination (main 75%)
+ * - Throughput & Exceptions: Friction Reasons + Payroll Countdown (side panel 25%)
+ * - Payments Pipeline: Settlement integration
+ * 
+ * NOTE: "Operations Hub" replaces the deprecated term "Workbench" per terminology standards.
  */
 
 import { useState, useMemo, useCallback } from 'react';
