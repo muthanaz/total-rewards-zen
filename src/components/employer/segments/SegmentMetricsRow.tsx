@@ -3,6 +3,7 @@
  * 
  * Top metric row with live-updating KPIs.
  * Uses OBJECTIVE BEHAVIORAL DATA: Budget Usage & Participation Rate.
+ * All metrics have SSOT tooltips for canonical definitions.
  */
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,6 +12,8 @@ import { Users, DollarSign, UserCheck, PieChart } from 'lucide-react';
 import { SegmentMetrics } from './types';
 import { formatCurrencyAED, formatPercent, formatInteger, cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SSOTTooltip, EstimatedBadge } from '@/components/shared/SSOTTooltip';
+import { isMetricEstimated } from '@/lib/ssot';
 
 interface SegmentMetricsRowProps {
   metrics: SegmentMetrics;
@@ -101,7 +104,10 @@ export function SegmentMetricsRow({ metrics, title }: SegmentMetricsRowProps) {
                     )}>
                       {formatPercent(metrics.budgetUsage)}
                     </p>
-                    <p className="text-xs text-muted-foreground">Budget Usage</p>
+                    <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                      Budget Usage
+                      <SSOTTooltip metricKey="budget_usage" size="sm" />
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -129,7 +135,11 @@ export function SegmentMetricsRow({ metrics, title }: SegmentMetricsRowProps) {
                     )}>
                       {formatPercent(metrics.participationRate)}
                     </p>
-                    <p className="text-xs text-muted-foreground">Employee Participation</p>
+                    <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                      Participation
+                      <SSOTTooltip metricKey="participation_rate" size="sm" />
+                      {isMetricEstimated('participation_rate') && <EstimatedBadge />}
+                    </p>
                   </div>
                 </div>
               </CardContent>

@@ -3,6 +3,8 @@
  * 
  * Bar-in-Bar visualization comparing Budget Usage vs Participation Rate.
  * Compact, space-efficient design for executive dashboards.
+ * 
+ * Uses SSOT metrics dictionary for canonical definitions.
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +12,8 @@ import { SegmentMetrics } from './types';
 import { formatPercent, formatCurrencyAED, cn } from '@/lib/utils';
 import { DollarSign, UserCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { SSOTTooltip, EstimatedBadge } from '@/components/shared/SSOTTooltip';
+import { isMetricEstimated } from '@/lib/ssot';
 
 interface BulletChartProps {
   metrics: SegmentMetrics;
@@ -21,7 +25,11 @@ export function BulletChart({ metrics }: BulletChartProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Usage vs Adoption (Bullet Chart)</CardTitle>
+        <CardTitle className="text-sm inline-flex items-center gap-2">
+          Budget Used vs Participation
+          <SSOTTooltip metricKey="budget_usage" />
+          <SSOTTooltip metricKey="participation_rate" />
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Combined Bullet Chart */}
@@ -55,13 +63,16 @@ export function BulletChart({ metrics }: BulletChartProps) {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-muted-foreground/30" />
-              <span className="text-muted-foreground">Budget Usage:</span>
+              <span className="text-muted-foreground">Budget Used:</span>
               <span className="font-semibold tabular-nums">{formatPercent(budgetUsage)}</span>
+              <SSOTTooltip metricKey="budget_usage" size="sm" />
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-success" />
               <span className="text-muted-foreground">Participation:</span>
               <span className="font-semibold tabular-nums">{formatPercent(participationRate)}</span>
+              <SSOTTooltip metricKey="participation_rate" size="sm" />
+              {isMetricEstimated('participation_rate') && <EstimatedBadge />}
             </div>
           </div>
 

@@ -231,7 +231,7 @@ export default function SegmentsPage() {
               <TabsContent value="insights" className="mt-0 space-y-6">
                 {/* Strategic Insights - Executive View */}
                 
-                {/* Bullet Chart for Usage vs Adoption - Clickable */}
+                {/* Bullet Chart for Budget Used vs Participation - Clickable */}
                 <div 
                   onClick={handleInsightClick}
                   className="cursor-pointer transition-transform hover:scale-[1.01]"
