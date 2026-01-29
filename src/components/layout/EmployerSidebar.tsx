@@ -99,7 +99,7 @@ const opsNavigation: NavGroup[] = [
     items: [
       { label: 'Operations Hub', labelAr: 'مركز العمليات', path: '/employer/ops', icon: LayoutGrid, isPrimary: true },
       { label: 'Settlements', labelAr: 'التسويات', path: '/employer/settlements', icon: Banknote },
-      { label: 'Communications', labelAr: 'الاتصالات', path: '/employer/communications', icon: Megaphone },
+      { label: 'Templates & Imports', labelAr: 'القوالب والاستيراد', path: '/employer/templates', icon: TableProperties },
       { label: 'Calendar', labelAr: 'التقويم', path: '/employer/calendar', icon: CalendarDays },
       { label: 'Employee Directory', labelAr: 'دليل الموظفين', path: '/employer/employees', icon: Users },
       { label: 'Reports', labelAr: 'التقارير', path: '/employer/reports', icon: TableProperties },

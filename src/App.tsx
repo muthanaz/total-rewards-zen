@@ -83,6 +83,7 @@ import SecurityAuditLogsPage from "./pages/employer/SecurityAuditLogs";
 import ActionWorkflowsPage from "./pages/employer/settings/ActionWorkflows";
 import ApproverGroupsPage from "./pages/employer/settings/ApproverGroups";
 import SetupPage from "./pages/employer/Setup";
+import TemplatesPage from "./pages/employer/Templates";
 
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminBenchmarks from "./pages/admin/Benchmarks";
@@ -303,6 +304,7 @@ function AppRoutes() {
         <Route path="settings/workflows" element={<ActionWorkflowsPage />} />
         <Route path="settings/approver-groups" element={<ApproverGroupsPage />} />
         <Route path="setup" element={<SetupPage />} />
+        <Route path="templates" element={<TemplatesPage />} />
       </Route>
 
       {/* Admin Routes - Platform owner only */}
