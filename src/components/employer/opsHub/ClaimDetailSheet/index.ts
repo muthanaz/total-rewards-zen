@@ -9,4 +9,5 @@ export { SummaryTab } from './SummaryTab';
 export { DocumentsTab } from './DocumentsTab';
 export { DecisionTab } from './DecisionTab';
 export { AuditTrailTab } from './AuditTrailTab';
+export { ApprovalBlockersSection, computeApprovalBlockers } from './ApprovalBlockersSection';
 export * from './types';

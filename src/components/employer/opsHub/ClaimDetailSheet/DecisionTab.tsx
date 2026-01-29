@@ -1,7 +1,10 @@
 /**
  * ClaimDetailSheet - Decision Tab
  * 
- * Approve / Reject / Request Info with required reason codes and validation
+ * Approve / Reject / Request Info with:
+ * - Approval Blockers section at top showing exact blockers + how to resolve
+ * - Override allowed only with reason code + audit note
+ * - Required reason codes and validation
  */
 
 import { useState, useMemo } from 'react';
@@ -25,9 +28,9 @@ import {
   FileQuestion,
   AlertTriangle,
   Info,
-  Shield,
 } from 'lucide-react';
 import { cn, formatCurrencyAED } from '@/lib/utils';
+import { ApprovalBlockersSection, computeApprovalBlockers } from './ApprovalBlockersSection';
 import type { DecisionPayload, ClaimSummary, ClaimDocument, SettlementReadiness } from './types';
 
 interface DecisionTabProps {
@@ -35,6 +38,7 @@ interface DecisionTabProps {
   documents: ClaimDocument[];
   settlementReadiness: SettlementReadiness | null;
   onDecision: (payload: DecisionPayload) => void;
+  onNavigateToTab?: (tab: 'documents') => void;
   isProcessing: boolean;
 }
 
@@ -65,7 +69,8 @@ export function DecisionTab({
   claim, 
   documents, 
   settlementReadiness,
-  onDecision, 
+  onDecision,
+  onNavigateToTab,
   isProcessing 
 }: DecisionTabProps) {
   const [selectedAction, setSelectedAction] = useState<'approve' | 'reject' | 'request_info' | null>(null);
@@ -74,17 +79,40 @@ export function DecisionTab({
   const [messageToEmployee, setMessageToEmployee] = useState('');
   const [acknowledgeOverride, setAcknowledgeOverride] = useState(false);
 
+  // Compute approval blockers
+  const approvalBlockers = useMemo(() => {
+    return computeApprovalBlockers(
+      {
+        payableAmount: claim.payableAmount,
+        amountClaimed: claim.amountClaimed,
+        policyRef: claim.policyRef,
+      },
+      documents.map(d => ({
+        isRequired: d.isRequired,
+        status: d.status,
+        docName: d.docName,
+      })),
+      null // settlementMethod - could be enhanced
+    );
+  }, [claim, documents]);
+
   // Validation checks
-  const allRequiredDocsVerified = documents.filter(d => d.isRequired).every(d => d.status === 'verified');
+  const hasErrorBlockers = approvalBlockers.some(b => b.severity === 'error');
+  const hasWarningBlockers = approvalBlockers.some(b => b.severity === 'warning');
   const hasPayableAmount = claim.payableAmount !== null && claim.payableAmount > 0;
-  const pendingDocCount = documents.filter(d => d.isRequired && d.status !== 'verified').length;
 
   const canApprove = useMemo(() => {
-    if (!hasPayableAmount) return false;
-    if (!allRequiredDocsVerified && reasonCode !== 'APPROVE_WITH_EXCEPTION') return false;
-    if (reasonCode === 'APPROVE_WITH_EXCEPTION' && !acknowledgeOverride) return false;
+    // Cannot approve if there are error-level blockers
+    if (hasErrorBlockers) return false;
+    
+    // If warning blockers exist, must use exception with acknowledgment
+    if (hasWarningBlockers) {
+      if (reasonCode !== 'APPROVE_WITH_EXCEPTION') return false;
+      if (!acknowledgeOverride) return false;
+    }
+    
     return reasonText.length >= MIN_REASON_LENGTH;
-  }, [hasPayableAmount, allRequiredDocsVerified, reasonCode, acknowledgeOverride, reasonText]);
+  }, [hasErrorBlockers, hasWarningBlockers, reasonCode, acknowledgeOverride, reasonText]);
 
   const canReject = useMemo(() => {
     return reasonCode && reasonText.length >= MIN_REASON_LENGTH;
@@ -116,39 +144,20 @@ export function DecisionTab({
     return true;
   };
 
+  const handleBlockerResolve = (blockerId: string, action: string) => {
+    // Navigate to documents tab for doc-related blockers
+    if (blockerId === 'missing_docs' || blockerId === 'unverified_docs') {
+      onNavigateToTab?.('documents');
+    }
+  };
+
   return (
     <div className="space-y-4">
-      {/* Pre-decision Checks */}
-      <Card className="border-muted">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Shield className="w-4 h-4" />
-            Pre-Decision Checks
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0 space-y-2">
-          <div className="flex items-center gap-2">
-            {allRequiredDocsVerified ? (
-              <CheckCircle className="w-4 h-4 text-success" />
-            ) : (
-              <AlertTriangle className="w-4 h-4 text-warning" />
-            )}
-            <span className="text-sm">
-              Required documents: {allRequiredDocsVerified ? 'All verified' : `${pendingDocCount} pending`}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            {hasPayableAmount ? (
-              <CheckCircle className="w-4 h-4 text-success" />
-            ) : (
-              <XCircle className="w-4 h-4 text-destructive" />
-            )}
-            <span className="text-sm">
-              Payable amount: {hasPayableAmount ? formatCurrencyAED(claim.payableAmount!) : 'Not computed'}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Approval Blockers Section - Always at top */}
+      <ApprovalBlockersSection
+        blockers={approvalBlockers}
+        onResolveAction={handleBlockerResolve}
+      />
 
       {/* Action Selection */}
       <div className="grid grid-cols-3 gap-3">
@@ -156,16 +165,22 @@ export function DecisionTab({
           variant={selectedAction === 'approve' ? 'default' : 'outline'}
           className={cn(
             'h-auto py-4 flex-col gap-2',
-            selectedAction === 'approve' && 'bg-success text-success-foreground hover:bg-success/90'
+            selectedAction === 'approve' && 'bg-success text-success-foreground hover:bg-success/90',
+            hasErrorBlockers && 'opacity-50 cursor-not-allowed'
           )}
           onClick={() => {
+            if (hasErrorBlockers) return;
             setSelectedAction('approve');
-            setReasonCode('STANDARD_APPROVAL');
+            setReasonCode(hasWarningBlockers ? 'APPROVE_WITH_EXCEPTION' : 'STANDARD_APPROVAL');
             setReasonText('');
           }}
+          disabled={hasErrorBlockers}
         >
           <CheckCircle className="w-5 h-5" />
           <span>Approve</span>
+          {hasErrorBlockers && (
+            <span className="text-[10px] opacity-70">Blocked</span>
+          )}
         </Button>
         
         <Button
@@ -240,7 +255,9 @@ export function DecisionTab({
                 <AlertTriangle className="w-4 h-4 text-warning" />
                 <AlertTitle className="text-sm">Exception Override Required</AlertTitle>
                 <AlertDescription className="text-xs">
-                  Not all required documents are verified. Approving with exception requires explicit acknowledgment.
+                  {approvalBlockers.filter(b => b.canOverride).length > 0 
+                    ? `Overriding ${approvalBlockers.filter(b => b.canOverride).length} warning(s). This will be logged in the audit trail.`
+                    : 'Approving with exception requires explicit acknowledgment and will be logged.'}
                 </AlertDescription>
                 <div className="flex items-center gap-2 mt-3">
                   <Checkbox 
@@ -249,7 +266,7 @@ export function DecisionTab({
                     onCheckedChange={(checked) => setAcknowledgeOverride(!!checked)}
                   />
                   <Label htmlFor="override" className="text-xs cursor-pointer">
-                    I acknowledge this approval is an exception to policy
+                    I acknowledge this approval is an exception to policy and will be audited
                   </Label>
                 </div>
               </Alert>
@@ -258,7 +275,7 @@ export function DecisionTab({
             {/* Reason Text / Message */}
             <div className="space-y-2">
               <Label>
-                {selectedAction === 'request_info' ? 'Message to Employee *' : 'Reason Notes *'}
+                {selectedAction === 'request_info' ? 'Message to Employee *' : 'Audit Notes *'}
                 <span className="text-muted-foreground ml-2 text-xs">
                   (min {MIN_REASON_LENGTH} characters)
                 </span>
@@ -266,10 +283,10 @@ export function DecisionTab({
               <Textarea
                 placeholder={
                   selectedAction === 'approve' 
-                    ? 'Describe the basis for approval...'
+                    ? 'Describe the basis for approval (required for audit trail)...'
                     : selectedAction === 'reject'
-                    ? 'Explain the reason for rejection...'
-                    : 'Specify what documents or information is needed...'
+                    ? 'Explain the reason for rejection (will be visible to employee)...'
+                    : 'Specify what documents or information is needed (will be sent to employee)...'
                 }
                 value={selectedAction === 'request_info' ? messageToEmployee : reasonText}
                 onChange={(e) => {
@@ -290,6 +307,18 @@ export function DecisionTab({
                 {(selectedAction === 'request_info' ? messageToEmployee.length : reasonText.length)}/{MIN_REASON_LENGTH} characters minimum
               </p>
             </div>
+
+            {/* Payable amount display for approval */}
+            {selectedAction === 'approve' && hasPayableAmount && (
+              <div className="p-3 rounded-lg bg-success/5 border border-success/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Payable Amount</span>
+                  <span className="text-lg font-bold text-success tabular-nums">
+                    {formatCurrencyAED(claim.payableAmount!)}
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Submit Button */}
             <Button

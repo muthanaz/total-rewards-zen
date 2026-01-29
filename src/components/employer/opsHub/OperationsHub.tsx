@@ -2,9 +2,9 @@
  * Operations Hub (High-Speed Workbench)
  * 
  * Primary operational interface for HR Ops teams:
- * - Default: "My Team Queue" with SLA risk sorting
- * - Comprehensive filters (Type, Category, Amount, SLA, Docs, Assigned)
- * - Each row: Request ID, Employee (Name (Grade)), Category, Amount, Status, SLA timer, Missing docs
+ * - Default: "My Queue" (assigned to current user) with SLA risk sorting
+ * - "All Queue" shows all action-required items
+ * - Fixed columns: Claim ID | Employee | Category | Submitted | Status | SLA | Payable | Assignee | Blockers | Open
  * - Inline actions: Approve / Reject / Request Docs / Assign / View Timeline
  * - Timeline drawer shows request_events audit trail
  */
@@ -36,9 +36,7 @@ import {
   RefreshCw,
   Calendar,
   Download,
-  Settings,
   ArrowUpDown,
-  AlertCircle,
   CheckCircle,
   XCircle,
 } from 'lucide-react';
@@ -62,11 +60,23 @@ import { OpsQueueStats } from './OpsQueueStats';
 import { RequestTimelineDrawer } from './RequestTimelineDrawer';
 import { ClaimDetailSheet } from './ClaimDetailSheet';
 import { FloatingActionBar } from '@/components/employer/FloatingActionBar';
-import type { QueueTab, QueueFilters, QueueItemRow, QueueStats, TeamMember, InlineAction } from './types';
+import type { 
+  QueueTab, 
+  QueueFilters, 
+  QueueItemRow, 
+  QueueStats, 
+  TeamMember, 
+  InlineAction,
+  ACTION_REQUIRED_STATUSES,
+} from './types';
+import { formatSlaTime, computeBlockers } from './types';
 
 // Constants
 const HIGH_VALUE_THRESHOLD = 5000;
 const PAGE_SIZE = 20;
+
+// Action-required statuses
+const ACTION_STATUSES = ['submitted', 'in_review', 'info_requested', 'pending_employee'];
 
 const HR_TEAM_MEMBERS: TeamMember[] = [
   { id: 'hr-manager-1', name: 'Fatima Hassan', role: 'HR Manager', activeTasks: 0 },
@@ -95,26 +105,41 @@ const REJECTION_REASONS = [
 ];
 
 // Helper: Transform DB request to QueueItemRow
-function transformRequest(request: RequestWithDetails): QueueItemRow {
+function transformRequest(request: RequestWithDetails, currentUserId?: string): QueueItemRow {
   const now = new Date();
   const slaDueAt = request.sla_due_at ? new Date(request.sla_due_at) : null;
+  const isPaused = request.status === 'info_requested' || request.status === 'pending_employee';
   
   let slaInfo = null;
   if (slaDueAt && !['approved', 'rejected', 'paid', 'closed'].includes(request.status || '')) {
     const hoursRemaining = (slaDueAt.getTime() - now.getTime()) / (1000 * 60 * 60);
+    const minutesRemaining = (slaDueAt.getTime() - now.getTime()) / (1000 * 60);
     slaInfo = {
       hoursRemaining: Math.round(hoursRemaining),
+      minutesRemaining: Math.round(minutesRemaining),
       daysRemaining: Math.round(hoursRemaining / 24 * 10) / 10,
       isOverdue: hoursRemaining < 0,
       isUrgent: hoursRemaining > 0 && hoursRemaining < 24,
       isOnTrack: hoursRemaining >= 24,
-      isPaused: request.status === 'info_requested' || request.status === 'pending_employee',
+      isPaused,
+      displayFormat: formatSlaTime(hoursRemaining, isPaused),
     };
   }
 
   const missingDocs = Array.isArray(request.missing_docs) ? request.missing_docs as string[] : [];
   const createdAt = request.created_at ? new Date(request.created_at) : now;
   const daysInQueue = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
+
+  // Compute blockers
+  const payableAmount = (request as any).payable_amount_aed ?? null;
+  const blockers = computeBlockers(
+    missingDocs.length > 0,
+    missingDocs,
+    request.amount,
+    request.cap_limit,
+    payableAmount,
+    request.policy_ref
+  );
 
   return {
     id: request.id,
@@ -128,14 +153,17 @@ function transformRequest(request: RequestWithDetails): QueueItemRow {
     subject: request.subject || '',
     amount: request.amount,
     capLimit: request.cap_limit,
+    payableAmount,
     currency: request.currency || 'AED',
     status: request.status || 'pending',
     slaInfo,
     slaDueAt: request.sla_due_at,
-    isPaused: request.status === 'info_requested' || request.status === 'pending_employee',
+    isPaused,
     hasMissingDocs: missingDocs.length > 0,
     missingDocsCount: missingDocs.length,
     missingDocs,
+    blockers,
+    hasBlockers: blockers.length > 0,
     assignedTo: request.assigned_to,
     assignedToName: (request as any).assigned_owner_name || null,
     submittedAt: request.submitted_at || request.created_at || '',
@@ -153,8 +181,9 @@ export function OperationsHub() {
   const updateStatus = useUpdateRequestStatus();
   const { logEvent } = useAuditLog();
 
-  // URL-persisted state
-  const activeTab = (searchParams.get('tab') as QueueTab) || 'my_team';
+  // URL-persisted state - Default to 'my_queue'
+  const urlTab = searchParams.get('tab');
+  const activeTab: QueueTab = (urlTab === 'my_queue' || urlTab === 'all_queue') ? urlTab : 'my_queue';
   const currentPage = Number(searchParams.get('page') || '1');
   
   // Local state
@@ -167,6 +196,7 @@ export function OperationsHub() {
     assignedTo: searchParams.get('assignedTo') || 'all',
     minAmount: searchParams.get('minAmount') ? Number(searchParams.get('minAmount')) : undefined,
     maxAmount: searchParams.get('maxAmount') ? Number(searchParams.get('maxAmount')) : undefined,
+    statusFilter: 'action_required', // Default to action-required statuses
   });
   
   const [sortBySla, setSortBySla] = useState(() => {
@@ -214,19 +244,29 @@ export function OperationsHub() {
   const { data: claimMetrics } = useClaimMetrics();
 
   // Transform to QueueItemRow
-  const allItems = useMemo(() => rawRequests.map(transformRequest), [rawRequests]);
+  const allItems = useMemo(() => 
+    rawRequests.map(r => transformRequest(r, user?.id)), 
+    [rawRequests, user?.id]
+  );
 
   // Calculate stats
-  const stats = useMemo<QueueStats>(() => ({
-    total: allItems.length,
-    pending: allItems.filter(i => i.status === 'pending' || i.status === 'submitted').length,
-    inReview: allItems.filter(i => i.status === 'in_review').length,
-    slaAtRisk: allItems.filter(i => i.slaInfo && (i.slaInfo.isOverdue || i.slaInfo.isUrgent)).length,
-    slaBreached: allItems.filter(i => i.slaInfo?.isOverdue).length,
-    missingDocs: allItems.filter(i => i.hasMissingDocs).length,
-    highValue: allItems.filter(i => i.amount && i.amount >= HIGH_VALUE_THRESHOLD).length,
-    unassigned: allItems.filter(i => !i.assignedTo && ['pending', 'submitted', 'in_review'].includes(i.status)).length,
-  }), [allItems]);
+  const stats = useMemo<QueueStats>(() => {
+    const actionRequiredItems = allItems.filter(i => ACTION_STATUSES.includes(i.status));
+    const myQueueItems = actionRequiredItems.filter(i => i.assignedTo === user?.id);
+    
+    return {
+      total: allItems.length,
+      pending: allItems.filter(i => i.status === 'pending' || i.status === 'submitted').length,
+      inReview: allItems.filter(i => i.status === 'in_review').length,
+      slaAtRisk: allItems.filter(i => i.slaInfo && (i.slaInfo.isOverdue || i.slaInfo.isUrgent)).length,
+      slaBreached: allItems.filter(i => i.slaInfo?.isOverdue).length,
+      missingDocs: allItems.filter(i => i.hasMissingDocs).length,
+      highValue: allItems.filter(i => i.amount && i.amount >= HIGH_VALUE_THRESHOLD).length,
+      unassigned: allItems.filter(i => !i.assignedTo && ACTION_STATUSES.includes(i.status)).length,
+      myQueue: myQueueItems.length,
+      actionRequired: actionRequiredItems.length,
+    };
+  }, [allItems, user?.id]);
 
   // Operational KPIs
   const opsKpis = useMemo(() => {
@@ -255,28 +295,15 @@ export function OperationsHub() {
   const filteredItems = useMemo(() => {
     let result = [...allItems];
 
+    // Always filter to action-required statuses (exclude paid/closed by default)
+    result = result.filter(i => ACTION_STATUSES.includes(i.status));
+
     // Tab-based filtering
-    switch (activeTab) {
-      case 'my_team':
-        // Default: all actionable items (pending + in_review)
-        result = result.filter(i => ['pending', 'submitted', 'in_review'].includes(i.status));
-        break;
-      case 'pending':
-        result = result.filter(i => i.status === 'pending' || i.status === 'submitted');
-        break;
-      case 'in_review':
-        result = result.filter(i => i.status === 'in_review');
-        break;
-      case 'sla_risk':
-        result = result.filter(i => i.slaInfo && (i.slaInfo.isOverdue || i.slaInfo.isUrgent));
-        break;
-      case 'missing_docs':
-        result = result.filter(i => i.hasMissingDocs);
-        break;
-      case 'high_value':
-        result = result.filter(i => i.amount && i.amount >= HIGH_VALUE_THRESHOLD);
-        break;
+    if (activeTab === 'my_queue') {
+      // Items assigned to current user
+      result = result.filter(i => i.assignedTo === user?.id);
     }
+    // 'all_queue' shows all action-required items (no additional filter)
 
     // Additional filters
     if (filters.search) {
@@ -396,6 +423,7 @@ export function OperationsHub() {
       assignedTo: 'all',
       minAmount: undefined,
       maxAmount: undefined,
+      statusFilter: 'action_required',
     });
   };
 
@@ -522,17 +550,19 @@ export function OperationsHub() {
   };
 
   const handleExportCSV = () => {
-    const headers = ['Request ID', 'Employee', 'Grade', 'Type', 'Category', 'Amount', 'Status', 'SLA Status', 'Days in Queue'];
+    const headers = ['Claim ID', 'Employee', 'Grade', 'Type', 'Category', 'Submitted', 'Status', 'SLA', 'Payable', 'Assignee', 'Blockers'];
     const rows = filteredItems.map(i => [
       i.requestRef,
       i.employeeName,
       i.employeeGrade,
       i.requestType,
       i.category,
-      i.amount ? formatCurrencyAED(i.amount) : '',
+      i.submittedAt ? format(new Date(i.submittedAt), 'd MMM yyyy') : '',
       i.status,
-      i.slaInfo?.isOverdue ? 'Breached' : i.slaInfo?.isUrgent ? 'At Risk' : 'On Track',
-      i.daysInQueue,
+      i.slaInfo?.displayFormat || '—',
+      i.payableAmount ? formatCurrencyAED(i.payableAmount) : (i.amount ? formatCurrencyAED(i.amount) : ''),
+      i.assignedToName || 'Unassigned',
+      i.blockers.length,
     ]);
     
     const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
@@ -618,7 +648,7 @@ export function OperationsHub() {
             activeTab={activeTab}
             onTabChange={handleTabChange}
             stats={stats}
-            slaEnabled={slaEnabled}
+            currentUserId={user?.id}
           />
         </CardHeader>
         

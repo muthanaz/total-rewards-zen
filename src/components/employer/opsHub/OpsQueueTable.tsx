@@ -1,13 +1,13 @@
 /**
  * Operations Hub Queue Table
  * 
- * High-speed queue table with:
- * - Request ID, Employee (Name (Grade)), Category, Amount, Status, SLA timer, Missing docs badge
- * - Inline actions: Approve / Reject / Request Docs / Assign / View Timeline
- * - Bulk selection support
+ * Fixed columns:
+ * Claim ID | Employee | Category | Submitted | Status | SLA (time left) | Payable | Assignee | Blockers | Open
+ * 
+ * SLA shows consistent format: "12h 20m" or "Paused" when waiting on employee
+ * Blockers column shows icons for: missing docs, policy mismatch, cap exceeded, data missing
  */
 
-import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -44,13 +44,17 @@ import {
   Clock,
   Pause,
   AlertTriangle,
-  User,
   Eye,
   Flag,
+  FileX,
+  ShieldAlert,
+  TrendingUp,
+  Database,
+  ExternalLink,
 } from 'lucide-react';
 import { cn, formatCurrencyAED } from '@/lib/utils';
 import { format } from 'date-fns';
-import type { QueueItemRow, InlineAction, TeamMember } from './types';
+import type { QueueItemRow, InlineAction, TeamMember, Blocker, BlockerType } from './types';
 
 interface OpsQueueTableProps {
   items: QueueItemRow[];
@@ -93,18 +97,27 @@ const getStatusLabel = (status: string) => {
   return labels[status] || status;
 };
 
-function SlaTimerCell({ slaInfo, isPaused }: { slaInfo: QueueItemRow['slaInfo']; isPaused: boolean }) {
+// Blocker icons
+const blockerIcons: Record<BlockerType, React.ReactNode> = {
+  missing_docs: <FileX className="w-3.5 h-3.5" />,
+  policy_mismatch: <ShieldAlert className="w-3.5 h-3.5" />,
+  cap_exceeded: <TrendingUp className="w-3.5 h-3.5" />,
+  data_missing: <Database className="w-3.5 h-3.5" />,
+  unverified_docs: <FileQuestion className="w-3.5 h-3.5" />,
+};
+
+function SlaTimerCell({ slaInfo }: { slaInfo: QueueItemRow['slaInfo'] }) {
   if (!slaInfo) {
     return <span className="text-xs text-muted-foreground">—</span>;
   }
 
-  if (isPaused) {
+  if (slaInfo.isPaused) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Pause className="w-3 h-3" />
-            <span>Paused</span>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Pause className="w-3.5 h-3.5" />
+            <span className="font-medium">Paused</span>
           </div>
         </TooltipTrigger>
         <TooltipContent>
@@ -114,62 +127,73 @@ function SlaTimerCell({ slaInfo, isPaused }: { slaInfo: QueueItemRow['slaInfo'];
     );
   }
 
-  const absHours = Math.abs(slaInfo.hoursRemaining);
-  const display = absHours < 24 
-    ? `${Math.round(absHours)}h` 
-    : `${Math.round(absHours / 24)}d`;
-
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <div className={cn(
-          "flex items-center gap-1 text-xs font-medium",
+          "flex items-center gap-1.5 text-xs font-medium tabular-nums",
           slaInfo.isOverdue ? "text-destructive" : 
           slaInfo.isUrgent ? "text-warning" : 
           "text-success"
         )}>
-          <Timer className="w-3 h-3" />
-          {slaInfo.isOverdue ? `-${display}` : display}
+          <Timer className="w-3.5 h-3.5" />
+          <span>{slaInfo.displayFormat}</span>
         </div>
       </TooltipTrigger>
       <TooltipContent>
         <p className="text-xs">
           {slaInfo.isOverdue 
-            ? `SLA breached ${display} ago` 
-            : `${display} remaining`}
+            ? `SLA breached ${slaInfo.displayFormat.replace('-', '')} ago` 
+            : `${slaInfo.displayFormat} remaining`}
         </p>
       </TooltipContent>
     </Tooltip>
   );
 }
 
-function MissingDocsBadge({ hasMissing, count, docs }: { hasMissing: boolean; count: number; docs: string[] }) {
-  if (!hasMissing) {
+function BlockersCell({ blockers }: { blockers: Blocker[] }) {
+  if (blockers.length === 0) {
     return (
       <span className="text-xs text-success flex items-center gap-1">
-        <CheckCircle className="w-3 h-3" />
-        Complete
+        <CheckCircle className="w-3.5 h-3.5" />
       </span>
     );
   }
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30 text-xs gap-1 cursor-help">
-          <FileQuestion className="w-3 h-3" />
-          {count} missing
-        </Badge>
-      </TooltipTrigger>
-      <TooltipContent className="max-w-xs">
-        <p className="font-medium text-xs mb-1">Missing Documents:</p>
-        <ul className="text-xs space-y-0.5">
-          {docs.map((doc, i) => (
-            <li key={i}>• {doc}</li>
-          ))}
-        </ul>
-      </TooltipContent>
-    </Tooltip>
+    <div className="flex items-center gap-1">
+      {blockers.slice(0, 3).map((blocker, idx) => (
+        <Tooltip key={idx}>
+          <TooltipTrigger asChild>
+            <div className={cn(
+              "w-6 h-6 rounded flex items-center justify-center",
+              blocker.severity === 'error' 
+                ? "bg-destructive/10 text-destructive" 
+                : "bg-warning/10 text-warning"
+            )}>
+              {blockerIcons[blocker.type]}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            <p className="font-medium text-xs">{blocker.label}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{blocker.description}</p>
+            <p className="text-xs text-primary mt-1">→ {blocker.resolutionHint}</p>
+          </TooltipContent>
+        </Tooltip>
+      ))}
+      {blockers.length > 3 && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge variant="outline" className="text-[10px] h-5">
+              +{blockers.length - 3}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="text-xs">{blockers.length - 3} more blocker(s)</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </div>
   );
 }
 
@@ -183,7 +207,6 @@ export function OpsQueueTable({
   isLoading,
 }: OpsQueueTableProps) {
   const allSelected = items.length > 0 && items.every(item => selectedIds.includes(item.id));
-  const someSelected = items.some(item => selectedIds.includes(item.id)) && !allSelected;
 
   const toggleSelectAll = () => {
     if (allSelected) {
@@ -240,14 +263,16 @@ export function OpsQueueTable({
                   aria-label="Select all"
                 />
               </TableHead>
-              <TableHead className="w-24">Request ID</TableHead>
-              <TableHead>Employee</TableHead>
+              <TableHead className="w-28">Claim ID</TableHead>
+              <TableHead className="min-w-[180px]">Employee</TableHead>
               <TableHead>Category</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="w-24">Submitted</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-20">SLA</TableHead>
-              <TableHead>Docs</TableHead>
-              <TableHead className="w-32">Actions</TableHead>
+              <TableHead className="w-24">SLA</TableHead>
+              <TableHead className="text-right w-28">Payable</TableHead>
+              <TableHead className="w-32">Assignee</TableHead>
+              <TableHead className="w-24">Blockers</TableHead>
+              <TableHead className="w-24">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -291,19 +316,6 @@ export function OpsQueueTable({
                           ({item.employeeGrade})
                         </span>
                       </p>
-                      {item.requestType && (
-                        <Badge 
-                          variant="outline" 
-                          className={cn(
-                            "text-[10px] h-4",
-                            item.requestType === 'request' 
-                              ? 'bg-info/10 text-info border-info/20' 
-                              : 'bg-primary/10 text-primary border-primary/20'
-                          )}
-                        >
-                          {item.requestType === 'request' ? 'Pre-approval' : 'Reimbursement'}
-                        </Badge>
-                      )}
                     </div>
                   </div>
                 </TableCell>
@@ -312,24 +324,10 @@ export function OpsQueueTable({
                   <span className="text-sm">{item.category}</span>
                 </TableCell>
                 
-                <TableCell className="text-right">
-                  {item.amount !== null ? (
-                    <div className="space-y-0.5">
-                      <p className="text-sm font-semibold tabular-nums">
-                        {formatCurrencyAED(item.amount)}
-                      </p>
-                      {item.capLimit && (
-                        <p className={cn(
-                          "text-[10px] tabular-nums",
-                          item.amount > item.capLimit ? "text-destructive" : "text-muted-foreground"
-                        )}>
-                          / {formatCurrencyAED(item.capLimit)}
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">—</span>
-                  )}
+                <TableCell>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {item.submittedAt ? format(new Date(item.submittedAt), 'd MMM') : '—'}
+                  </span>
                 </TableCell>
                 
                 <TableCell>
@@ -339,19 +337,53 @@ export function OpsQueueTable({
                 </TableCell>
                 
                 <TableCell>
-                  <SlaTimerCell slaInfo={item.slaInfo} isPaused={item.isPaused} />
+                  <SlaTimerCell slaInfo={item.slaInfo} />
+                </TableCell>
+                
+                <TableCell className="text-right">
+                  {item.payableAmount !== null ? (
+                    <span className="text-sm font-semibold tabular-nums">
+                      {formatCurrencyAED(item.payableAmount)}
+                    </span>
+                  ) : item.amount !== null ? (
+                    <span className="text-sm text-muted-foreground tabular-nums">
+                      {formatCurrencyAED(item.amount)}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
                 </TableCell>
                 
                 <TableCell>
-                  <MissingDocsBadge 
-                    hasMissing={item.hasMissingDocs} 
-                    count={item.missingDocsCount}
-                    docs={item.missingDocs}
-                  />
+                  {item.assignedToName ? (
+                    <span className="text-xs truncate max-w-[100px] block">
+                      {item.assignedToName}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground italic">Unassigned</span>
+                  )}
+                </TableCell>
+                
+                <TableCell>
+                  <BlockersCell blockers={item.blockers} />
                 </TableCell>
                 
                 <TableCell>
                   <div className="flex items-center gap-1">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          onClick={() => onViewDetails(item.id)}
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Open Details</TooltipContent>
+                    </Tooltip>
+
                     {isProcessable(item.status) && (
                       <>
                         <Tooltip>
