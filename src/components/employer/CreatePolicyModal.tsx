@@ -124,6 +124,23 @@ export function CreatePolicyModal({
     }
   }, [open]);
 
+  // Listen for template selection from external selector
+  useEffect(() => {
+    const handleTemplateSelected = (event: CustomEvent<{ template: PolicyTemplate }>) => {
+      if (open) {
+        const { template } = event.detail;
+        applyTemplate(template);
+        setSelectedTemplateId(template.id);
+        setStep('details');
+      }
+    };
+
+    window.addEventListener('policy-template-selected', handleTemplateSelected as EventListener);
+    return () => {
+      window.removeEventListener('policy-template-selected', handleTemplateSelected as EventListener);
+    };
+  }, [open, templates]);
+
   // Apply template when selected and moving to details
   const applyTemplate = (template: PolicyTemplate) => {
     setName(`${template.name} Policy`);
