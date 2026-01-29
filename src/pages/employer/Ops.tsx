@@ -1,19 +1,23 @@
 /**
  * Operations Hub Page
  * 
- * Primary operational hub for HR Ops users combining:
- * - My Team Queue with SLA risk sorting (default)
- * - Comprehensive filters (Type, Category, Amount, SLA, Docs, Assigned)
- * - Inline actions (Approve, Reject, Request Docs, Assign, View Timeline)
- * - Timeline drawer showing request_events audit trail
+ * Primary operational hub for HR Ops users with 3 tabs:
+ * - Queue (default): Claims/requests workbench with SLA sorting
+ * - Overview: High-level metrics (Queue Health, SLA, Throughput, Payments)
+ * - Payments: Settlement pipeline summary
+ * 
+ * Wrapped in OpsOnlyGuard to redirect Executive users.
  */
 
 import { OperationsHub } from '@/components/employer/opsHub';
+import { OpsOnlyGuard } from '@/components/employer/OpsOnlyGuard';
 
 export default function OpsPage() {
   return (
-    <div className="animate-fade-in">
-      <OperationsHub />
-    </div>
+    <OpsOnlyGuard>
+      <div className="animate-fade-in">
+        <OperationsHub />
+      </div>
+    </OpsOnlyGuard>
   );
 }

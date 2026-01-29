@@ -3,29 +3,39 @@
  * 
  * Mode-aware dashboard that renders different views based on user context:
  * 
- * EXECUTIVE VIEW (CEO/CFO):
- * - Bottom Line: Total investment, utilization, budget variance
- * - Drivers: What's moving the numbers (headcount, claims, policies)
- * - Decisions: Strategic choices requiring sign-off
- * - Risks: At-risk segments, budget overruns, retention signals
+ * EXECUTIVE VIEW:
+ * - Renders the ExecutiveDashboard with strategic KPIs
  * 
  * HR OPS VIEW:
- * - Backlog: Pending items requiring action
- * - SLA Performance: Processing time, compliance rates
- * - Throughput: Claims processed, approval rates
- * - Exceptions: Escalations, anomalies, policy violations
- * - Payments Pipeline: Settlement lifecycle status
+ * - Redirects to /employer/ops (Operations Hub workbench)
+ * - The HR Ops dashboard content is now a tab within the Operations Hub
  */
 
+import { Navigate } from 'react-router-dom';
 import { useEmployerViewMode } from '@/contexts/EmployerViewModeContext';
-import { ExecutiveDashboard, HROpsDashboard } from '@/components/employer';
+import { ExecutiveDashboard } from '@/components/employer';
 
 export default function EmployerDashboard() {
-  const { isExecutive } = useEmployerViewMode();
+  const { isExecutive, loading } = useEmployerViewMode();
+  
+  // Show loading state while determining view mode
+  if (loading) {
+    return (
+      <div className="animate-pulse space-y-6 p-4 lg:p-8">
+        <div className="h-16 bg-muted rounded-xl" />
+        <div className="h-48 bg-muted rounded-xl" />
+      </div>
+    );
+  }
+  
+  // HR Ops users should go to /employer/ops
+  if (!isExecutive) {
+    return <Navigate to="/employer/ops" replace />;
+  }
   
   return (
     <div className="animate-fade-in">
-      {isExecutive ? <ExecutiveDashboard /> : <HROpsDashboard />}
+      <ExecutiveDashboard />
     </div>
   );
 }
