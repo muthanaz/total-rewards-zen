@@ -6,41 +6,47 @@
  * 
  * IMPORTANT: All pages consuming demo metrics should use this context
  * to ensure numbers match and update reactively.
+ * 
+ * Data is sourced from src/lib/demoData/index.ts which provides:
+ * - 30 employees across 4 departments and 3 grades
+ * - 20 claims with mixed statuses
+ * - Reconciled entitlements and utilization
  */
 
 import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo } from 'react';
 import { toast } from 'sonner';
+import { EXECUTIVE_METRICS, CLAIMS_SUMMARY, SEGMENT_METRICS } from '@/lib/demoData/index';
 
 // ============================================
 // GLOBAL METRICS - THE SINGLE SOURCE OF TRUTH
 // ============================================
 
-// Initial values for global metrics
+// Initial values derived from coherent demo data
 const createInitialMetrics = (): GlobalMetrics => ({
-  // Core Budget Metrics
-  totalBudget: 15000000,        // AED 15M (Annual allocated budget)
-  ytdSpend: 11250000,           // AED 11.25M (YTD actual spend - 75% of budget)
-  projectedSpend: 14800000,     // AED 14.8M (End of year projection)
+  // Core Budget Metrics (from EXECUTIVE_METRICS)
+  totalBudget: EXECUTIVE_METRICS.totalBudget,
+  ytdSpend: EXECUTIVE_METRICS.ytdSpend,
+  projectedSpend: Math.round(EXECUTIVE_METRICS.ytdSpend * 1.3), // Project 30% more by year end
   
   // Workforce
-  activeEmployees: 312,         // Total headcount
+  activeEmployees: EXECUTIVE_METRICS.employeeCount,
   
   // Rates
-  utilizationRate: 76.0,        // Float - % of budget utilized
-  targetUtilization: 85.0,      // Target utilization %
+  utilizationRate: EXECUTIVE_METRICS.utilizationRate,
+  targetUtilization: EXECUTIVE_METRICS.targetUtilization,
   
-  // Derived metrics (computed from above)
-  unutilizedBudget: 3750000,    // totalBudget - ytdSpend
-  costPerEmployee: 48077,       // totalBudget / activeEmployees
+  // Derived metrics (computed from demo data)
+  unutilizedBudget: EXECUTIVE_METRICS.unutilized,
+  costPerEmployee: EXECUTIVE_METRICS.costPerEmployee,
   
-  // Claims queue metrics
-  pendingClaims: 47,
-  approvedToday: 12,
-  rejectedToday: 3,
+  // Claims queue metrics (from CLAIMS_SUMMARY)
+  pendingClaims: CLAIMS_SUMMARY.byStatus.submitted + CLAIMS_SUMMARY.byStatus.in_review + CLAIMS_SUMMARY.byStatus.info_requested,
+  approvedToday: CLAIMS_SUMMARY.byStatus.approved,
+  rejectedToday: CLAIMS_SUMMARY.byStatus.rejected,
   
   // ROI & Savings
-  budgetLeakage: 2200000,       // Identified waste
-  recoveryPotential: 1450000,   // Recoverable amount
+  budgetLeakage: EXECUTIVE_METRICS.budgetLeakage,
+  recoveryPotential: EXECUTIVE_METRICS.recoveryPotential,
   
   // Timestamps
   lastUpdated: new Date().toISOString(),
@@ -123,12 +129,15 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
   // Transaction history
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   
-  // Segment breakdown (sums to ~activeEmployees)
-  const segmentBreakdown = useMemo(() => ({
-    hqOffice: 142,
-    fieldOps: 128,
-    leadership: 42,
-  }), []);
+  // Segment breakdown (from coherent demo data)
+  const segmentBreakdown = useMemo(() => {
+    const depts = SEGMENT_METRICS.byDepartment;
+    return {
+      hqOffice: depts.find(d => d.id === 'dept-eng')?.employeeCount || 10,
+      fieldOps: depts.find(d => d.id === 'dept-ops')?.employeeCount || 7,
+      leadership: depts.find(d => d.id === 'dept-corp')?.employeeCount || 5,
+    };
+  }, []);
   
   // Approve a claim - adds to YTD spend and recalculates utilization
   const approveClaim = useCallback((amount: number, claimId?: string) => {

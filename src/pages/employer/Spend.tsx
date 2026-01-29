@@ -22,7 +22,7 @@ import {
   INVESTMENT_METRICS, 
   UTILIZATION_METRICS,
   ORG_BASELINE,
-  CATEGORY_METRICS,
+  CATEGORY_METRICS_EXEC,
 } from '@/lib/executiveMetricsConstants';
 import { 
   DataConfidenceBadge, 
@@ -70,9 +70,9 @@ const generatePillarData = () => {
   });
 };
 
-// Generate category data from CATEGORY_METRICS
+// Generate category data from CATEGORY_METRICS_EXEC
 const generateCategoryData = () => {
-  return Object.values(CATEGORY_METRICS).map((cat) => {
+  return Object.values(CATEGORY_METRICS_EXEC).map((cat) => {
     const forecast = cat.claimed * 1.4;
     const variance = forecast - cat.budget;
     return {
@@ -81,9 +81,9 @@ const generateCategoryData = () => {
       budget: cat.budget,
       ytdSpend: cat.claimed,
       forecast,
-      utilization: (cat.claimed / cat.entitled) * 100,
+      utilization: cat.utilization,
       variance,
-      variancePercent: (variance / cat.budget) * 100,
+      variancePercent: cat.budget > 0 ? (variance / cat.budget) * 100 : 0,
       employeeCount: Math.round(ORG_BASELINE.employeeCount * 0.7),
     };
   });
