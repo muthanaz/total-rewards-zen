@@ -22,6 +22,8 @@ import {
   BookOpen,
   Activity,
   UserPlus,
+  Beaker,
+  ClipboardCheck,
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { DemoModeToggle } from '@/components/demo';
@@ -128,6 +130,16 @@ const navigationGroups: NavGroup[] = [
     defaultOpen: true,
     items: [
       { label: 'Alerts Center', labelAr: 'مركز التنبيهات', path: '/admin/alerts', icon: AlertTriangle, badge: 3 },
+    ],
+  },
+  {
+    id: 'demo-qa',
+    label: 'Demo & QA',
+    labelAr: 'العرض والجودة',
+    defaultOpen: true,
+    items: [
+      { label: 'Demo Tools', labelAr: 'أدوات العرض', path: '/admin/demo-tools', icon: Beaker },
+      { label: 'QA Checklist', labelAr: 'قائمة الجودة', path: '/admin/qa-checklist', icon: ClipboardCheck },
     ],
   },
   {
