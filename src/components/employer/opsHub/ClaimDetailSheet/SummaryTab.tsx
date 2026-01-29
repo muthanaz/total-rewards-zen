@@ -78,8 +78,14 @@ export function SummaryTab({ claim }: SummaryTabProps) {
               )
             } 
           />
-          <InfoRow label="Category" value={claim.category} />
-          <InfoRow label="Type" value={claim.claimType} />
+          {claim.policyVersionId && (
+            <InfoRow 
+              label="Version" 
+              value={<span className="font-mono text-xs">v{claim.policyVersionId.slice(0, 6)}</span>} 
+            />
+          )}
+          <InfoRow label="Category" value={<Badge variant="outline" className="text-xs">{claim.category}</Badge>} />
+          <InfoRow label="Type" value={claim.claimType === 'claim' ? 'Reimbursement Claim' : 'Pre-approval Request'} />
         </CardContent>
       </Card>
 

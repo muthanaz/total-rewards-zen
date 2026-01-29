@@ -6,6 +6,9 @@ export type {
   ReconciliationResult,
   BatchStatus,
   ReconciliationStatus,
+  PaymentMethod,
+  BatchGrouping,
+  SettlementExportRow,
 } from './types';
 export { mockBatches, mockPendingClaims, mockExceptions, getLifecycleStats } from './mockData';
 export { SettlementStats } from './SettlementStats';
