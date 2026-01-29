@@ -22,8 +22,9 @@ import {
   Info
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { StandardPageHeader, ConfidenceBadge } from '@/components/shared';
-import { useDataCoverageMetrics, DataConfidenceBadge } from '@/components/employer';
+import { StandardPageHeader } from '@/components/shared';
+import { useDataCoverageMetrics } from '@/components/employer';
+import { DataTrustPanel } from '@/components/trust';
 import { 
   BenchmarkCategorySection,
   BenchmarkMetadataCard,
@@ -62,7 +63,6 @@ export default function Benchmarks() {
         icon={BarChart3}
         iconClassName="from-accent to-accent/80 shadow-accent/25"
         lastUpdated={new Date()}
-        confidenceBadge={<DataConfidenceBadge metrics={coverageMetrics} />}
         secondaryActions={
           <>
             <Button variant="outline" size="sm">
@@ -76,6 +76,9 @@ export default function Benchmarks() {
           </>
         }
       />
+
+      {/* DATA TRUST PANEL */}
+      <DataTrustPanel pageName="benchmarks" />
 
       {/* Summary Header */}
       <div className="grid gap-4 md:grid-cols-4">

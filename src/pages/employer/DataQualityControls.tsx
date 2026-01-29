@@ -26,7 +26,8 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { DemoModeBadge } from '@/components/shared/DemoDataGate';
-import { 
+import { DataTrustPanel } from '@/components/trust';
+import {
   DataReadinessScoreCard, 
   FailingRulesPanel,
   MOCK_DATA_READINESS,
@@ -123,6 +124,9 @@ export default function DataQualityControls() {
           </Button>
         </div>
       </div>
+
+      {/* DATA TRUST PANEL */}
+      <DataTrustPanel pageName="data-quality" />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

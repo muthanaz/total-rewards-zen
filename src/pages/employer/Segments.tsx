@@ -15,10 +15,10 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  DataConfidenceBadge, 
   PageConfidenceGate, 
   useDataCoverageMetrics 
 } from '@/components/employer';
+import { DataTrustPanel } from '@/components/trust';
 import {
   useSegmentBuilder,
   SegmentFilterPanel,
@@ -140,7 +140,6 @@ export default function SegmentsPage() {
             <h1 className="text-2xl font-display font-bold text-foreground">
               Drivers & Segments
             </h1>
-            <DataConfidenceBadge metrics={coverageMetrics} />
             </div>
             <motion.p
               key={dynamicTitle}
@@ -176,6 +175,9 @@ export default function SegmentsPage() {
             </Button>
           </div>
         </div>
+
+        {/* DATA TRUST PANEL */}
+        <DataTrustPanel pageName="segments" />
 
         {/* AI Watchlist Strip - now opens drilldown on click */}
         <AIWatchlistStrip
