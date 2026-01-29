@@ -9,3 +9,12 @@ export {
   type RecommendedAction, 
   type ExecAnalyticsTemplateProps 
 } from './ExecAnalyticsTemplate';
+
+// Employee Benefit Templates
+export { 
+  BenefitDetailTemplate, 
+  type BenefitEntitlement, 
+  type RecentClaim, 
+  type BenefitDetailTemplateProps 
+} from './BenefitDetailTemplate';
+export { UniversalBenefitTemplate, type BenefitUtilization, type UniversalBenefitTemplateProps } from './UniversalBenefitTemplate';
