@@ -1,15 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
-import { PageHeader } from '@/components/shared/PageHeader';
-import { BenefitCrossLinks } from '@/components/employee/BenefitCrossLinks';
-import { formatCurrencyAED, formatPercent } from '@/lib/utils';
-import { Dumbbell, Heart, Brain, Leaf, Moon, CheckCircle, ExternalLink, Wallet, TrendingDown, Percent } from 'lucide-react';
-
-const ANNUAL_VALUE = 6000;
-const UTILIZED = 3200;
+import { Dumbbell, Heart, Brain, Leaf, Moon, CheckCircle, ExternalLink } from 'lucide-react';
+import { formatCurrencyAED } from '@/lib/utils';
+import { BenefitDetailTemplate } from '@/components/employee/BenefitDetailTemplate';
 
 const programs = [
   {
@@ -52,123 +46,26 @@ const tips = [
   { icon: Brain, title: 'Mental Health', tip: 'Book a counseling session if you need support. It\'s confidential.' },
 ];
 
-const wellbeingPolicies = [
-  'AED 6,000 annual wellbeing budget',
-  'Gym membership fully covered',
-  'Mental health support is confidential',
-  'Can mix and match programs',
-  'Unused budget doesn\'t roll over',
-  'Family members may join gym (extra cost)',
+const HOW_IT_WORKS = [
+  'Choose programs up to your AED 6,000 budget',
+  'Access programs instantly via app or partner locations',
+  'Mental health sessions are 100% confidential',
+  'Mix and match programs as needed',
 ];
 
 export default function WellbeingPage() {
   const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
-  const remaining = ANNUAL_VALUE - UTILIZED;
-  const utilizationPercent = Math.round((UTILIZED / ANNUAL_VALUE) * 100);
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header - Using PageHeader pattern */}
-      <PageHeader
-        title="Wellbeing Program"
-        description="Your health and wellness benefits for mind and body"
-        icon={Dumbbell}
-        iconClassName="from-chart-6 to-chart-6/80 shadow-chart-6/25"
-        partnerOffersCategory="Wellbeing"
-      />
-
-      {/* 1. Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <SummaryStatsCard
-          icon={Dumbbell}
-          value={formatCurrency(ANNUAL_VALUE)}
-          label="Annual Value"
-          formula="Total wellbeing budget"
-          dataSource="HR Policy"
-          variant="primary"
-        />
-        <SummaryStatsCard
-          icon={Wallet}
-          value={formatCurrency(UTILIZED)}
-          label="Utilized"
-          formula="Active subscriptions value"
-          dataSource="Benefits System"
-          variant="utilized"
-        />
-        <SummaryStatsCard
-          icon={TrendingDown}
-          value={formatCurrency(remaining)}
-          label="Available"
-          formula="Annual - Utilized"
-          dataSource="System"
-          variant="remaining"
-        />
-        <SummaryStatsCard
-          icon={Percent}
-          value={`${utilizationPercent}%`}
-          label="Utilization"
-          formula="(Utilized / Annual) × 100"
-          dataSource="System"
-          variant="utilization"
-          progress={utilizationPercent}
-        />
-      </div>
-
-      {/* 2. Policy Highlights - Tips integrated */}
-      <PolicyHighlightsCard
-        title="Wellbeing Policy Highlights"
-        policies={[
-          ...wellbeingPolicies,
-          '💡 Mix & match programs up to your total budget',
-          '🔒 Mental health sessions are 100% confidential',
-        ]}
-        category="Wellbeing"
-        actionLabel="Submit Claim"
-        policyLabel="View Full Policy"
-      />
-
-      {/* 3. How It Works */}
-      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <Dumbbell className="w-5 h-5 text-accent" />
-            How Your Wellbeing Program Works
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
-              <div>
-                <p className="font-medium text-sm">Choose Programs</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Activate any combination of programs up to your <span className="font-semibold text-accent">AED 6,000</span> budget
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
-              <div>
-                <p className="font-medium text-sm">Instant Access</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Once activated, access your programs immediately via app or partner locations
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
-              <div>
-                <p className="font-medium text-sm">Confidential Support</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Mental health sessions are 100% confidential — employer sees only utilization
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-
+    <BenefitDetailTemplate
+      category="wellbeing"
+      name="Wellbeing Program"
+      description="Your health and wellness benefits for mind and body"
+      icon={Dumbbell}
+      iconClassName="from-chart-6 to-chart-6/80 shadow-chart-6/25"
+      howItWorksBullets={HOW_IT_WORKS}
+      showMarketplaceLink={true}
+    >
       {/* Programs Grid */}
       <div className="grid md:grid-cols-2 gap-6">
         {programs.map((program) => (
@@ -239,6 +136,6 @@ export default function WellbeingPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </BenefitDetailTemplate>
   );
 }

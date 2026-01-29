@@ -4,21 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
-import { PageHeader } from '@/components/shared/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile, Shield, Users, Activity, FileText, Clock, AlertCircle } from 'lucide-react';
+import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile } from 'lucide-react';
 import { useHealthProviders } from '@/hooks/useSupabaseData';
-import { BenefitCrossLinks } from '@/components/employee/BenefitCrossLinks';
-import { BenefitValueTypeChip } from '@/components/shared/BenefitValueTypeChip';
-import { formatCurrencyAED, formatInteger } from '@/lib/utils';
-
-// Coverage-type benefit: Show plan/network info, NOT AED remaining
-const EMPLOYER_INVESTMENT = 45000; // What employer pays for coverage
-const CLAIMS_COUNT = 8;
-const NETWORK_PROVIDERS = 245;
-const DEPENDENTS_COVERED = 3;
+import { BenefitDetailTemplate } from '@/components/employee/BenefitDetailTemplate';
 
 const policyCategories = [
   {
@@ -66,13 +55,11 @@ const faqs = [
   { q: 'Are my dependents covered?', a: 'Yes, spouse and children under 18 are covered under your policy at the same benefit levels.' },
 ];
 
-const healthPolicies = [
-  'Comprehensive coverage up to AED 1,000,000',
-  'Spouse and children covered at same levels',
-  'Pre-existing conditions covered after 6 months',
-  'Direct billing at network providers',
-  '24/7 emergency helpline available',
-  'Annual health check-up included',
+const HOW_IT_WORKS = [
+  'In-network care with direct billing — no upfront payment',
+  'Spouse and children under 18 covered at same levels',
+  'Pre-auth required 48hrs before planned surgeries',
+  'Out-of-network: submit receipts within 60 days for 50% reimbursement',
 ];
 
 export default function HealthPage() {
@@ -125,129 +112,15 @@ export default function HealthPage() {
   }, [providers, searchTerm, providerType, specialty, area]);
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header - Using PageHeader pattern */}
-      <PageHeader
-        title="Health Insurance"
-        description="Comprehensive coverage for you and your family"
-        icon={Heart}
-        iconClassName="from-chart-5 to-chart-5/80 shadow-chart-5/25"
-        partnerOffersCategory="Health Insurance"
-      />
-
-      {/* Coverage Type Banner - This is NOT cash/reimbursement */}
-      <Card className="border-rose-500/20 bg-rose-500/5">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-rose-500/10">
-              <AlertCircle className="w-5 h-5 text-rose-600" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-medium text-sm">This is a Coverage benefit</span>
-                <BenefitValueTypeChip valueType="coverage" size="sm" showTooltip={false} />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Your employer invests {formatCurrencyAED(EMPLOYER_INVESTMENT)} annually for your health coverage. 
-                This is <strong>not cash you can spend</strong> — it's insurance that covers your medical expenses when you need care.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 1. Coverage Summary Cards - Service metrics, NOT AED balances */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <SummaryStatsCard
-          icon={Shield}
-          value="Active"
-          label="Coverage Status"
-          formula="Current policy status"
-          dataSource="Insurance Provider"
-          variant="primary"
-        />
-        <SummaryStatsCard
-          icon={Users}
-          value={formatInteger(DEPENDENTS_COVERED)}
-          label="Dependents Covered"
-          formula="You + family members"
-          dataSource="Policy"
-          variant="utilized"
-        />
-        <SummaryStatsCard
-          icon={Activity}
-          value={formatInteger(CLAIMS_COUNT)}
-          label="Claims This Year"
-          formula="Claims processed YTD"
-          dataSource="Claims System"
-          variant="remaining"
-        />
-        <SummaryStatsCard
-          icon={Heart}
-          value={formatInteger(NETWORK_PROVIDERS)}
-          label="Network Providers"
-          formula="In-network facilities"
-          dataSource="Provider Directory"
-          variant="info"
-        />
-      </div>
-
-      {/* 2. Policy Highlights with Action Buttons - Tips integrated */}
-      <PolicyHighlightsCard
-        title="Insurance Policy Highlights"
-        policies={[
-          ...healthPolicies,
-          '💡 In-network = no upfront cost (show insurance card)',
-          '📋 Pre-auth required 48hrs before planned surgeries',
-          '⏱️ Claims processed in 5-7 business days',
-        ]}
-        category="Health Insurance"
-        actionLabel="Submit Claim"
-        policyLabel="View Full Policy"
-      />
-
-      {/* 3. How It Works */}
-      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <Heart className="w-5 h-5 text-accent" />
-            How Your Health Insurance Works
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
-              <div>
-                <p className="font-medium text-sm">In-Network Care</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Visit any in-network provider for <span className="font-semibold text-accent">direct billing</span> — no upfront payment
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
-              <div>
-                <p className="font-medium text-sm">Family Covered</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Spouse and children under 18 are covered at the same benefit levels
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
-              <div>
-                <p className="font-medium text-sm">Claims Reimbursement</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Out-of-network? Submit receipts within 60 days for 50% reimbursement
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-
+    <BenefitDetailTemplate
+      category="health"
+      name="Health Insurance"
+      description="Comprehensive coverage for you and your family"
+      icon={Heart}
+      iconClassName="from-chart-5 to-chart-5/80 shadow-chart-5/25"
+      howItWorksBullets={HOW_IT_WORKS}
+      showMarketplaceLink={true}
+    >
       {/* Coverage Categories */}
       <Card>
         <CardHeader>
@@ -280,7 +153,7 @@ export default function HealthPage() {
       <Tabs defaultValue="providers" className="space-y-4">
         <TabsList>
           <TabsTrigger value="providers">Provider Directory</TabsTrigger>
-          <TabsTrigger value="helper">Policy Helper (Demo)</TabsTrigger>
+          <TabsTrigger value="helper">Policy Helper</TabsTrigger>
         </TabsList>
 
         <TabsContent value="providers" className="space-y-4">
@@ -393,13 +266,12 @@ export default function HealthPage() {
             <CardHeader>
               <CardTitle className="text-base font-display flex items-center gap-2">
                 <HelpCircle className="w-5 h-5 text-accent" />
-                Policy Helper (Demo)
+                Policy Helper
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-6">
-                Get quick answers about your health insurance coverage. This demo shows common questions - 
-                in the full version, you can ask any question about your policy.
+                Get quick answers about your health insurance coverage.
               </p>
 
               <div className="space-y-4">
@@ -417,6 +289,6 @@ export default function HealthPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </BenefitDetailTemplate>
   );
 }

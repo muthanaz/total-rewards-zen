@@ -1,22 +1,16 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
-import { PageHeader } from '@/components/shared/PageHeader';
 import { NoData } from '@/components/ui/empty-state';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { BookOpen, Award, Clock, CheckCircle, Plus, ExternalLink, Wallet, TrendingUp, Calculator } from 'lucide-react';
+import { BookOpen, Award, Clock, CheckCircle, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { BenefitCrossLinks } from '@/components/employee/BenefitCrossLinks';
-import { formatCurrencyAED, formatPercent } from '@/lib/utils';
-
-const ANNUAL_BUDGET = 12000;
-const UTILIZED = 4500;
+import { formatCurrencyAED } from '@/lib/utils';
+import { BenefitDetailTemplate } from '@/components/employee/BenefitDetailTemplate';
 
 const reimbursements = [
   { 
@@ -54,12 +48,10 @@ const suggestedCourses = [
   { name: 'Design Thinking', provider: 'IDEO', cost: 800, duration: '4 weeks' },
 ];
 
-const learningPolicies = [
-  'AED 12,000 annual learning budget',
-  'Pre-approval required for courses over AED 2,000',
-  'Covers courses, certifications, conferences',
-  'Must be job-related or career-advancing',
-  'Reimbursement within 30 days of completion',
+const HOW_IT_WORKS = [
+  'Submit a course request with justification — most under AED 2,000 auto-approved',
+  'Finish your course and submit receipts plus completion certificate',
+  'Receive reimbursement within 30 days of submission',
   'Study leave: up to 5 days for certifications',
 ];
 
@@ -68,8 +60,6 @@ export default function LearningPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
-  const remaining = ANNUAL_BUDGET - UTILIZED;
-  const utilizationPercent = Math.round((UTILIZED / ANNUAL_BUDGET) * 100);
 
   const handleSubmitRequest = () => {
     toast({
@@ -80,112 +70,15 @@ export default function LearningPage() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header - Using PageHeader pattern */}
-      <PageHeader
-        title="Learning & Development"
-        description="Courses, certifications, and professional development"
-        icon={BookOpen}
-        iconClassName="from-chart-3 to-chart-3/80 shadow-chart-3/25"
-        partnerOffersCategory="Learning & Development"
-      />
-
-      {/* 1. Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <SummaryStatsCard
-          variant="primary"
-          label="Annual Budget"
-          value={formatCurrency(ANNUAL_BUDGET)}
-          icon={Wallet}
-          formula="Annual L&D budget per employee"
-          dataSource="HR Policy"
-          index={0}
-        />
-        <SummaryStatsCard
-          variant="utilized"
-          label="Utilized"
-          value={formatCurrency(UTILIZED)}
-          icon={Award}
-          formula="Approved and paid learning costs"
-          dataSource="L&D System"
-          index={1}
-        />
-        <SummaryStatsCard
-          variant="remaining"
-          label="Remaining"
-          value={formatCurrency(remaining)}
-          icon={Calculator}
-          formula="Budget - Utilized"
-          dataSource="System"
-          index={2}
-        />
-        <SummaryStatsCard
-          variant="utilization"
-          label="Utilization"
-          value={`${utilizationPercent}%`}
-          icon={TrendingUp}
-          formula="(Utilized / Budget) × 100"
-          dataSource="System"
-          progress={utilizationPercent}
-          index={3}
-        />
-      </div>
-
-      {/* 2. Policy Highlights - Tips integrated */}
-      <PolicyHighlightsCard
-        title="L&D Policy Highlights"
-        policies={[
-          ...learningPolicies,
-          '💡 Courses under AED 2,000 are usually auto-approved',
-          '📋 Submit: Payment receipt + completion certificate',
-        ]}
-        category="Learning & Development"
-        actionLabel="Submit Claim"
-        policyLabel="View Full Policy"
-      />
-
-      {/* 3. How It Works */}
-      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-accent" />
-            How Your L&D Budget Works
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
-              <div>
-                <p className="font-medium text-sm">Request Approval</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Submit a course request with justification — most under <span className="font-semibold text-accent">AED 2,000</span> auto-approved
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
-              <div>
-                <p className="font-medium text-sm">Complete & Submit</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Finish your course and submit receipts plus completion certificate
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
-              <div>
-                <p className="font-medium text-sm">Get Reimbursed</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Receive reimbursement within 30 days of submission
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-
+    <BenefitDetailTemplate
+      category="learning"
+      name="Learning & Development"
+      description="Courses, certifications, and professional development"
+      icon={BookOpen}
+      iconClassName="from-chart-3 to-chart-3/80 shadow-chart-3/25"
+      howItWorksBullets={HOW_IT_WORKS}
+      showMarketplaceLink={true}
+    >
       {/* Your Learning */}
       <Card>
         <CardHeader>
@@ -264,6 +157,37 @@ export default function LearningPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+
+      {/* Request Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Request Learning Course</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="course">Course Name</Label>
+              <Input id="course" placeholder="Enter course name" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="provider">Provider</Label>
+              <Input id="provider" placeholder="e.g., Coursera, Udemy" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cost">Cost (AED)</Label>
+              <Input id="cost" type="number" placeholder="0" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="justification">Justification</Label>
+              <Textarea id="justification" placeholder="How will this benefit your role?" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSubmitRequest}>Submit Request</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </BenefitDetailTemplate>
   );
 }
