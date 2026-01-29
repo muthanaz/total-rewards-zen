@@ -10,3 +10,4 @@ export { ReportFiltersPanel } from './ReportFiltersPanel';
 export { SavePresetDialog } from './SavePresetDialog';
 export { ReportGenerationDrawer } from './ReportGenerationDrawer';
 export { RecentReportsTable } from './RecentReportsTable';
+export { ClaimsVolumeReport, PayableByCategoryReport, SLAPerformanceReport } from './DemoReportsData';

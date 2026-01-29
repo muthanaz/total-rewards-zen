@@ -5,6 +5,14 @@
 
 export type BatchStatus = 'draft' | 'ready' | 'exported' | 'paid';
 export type ReconciliationStatus = 'pending' | 'matched' | 'partial' | 'unmatched';
+export type PaymentMethod = 'payroll' | 'vendor' | 'reimbursement';
+
+export interface BatchGrouping {
+  method: PaymentMethod;
+  label: string;
+  count: number;
+  totalAED: number;
+}
 
 export interface SettlementBatch {
   id: string;
@@ -70,6 +78,20 @@ export interface SettlementClaim {
   status: 'pending_batch' | 'batched' | 'exported' | 'paid' | 'failed';
   batchId?: string;
   paymentRef?: string;
+  paymentMethod: PaymentMethod;
+  costCenter?: string;
+}
+
+export interface SettlementExportRow {
+  referenceId: string;
+  employeeName: string;
+  employeeCode?: string;
+  category: string;
+  payableAmount: number;
+  costCenter?: string;
+  paymentMethod: PaymentMethod;
+  bankIban?: string;
+  bankName?: string;
 }
 
 export interface ReconciliationResult {

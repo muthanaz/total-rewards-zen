@@ -75,17 +75,15 @@ const HR_TEAM_MEMBERS: TeamMember[] = [
   { id: 'finance-lead-1', name: 'John Mitchell', role: 'Finance Lead', activeTasks: 0 },
 ];
 
-const CATEGORIES = [
-  'Health Insurance',
-  'Transport',
+// Policy-driven categories
+const POLICY_CATEGORIES = [
   'Housing',
-  'Learning & Development',
+  'Schooling', 
+  'Health',
+  'Transport',
   'Wellbeing',
-  'Schooling',
-  'Education Allowance',
-  'Leave',
-  'Per Diem',
-  'Other',
+  'Learning',
+  'Long-Term Financials',
 ];
 
 const REJECTION_REASONS = [
@@ -630,7 +628,7 @@ export function OperationsHub() {
             filters={filters}
             onFiltersChange={handleFiltersChange}
             teamMembers={HR_TEAM_MEMBERS}
-            categories={CATEGORIES}
+            categories={POLICY_CATEGORIES}
             activeFiltersCount={activeFiltersCount}
             onClearAll={handleClearFilters}
           />

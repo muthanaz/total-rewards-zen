@@ -3,12 +3,13 @@
  * 
  * Curated executive and operations report library with
  * one-click generation, filtering, and preset saving.
+ * Includes 3 demo reports that work without integrations.
  */
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, History, BookMarked } from 'lucide-react';
+import { FileText, History, BookMarked, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -20,6 +21,9 @@ import {
   SAVED_PRESETS,
   RECENT_REPORTS,
   ReportDefinition,
+  ClaimsVolumeReport,
+  PayableByCategoryReport,
+  SLAPerformanceReport,
 } from '@/components/employer/reports';
 
 export default function ReportsPage() {
@@ -28,7 +32,7 @@ export default function ReportsPage() {
   
   const [selectedReport, setSelectedReport] = useState<ReportDefinition | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('library');
+  const [activeTab, setActiveTab] = useState('demo');
 
   const handleGenerate = (report: ReportDefinition) => {
     setSelectedReport(report);
@@ -59,7 +63,7 @@ export default function ReportsPage() {
 
       {/* Stats */}
       <ReportsStats
-        totalReports={DEFAULT_REPORTS.length}
+        totalReports={DEFAULT_REPORTS.length + 3}
         recentGenerations={RECENT_REPORTS.length}
         savedPresets={SAVED_PRESETS.length}
         scheduledReports={scheduledCount}
@@ -68,6 +72,10 @@ export default function ReportsPage() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
+          <TabsTrigger value="demo" className="gap-2">
+            <BarChart3 className="w-4 h-4" />
+            Demo Reports
+          </TabsTrigger>
           <TabsTrigger value="library" className="gap-2">
             <FileText className="w-4 h-4" />
             Report Library
@@ -81,6 +89,23 @@ export default function ReportsPage() {
             Saved Presets
           </TabsTrigger>
         </TabsList>
+
+        {/* Demo Reports Tab - Works without integrations */}
+        <TabsContent value="demo" className="mt-6">
+          <div className="mb-4 p-3 rounded-lg border bg-primary/5 border-primary/20">
+            <p className="text-sm text-primary font-medium">
+              ✨ Live Demo Reports — No integrations required
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              These reports use demo data and update to reflect settlement activity.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <ClaimsVolumeReport />
+            <PayableByCategoryReport />
+            <SLAPerformanceReport />
+          </div>
+        </TabsContent>
 
         {/* Library Tab */}
         <TabsContent value="library" className="mt-6">
@@ -97,7 +122,7 @@ export default function ReportsPage() {
         </TabsContent>
 
         {/* Recent Tab */}
-        <TabsContent value="presets" className="mt-6">
+        <TabsContent value="recent" className="mt-6">
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
@@ -112,7 +137,7 @@ export default function ReportsPage() {
         </TabsContent>
 
         {/* Presets Tab */}
-        <TabsContent value="recent" className="mt-6">
+        <TabsContent value="presets" className="mt-6">
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
