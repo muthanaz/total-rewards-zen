@@ -350,7 +350,7 @@ export function generateUtilizationInsight(
       ? `Still ${gapToTarget.toFixed(1)}pp below target. Unrealized value may indicate awareness or accessibility gaps.`
       : `Exceeding target by ${Math.abs(gapToTarget).toFixed(1)}pp. Strong employee engagement with benefits.`,
     action: gapToTarget > 5 
-      ? 'Review low-utilization benefits in Optimization'
+      ? 'Review low-utilization benefits for recoverable spend'
       : 'Monitor and maintain current engagement levels',
     actionPath: gapToTarget > 5 ? '/employer/optimization' : undefined,
     trend: isPositive ? 'up' : 'down',
@@ -373,8 +373,8 @@ export function generateSpendInsight(
     metricValue: `${budgetUtilization.toFixed(0)}% of budget`,
     impact: isOverBudget 
       ? 'Spending exceeds allocated budget. Review forecasting accuracy and cost controls.'
-      : 'Within budget parameters. Focus on ROI optimization.',
-    action: isOverBudget 
+      : 'Within budget parameters. Focus on value realization.',
+    action: isOverBudget
       ? 'Review budget allocation in Spend & Utilization'
       : 'Analyze category-level ROI for rebalancing opportunities',
     actionPath: '/employer/spend',

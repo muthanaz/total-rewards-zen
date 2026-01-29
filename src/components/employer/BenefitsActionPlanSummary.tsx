@@ -81,12 +81,12 @@ const ownerIcons: Record<string, LucideIcon> = {
 };
 
 const sourceLabels = {
-  zombie_spend: 'Optimization',
-  spend: 'Spend',
-  claims: 'Claims',
-  policies: 'Policies',
+  zombie_spend: 'Recoverable Spend',
+  spend: 'Spend Analysis',
+  claims: 'Claims Processing',
+  policies: 'Policy Management',
   segments: 'Segments',
-  manual: 'Manual',
+  manual: 'Manual Entry',
 };
 
 function buildDeepLink(path: string, params?: Record<string, string>): string {
@@ -168,7 +168,7 @@ export function BenefitsActionPlanSummary({
               Benefits Action Plan
             </CardTitle>
             <CardDescription>
-              Actionable recommendations from Optimization, Spend, Claims & Policies
+              Actionable recommendations from Spend Analysis, Claims Processing & Policy Management
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">

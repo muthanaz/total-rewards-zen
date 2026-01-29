@@ -202,7 +202,7 @@ export function MarketplacePhase2Gate({ children }: { children: ReactNode }) {
         'Curated partner offers with exclusive discounts',
         'Bank card benefits integration',
         'Perk activation tracking and analytics',
-        'AI-powered personalized recommendations',
+        'Personalized recommendations based on your profile',
       ]}
     >
       {children}

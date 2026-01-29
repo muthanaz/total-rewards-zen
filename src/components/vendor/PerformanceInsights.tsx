@@ -207,12 +207,12 @@ export function PerformanceInsights() {
           </CardContent>
         </Card>
 
-        {/* AI Insights */}
+        {/* System Insights */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
               <Sparkles className="w-5 h-5 text-accent" />
-              {t('AI-Powered Insights', 'رؤى مدعومة بالذكاء الاصطناعي')}
+              {t('Performance Insights', 'رؤى الأداء')}
             </CardTitle>
             <CardDescription>
               {t('Actionable recommendations based on your data', 'توصيات قابلة للتنفيذ بناءً على بياناتك')}

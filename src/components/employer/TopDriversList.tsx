@@ -42,9 +42,9 @@ const DRIVER_ROUTES: Record<DriverType, string> = {
 };
 
 const DRIVER_LABELS: Record<DriverType, string> = {
-  spend: 'Spend',
-  waste: 'Leakage',
-  segment: 'Segment',
+  spend: 'Spend Analysis',
+  waste: 'Recoverable Spend',
+  segment: 'Segment Analysis',
 };
 
 export function TopDriversList({ drivers, className }: TopDriversListProps) {
