@@ -390,6 +390,7 @@ export function ClaimDetailSheet({
                     documents={documents}
                     settlementReadiness={null}
                     onDecision={handleDecision}
+                    onNavigateToTab={(tab) => setActiveTab(tab)}
                     isProcessing={isProcessing}
                   />
                 )}
