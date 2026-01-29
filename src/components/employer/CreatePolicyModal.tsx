@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -406,8 +407,13 @@ export function CreatePolicyModal({
                       )}
                     >
                       <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-sm">{template.name}</p>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <p className="font-medium text-sm truncate">{template.name}</p>
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/50 text-amber-600 bg-amber-50 flex-shrink-0">
+                              DEMO
+                            </Badge>
+                          </div>
                           <p className="text-xs text-muted-foreground">
                             {LIFE_AREA_LABELS[template.category as keyof typeof LIFE_AREA_LABELS] || template.category}
                             {template.transaction_model && (

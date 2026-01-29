@@ -51,6 +51,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PolicyEditorSheetV2 } from './PolicyEditorSheetV2';
 import { CreatePolicyModal } from './CreatePolicyModal';
+import { SeedDemoPoliciesButton } from './SeedDemoPoliciesButton';
 import { PolicyEmptyState, PolicyInsightsStrip } from './PolicyEmptyState';
 import { 
   PolicyModelChip, 
@@ -839,10 +840,16 @@ export function PolicyManagementView() {
                 </Badge>
               }
             >
-              <Button className="gap-2" onClick={() => setCreateModalOpen(true)}>
-                <Plus className="w-4 h-4" />
-                Create New Policy
-              </Button>
+              <div className="flex items-center gap-2">
+                {/* Create Demo Policies Button */}
+                {publishedCount === 0 && (
+                  <SeedDemoPoliciesButton variant="outline" size="sm" />
+                )}
+                <Button className="gap-2" onClick={() => setCreateModalOpen(true)}>
+                  <Plus className="w-4 h-4" />
+                  Create New Policy
+                </Button>
+              </div>
             </PermissionGate>
           </div>
         }
@@ -954,6 +961,11 @@ export function PolicyManagementView() {
                           <div className="flex items-center gap-2">
                             <FileText className="w-4 h-4 text-muted-foreground" />
                             <span className="font-medium">{policy.title}</span>
+                            {policy.policy_ref?.includes('DEMO') && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/50 text-amber-600 bg-amber-50">
+                                DEMO
+                              </Badge>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>

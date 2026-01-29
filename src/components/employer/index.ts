@@ -133,6 +133,8 @@ export { PolicyManagementView } from './PolicyManagementView';
 export { PolicyInsightsDrawer } from './PolicyInsightsDrawer';
 export { PolicyInsightsTabContent } from './PolicyInsightsTabContent';
 export { KnowledgeBaseTabContent } from './KnowledgeBaseTabContent';
+export { PolicyTemplateSelector } from './PolicyTemplateSelector';
+export { SeedDemoPoliciesButton } from './SeedDemoPoliciesButton';
 
 // Claims Bulk Actions & SLA
 export { ClaimsBulkActionsBar } from './ClaimsBulkActionsBar';
