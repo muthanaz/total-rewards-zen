@@ -27,12 +27,15 @@ export function PolicyEmptyState({
         </div>
         
         <h3 className="text-lg font-semibold text-foreground mb-2">
-          No policies yet
+          No policies configured
         </h3>
         
-        <p className="text-sm text-muted-foreground text-center max-w-md mb-6">
-          Create your first benefit policy to define eligibility rules, approval workflows, 
-          and required documents. Policies power the Claims module and employee portal.
+        <p className="text-sm text-muted-foreground text-center max-w-md mb-2">
+          Policies define eligibility rules, caps, and required documents for each benefit category.
+        </p>
+        
+        <p className="text-xs text-muted-foreground text-center max-w-md mb-6">
+          → Published policies enable employees to submit claims against those benefits
         </p>
         
         <div className="flex flex-col sm:flex-row gap-3">

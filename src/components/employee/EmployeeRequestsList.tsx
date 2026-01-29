@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { NoSearchResults, NoRequestsEmpty } from '@/components/ui/empty-state';
+import { ActionableError } from '@/components/ui/actionable-error';
 import { 
   Search, 
   Clock, 
@@ -169,10 +171,12 @@ export function EmployeeRequestsList() {
           <CardTitle>My Requests</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-            <p>Failed to load requests. Please try again.</p>
-          </div>
+          <ActionableError
+            problem="Failed to load your requests"
+            cause="We couldn't connect to the server"
+            fix="Check your connection and try refreshing the page"
+            onRetry={() => window.location.reload()}
+          />
         </CardContent>
       </Card>
     );
@@ -228,13 +232,21 @@ export function EmployeeRequestsList() {
             
             <TabsContent value={statusFilter} className="mt-0">
               {filteredRequests.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <FileText className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                  <p className="font-medium">No requests found</p>
-                  <p className="text-sm">
-                    {searchQuery ? 'Try adjusting your search' : 'Submit a new request to get started'}
-                  </p>
-                </div>
+                searchQuery ? (
+                  <NoSearchResults 
+                    query={searchQuery} 
+                    entityName="requests"
+                    onClear={() => setSearchQuery('')}
+                  />
+                ) : (
+                  <NoRequestsEmpty 
+                    statusFilter={statusFilter}
+                    onCreateNew={() => {
+                      // Trigger the parent's create handler via custom event
+                      window.dispatchEvent(new CustomEvent('open-create-request', { detail: { type: 'claim' } }));
+                    }}
+                  />
+                )
               ) : (
                 <div className="space-y-3">
                   {filteredRequests.map((request) => (

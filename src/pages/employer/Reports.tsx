@@ -155,11 +155,16 @@ export default function ReportsPage() {
             </CardHeader>
             <CardContent>
               {SAVED_PRESETS.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <BookMarked className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No saved presets yet</p>
-                  <p className="text-xs mt-1">
-                    Generate a report with custom filters and save them as a preset
+                <div className="text-center py-12">
+                  <div className="w-12 h-12 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <BookMarked className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <p className="font-medium text-foreground">No saved presets yet</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Generate a report with custom filters, then save them for quick access.
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    → Presets let you regenerate reports with one click
                   </p>
                 </div>
               ) : (

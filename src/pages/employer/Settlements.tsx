@@ -197,6 +197,8 @@ export default function SettlementsPage() {
             onMarkPaid={handleMarkPaid}
             onRunReconciliation={handleRunReconciliation}
             onViewDetails={handleViewDetails}
+            onCreateBatch={() => setCreateModalOpen(true)}
+            hasActiveFilters={filters.status !== 'all' || filters.reconciliation !== 'all' || Boolean(filters.search)}
           />
 
           {/* Pending Claims Summary */}

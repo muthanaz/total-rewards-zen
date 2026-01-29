@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { QueueEmptyState } from '@/components/ui/empty-state';
 import {
   Tooltip,
   TooltipContent,
@@ -240,13 +241,10 @@ export function OpsQueueTable({
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <Clock className="w-12 h-12 text-muted-foreground/30 mb-4" />
-        <h3 className="font-medium text-lg">Queue is empty</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          No items match the current filters
-        </p>
-      </div>
+      <QueueEmptyState 
+        queueType="all_queue" 
+        onRefresh={undefined}
+      />
     );
   }
 

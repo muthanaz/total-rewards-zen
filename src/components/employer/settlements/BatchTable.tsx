@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { NoBatchesEmpty } from '@/components/ui/empty-state';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +44,8 @@ interface BatchTableProps {
   onMarkPaid: (batch: SettlementBatch) => void;
   onRunReconciliation: (batch: SettlementBatch) => void;
   onViewDetails: (batch: SettlementBatch) => void;
+  onCreateBatch?: () => void;
+  hasActiveFilters?: boolean;
 }
 
 const statusConfig: Record<BatchStatus, { label: string; icon: typeof Clock; color: string }> = {
@@ -67,6 +70,8 @@ export function BatchTable({
   onMarkPaid,
   onRunReconciliation,
   onViewDetails,
+  onCreateBatch,
+  hasActiveFilters = false,
 }: BatchTableProps) {
   const allSelected = batches.length > 0 && selectedIds.length === batches.length;
   const someSelected = selectedIds.length > 0 && selectedIds.length < batches.length;
@@ -86,6 +91,16 @@ export function BatchTable({
       onSelectionChange([...selectedIds, id]);
     }
   };
+
+  // Empty state handling
+  if (batches.length === 0) {
+    return (
+      <NoBatchesEmpty 
+        onCreateBatch={onCreateBatch} 
+        hasFilter={hasActiveFilters}
+      />
+    );
+  }
 
   return (
     <div className="border rounded-lg overflow-hidden">
