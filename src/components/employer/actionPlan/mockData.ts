@@ -2,6 +2,7 @@
  * Action Plan Mock Data
  * 
  * Governance-grade sample actions with all mandatory fields.
+ * PROMPT 07: Added lever type, mechanism, and impact ranges.
  */
 
 import { addDays, subDays } from 'date-fns';
@@ -13,8 +14,11 @@ export const MOCK_ACTIONS: GovernanceAction[] = [
     title: 'Launch L&D awareness campaign for senior grades',
     owner: { id: 'user-001', name: 'Sarah Ahmed', role: 'HR Ops Lead' },
     dueDate: addDays(new Date(), 7),
-    expectedImpactAED: 125000,
+    expectedImpactAEDMin: 95000,
+    expectedImpactAEDMax: 145000,
     expectedImpactPercent: 18,
+    leverType: 'comms',
+    mechanism: 'Email + Slack campaign targeting G4+ employees with personalized L&D recommendations based on role.',
     linkedKPI: {
       key: 'ld_utilization',
       name: 'L&D Utilization Rate',
@@ -38,13 +42,17 @@ export const MOCK_ACTIONS: GovernanceAction[] = [
     createdAt: subDays(new Date(), 12),
     updatedAt: subDays(new Date(), 1),
     category: 'Learning & Development',
+    riskDownside: 'Low risk; campaign may underperform if messaging is generic.',
   },
   {
     id: 'ga-002',
     title: 'Reduce housing allowance cap breach exceptions',
     owner: { id: 'user-002', name: 'Fatima Hassan', role: 'Comp & Ben Manager' },
     dueDate: addDays(new Date(), 14),
-    expectedImpactAED: 89000,
+    expectedImpactAEDMin: 65000,
+    expectedImpactAEDMax: 120000,
+    leverType: 'policy',
+    mechanism: 'Adjust housing cap tiers by grade to reflect current Dubai rental market (Q4 data).',
     linkedKPI: {
       key: 'policy_exceptions',
       name: 'Housing Cap Exceptions',
@@ -68,14 +76,18 @@ export const MOCK_ACTIONS: GovernanceAction[] = [
     createdAt: subDays(new Date(), 20),
     updatedAt: subDays(new Date(), 3),
     category: 'Housing',
+    riskDownside: 'May increase costs if caps are set too high; requires Finance alignment.',
   },
   {
     id: 'ga-003',
     title: 'Implement auto-approval for wellbeing claims under AED 500',
     owner: { id: 'user-003', name: 'Ahmed Khalil', role: 'Process Lead' },
     dueDate: subDays(new Date(), 2), // Overdue
-    expectedImpactAED: 35000,
+    expectedImpactAEDMin: 30000,
+    expectedImpactAEDMax: 42000,
     expectedImpactPercent: 25,
+    leverType: 'process',
+    mechanism: 'Configure workflow engine to auto-approve wellbeing claims ≤AED 500 with valid receipt.',
     linkedKPI: {
       key: 'wellbeing_utilization',
       name: 'Wellbeing Utilization',
@@ -99,13 +111,17 @@ export const MOCK_ACTIONS: GovernanceAction[] = [
     createdAt: subDays(new Date(), 30),
     updatedAt: subDays(new Date(), 2),
     category: 'Wellbeing',
+    riskDownside: 'Minimal fraud risk at AED 500 threshold; audit sampling recommended.',
   },
   {
     id: 'ga-004',
     title: 'Negotiate volume discount with healthcare provider',
     owner: null, // Unassigned
     dueDate: addDays(new Date(), 21),
-    expectedImpactAED: 180000,
+    expectedImpactAEDMin: 140000,
+    expectedImpactAEDMax: 220000,
+    leverType: 'vendor',
+    mechanism: 'RFP to incumbent + 2 competitors; leverage 15% headcount growth for better rates.',
     linkedKPI: {
       key: 'healthcare_cost_per_head',
       name: 'Healthcare Cost per Employee',
@@ -129,14 +145,18 @@ export const MOCK_ACTIONS: GovernanceAction[] = [
     createdAt: subDays(new Date(), 5),
     updatedAt: subDays(new Date(), 5),
     category: 'Healthcare',
+    riskDownside: 'May require 2-year commitment; evaluate contract flexibility.',
   },
   {
     id: 'ga-005',
     title: 'Align education allowance with market P50',
     owner: { id: 'user-002', name: 'Fatima Hassan', role: 'Comp & Ben Manager' },
     dueDate: addDays(new Date(), 45),
-    expectedImpactAED: 75000,
+    expectedImpactAEDMin: 55000,
+    expectedImpactAEDMax: 95000,
     expectedImpactPercent: 12,
+    leverType: 'policy',
+    mechanism: 'Update education policy tiers based on benchmark data; communicate changes in Q2.',
     linkedKPI: {
       key: 'education_utilization',
       name: 'Education Allowance Usage',
@@ -160,13 +180,17 @@ export const MOCK_ACTIONS: GovernanceAction[] = [
     createdAt: subDays(new Date(), 3),
     updatedAt: subDays(new Date(), 3),
     category: 'Education',
+    riskDownside: 'Budget increase required; needs CFO approval.',
   },
   {
     id: 'ga-006',
     title: 'Deploy quarterly benefits utilization report',
     owner: { id: 'user-004', name: 'Mohammed Ali', role: 'Analytics Lead' },
     dueDate: subDays(new Date(), 5),
-    expectedImpactAED: 0,
+    expectedImpactAEDMin: 0,
+    expectedImpactAEDMax: 0,
+    leverType: 'process',
+    mechanism: 'Automated BI dashboard with scheduled email distribution to HR leadership.',
     linkedKPI: {
       key: 'data_coverage',
       name: 'Data Coverage Score',
@@ -191,14 +215,18 @@ export const MOCK_ACTIONS: GovernanceAction[] = [
     updatedAt: subDays(new Date(), 5),
     completedAt: subDays(new Date(), 5),
     category: 'Analytics',
+    riskDownside: 'None; experience/clarity improvement only.',
   },
   {
     id: 'ga-007',
     title: 'Simplify transport claim documentation requirements',
     owner: { id: 'user-001', name: 'Sarah Ahmed', role: 'HR Ops Lead' },
     dueDate: subDays(new Date(), 10),
-    expectedImpactAED: 28000,
+    expectedImpactAEDMin: 24000,
+    expectedImpactAEDMax: 32000,
     expectedImpactPercent: 15,
+    leverType: 'process',
+    mechanism: 'Reduce required documents from 4 to 2 (receipt + odometer photo); update claim form.',
     linkedKPI: {
       key: 'transport_utilization',
       name: 'Transport Benefit Usage',
@@ -223,6 +251,7 @@ export const MOCK_ACTIONS: GovernanceAction[] = [
     updatedAt: subDays(new Date(), 10),
     completedAt: subDays(new Date(), 10),
     category: 'Transport',
+    riskDownside: 'Minimal; fraud risk addressed via random audit sampling.',
   },
 ];
 
@@ -236,7 +265,8 @@ export function calculatePortfolioMetrics(actions: GovernanceAction[]): Portfoli
     done: 0,
   };
   
-  let totalImpact = 0;
+  let totalImpactMin = 0;
+  let totalImpactMax = 0;
   let overdueCount = 0;
   const blockerReasons: Record<string, { count: number; impact: number }> = {};
   let completedDays: number[] = [];
@@ -245,7 +275,8 @@ export function calculatePortfolioMetrics(actions: GovernanceAction[]): Portfoli
     actionsByStatus[action.status]++;
     
     if (action.status !== 'done') {
-      totalImpact += action.expectedImpactAED;
+      totalImpactMin += action.expectedImpactAEDMin;
+      totalImpactMax += action.expectedImpactAEDMax;
     }
     
     // Check overdue
@@ -253,13 +284,13 @@ export function calculatePortfolioMetrics(actions: GovernanceAction[]): Portfoli
       overdueCount++;
     }
     
-    // Aggregate blockers
+    // Aggregate blockers (use max impact for "at risk" calculation)
     action.blockers.forEach(blocker => {
       if (!blockerReasons[blocker]) {
         blockerReasons[blocker] = { count: 0, impact: 0 };
       }
       blockerReasons[blocker].count++;
-      blockerReasons[blocker].impact += action.expectedImpactAED;
+      blockerReasons[blocker].impact += action.expectedImpactAEDMax;
     });
     
     // Calculate completion time
@@ -284,7 +315,8 @@ export function calculatePortfolioMetrics(actions: GovernanceAction[]): Portfoli
     : 0;
   
   return {
-    totalExpectedImpactAED: totalImpact,
+    totalExpectedImpactAEDMin: totalImpactMin,
+    totalExpectedImpactAEDMax: totalImpactMax,
     actionsOverdue: overdueCount,
     actionsTotal: actions.length,
     actionsByStatus,

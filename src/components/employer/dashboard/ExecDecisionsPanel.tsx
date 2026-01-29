@@ -1,12 +1,12 @@
 /**
  * Executive Decisions Panel (Action Plan Preview)
  * 
- * Shows 3 highest-impact recommended actions with:
- * - Impact (AED)
- * - Effort (Low/Med/High)
- * - Owner
- * - Due Date
- * - Primary CTA: "Create/Assign Action"
+ * PROMPT 07: Board-ready action cards with:
+ * - Lever type (Policy/Vendor/Comms/Process)
+ * - Impact range (Low–High AED)
+ * - Confidence band
+ * - Owner + Due Date
+ * - Mechanism one-liner
  */
 
 import { useState } from 'react';
@@ -30,19 +30,45 @@ import {
   Clock,
   CheckCircle2,
   UserPlus,
+  Cog,
 } from 'lucide-react';
 import { cn, formatCurrencyAED } from '@/lib/utils';
 import { format } from 'date-fns';
 
-export type EffortLevel = 'low' | 'medium' | 'high';
+// Lever types for PROMPT 07
+export type LeverType = 'policy' | 'vendor' | 'comms' | 'process';
+export type ConfidenceLevel = 'high' | 'medium' | 'low';
+
+const LEVER_CONFIG: Record<LeverType, { label: string; color: string; bgColor: string; icon: string }> = {
+  policy: { label: 'Policy', color: 'text-purple-600', bgColor: 'bg-purple-50 dark:bg-purple-950/30', icon: '📋' },
+  vendor: { label: 'Vendor', color: 'text-blue-600', bgColor: 'bg-blue-50 dark:bg-blue-950/30', icon: '🤝' },
+  comms: { label: 'Comms', color: 'text-green-600', bgColor: 'bg-green-50 dark:bg-green-950/30', icon: '📣' },
+  process: { label: 'Process', color: 'text-orange-600', bgColor: 'bg-orange-50 dark:bg-orange-950/30', icon: '⚙️' },
+};
+
+const CONFIDENCE_CONFIG: Record<ConfidenceLevel, { label: string; color: string; bgColor: string }> = {
+  high: { label: 'High', color: 'text-success', bgColor: 'bg-success/10' },
+  medium: { label: 'Med', color: 'text-warning', bgColor: 'bg-warning/10' },
+  low: { label: 'Low', color: 'text-muted-foreground', bgColor: 'bg-muted' },
+};
 
 export interface RecommendedAction {
   id: string;
   title: string;
   description?: string;
-  impactAED: number;
-  effort: EffortLevel;
+  /** Impact range - use min/max for non-high confidence */
+  impactAEDMin: number;
+  impactAEDMax: number;
+  /** @deprecated Use impactAEDMin/Max */
+  impactAED?: number;
+  /** Lever type categorization */
+  leverType: LeverType;
+  /** Confidence band */
+  confidence: ConfidenceLevel;
+  /** Mechanism: what changes operationally */
+  mechanism: string;
   owner?: string;
+  ownerRole?: string;
   dueDate?: Date | string;
   category?: string;
   status?: 'draft' | 'pending' | 'assigned' | 'in_progress';
@@ -55,12 +81,6 @@ interface ExecDecisionsPanelProps {
   className?: string;
 }
 
-const EFFORT_CONFIG: Record<EffortLevel, { label: string; color: string; bg: string }> = {
-  low: { label: 'Low', color: 'text-success', bg: 'bg-success/10' },
-  medium: { label: 'Med', color: 'text-warning', bg: 'bg-warning/10' },
-  high: { label: 'High', color: 'text-destructive', bg: 'bg-destructive/10' },
-};
-
 export function ExecDecisionsPanel({
   actions,
   onAssignAction,
@@ -71,8 +91,12 @@ export function ExecDecisionsPanel({
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const top3 = actions.slice(0, 3);
+  
   // Only include actions with financial impact > 0 in the header total
-  const financialImpactTotal = top3.reduce((sum, a) => sum + (a.impactAED > 0 ? a.impactAED : 0), 0);
+  // Use min values for conservative estimates
+  const financialImpactMin = top3.reduce((sum, a) => sum + (a.impactAEDMax > 0 ? a.impactAEDMin : 0), 0);
+  const financialImpactMax = top3.reduce((sum, a) => sum + a.impactAEDMax, 0);
+  const showRange = financialImpactMin !== financialImpactMax;
 
   const handleOpenAction = (action: RecommendedAction) => {
     setSelectedAction(action);
@@ -96,7 +120,10 @@ export function ExecDecisionsPanel({
             </CardTitle>
             <div className="flex items-center gap-3">
               <Badge variant="secondary" className="text-xs tabular-nums">
-                Est. financial impact: {formatCurrencyAED(financialImpactTotal, { abbreviate: true })}
+                Est. impact: {showRange 
+                  ? `${formatCurrencyAED(financialImpactMin, { abbreviate: true })}–${formatCurrencyAED(financialImpactMax, { abbreviate: true })}`
+                  : formatCurrencyAED(financialImpactMax, { abbreviate: true })
+                }
               </Badge>
               <Link to="/employer/actions">
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
@@ -110,70 +137,80 @@ export function ExecDecisionsPanel({
         <CardContent>
           <div className="space-y-3">
             {top3.map((action, index) => {
-              const effortConfig = EFFORT_CONFIG[action.effort];
+              const leverConfig = LEVER_CONFIG[action.leverType];
+              const confidenceConfig = CONFIDENCE_CONFIG[action.confidence];
+              const hasFinancialImpact = action.impactAEDMax > 0;
+              const isSinglePoint = action.impactAEDMin === action.impactAEDMax || action.confidence === 'high';
               
               return (
                 <div 
                   key={action.id}
-                  className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:border-accent/30 transition-colors min-h-[88px]"
+                  className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:border-accent/30 transition-colors min-h-[100px]"
                 >
                   {/* Rank indicator */}
                   <div className="flex items-center justify-center w-8 h-8 rounded-full bg-accent/10 text-accent font-bold text-sm shrink-0">
                     {index + 1}
                   </div>
 
-                  {/* Content - Title row, Metadata row, organized structure */}
+                  {/* Content */}
                   <div className="flex-1 min-w-0 space-y-2">
                     {/* Title Row */}
                     <p className="font-medium text-sm line-clamp-1">{action.title}</p>
                     
-                    {/* Metadata Row: Owner, Date, Effort */}
+                    {/* Badges Row: Lever + Confidence */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="outline" className={cn("text-[10px]", leverConfig.bgColor, leverConfig.color)}>
+                        {leverConfig.icon} {leverConfig.label}
+                      </Badge>
+                      <Badge variant="outline" className={cn("text-[10px]", confidenceConfig.bgColor, confidenceConfig.color)}>
+                        {confidenceConfig.label} conf
+                      </Badge>
+                    </div>
+                    
+                    {/* Metadata Row: Owner, Date */}
                     <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                      {/* Owner */}
                       {action.owner && (
                         <div className="flex items-center gap-1">
                           <User className="w-3 h-3" />
-                          <span>{action.owner}</span>
+                          <span>{action.owner}{action.ownerRole && ` (${action.ownerRole})`}</span>
                         </div>
                       )}
-
-                      {/* Due Date */}
                       {action.dueDate && (
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           <span>{formatDueDate(action.dueDate)}</span>
                         </div>
                       )}
-                      
-                      {/* Effort */}
-                      <Badge 
-                        variant="outline" 
-                        className={cn('text-[10px] gap-1', effortConfig.bg, effortConfig.color)}
-                      >
-                        <Clock className="w-2.5 h-2.5" />
-                        {effortConfig.label} Effort
-                      </Badge>
                     </div>
 
-                    {/* Impact Row */}
+                    {/* Impact Row - Range Display */}
                     <div className="flex items-center gap-1">
-                      <Zap className={cn('w-3 h-3', action.impactAED > 0 ? 'text-success' : 'text-muted-foreground')} />
-                      {action.impactAED > 0 ? (
+                      <Zap className={cn('w-3 h-3', hasFinancialImpact ? 'text-success' : 'text-muted-foreground')} />
+                      {hasFinancialImpact ? (
                         <>
                           <span className="text-xs font-semibold text-success tabular-nums">
-                            {formatCurrencyAED(action.impactAED, { abbreviate: true })}
+                            {isSinglePoint 
+                              ? formatCurrencyAED(action.impactAEDMax, { abbreviate: true })
+                              : `${formatCurrencyAED(action.impactAEDMin, { abbreviate: true })}–${formatCurrencyAED(action.impactAEDMax, { abbreviate: true })}`
+                            }
                           </span>
                           <span className="text-xs text-muted-foreground">est. impact</span>
                         </>
                       ) : (
                         <span className="text-xs text-muted-foreground">
-                          Financial impact: AED 0 (Experience/clarity improvement)
+                          AED 0 (Experience/clarity improvement)
                         </span>
                       )}
                     </div>
+
+                    {/* Mechanism Row */}
+                    <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                      <Cog className="w-3 h-3 shrink-0 mt-0.5" />
+                      <span className="line-clamp-1">{action.mechanism}</span>
+                    </div>
                   </div>
 
-                  {/* CTA - Fixed size, consistent placement */}
+                  {/* CTA */}
                   <Button 
                     size="sm" 
                     className="gap-1.5 shrink-0 min-w-[80px]"
@@ -209,28 +246,46 @@ export function ExecDecisionsPanel({
           
           {selectedAction && (
             <div className="mt-6 space-y-6">
-              {/* Impact highlight */}
+              {/* Lever + Confidence badges */}
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className={cn("text-xs", LEVER_CONFIG[selectedAction.leverType].bgColor, LEVER_CONFIG[selectedAction.leverType].color)}>
+                  {LEVER_CONFIG[selectedAction.leverType].icon} {LEVER_CONFIG[selectedAction.leverType].label}
+                </Badge>
+                <Badge variant="outline" className={cn("text-xs", CONFIDENCE_CONFIG[selectedAction.confidence].bgColor, CONFIDENCE_CONFIG[selectedAction.confidence].color)}>
+                  {CONFIDENCE_CONFIG[selectedAction.confidence].label} confidence
+                </Badge>
+              </div>
+
+              {/* Impact highlight - Range */}
               <div className="p-4 rounded-lg bg-success/5 border border-success/20">
                 <p className="text-xs text-muted-foreground mb-1">Estimated Impact</p>
                 <p className="text-2xl font-bold text-success tabular-nums">
-                  {formatCurrencyAED(selectedAction.impactAED)}
+                  {selectedAction.impactAEDMin === selectedAction.impactAEDMax || selectedAction.confidence === 'high'
+                    ? formatCurrencyAED(selectedAction.impactAEDMax)
+                    : `${formatCurrencyAED(selectedAction.impactAEDMin)} – ${formatCurrencyAED(selectedAction.impactAEDMax)}`
+                  }
                 </p>
+              </div>
+
+              {/* Mechanism */}
+              <div className="p-3 rounded-lg bg-muted/30">
+                <p className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
+                  <Cog className="w-3.5 h-3.5" />
+                  Mechanism
+                </p>
+                <p className="text-sm">{selectedAction.mechanism}</p>
               </div>
 
               {/* Details grid */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-3 rounded-lg bg-muted/30">
-                  <p className="text-xs text-muted-foreground mb-1">Effort Level</p>
-                  <Badge 
-                    variant="outline" 
-                    className={cn(
-                      'text-xs',
-                      EFFORT_CONFIG[selectedAction.effort].bg,
-                      EFFORT_CONFIG[selectedAction.effort].color
+                  <p className="text-xs text-muted-foreground mb-1">Owner</p>
+                  <p className="text-sm font-medium">
+                    {selectedAction.owner || 'Unassigned'}
+                    {selectedAction.ownerRole && (
+                      <span className="text-muted-foreground font-normal"> ({selectedAction.ownerRole})</span>
                     )}
-                  >
-                    {EFFORT_CONFIG[selectedAction.effort].label}
-                  </Badge>
+                  </p>
                 </div>
                 <div className="p-3 rounded-lg bg-muted/30">
                   <p className="text-xs text-muted-foreground mb-1">Due Date</p>

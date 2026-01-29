@@ -12,7 +12,7 @@ export { ExecTopDriversPanel } from './ExecTopDriversPanel';
 export type { SpendDriver, LeakageDriver } from './ExecTopDriversPanel';
 
 export { ExecDecisionsPanel } from './ExecDecisionsPanel';
-export type { RecommendedAction, EffortLevel } from './ExecDecisionsPanel';
+export type { RecommendedAction, LeverType, ConfidenceLevel } from './ExecDecisionsPanel';
 
 export { ExecRisksPanel } from './ExecRisksPanel';
 export type { RiskIndicator } from './ExecRisksPanel';
