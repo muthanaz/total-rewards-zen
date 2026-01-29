@@ -1,13 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
-import { PageHeader } from '@/components/shared/PageHeader';
-import { Car, Fuel, Plane, CreditCard, CheckCircle, Wallet, TrendingDown, Percent, FileText } from 'lucide-react';
+import { Car, Fuel, Plane, CheckCircle, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import { BenefitCrossLinks } from '@/components/employee/BenefitCrossLinks';
-import { formatCurrencyAED, formatPercent } from '@/lib/utils';
+import { formatCurrencyAED } from '@/lib/utils';
+import { BenefitDetailTemplate } from '@/components/employee/BenefitDetailTemplate';
 
 const allowances = [
   {
@@ -51,133 +48,32 @@ const allowances = [
   },
 ];
 
-const transportPolicies = [
-  'Fuel allowance paid monthly with salary',
-  'Car allowance for Grade 5+ employees',
-  'Annual tickets to home country for family',
-  'Business class available for Grade 8+',
-  'Unused ticket allowance non-encashable',
-  'Advance booking recommended for best fares',
+const HOW_IT_WORKS = [
+  'Fuel and car allowances auto-credited monthly to your salary',
+  'Book annual tickets through the approved travel portal or HR',
+  'Flight tickets cover you and registered dependents',
+  'Business class available for Grade 8+ employees',
 ];
 
 export default function TransportPage() {
   const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
 
-  const totalAnnual = allowances.reduce((sum, a) => sum + a.annual, 0);
-  const totalUtilized = allowances.reduce((sum, a) => sum + a.utilized, 0);
-  const totalRemaining = totalAnnual - totalUtilized;
-  const totalUtilization = Math.round((totalUtilized / totalAnnual) * 100);
-
   const handleSubmitClaim = (claimType: string, allowanceName: string) => {
     toast.success(`Claim for ${allowanceName}`, {
       description: 'Redirecting to claim form...',
     });
-    // In production, this would navigate to the claims page with pre-filled data
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header - Using PageHeader pattern */}
-      <PageHeader
-        title="Transport & Mobility"
-        description="Fuel, car allowance, and annual flight tickets"
-        icon={Car}
-        iconClassName="from-chart-2 to-chart-2/80 shadow-chart-2/25"
-        partnerOffersCategory="Transport"
-      />
-
-      {/* 1. Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <SummaryStatsCard
-          icon={CreditCard}
-          value={formatCurrency(totalAnnual)}
-          label="Total Annual"
-          formula="Sum of all transport allowances"
-          dataSource="HR Policy"
-          variant="primary"
-        />
-        <SummaryStatsCard
-          icon={Wallet}
-          value={formatCurrency(totalUtilized)}
-          label="Utilized"
-          formula="Amount paid/used YTD"
-          dataSource="Payroll"
-          variant="utilized"
-        />
-        <SummaryStatsCard
-          icon={TrendingDown}
-          value={formatCurrency(totalRemaining)}
-          label="Remaining"
-          formula="Total - Utilized"
-          dataSource="System"
-          variant="remaining"
-        />
-        <SummaryStatsCard
-          icon={Percent}
-          value={`${totalUtilization}%`}
-          label="Utilization"
-          formula="(Utilized / Total) × 100"
-          dataSource="System"
-          variant="utilization"
-          progress={totalUtilization}
-        />
-      </div>
-
-      {/* 2. Policy Highlights - Tips integrated */}
-      <PolicyHighlightsCard
-        title="Transport Policy Highlights"
-        policies={[
-          ...transportPolicies,
-          '💡 Fuel auto-credited monthly — no claim needed',
-          '📋 Submit: E-ticket + boarding pass + payment receipt for flights',
-        ]}
-        category="Transport"
-        showClaimButton={false}
-        policyLabel="View Full Policy"
-      />
-
-      {/* 3. How It Works */}
-      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <Car className="w-5 h-5 text-accent" />
-            How Your Transport Benefits Work
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
-              <div>
-                <p className="font-medium text-sm">Automatic Credit</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Fuel and car allowances are <span className="font-semibold text-accent">auto-credited</span> to your salary monthly
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
-              <div>
-                <p className="font-medium text-sm">Flight Booking</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Book annual tickets through the approved travel portal or HR
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
-              <div>
-                <p className="font-medium text-sm">Family Included</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Flight tickets cover you and your registered dependents
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-
+    <BenefitDetailTemplate
+      category="transport"
+      name="Transport & Mobility"
+      description="Fuel, car allowance, and annual flight tickets"
+      icon={Car}
+      iconClassName="from-chart-2 to-chart-2/80 shadow-chart-2/25"
+      howItWorksBullets={HOW_IT_WORKS}
+      showMarketplaceLink={true}
+    >
       {/* Allowance Cards with Submit Claim buttons */}
       <div className="grid md:grid-cols-3 gap-6">
         {allowances.map((allowance) => {
@@ -226,7 +122,6 @@ export default function TransportPage() {
                   </ul>
                 </div>
 
-                {/* Submit Claim Button for each allowance */}
                 <Button 
                   className="w-full mt-2" 
                   size="sm"
@@ -240,6 +135,6 @@ export default function TransportPage() {
           );
         })}
       </div>
-    </div>
+    </BenefitDetailTemplate>
   );
 }

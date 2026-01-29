@@ -4,27 +4,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
-import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
-import { PageHeader } from '@/components/shared/PageHeader';
-import { RecommendedVendorsModule } from '@/components/employee/RecommendedVendorsModule';
-import { BenefitCrossLinks } from '@/components/employee/BenefitCrossLinks';
-import { Home, Search, Star, Clock, ExternalLink, MapPin, Bath, Bed, Wallet, TrendingDown, Percent, CheckCircle2 } from 'lucide-react';
+import { Home, Search, Star, Clock, ExternalLink, MapPin, Bath, Bed } from 'lucide-react';
 import { useHousingAreas, useHousingListings } from '@/hooks/useSupabaseData';
-import { BENEFIT_CATEGORIES } from '@/lib/benefitCategories';
-import { getRAGIndicator } from '@/lib/colorUtils';
-import { cn, formatCurrencyAED, formatPercent } from '@/lib/utils';
+import { formatCurrencyAED } from '@/lib/utils';
+import { BenefitDetailTemplate } from '@/components/employee/BenefitDetailTemplate';
 
 const HOUSING_ALLOWANCE = 120000;
-const housingCategory = BENEFIT_CATEGORIES.housing;
 
-const housingPolicies = [
+const HOW_IT_WORKS = [
   'Paid monthly with salary as cash allowance',
-  'Can be used for rent or mortgage payments',
-  'Receipts required for tax-free treatment',
-  'Annual renewal: submit new tenancy contract',
+  'Use for rent, mortgage, or accommodation',
+  'Keep tenancy contract (Ejari) for records',
   'Pro-rated for partial year employment',
-  'Allowance based on grade and location',
 ];
 
 export default function HousingPage() {
@@ -36,11 +27,6 @@ export default function HousingPage() {
   const [bedrooms, setBedrooms] = useState<string>('all');
   const [maxRent, setMaxRent] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('price');
-
-  const utilized = 120000;
-  const remaining = HOUSING_ALLOWANCE - utilized;
-  const utilizationPercent = Math.round((utilized / HOUSING_ALLOWANCE) * 100);
-  const rag = getRAGIndicator(utilizationPercent);
 
   const filteredListings = useMemo(() => {
     let filtered = [...listings];
@@ -97,116 +83,15 @@ export default function HousingPage() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header - Using PageHeader pattern */}
-      <PageHeader
-        title="Housing Allowance"
-        description="Find the perfect home within your allowance or calculate your top-up"
-        icon={Home}
-        iconClassName="from-accent to-accent/80 shadow-accent/25"
-        partnerOffersCategory="Housing"
-        badge={{
-          label: `${utilizationPercent}% ${rag.label}`,
-          icon: CheckCircle2,
-          variant: utilizationPercent >= 80 ? 'success' : utilizationPercent >= 50 ? 'warning' : 'default',
-        }}
-      />
-
-      {/* 1. Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <SummaryStatsCard
-          icon={Home}
-          value={formatCurrency(HOUSING_ALLOWANCE)}
-          label="Annual Allowance"
-          formula="Annual housing allowance based on grade"
-          dataSource="HR Policy"
-          variant="primary"
-        />
-        <SummaryStatsCard
-          icon={Wallet}
-          value={formatCurrency(utilized)}
-          label="Utilized"
-          formula="Total housing payments made"
-          dataSource="Payroll"
-          variant="utilized"
-        />
-        <SummaryStatsCard
-          icon={TrendingDown}
-          value={formatCurrency(remaining)}
-          label="Remaining"
-          formula="Allowance - Utilized"
-          dataSource="Benefits System"
-          variant="remaining"
-        />
-        <SummaryStatsCard
-          icon={Percent}
-          value={`${utilizationPercent}%`}
-          label="Utilization"
-          formula="(Utilized / Allowance) × 100"
-          dataSource="System"
-          variant="utilization"
-          progress={utilizationPercent}
-        />
-      </div>
-
-      {/* 2. Policy Highlights with Action Buttons - Tips integrated */}
-      <PolicyHighlightsCard
-        title="Housing Policy Highlights"
-        policies={[
-          ...housingPolicies,
-          '💡 Paid monthly with salary — no claim needed',
-          '📋 Keep: Tenancy contract (Ejari), landlord details, rent receipts',
-        ]}
-        category="Housing"
-        actionLabel="Submit Claim"
-        policyLabel="View Full Policy"
-      />
-
-      {/* 3. How Your Allowance Works */}
-      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <Home className="w-5 h-5 text-accent" />
-            How Your Housing Allowance Works
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">1</div>
-              <div>
-                <p className="font-medium text-sm">Monthly Payment</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  <span className="font-semibold text-accent">AED 10,000</span> credited to your salary each month
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">2</div>
-              <div>
-                <p className="font-medium text-sm">Flexible Use</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Use for rent, mortgage, or accommodation as you prefer
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-card border">
-              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm shrink-0">3</div>
-              <div>
-                <p className="font-medium text-sm">Top-Up Option</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Need more? Top up from salary for properties above allowance
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-
-      {/* Recommended Vendors */}
-      <RecommendedVendorsModule benefitCategory="Housing" title="Housing & Home Partners" />
-
+    <BenefitDetailTemplate
+      category="housing"
+      name="Housing Allowance"
+      description="Find the perfect home within your allowance or calculate your top-up"
+      icon={Home}
+      iconClassName="from-accent to-accent/80 shadow-accent/25"
+      howItWorksBullets={HOW_IT_WORKS}
+      showMarketplaceLink={true}
+    >
       {/* Area Comparison Table */}
       <Card>
         <CardHeader>
@@ -403,6 +288,6 @@ export default function HousingPage() {
           <p className="mt-4 text-muted-foreground">No listings match your filters</p>
         </Card>
       )}
-    </div>
+    </BenefitDetailTemplate>
   );
 }
