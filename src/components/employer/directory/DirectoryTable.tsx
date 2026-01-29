@@ -21,26 +21,27 @@ export function DirectoryTable({ employees, onViewEmployee }: DirectoryTableProp
   };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[240px]">Name (Grade)</TableHead>
-          <TableHead className="w-[140px]">Department</TableHead>
-          <TableHead className="w-[120px]">Location</TableHead>
-          <TableHead className="w-[100px]">Status</TableHead>
-          <TableHead className="w-[100px] text-center">Open Requests</TableHead>
-          <TableHead className="w-[200px]">Eligibility</TableHead>
-          <TableHead className="w-[120px]">Utilization</TableHead>
-          <TableHead className="w-[80px] text-center">Action</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {employees.map((emp) => (
-          <TableRow 
-            key={emp.id} 
-            className="group cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={() => onViewEmployee(emp)}
-          >
+    <div className="border border-border/50 rounded-lg overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[240px]">Name (Grade)</TableHead>
+            <TableHead className="w-[140px]">Department</TableHead>
+            <TableHead className="w-[120px]">Location</TableHead>
+            <TableHead className="w-[100px]">Status</TableHead>
+            <TableHead className="w-[100px] text-center">Open Requests</TableHead>
+            <TableHead className="w-[200px]">Eligibility</TableHead>
+            <TableHead className="w-[120px]">Utilization</TableHead>
+            <TableHead className="w-[80px] text-right">Action</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {employees.map((emp) => (
+            <TableRow 
+              key={emp.id} 
+              className="group cursor-pointer"
+              onClick={() => onViewEmployee(emp)}
+            >
             {/* Name (Grade) */}
             <TableCell>
               <div className="flex items-center gap-3">
@@ -147,9 +148,9 @@ export function DirectoryTable({ employees, onViewEmployee }: DirectoryTableProp
               </div>
             </TableCell>
 
-            {/* Action */}
-            <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
-              <Button
+              {/* Action */}
+              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                <Button
                 variant="ghost"
                 size="sm"
                 className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -159,17 +160,18 @@ export function DirectoryTable({ employees, onViewEmployee }: DirectoryTableProp
                 <span className="sr-only">View {emp.firstName}</span>
               </Button>
             </TableCell>
-          </TableRow>
-        ))}
+            </TableRow>
+          ))}
 
-        {employees.length === 0 && (
-          <TableRow>
-            <TableCell colSpan={8} className="h-32 text-center">
-              <p className="text-muted-foreground">No employees found matching your criteria.</p>
-            </TableCell>
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
+          {employees.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={8} className="h-32 text-center">
+                <p className="text-muted-foreground">No employees found matching your criteria.</p>
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

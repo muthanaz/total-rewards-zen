@@ -103,10 +103,10 @@ export function BatchTable({
   }
 
   return (
-    <div className="border rounded-lg overflow-hidden">
+    <div className="border border-border/50 rounded-lg overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/50">
+          <TableRow>
             <TableHead className="w-12">
               <Checkbox
                 checked={allSelected}
@@ -137,10 +137,7 @@ export function BatchTable({
             return (
               <TableRow 
                 key={batch.id}
-                className={cn(
-                  'hover:bg-muted/30',
-                  selectedIds.includes(batch.id) && 'bg-primary/5'
-                )}
+                data-state={selectedIds.includes(batch.id) ? "selected" : undefined}
               >
                 <TableCell>
                   <Checkbox

@@ -115,6 +115,13 @@ export default {
       },
       boxShadow: {
         glow: "0 0 20px hsl(174 60% 45% / 0.3)",
+        card: "var(--shadow-card)",
+        "card-hover": "var(--shadow-card-hover)",
+      },
+      transitionDuration: {
+        fast: "150ms",
+        base: "200ms",
+        slow: "300ms",
       },
     },
   },

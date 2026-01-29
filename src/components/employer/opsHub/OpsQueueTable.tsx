@@ -250,10 +250,10 @@ export function OpsQueueTable({
 
   return (
     <TooltipProvider>
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border border-border/50 rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/30">
+            <TableRow>
               <TableHead className="w-10">
                 <Checkbox
                   checked={allSelected}
@@ -270,16 +270,15 @@ export function OpsQueueTable({
               <TableHead className="text-right w-28">Payable</TableHead>
               <TableHead className="w-32">Assignee</TableHead>
               <TableHead className="w-24">Blockers</TableHead>
-              <TableHead className="w-24">Actions</TableHead>
+              <TableHead className="w-24 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {items.map((item) => (
               <TableRow 
                 key={item.id}
+                data-state={selectedIds.includes(item.id) ? "selected" : undefined}
                 className={cn(
-                  "transition-colors",
-                  selectedIds.includes(item.id) && "bg-primary/5",
                   item.slaInfo?.isOverdue && "bg-destructive/5"
                 )}
               >

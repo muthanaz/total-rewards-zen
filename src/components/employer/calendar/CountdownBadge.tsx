@@ -23,7 +23,7 @@ export function CountdownBadge({ date, isCompleted }: CountdownBadgeProps) {
   if (isPast(date) && !isToday(date)) {
     const daysOverdue = Math.abs(daysUntil);
     return (
-      <Badge variant="destructive" className="animate-pulse">
+      <Badge variant="destructive">
         {daysOverdue}d overdue
       </Badge>
     );

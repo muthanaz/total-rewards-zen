@@ -91,17 +91,18 @@ export function RecentReportsTable({ reports }: RecentReportsTableProps) {
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Report</TableHead>
-          <TableHead>Format</TableHead>
-          <TableHead>Generated</TableHead>
-          <TableHead>By</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead className="text-right">Action</TableHead>
-        </TableRow>
-      </TableHeader>
+    <div className="border border-border/50 rounded-lg overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Report</TableHead>
+            <TableHead>Format</TableHead>
+            <TableHead>Generated</TableHead>
+            <TableHead>By</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Action</TableHead>
+          </TableRow>
+        </TableHeader>
       <TableBody>
         {reports.map((report) => {
           const formatConfig = EXPORT_FORMAT_CONFIG[report.format];
@@ -154,10 +155,11 @@ export function RecentReportsTable({ reports }: RecentReportsTableProps) {
                   </Button>
                 )}
               </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

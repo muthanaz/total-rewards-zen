@@ -117,11 +117,11 @@ export function SummaryStatsCard({
     >
       <Card
         className={cn(
-          'relative overflow-hidden rounded-lg transition-all duration-300 shadow-sm hover:shadow-md dark:shadow-none dark:hover:shadow-md dark:hover:shadow-black/20 h-full flex flex-col',
+          'relative overflow-hidden rounded-lg transition-shadow duration-150 h-full flex flex-col',
           compact ? 'p-2.5' : 'p-4',
           styles.bg,
           styles.border,
-          highlight && 'ring-2 ring-accent/30 shadow-lg',
+          highlight && 'ring-2 ring-accent/30 shadow-md',
           className
         )}
       >

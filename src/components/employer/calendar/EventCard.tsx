@@ -53,7 +53,7 @@ export function EventCard({ event, onOpenChecklist }: EventCardProps) {
 
   return (
     <Card className={cn(
-      'hover:shadow-md transition-all duration-200 group',
+      'hover:shadow-md transition-shadow duration-150 group',
       event.status === 'completed' && 'opacity-60'
     )}>
       <CardContent className="p-4">
