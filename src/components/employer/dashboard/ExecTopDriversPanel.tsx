@@ -1,14 +1,10 @@
 /**
  * Executive Top Drivers Panel (2 panels side-by-side)
  * 
- * Left: Top N Benefits by Spend (dynamic title based on actual row count)
- * Right: Top N Benefits by Leakage (with cause tooltips)
- * 
- * Each driver item has CTAs:
- * - "Open Benefit Policy"
- * - "Open Optimization Tab"
- * 
- * Scope labels clarify what data is included
+ * Uses StandardListCard with enforced 5-row structure:
+ * - Top 4 items + "Other" aggregation
+ * - Fixed row heights for consistent card rhythm
+ * - 12-column grid with gap-6 (Executive variant)
  */
 
 import { Link } from 'react-router-dom';
@@ -28,6 +24,8 @@ import {
   Info,
 } from 'lucide-react';
 import { cn, formatCurrencyAED } from '@/lib/utils';
+import { StandardListCard, type ListItem } from '@/components/ui/StandardListCard';
+import { StandardCardGrid } from '@/components/ui/StandardCard';
 
 export interface SpendDriver {
   id: string;

@@ -1,17 +1,18 @@
 /**
  * Executive Bottom Line KPIs (4 cards)
  * 
- * 1. YTD Spend (AED)
- * 2. Projected Year-End Spend (AED)
- * 3. Budget Variance (AED and %)
- * 4. Budget Leakage (AED) + Recovery Potential (AED) as paired card
+ * Uses StandardKpiCard with 4-row structure:
+ * - Row 1: Label + tooltip
+ * - Row 2: Primary value
+ * - Row 3: Delta/confidence
+ * - Row 4: Footer meta
  * 
- * Uses MetricsContract component for consistent display
- * Uses SSOT metrics dictionary for canonical definitions
+ * Uses 12-column grid with gap-6 (Executive variant)
  */
 
 import { DollarSign, TrendingUp, AlertTriangle, Wallet } from 'lucide-react';
-import { MetricsContract, MetricsContractGrid } from '@/components/shared/MetricsContract';
+import { StandardKpiCard } from '@/components/ui/StandardKpiCard';
+import { StandardCardGrid } from '@/components/ui/StandardCard';
 import { formatCurrencyAED } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -109,127 +110,88 @@ export function ExecBottomLineKPIs({
   };
 
   return (
-    <MetricsContractGrid columns={4} className={className}>
+    <StandardCardGrid variant="executive" columns={4} className={className}>
       {/* 1. YTD Spend */}
-      <MetricsContract
-        title={renderKPITitle("YTD Total Spend", "ytd_spend")}
+      <StandardKpiCard
+        label="YTD Total Spend"
         value={formatCurrencyAED(ytdSpend, { abbreviate: true })}
         icon={DollarSign}
         iconClassName="bg-primary/10 text-primary"
-        trend={{
-          value: ytdDelta,
-          label: 'vs last year',
-          higherIsBetter: true,
-        }}
-        metadata={{
-          definition: 'Total benefits expenditure year-to-date including claims and allowances',
-          formula: 'SUM(approved_claims) + SUM(disbursed_allowances)',
-          source: 'requests + utilization_events',
-          lastUpdated,
-          confidence: getConfidence('ytdSpend'),
-        }}
-        footer={<ConfidenceFooter confidence={getConfidence('ytdSpend')} />}
+        tooltip="Total benefits expenditure year-to-date including claims and allowances"
+        delta={ytdDelta}
+        deltaLabel="vs last year"
+        higherIsBetter={true}
+        lastUpdated={lastUpdated}
+        variant="executive"
         onClick={() => onKPIClick?.('ytdSpend')}
       />
 
       {/* 2. Projected Year-End Spend */}
-      <MetricsContract
-        title={renderKPITitle("Projected Year-End", "projected_year_end")}
+      <StandardKpiCard
+        label="Projected Year-End"
         value={formatCurrencyAED(projectedYearEnd, { abbreviate: true })}
         icon={TrendingUp}
         iconClassName="bg-accent/10 text-accent"
-        trend={{
-          value: projectedDelta,
-          label: 'vs budget',
-          higherIsBetter: false,
-        }}
-        metadata={{
-          definition: 'Forecasted total spend based on current run rate and seasonality',
-          formula: '(YTD Spend / Months Elapsed) × 12',
-          source: 'get_employer_dashboard_metrics()',
-          lastUpdated,
-          confidence: getConfidence('projected'),
-        }}
-        subtitle="Based on current run rate"
-        footer={<ConfidenceFooter confidence={getConfidence('projected')} />}
+        tooltip="Forecasted total spend based on current run rate and seasonality"
+        delta={projectedDelta}
+        deltaLabel="vs budget"
+        higherIsBetter={false}
+        scope="Based on current run rate"
+        lastUpdated={lastUpdated}
+        variant="executive"
         onClick={() => onKPIClick?.('projected')}
       />
 
       {/* 3. Budget Variance */}
-      <MetricsContract
-        title={renderKPITitle("Budget Variance", "budget_variance")}
+      <StandardKpiCard
+        label="Budget Variance"
         value={`${isOverBudget ? '+' : ''}${formatCurrencyAED(Math.abs(budgetVariance), { abbreviate: true })}`}
         icon={Wallet}
-        iconClassName={cn(
-          isOverBudget ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success'
-        )}
-        metadata={{
-          definition: 'Difference between actual spend and allocated budget',
-          formula: 'YTD Spend - Allocated Budget',
-          source: 'org_budgets + requests',
-          lastUpdated,
-          confidence: getConfidence('variance'),
-        }}
+        iconClassName={isOverBudget ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success'}
+        tooltip="Difference between actual spend and allocated budget"
+        scope={isOverBudget ? 'Over budget' : 'Under budget'}
+        lastUpdated={lastUpdated}
+        variant="executive"
+        onClick={() => onKPIClick?.('variance')}
         footer={
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">
-                {isOverBudget ? 'Over budget' : 'Under budget'}
-              </span>
-              <Badge 
-                variant="outline" 
-                className={cn(
-                  'text-[10px]',
-                  isOverBudget 
-                    ? 'bg-destructive/10 text-destructive border-destructive/30' 
-                    : 'bg-success/10 text-success border-success/30'
-                )}
-              >
-                {variancePercent}%
-              </Badge>
-            </div>
-            <ConfidenceFooter confidence={getConfidence('variance')} />
+          <div className="flex items-center justify-between">
+            <span>Variance</span>
+            <Badge 
+              variant="outline" 
+              className={cn(
+                'text-[10px]',
+                isOverBudget 
+                  ? 'bg-destructive/10 text-destructive border-destructive/30' 
+                  : 'bg-success/10 text-success border-success/30'
+              )}
+            >
+              {variancePercent}%
+            </Badge>
           </div>
         }
-        onClick={() => onKPIClick?.('variance')}
       />
 
-      {/* 4. Budget Leakage + Recovery Potential (paired) */}
-      <MetricsContract
-        title={renderKPITitle("Budget Leakage", "budget_leakage")}
+      {/* 4. Budget Leakage + Recovery Potential */}
+      <StandardKpiCard
+        label="Budget Leakage"
         value={formatCurrencyAED(budgetLeakage, { abbreviate: true })}
         icon={AlertTriangle}
         iconClassName="bg-warning/10 text-warning"
-        trend={{
-          value: leakageDelta,
-          label: 'vs last quarter',
-          higherIsBetter: false,
-        }}
-        metadata={{
-          definition: 'Unutilized entitled benefits that could have been claimed',
-          formula: 'Entitled Value - Claimed Amount',
-          source: 'benefit_entitlements',
-          lastUpdated,
-          confidence: getConfidence('leakage'),
-          confidenceReason: 'Based on 72% employee data coverage',
-        }}
+        tooltip="Unutilized entitled benefits that could have been claimed"
+        delta={leakageDelta}
+        deltaLabel="vs last quarter"
+        higherIsBetter={false}
+        variant="executive"
+        onClick={() => onKPIClick?.('leakage')}
         footer={
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="inline-flex items-center gap-1">
-                <span className="text-muted-foreground">Recovery Potential</span>
-                <SSOTTooltip metricKey="recovery_potential" size="sm" />
-                {isMetricEstimated('recovery_potential') && <EstimatedBadge />}
-              </span>
-              <span className="font-semibold text-success tabular-nums">
-                {formatCurrencyAED(recoveryPotential, { abbreviate: true })}
-              </span>
-            </div>
-            <ConfidenceFooter confidence={getConfidence('leakage')} />
+          <div className="flex items-center justify-between">
+            <span>Recovery Potential</span>
+            <span className="font-semibold text-success tabular-nums">
+              {formatCurrencyAED(recoveryPotential, { abbreviate: true })}
+            </span>
           </div>
         }
-        onClick={() => onKPIClick?.('leakage')}
       />
-    </MetricsContractGrid>
+    </StandardCardGrid>
   );
 }

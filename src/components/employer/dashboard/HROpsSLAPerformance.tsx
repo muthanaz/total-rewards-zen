@@ -1,11 +1,7 @@
 /**
  * HR Ops SLA Performance Section
  * 
- * Shows:
- * - SLA Met %
- * - Breached count
- * - Average cycle time
- * - CTA: "View SLA Breaches"
+ * Uses StandardKpiCard with 4-row structure and gap-4 for HR Ops
  */
 
 import { Link } from 'react-router-dom';
@@ -18,11 +14,10 @@ import {
   XCircle, 
   Clock,
   ArrowRight,
-  TrendingUp,
-  TrendingDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { MetricsContract, MetricsContractGrid } from '@/components/shared/MetricsContract';
+import { StandardKpiCard } from '@/components/ui/StandardKpiCard';
+import { StandardCardGrid } from '@/components/ui/StandardCard';
 
 export interface SLAMetrics {
   slaMetPercent: number;
@@ -70,10 +65,10 @@ export function HROpsSLAPerformance({
         </div>
       </CardHeader>
       <CardContent>
-        <MetricsContractGrid columns={3}>
+        <StandardCardGrid variant="hr_ops" columns={3}>
           {/* SLA Met % */}
-          <MetricsContract
-            title="SLA Met"
+          <StandardKpiCard
+            label="SLA Met"
             value={`${slaMetPercent}%`}
             icon={CheckCircle2}
             iconClassName={cn(
@@ -81,19 +76,11 @@ export function HROpsSLAPerformance({
               slaStatus === 'good' ? 'bg-primary/10 text-primary' :
               'bg-warning/10 text-warning'
             )}
-            trend={{
-              value: slaMetDelta,
-              label: 'vs last period',
-              higherIsBetter: true,
-            }}
-            metadata={{
-              definition: 'Percentage of requests resolved within SLA target',
-              formula: '(Resolved Within SLA / Total Resolved) × 100',
-              source: 'requests + org_settings.sla_hours',
-              lastUpdated,
-              confidence: 'high',
-            }}
-            size="sm"
+            tooltip="Percentage of requests resolved within SLA target"
+            delta={slaMetDelta}
+            deltaLabel="vs last period"
+            higherIsBetter={true}
+            variant="hr_ops"
             footer={
               <Badge 
                 variant="outline" 
@@ -111,8 +98,8 @@ export function HROpsSLAPerformance({
           />
 
           {/* Breached Count */}
-          <MetricsContract
-            title="SLA Breached"
+          <StandardKpiCard
+            label="SLA Breached"
             value={breachedCount.toString()}
             icon={XCircle}
             iconClassName={cn(
@@ -120,14 +107,8 @@ export function HROpsSLAPerformance({
               breachedCount <= 5 ? 'bg-warning/10 text-warning' :
               'bg-destructive/10 text-destructive'
             )}
-            metadata={{
-              definition: 'Number of requests that exceeded SLA target time',
-              formula: 'COUNT(requests WHERE resolved_at > sla_due_at)',
-              source: 'requests',
-              lastUpdated,
-              confidence: 'high',
-            }}
-            size="sm"
+            tooltip="Number of requests that exceeded SLA target time"
+            variant="hr_ops"
             footer={
               breachedCount > 0 ? (
                 <Link 
@@ -143,8 +124,8 @@ export function HROpsSLAPerformance({
           />
 
           {/* Average Cycle Time */}
-          <MetricsContract
-            title="Avg Cycle Time"
+          <StandardKpiCard
+            label="Avg Cycle Time"
             value={`${avgCycleTimeDays.toFixed(1)}d`}
             icon={Clock}
             iconClassName={cn(
@@ -152,26 +133,18 @@ export function HROpsSLAPerformance({
               avgCycleTimeDays <= 4 ? 'bg-primary/10 text-primary' :
               'bg-warning/10 text-warning'
             )}
-            trend={{
-              value: cycleTimeDelta,
-              label: 'vs last period',
-              higherIsBetter: false,
-            }}
-            metadata={{
-              definition: 'Average time from submission to resolution',
-              formula: 'AVG(resolved_at - submitted_at)',
-              source: 'requests',
-              lastUpdated,
-              confidence: 'high',
-            }}
-            size="sm"
+            tooltip="Average time from submission to resolution"
+            delta={cycleTimeDelta}
+            deltaLabel="vs last period"
+            higherIsBetter={false}
+            variant="hr_ops"
             footer={
               <span className="text-xs text-muted-foreground">
                 Target: ≤ 3 days
               </span>
             }
           />
-        </MetricsContractGrid>
+        </StandardCardGrid>
       </CardContent>
     </Card>
   );

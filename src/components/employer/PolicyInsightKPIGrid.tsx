@@ -1,8 +1,14 @@
+/**
+ * PolicyInsightKPIGrid - Uses StandardKpiCard for consistent 4-row structure
+ */
+
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { StandardKpiCard } from '@/components/ui/StandardKpiCard';
+import { StandardCardGrid } from '@/components/ui/StandardCard';
 
 interface PolicyKPI {
   label: string;
@@ -99,54 +105,24 @@ export function PolicyInsightKPIGrid() {
   };
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {policyKPIs.map((kpi, index) => {
+    <StandardCardGrid variant="executive" columns={4}>
+      {policyKPIs.map((kpi) => {
         const delta = getDelta(kpi.value, kpi.previousValue);
-        const deltaColor = getDeltaColor(delta, kpi.higherIsBetter);
         
         return (
-          <Card key={index} className="card-elevated">
-            <CardContent className="pt-5 pb-4">
-              {/* Label + Target + Info */}
-              <div className="flex justify-between items-start mb-2">
-                <div className="flex items-center gap-1">
-                  <p className="text-sm text-muted-foreground font-medium">{kpi.label}</p>
-                  <InfoTooltip 
-                    formula={kpi.definition.formula}
-                    dataSource={kpi.definition.dataSource}
-                  />
-                </div>
-                <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                  Target: {kpi.target}{kpi.unit}
-                </span>
-              </div>
-
-              {/* Value */}
-              <p className={cn(
-                "text-2xl lg:text-3xl font-bold",
-                getStatusColor(kpi.value, kpi.target)
-              )}>
-                {kpi.value}{kpi.unit}
-              </p>
-
-              {/* Progress bar */}
-              <Progress 
-                value={(kpi.value / kpi.target) * 100} 
-                className="h-1.5 mt-2 mb-2" 
-              />
-
-              {/* Delta indicator */}
-              <div className={cn("flex items-center gap-1 text-sm", deltaColor)}>
-                {getDeltaIcon(delta, kpi.higherIsBetter)}
-                <span className="font-medium">
-                  {delta > 0 ? '+' : ''}{delta}{kpi.unit}
-                </span>
-                <span className="text-xs text-muted-foreground">vs last month</span>
-              </div>
-            </CardContent>
-          </Card>
+          <StandardKpiCard
+            key={kpi.label}
+            label={kpi.label}
+            value={`${kpi.value}${kpi.unit}`}
+            tooltip={kpi.definition.formula}
+            delta={delta}
+            deltaLabel="vs last month"
+            higherIsBetter={kpi.higherIsBetter}
+            scope={`Target: ${kpi.target}${kpi.unit}`}
+            variant="executive"
+          />
         );
       })}
-    </div>
+    </StandardCardGrid>
   );
 }
