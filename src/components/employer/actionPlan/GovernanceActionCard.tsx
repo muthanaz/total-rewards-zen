@@ -1,12 +1,16 @@
 /**
  * Governance Action Card
  * 
- * Full-featured card displaying all mandatory fields for governance-grade tracking.
+ * PROMPT 07: Board-ready action card with:
+ * - Lever type (Policy/Vendor/Comms/Process)
+ * - Impact range (Low–High AED)
+ * - Confidence band
+ * - Mechanism one-liner
+ * - Owner + due date
  */
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -19,12 +23,18 @@ import {
   ArrowRight,
   AlertTriangle,
   TrendingUp,
-  Clock
+  Cog,
+  Info,
 } from 'lucide-react';
-import { format, isPast, formatDistanceToNow } from 'date-fns';
+import { format, isPast } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { cn, formatCurrencyAED, formatPercent } from '@/lib/utils';
-import { GovernanceAction, KanbanColumn } from './types';
+import { 
+  GovernanceAction, 
+  KanbanColumn, 
+  LEVER_CONFIG, 
+  CONFIDENCE_CONFIG,
+} from './types';
 
 interface GovernanceActionCardProps {
   action: GovernanceAction;
@@ -45,12 +55,6 @@ const statusConfig: Record<KanbanColumn, { label: string; color: string }> = {
   done: { label: 'Done', color: 'text-success' },
 };
 
-const confidenceConfig = {
-  high: { label: 'High', color: 'text-success', bgColor: 'bg-success/10' },
-  medium: { label: 'Med', color: 'text-warning', bgColor: 'bg-warning/10' },
-  low: { label: 'Low', color: 'text-muted-foreground', bgColor: 'bg-muted' },
-};
-
 const sourceTypeIcons = {
   spend: '💰',
   optimization: '⚡',
@@ -63,6 +67,14 @@ export function GovernanceActionCard({ action, onClick, compact = false }: Gover
   const navigate = useNavigate();
   const isOverdue = action.dueDate && isPast(action.dueDate) && action.status !== 'done';
   const hasBlockers = action.blockers.length > 0;
+  const leverConfig = LEVER_CONFIG[action.leverType];
+  const confidenceConfig = CONFIDENCE_CONFIG[action.confidence];
+  
+  // Impact range display
+  const impactMin = action.expectedImpactAEDMin;
+  const impactMax = action.expectedImpactAEDMax;
+  const isSinglePoint = impactMin === impactMax || action.confidence === 'high';
+  const hasFinancialImpact = impactMax > 0;
   
   const handleSourceClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -85,10 +97,16 @@ export function GovernanceActionCard({ action, onClick, compact = false }: Gover
         )}
         onClick={onClick}
       >
-        {/* Header */}
-        <div className="flex items-center gap-2 mb-2">
+        {/* Header: Priority + Lever + Confidence */}
+        <div className="flex items-center gap-1.5 mb-2 flex-wrap">
           <Badge className={cn("text-[10px] border-0", priorityConfig[action.priority].bgColor, priorityConfig[action.priority].color)}>
             {action.priority}
+          </Badge>
+          <Badge variant="outline" className={cn("text-[10px]", leverConfig.bgColor, leverConfig.color)}>
+            {leverConfig.icon} {leverConfig.label}
+          </Badge>
+          <Badge variant="outline" className={cn("text-[10px]", confidenceConfig.bgColor, confidenceConfig.color)}>
+            {confidenceConfig.label}
           </Badge>
           {isOverdue && (
             <Badge variant="destructive" className="text-[10px]">Overdue</Badge>
@@ -99,13 +117,12 @@ export function GovernanceActionCard({ action, onClick, compact = false }: Gover
               Blocked
             </Badge>
           )}
-          <span className="ml-auto text-xs">{sourceTypeIcons[action.sourceInsight.type]}</span>
         </div>
 
         {/* Title */}
         <h4 className="font-medium text-sm line-clamp-2 mb-2">{action.title}</h4>
 
-        {/* Impact + Owner */}
+        {/* Impact Range + Owner */}
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-1.5">
             <Avatar className="h-5 w-5">
@@ -117,10 +134,15 @@ export function GovernanceActionCard({ action, onClick, compact = false }: Gover
               {action.owner ? action.owner.name.split(' ')[0] : 'Unassigned'}
             </span>
           </div>
-          {action.expectedImpactAED > 0 && (
-            <span className="font-medium text-success">
-              {formatCurrencyAED(action.expectedImpactAED, { abbreviate: true })}
+          {hasFinancialImpact ? (
+            <span className="font-medium text-success tabular-nums">
+              {isSinglePoint 
+                ? formatCurrencyAED(impactMax, { abbreviate: true })
+                : `${formatCurrencyAED(impactMin, { abbreviate: true })}–${formatCurrencyAED(impactMax, { abbreviate: true })}`
+              }
             </span>
+          ) : (
+            <span className="text-muted-foreground text-[10px]">AED 0</span>
           )}
         </div>
 
@@ -149,27 +171,28 @@ export function GovernanceActionCard({ action, onClick, compact = false }: Gover
         onClick={onClick}
       >
         <CardContent className="p-4 space-y-3">
-          {/* Header: Priority + Status + Source */}
+          {/* Header: Priority + Lever + Confidence + Source */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <Badge className={cn("text-xs border-0", priorityConfig[action.priority].bgColor, priorityConfig[action.priority].color)}>
                 {action.priority}
               </Badge>
-              <Badge variant="outline" className={cn("text-xs", confidenceConfig[action.confidence].color)}>
-                {confidenceConfig[action.confidence].label} conf
+              <Badge variant="outline" className={cn("text-xs", leverConfig.bgColor, leverConfig.color)}>
+                {leverConfig.icon} {leverConfig.label}
+              </Badge>
+              <Badge variant="outline" className={cn("text-xs", confidenceConfig.bgColor, confidenceConfig.color)}>
+                {confidenceConfig.label} conf
               </Badge>
             </div>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-6 text-xs gap-1"
+                <button 
+                  className="h-6 px-1.5 flex items-center gap-1 text-xs hover:bg-muted rounded"
                   onClick={handleSourceClick}
                 >
                   {sourceTypeIcons[action.sourceInsight.type]}
                   <ExternalLink className="h-3 w-3" />
-                </Button>
+                </button>
               </TooltipTrigger>
               <TooltipContent>
                 <p className="text-xs">{action.sourceInsight.label}</p>
@@ -191,7 +214,11 @@ export function GovernanceActionCard({ action, onClick, compact = false }: Gover
                   </AvatarFallback>
                 </Avatar>
                 <span className="text-xs">
-                  {action.owner ? action.owner.name : <span className="text-warning">Unassigned</span>}
+                  {action.owner ? (
+                    <span>{action.owner.name} <span className="text-muted-foreground">({action.owner.role})</span></span>
+                  ) : (
+                    <span className="text-warning">Unassigned</span>
+                  )}
                 </span>
               </div>
             </div>
@@ -207,21 +234,43 @@ export function GovernanceActionCard({ action, onClick, compact = false }: Gover
             )}
           </div>
 
-          {/* Expected Impact */}
+          {/* Expected Impact Range */}
           <div className="p-2.5 rounded-lg bg-muted/50">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Expected Impact</span>
-              <DollarSign className="h-3.5 w-3.5 text-success" />
+              <DollarSign className={cn("h-3.5 w-3.5", hasFinancialImpact ? "text-success" : "text-muted-foreground")} />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-lg font-bold text-success tabular-nums">
-                {formatCurrencyAED(action.expectedImpactAED, { abbreviate: true })}
-              </span>
-              {action.expectedImpactPercent && (
-                <Badge variant="outline" className="text-[10px] text-success border-success/30">
-                  +{action.expectedImpactPercent}%
-                </Badge>
+              {hasFinancialImpact ? (
+                <>
+                  <span className="text-lg font-bold text-success tabular-nums">
+                    {isSinglePoint 
+                      ? formatCurrencyAED(impactMax, { abbreviate: true })
+                      : `${formatCurrencyAED(impactMin, { abbreviate: true })}–${formatCurrencyAED(impactMax, { abbreviate: true })}`
+                    }
+                  </span>
+                  {action.expectedImpactPercent && (
+                    <Badge variant="outline" className="text-[10px] text-success border-success/30">
+                      +{action.expectedImpactPercent}%
+                    </Badge>
+                  )}
+                </>
+              ) : (
+                <span className="text-sm text-muted-foreground">
+                  AED 0 (Experience/clarity improvement)
+                </span>
               )}
+            </div>
+          </div>
+
+          {/* Mechanism (PROMPT 07 requirement) */}
+          <div className="p-2.5 rounded-lg border border-border/50 bg-card">
+            <div className="flex items-start gap-2">
+              <Cog className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+              <div>
+                <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Mechanism</span>
+                <p className="text-xs text-foreground mt-0.5 line-clamp-2">{action.mechanism}</p>
+              </div>
             </div>
           </div>
 
@@ -280,6 +329,21 @@ export function GovernanceActionCard({ action, onClick, compact = false }: Gover
                 </span>
               </div>
             </div>
+          )}
+
+          {/* Risk/Downside (if present) */}
+          {action.riskDownside && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-help">
+                  <Info className="h-3 w-3" />
+                  <span className="truncate">Risk: {action.riskDownside}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p className="text-xs">{action.riskDownside}</p>
+              </TooltipContent>
+            </Tooltip>
           )}
 
           {/* Next Step */}

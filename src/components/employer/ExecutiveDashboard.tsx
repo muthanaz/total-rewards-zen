@@ -130,22 +130,50 @@ export function ExecutiveDashboard() {
     }));
   }, [spendAllocation, globalMetrics]);
 
-  // Recommended Actions (3 highest impact)
+  // Recommended Actions (3 highest impact) - PROMPT 07 compliant
   const recommendedActions: RecommendedAction[] = useMemo(() => {
     const thirtyDaysFromNow = addDays(new Date(), 30);
+    
+    // Map ActionType to LeverType
+    const getLeverType = (type?: string): 'policy' | 'vendor' | 'comms' | 'process' => {
+      if (type === 'policy') return 'policy';
+      if (type === 'vendor') return 'vendor';
+      if (type === 'comms') return 'comms';
+      return 'process';
+    };
+    
+    // Derive confidence display level from action confidence
+    const getConfidence = (conf: string): 'high' | 'medium' | 'low' => {
+      if (conf === 'high') return 'high';
+      if (conf === 'medium') return 'medium';
+      return 'low';
+    };
+    
     return filteredActions
       .filter(a => !['completed', 'cancelled'].includes(a.status))
       .filter(a => !a.dueDate || a.dueDate <= thirtyDaysFromNow)
       .slice(0, 3)
-      .map(a => ({
-        id: a.id,
-        title: a.title,
-        description: a.description,
-        impactAED: a.expectedImpact.costAvoidance || 0,
-        effort: 'medium' as 'low' | 'medium' | 'high',
-        owner: a.owner,
-        dueDate: a.dueDate,
-      }));
+      .map(a => {
+        const baseImpact = a.expectedImpact.costAvoidance || 0;
+        const confidence = getConfidence(a.confidence);
+        // Use range values if available, otherwise derive from base impact
+        const impactMin = a.expectedImpact.costAvoidanceLow || (confidence === 'high' ? baseImpact : Math.round(baseImpact * 0.75));
+        const impactMax = a.expectedImpact.costAvoidanceHigh || baseImpact;
+        
+        return {
+          id: a.id,
+          title: a.title,
+          description: a.description,
+          impactAEDMin: impactMin,
+          impactAEDMax: impactMax,
+          leverType: getLeverType(a.type),
+          confidence,
+          mechanism: a.description || `Execute ${a.title.toLowerCase()} to achieve target outcomes.`,
+          owner: a.owner,
+          ownerRole: a.priority === 'P0' ? 'Lead' : 'Owner',
+          dueDate: a.dueDate,
+        };
+      });
   }, [filteredActions]);
 
   // Risk Indicators - renamed "Compliance Rate" to "SLA Compliance" for clarity
@@ -253,29 +281,30 @@ export function ExecutiveDashboard() {
           />
         </section>
 
-        {/* SECTION 2: TOP DRIVERS (2 panels side-by-side, equal heights) */}
+        {/* SECTION 2: DRIVERS (left) + ACTIONS (right) - PROMPT 07 layout */}
         <section>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
-            Top Drivers
+            Drivers & Decisions
           </h2>
-          <ExecTopDriversPanel
-            spendDrivers={spendDrivers}
-            leakageDrivers={leakageDrivers}
-            totalSpend={bottomLineMetrics.ytdSpend}
-            totalLeakage={bottomLineMetrics.budgetLeakage}
-          />
-        </section>
-
-        {/* SECTION 3: DECISIONS (Action Plan Preview) */}
-        <section>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4">
-            Decisions
-          </h2>
-          <ExecDecisionsPanel
-            actions={recommendedActions}
-            onAssignAction={(actionId) => navigate(`/employer/actions?open=${actionId}`)}
-            onCreateAction={() => navigate('/employer/actions?create=true')}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left: Top Drivers (8 cols) */}
+            <div className="lg:col-span-8">
+              <ExecTopDriversPanel
+                spendDrivers={spendDrivers}
+                leakageDrivers={leakageDrivers}
+                totalSpend={bottomLineMetrics.ytdSpend}
+                totalLeakage={bottomLineMetrics.budgetLeakage}
+              />
+            </div>
+            {/* Right: Actions (4 cols) */}
+            <div className="lg:col-span-4">
+              <ExecDecisionsPanel
+                actions={recommendedActions}
+                onAssignAction={(actionId) => navigate(`/employer/actions?open=${actionId}`)}
+                onCreateAction={() => navigate('/employer/actions?create=true')}
+              />
+            </div>
+          </div>
         </section>
 
         {/* SECTION 4: RISKS & EXCEPTIONS (3 compact cards in grid) */}
