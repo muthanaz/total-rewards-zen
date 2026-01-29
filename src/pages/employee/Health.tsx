@@ -6,13 +6,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { PolicyHighlightsCard } from '@/components/employee/PolicyHighlightsCard';
-import { PageHeader } from '@/components/shared/PageHeader';
+import { StandardPageHeader } from '@/components/shared';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile, Shield, Users, Activity, FileText, Clock, AlertCircle } from 'lucide-react';
+import { Heart, Search, Star, Phone, MapPin, CheckCircle, HelpCircle, Stethoscope, Pill, Eye, Smile, Shield, Users, Activity, FileText, Clock, AlertCircle, Send } from 'lucide-react';
 import { useHealthProviders } from '@/hooks/useSupabaseData';
 import { BenefitCrossLinks } from '@/components/employee/BenefitCrossLinks';
 import { BenefitValueTypeChip } from '@/components/shared/BenefitValueTypeChip';
 import { formatCurrencyAED, formatInteger } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 // Coverage-type benefit: Show plan/network info, NOT AED remaining
 const EMPLOYER_INVESTMENT = 45000; // What employer pays for coverage
@@ -76,6 +77,7 @@ const healthPolicies = [
 ];
 
 export default function HealthPage() {
+  const navigate = useNavigate();
   const { data: providers = [] } = useHealthProviders();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -126,13 +128,18 @@ export default function HealthPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header - Using PageHeader pattern */}
-      <PageHeader
+      {/* Standard Page Header - Employee variant */}
+      <StandardPageHeader
+        variant="employee"
         title="Health Insurance"
-        description="Comprehensive coverage for you and your family"
+        helperText="Comprehensive coverage for you and your family"
         icon={Heart}
         iconClassName="from-chart-5 to-chart-5/80 shadow-chart-5/25"
-        partnerOffersCategory="Health Insurance"
+        primaryCTA={{
+          label: 'Submit Claim',
+          icon: Send,
+          onClick: () => navigate('/employee/requests/new?category=health'),
+        }}
       />
 
       {/* Coverage Type Banner - This is NOT cash/reimbursement */}

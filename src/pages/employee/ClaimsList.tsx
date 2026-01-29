@@ -22,7 +22,9 @@ import {
   FileText,
   Eye,
   AlertCircle,
+  Receipt,
 } from 'lucide-react';
+import { StandardPageHeader } from '@/components/shared';
 import { Currency } from '@/components/ui/Currency';
 import { useEmployeeRequests, useEmployeeRequestCounts, getEmployeeStatusLabel } from '@/hooks/useEmployeeRequests';
 import { getStatusBadgeStyle, formatRelativeTime } from '@/lib/crossPortalContract';
@@ -116,19 +118,19 @@ export default function ClaimsListPage() {
   
   return (
     <div className="space-y-6">
-      {/* Header with New Claim button */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">My Claims</h1>
-          <p className="text-sm text-muted-foreground">
-            Most claims take less than 2 minutes if documents are ready.
-          </p>
-        </div>
-        <Button onClick={() => navigate('/employee/requests/new')} className="gap-2">
-          <Plus className="h-4 w-4" />
-          New Claim
-        </Button>
-      </div>
+      {/* Standard Page Header - Employee variant */}
+      <StandardPageHeader
+        variant="employee"
+        title="My Claims"
+        helperText="Most claims take less than 2 minutes if documents are ready."
+        icon={Receipt}
+        iconClassName="from-success to-success/80 shadow-success/25"
+        primaryCTA={{
+          label: 'New Claim',
+          icon: Plus,
+          onClick: () => navigate('/employee/requests/new'),
+        }}
+      />
       
       {/* Claims Table */}
       <Card>

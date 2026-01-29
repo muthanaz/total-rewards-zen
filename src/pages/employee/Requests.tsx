@@ -16,7 +16,9 @@ import {
   HelpCircle,
   ArrowRight,
   ChevronDown,
+  Send,
 } from "lucide-react";
+import { StandardPageHeader } from '@/components/shared';
 import PerDiemWidget from "@/components/employee/PerDiemWidget";
 import { EmployeeRequestsList } from "@/components/employee/EmployeeRequestsList";
 import { EmployeeCreateRequestSheet } from "@/components/employee/EmployeeCreateRequestSheet";
@@ -153,12 +155,19 @@ export default function Requests() {
   
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold tracking-tight">Claims & Requests</h1>
-        <p className="text-muted-foreground">
-          Submit reimbursements, pre-approvals, and support requests.
-        </p>
-      </div>
+      {/* Standard Page Header - Employee variant */}
+      <StandardPageHeader
+        variant="employee"
+        title="Claims & Requests"
+        helperText="Submit reimbursements, pre-approvals, and support requests."
+        icon={FileText}
+        iconClassName="from-accent to-accent/80 shadow-accent/25"
+        primaryCTA={{
+          label: 'New Claim',
+          icon: Plus,
+          onClick: () => openCreate('claim'),
+        }}
+      />
 
       {/* Quick Action Cards - Grouped by type */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

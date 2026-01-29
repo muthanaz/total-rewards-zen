@@ -6,7 +6,6 @@
  */
 
 import { useState, useMemo } from 'react';
-import { ExecPageHeader } from '@/components/employer/ExecPageHeader';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -16,9 +15,9 @@ import {
   Download, 
   LayoutGrid, 
   List,
-  Filter,
   RefreshCw
 } from 'lucide-react';
+import { StandardPageHeader } from '@/components/shared';
 import { 
   PortfolioHeader,
   GovernanceKanbanView,
@@ -69,29 +68,34 @@ export default function ActionPlanPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-        <ExecPageHeader
-          title="Action Plan"
-          titleAr="خطة العمل"
-          description="Governance-grade execution tracking with mandatory accountability fields"
-          descriptionAr="تتبع التنفيذ بمستوى الحوكمة مع حقول المساءلة الإلزامية"
-        />
-        
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleRefresh}>
-            <RefreshCw className="h-4 w-4 mr-1" />
-            Refresh
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="h-4 w-4 mr-1" />
-            Export
-          </Button>
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-1" />
-            New Action
-          </Button>
-        </div>
-      </div>
+      {/* Standard Page Header - Executive variant */}
+      <StandardPageHeader
+        variant="executive"
+        title="Action Plan"
+        titleAr="خطة العمل"
+        helperText="Governance-grade execution tracking with mandatory accountability fields"
+        helperTextAr="تتبع التنفيذ بمستوى الحوكمة مع حقول المساءلة الإلزامية"
+        icon={Target}
+        iconClassName="from-primary to-primary/80 shadow-primary/25"
+        lastUpdated={new Date()}
+        primaryCTA={{
+          label: 'New Action',
+          icon: Plus,
+          onClick: () => toast.info('Create action modal opening...'),
+        }}
+        secondaryActions={
+          <>
+            <Button variant="outline" size="sm" onClick={handleRefresh}>
+              <RefreshCw className="h-4 w-4 mr-1" />
+              Refresh
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              <Download className="h-4 w-4 mr-1" />
+              Export
+            </Button>
+          </>
+        }
+      />
 
       {/* Portfolio Header */}
       <PortfolioHeader metrics={metrics} />

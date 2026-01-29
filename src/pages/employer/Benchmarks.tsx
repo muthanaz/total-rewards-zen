@@ -6,7 +6,6 @@
  */
 
 import { useState } from 'react';
-import { ExecPageHeader } from '@/components/employer/ExecPageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -23,6 +22,8 @@ import {
   Info
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { StandardPageHeader, ConfidenceBadge } from '@/components/shared';
+import { useDataCoverageMetrics, DataConfidenceBadge } from '@/components/employer';
 import { 
   BenchmarkCategorySection,
   BenchmarkMetadataCard,
@@ -33,6 +34,7 @@ import {
 
 export default function Benchmarks() {
   const [activeTab, setActiveTab] = useState('all');
+  const coverageMetrics = useDataCoverageMetrics();
 
   // Calculate overall benchmark position
   const allMetrics = BENCHMARK_CATEGORIES.flatMap(c => c.metrics);
@@ -50,11 +52,29 @@ export default function Benchmarks() {
 
   return (
     <div className="space-y-6">
-      <ExecPageHeader
+      {/* Standard Page Header - Executive variant */}
+      <StandardPageHeader
+        variant="executive"
         title="Benchmarks"
         titleAr="المقارنات المعيارية"
-        description="Compare your benefits performance against industry peers with confidence indicators"
-        descriptionAr="قارن أداء مزاياك بأقرانك في الصناعة مع مؤشرات الثقة"
+        helperText="Compare your benefits performance against industry peers with confidence indicators"
+        helperTextAr="قارن أداء مزاياك بأقرانك في الصناعة مع مؤشرات الثقة"
+        icon={BarChart3}
+        iconClassName="from-accent to-accent/80 shadow-accent/25"
+        lastUpdated={new Date()}
+        confidenceBadge={<DataConfidenceBadge metrics={coverageMetrics} />}
+        secondaryActions={
+          <>
+            <Button variant="outline" size="sm">
+              <RefreshCw className="h-4 w-4 mr-1" />
+              Refresh
+            </Button>
+            <Button variant="outline" size="sm">
+              <Download className="h-4 w-4 mr-1" />
+              Export
+            </Button>
+          </>
+        }
       />
 
       {/* Summary Header */}
