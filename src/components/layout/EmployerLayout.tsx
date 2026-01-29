@@ -22,12 +22,14 @@ import { useCommandPalette } from '@/components/ui/command-palette';
 
 function HeaderModeToggle() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { direction, language } = useLanguage();
   const { viewMode, setViewMode, isExecutive } = useEmployerViewMode();
   const isRTL = direction === 'rtl';
 
   const handleModeChange = (mode: ViewMode) => {
     setViewMode(mode);
+    // Redirect to the correct landing page for the selected mode
     if (mode === 'operational') {
       navigate('/employer/ops');
     } else {

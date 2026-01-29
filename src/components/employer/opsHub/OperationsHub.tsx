@@ -1,16 +1,14 @@
 /**
  * Operations Hub (High-Speed Workbench)
  * 
- * Primary operational interface for HR Ops teams:
- * - Default: "My Queue" (assigned to current user) with SLA risk sorting
- * - "All Queue" shows all action-required items
- * - Fixed columns: Claim ID | Employee | Category | Submitted | Status | SLA | Payable | Assignee | Blockers | Open
- * - Inline actions: Approve / Reject / Request Docs / Assign / View Timeline
- * - Timeline drawer shows request_events audit trail
+ * Primary operational interface for HR Ops teams with 3 tabs:
+ * - Queue (default): Claims/requests workbench with SLA risk sorting
+ * - Overview: High-level metrics dashboard (Queue Health, SLA, Throughput, Payments)
+ * - Payments: Settlements pipeline summary with deep link
  */
 
 import { useState, useMemo, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -60,6 +58,9 @@ import { OpsQueueStats } from './OpsQueueStats';
 import { RequestTimelineDrawer } from './RequestTimelineDrawer';
 import { ClaimDetailSheet } from './ClaimDetailSheet';
 import { FloatingActionBar } from '@/components/employer/FloatingActionBar';
+import { OpsHubTabs, type OpsHubTab } from './OpsHubTabs';
+import { OpsHubOverview } from './OpsHubOverview';
+import { OpsHubPayments } from './OpsHubPayments';
 import type { 
   QueueTab, 
   QueueFilters, 
@@ -176,12 +177,17 @@ function transformRequest(request: RequestWithDetails, currentUserId?: string): 
 
 export function OperationsHub() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
   const updateStatus = useUpdateRequestStatus();
   const { logEvent } = useAuditLog();
 
-  // URL-persisted state - Default to 'my_queue'
+  // Top-level Hub tab (queue | overview | payments)
+  const hubTab = searchParams.get('view') as OpsHubTab | null;
+  const activeHubTab: OpsHubTab = hubTab === 'overview' || hubTab === 'payments' ? hubTab : 'queue';
+
+  // Queue-specific tab (my_queue | all_queue)
   const urlTab = searchParams.get('tab');
   const activeTab: QueueTab = (urlTab === 'my_queue' || urlTab === 'all_queue') ? urlTab : 'my_queue';
   const currentPage = Number(searchParams.get('page') || '1');
@@ -208,6 +214,20 @@ export function OperationsHub() {
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [timelineRequestId, setTimelineRequestId] = useState<string | null>(null);
   const [timelineRequestRef, setTimelineRequestRef] = useState<string>('');
+
+  // Handle hub tab changes
+  const handleHubTabChange = (tab: OpsHubTab) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (tab === 'queue') {
+        next.delete('view');
+      } else {
+        next.set('view', tab);
+      }
+      next.delete('page');
+      return next;
+    });
+  };
   
   // Action modals
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -594,6 +614,9 @@ export function OperationsHub() {
     }
   };
 
+  // Ready for payment count (for payments tab badge)
+  const paymentsReadyCount = allItems.filter(i => i.status === 'approved').length;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -607,39 +630,60 @@ export function OperationsHub() {
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
           </p>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* SLA Sort Toggle */}
-          <div className="flex items-center gap-2">
-            <Switch
-              id="sla-sort"
-              checked={sortBySla}
-              onCheckedChange={handleSlaSortToggle}
-            />
-            <Label htmlFor="sla-sort" className="text-sm cursor-pointer flex items-center gap-1">
-              <ArrowUpDown className="w-3 h-3" />
-              SLA Priority Sort
-            </Label>
+        {activeHubTab === 'queue' && (
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* SLA Sort Toggle */}
+            <div className="flex items-center gap-2">
+              <Switch
+                id="sla-sort"
+                checked={sortBySla}
+                onCheckedChange={handleSlaSortToggle}
+              />
+              <Label htmlFor="sla-sort" className="text-sm cursor-pointer flex items-center gap-1">
+                <ArrowUpDown className="w-3 h-3" />
+                SLA Priority Sort
+              </Label>
+            </div>
+            
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </Button>
+            
+            <Button variant="outline" size="sm" onClick={handleExportCSV} className="gap-2">
+              <Download className="w-4 h-4" />
+              Export
+            </Button>
           </div>
-          
-          <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </Button>
-          
-          <Button variant="outline" size="sm" onClick={handleExportCSV} className="gap-2">
-            <Download className="w-4 h-4" />
-            Export
-          </Button>
-        </div>
+        )}
       </div>
 
-      {/* KPI Strip */}
-      <OpsQueueStats
-        newToday={opsKpis.newToday}
-        slaAtRisk={opsKpis.slaAtRisk}
-        awaitingEmployee={opsKpis.awaitingEmployee}
-        medianCycleTime={opsKpis.medianCycleTime}
+      {/* Hub-level Tabs: Queue | Overview | Payments */}
+      <OpsHubTabs
+        activeTab={activeHubTab}
+        onTabChange={handleHubTabChange}
+        queueCount={stats.actionRequired}
+        paymentsReadyCount={paymentsReadyCount}
       />
+
+      {/* Tab Content */}
+      {activeHubTab === 'overview' && (
+        <OpsHubOverview onNavigateToPayments={() => handleHubTabChange('payments')} />
+      )}
+
+      {activeHubTab === 'payments' && (
+        <OpsHubPayments />
+      )}
+
+      {activeHubTab === 'queue' && (
+        <>
+          {/* KPI Strip */}
+          <OpsQueueStats
+            newToday={opsKpis.newToday}
+            slaAtRisk={opsKpis.slaAtRisk}
+            awaitingEmployee={opsKpis.awaitingEmployee}
+            medianCycleTime={opsKpis.medianCycleTime}
+          />
 
       {/* Main Queue Card */}
       <Card>
@@ -727,8 +771,10 @@ export function OperationsHub() {
           }}
         />
       )}
+        </>
+      )}
 
-      {/* Detail Sheet - New 4-tab version */}
+      {/* Detail Sheet - New 4-tab version (always available) */}
       <ClaimDetailSheet
         requestId={selectedRequestId}
         organizationId={organizationId}
