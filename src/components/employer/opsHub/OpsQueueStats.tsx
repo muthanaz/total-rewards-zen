@@ -1,11 +1,7 @@
 /**
  * Operations Hub KPI Strip
  * 
- * Quick stats for the queue:
- * - New Today
- * - SLA At Risk
- * - Awaiting Employee
- * - Median Cycle Time
+ * Uses StandardKpiCard with gap-4 for HR Ops variant
  */
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,6 +22,8 @@ import {
   Minus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { StandardKpiCard } from '@/components/ui/StandardKpiCard';
+import { StandardCardGrid } from '@/components/ui/StandardCard';
 
 interface OpsQueueStatsProps {
   newToday: number;
@@ -116,45 +114,57 @@ export function OpsQueueStats({
   const cycleTimeCritical = medianCycleTime > ((slaTarget * 1.5) / 24);
 
   return (
-    <TooltipProvider>
-      <div className="flex flex-wrap gap-3">
-        <StatCard
-          icon={<Inbox className="w-5 h-5" />}
-          label="New Today"
-          value={newToday}
-          trend={trends?.newToday}
-          tooltip="Requests submitted today"
-        />
-        
-        <StatCard
-          icon={<Flame className="w-5 h-5" />}
-          label="SLA At Risk"
-          value={slaAtRisk}
-          trend={trends?.slaAtRisk}
-          warning={slaAtRisk > 0}
-          critical={slaAtRisk > 5}
-          tooltip="Requests with less than 24h remaining before SLA breach"
-        />
-        
-        <StatCard
-          icon={<UserCheck className="w-5 h-5" />}
-          label="Awaiting Employee"
-          value={awaitingEmployee}
-          tooltip="Requests paused pending employee response"
-        />
-        
-        <StatCard
-          icon={<Timer className="w-5 h-5" />}
-          label="Median Cycle Time"
-          value={medianCycleTime.toFixed(1)}
-          suffix="days"
-          trend={trends?.cycleTime}
-          warning={cycleTimeWarning}
-          critical={cycleTimeCritical}
-          tooltip={`Target: ${(slaTarget / 24).toFixed(1)} days`}
-        />
-      </div>
-    </TooltipProvider>
+    <StandardCardGrid variant="hr_ops" columns={4}>
+      <StandardKpiCard
+        label="New Today"
+        value={newToday.toString()}
+        icon={Inbox}
+        iconClassName="bg-primary/10 text-primary"
+        tooltip="Requests submitted today"
+        delta={trends?.newToday}
+        higherIsBetter={false}
+        variant="hr_ops"
+      />
+      
+      <StandardKpiCard
+        label="SLA At Risk"
+        value={slaAtRisk.toString()}
+        icon={Flame}
+        iconClassName={cn(
+          slaAtRisk > 5 ? "bg-destructive/10 text-destructive" :
+          slaAtRisk > 0 ? "bg-warning/10 text-warning" :
+          "bg-success/10 text-success"
+        )}
+        tooltip="Requests with less than 24h remaining before SLA breach"
+        delta={trends?.slaAtRisk}
+        higherIsBetter={false}
+        variant="hr_ops"
+      />
+      
+      <StandardKpiCard
+        label="Awaiting Employee"
+        value={awaitingEmployee.toString()}
+        icon={UserCheck}
+        iconClassName="bg-accent/10 text-accent"
+        tooltip="Requests paused pending employee response"
+        variant="hr_ops"
+      />
+      
+      <StandardKpiCard
+        label="Median Cycle Time"
+        value={`${medianCycleTime.toFixed(1)}d`}
+        icon={Timer}
+        iconClassName={cn(
+          cycleTimeCritical ? "bg-destructive/10 text-destructive" :
+          cycleTimeWarning ? "bg-warning/10 text-warning" :
+          "bg-success/10 text-success"
+        )}
+        tooltip={`Target: ${(slaTarget / 24).toFixed(1)} days`}
+        delta={trends?.cycleTime}
+        higherIsBetter={false}
+        variant="hr_ops"
+      />
+    </StandardCardGrid>
   );
 }
 

@@ -1,17 +1,13 @@
 /**
  * HR Ops Queue Health Section
  * 
- * Shows:
- * - Pending Claims, Pending Requests, Pending Documents
- * - Aging buckets (0-2d, 3-5d, 6+d)
- * - CTA: "Open Operations Hub" (filtered)
+ * Uses StandardKpiCard with gap-4 for HR Ops variant
  */
 
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { 
   Inbox, 
   FileText, 
@@ -20,7 +16,8 @@ import {
   Clock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { MetricsContract, MetricsContractGrid } from '@/components/shared/MetricsContract';
+import { StandardKpiCard } from '@/components/ui/StandardKpiCard';
+import { StandardCardGrid } from '@/components/ui/StandardCard';
 
 export interface QueueHealthMetrics {
   pendingClaims: number;
@@ -71,50 +68,59 @@ export function HROpsQueueHealth({
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Pending Counts */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="p-4 rounded-lg bg-muted/30 border">
-            <div className="flex items-center gap-2 mb-2">
-              <FileText className="w-4 h-4 text-primary" />
-              <span className="text-xs text-muted-foreground">Claims</span>
-            </div>
-            <p className="text-2xl font-bold tabular-nums">{pendingClaims}</p>
-            <Link 
-              to="/employer/ops?type=claim" 
-              className="text-xs text-primary hover:underline"
-            >
-              View claims →
-            </Link>
-          </div>
+        {/* Pending Counts - using StandardCardGrid with hr_ops variant (gap-4) */}
+        <StandardCardGrid variant="hr_ops" columns={3}>
+          <StandardKpiCard
+            label="Pending Claims"
+            value={pendingClaims.toString()}
+            icon={FileText}
+            iconClassName="bg-primary/10 text-primary"
+            tooltip="Reimbursement claims awaiting review"
+            variant="hr_ops"
+            footer={
+              <Link 
+                to="/employer/ops?type=claim" 
+                className="text-xs text-primary hover:underline"
+              >
+                View claims →
+              </Link>
+            }
+          />
           
-          <div className="p-4 rounded-lg bg-muted/30 border">
-            <div className="flex items-center gap-2 mb-2">
-              <Inbox className="w-4 h-4 text-accent" />
-              <span className="text-xs text-muted-foreground">Requests</span>
-            </div>
-            <p className="text-2xl font-bold tabular-nums">{pendingRequests}</p>
-            <Link 
-              to="/employer/ops?type=request" 
-              className="text-xs text-primary hover:underline"
-            >
-              View requests →
-            </Link>
-          </div>
+          <StandardKpiCard
+            label="Pending Requests"
+            value={pendingRequests.toString()}
+            icon={Inbox}
+            iconClassName="bg-accent/10 text-accent"
+            tooltip="Pre-approval requests awaiting review"
+            variant="hr_ops"
+            footer={
+              <Link 
+                to="/employer/ops?type=request" 
+                className="text-xs text-primary hover:underline"
+              >
+                View requests →
+              </Link>
+            }
+          />
           
-          <div className="p-4 rounded-lg bg-muted/30 border">
-            <div className="flex items-center gap-2 mb-2">
-              <FileQuestion className="w-4 h-4 text-warning" />
-              <span className="text-xs text-muted-foreground">Needs Docs</span>
-            </div>
-            <p className="text-2xl font-bold tabular-nums">{pendingDocuments}</p>
-            <Link 
-              to="/employer/ops?tab=missing_docs" 
-              className="text-xs text-primary hover:underline"
-            >
-              View pending →
-            </Link>
-          </div>
-        </div>
+          <StandardKpiCard
+            label="Needs Docs"
+            value={pendingDocuments.toString()}
+            icon={FileQuestion}
+            iconClassName="bg-warning/10 text-warning"
+            tooltip="Items waiting on employee documentation"
+            variant="hr_ops"
+            footer={
+              <Link 
+                to="/employer/ops?tab=missing_docs" 
+                className="text-xs text-primary hover:underline"
+              >
+                View pending →
+              </Link>
+            }
+          />
+        </StandardCardGrid>
 
         {/* Aging Buckets */}
         <div className="space-y-3">
