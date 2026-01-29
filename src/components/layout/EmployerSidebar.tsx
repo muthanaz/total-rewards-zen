@@ -31,6 +31,7 @@ import {
   UsersRound,
   Shield,
   LogOut,
+  Rocket,
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useEmployerViewMode } from '@/contexts/EmployerViewModeContext';
@@ -109,6 +110,7 @@ const opsNavigation: NavGroup[] = [
     label: 'GOVERNANCE',
     labelAr: 'الحوكمة',
     items: [
+      { label: 'Setup Checklist', labelAr: 'قائمة الإعداد', path: '/employer/setup', icon: Rocket, isPrimary: true },
       { label: 'Policy Management', labelAr: 'إدارة السياسات', path: '/employer/policies', icon: BookOpen },
       { label: 'Workflows', labelAr: 'سير العمل', path: '/employer/settings/workflows', icon: Workflow },
       { label: 'Approver Groups', labelAr: 'مجموعات الموافقة', path: '/employer/settings/approver-groups', icon: UsersRound },
