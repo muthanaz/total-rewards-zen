@@ -12,9 +12,10 @@
 
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DataConfidenceBadge, useDataCoverageMetrics } from './DataConfidenceBadge';
+import { useDataCoverageMetrics } from './DataConfidenceBadge';
 import { PageConfidenceGate } from './PageConfidenceGate';
 import { ExecHighlightsStrip, ConfidenceLevel } from './ExecHighlightsStrip';
+import { DataTrustPanel } from '@/components/trust';
 import { 
   useExecutiveMetrics, 
   useSpendAllocation,
@@ -231,12 +232,8 @@ export function ExecutiveDashboard() {
           </div>
         </div>
 
-        {/* DATA VERIFICATION STRIP */}
-        <ExecHighlightsStrip
-          confidence={confidenceLevel}
-          lastSync={coverageMetrics.lastSyncTime}
-          sourcesCount={3}
-        />
+        {/* DATA TRUST PANEL - Collapsible, expanded if Low confidence */}
+        <DataTrustPanel pageName="dashboard" />
 
         {/* SECTION 1: BOTTOM LINE (4 KPI cards) - equal heights enforced */}
         <section>

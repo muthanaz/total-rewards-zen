@@ -13,6 +13,7 @@ import { FileText, History, BookMarked, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { StandardPageHeader } from '@/components/shared';
+import { DataTrustPanel } from '@/components/trust';
 import {
   ReportsStats,
   ReportCard,
@@ -64,6 +65,9 @@ export default function ReportsPage() {
           { label: `${scheduledCount} Scheduled`, variant: 'success' },
         ]}
       />
+
+      {/* DATA TRUST PANEL */}
+      <DataTrustPanel pageName="reports" />
 
       {/* Stats */}
       <ReportsStats

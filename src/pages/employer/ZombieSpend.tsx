@@ -35,11 +35,11 @@ import {
 } from 'lucide-react';
 import { 
   EmployerGlobalFiltersBar, 
-  DataConfidenceBadge, 
   PageConfidenceGate, 
   useDataCoverageMetrics,
   CFORecoveryKPIGrid,
 } from '@/components/employer';
+import { DataTrustPanel } from '@/components/trust';
 import { SavingsFunnel } from '@/components/employer/SavingsFunnel';
 import { CreateActionModal, OpportunityData } from '@/components/employer/CreateActionModal';
 import { PageLayout } from '@/components/shared';
@@ -308,7 +308,6 @@ export default function ZombieSpendPage() {
         description={`FY ${ORG_BASELINE.fiscalYear} · ${formatCurrencyAED(totalOpportunityMin, { abbreviate: true })} – ${formatCurrencyAED(totalOpportunityMax, { abbreviate: true })} total potential`}
         icon={Target}
         iconClassName="bg-success/10 text-success"
-        confidenceBadge={<DataConfidenceBadge metrics={coverageMetrics} />}
         actions={
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
@@ -341,6 +340,8 @@ export default function ZombieSpendPage() {
         }
         filters={<EmployerGlobalFiltersBar />}
       >
+        {/* DATA TRUST PANEL */}
+        <DataTrustPanel pageName="optimization" />
         {/* 1. CFO KPI GRID - 4 Core Metrics First */}
         <CFORecoveryKPIGrid
           metrics={{

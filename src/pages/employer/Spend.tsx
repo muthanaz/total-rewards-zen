@@ -25,13 +25,13 @@ import {
   CATEGORY_METRICS_EXEC,
 } from '@/lib/executiveMetricsConstants';
 import { 
-  DataConfidenceBadge, 
   PageConfidenceGate, 
   useDataCoverageMetrics,
   CreateActionModal,
   type OpportunityData,
 } from '@/components/employer';
 import { PageLayout } from '@/components/shared';
+import { DataTrustPanel } from '@/components/trust';
 import { toast } from 'sonner';
 
 // Import new spend module components
@@ -222,7 +222,6 @@ export function Spend() {
         description={`FY ${ORG_BASELINE.fiscalYear} · ${formatInteger(ORG_BASELINE.employeeCount)} employees · ${formatCurrencyAED(INVESTMENT_METRICS.costPerEmployee, { abbreviate: true })} per head`}
         icon={DollarSign}
         iconClassName="bg-primary/10 text-primary"
-        confidenceBadge={<DataConfidenceBadge metrics={coverageMetrics} />}
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm">
@@ -236,6 +235,9 @@ export function Spend() {
           </div>
         }
       >
+        {/* DATA TRUST PANEL */}
+        <DataTrustPanel pageName="spend" />
+        
         {/* Sticky Filters */}
         <SpendFiltersBar 
           filters={filters} 
