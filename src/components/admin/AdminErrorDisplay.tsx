@@ -44,9 +44,9 @@ export function AdminErrorDisplay({
   // Try to get error pattern from constants
   const pattern = errorCode ? ERROR_PATTERNS[errorCode] : null;
 
-  const displayWhat = what || (pattern ? (isArabic ? pattern.whatAr : pattern.what) : 'An error occurred');
-  const displayWhy = why || (pattern ? (isArabic ? pattern.whyAr : pattern.why) : 'Unknown cause');
-  const displayAction = action || (pattern ? (isArabic ? pattern.actionAr : pattern.action) : 'Please try again');
+  const displayWhat = what || (pattern ? (isArabic ? pattern.whatAr : pattern.what) : 'Something went wrong');
+  const displayWhy = why || (pattern ? (isArabic ? pattern.whyAr : pattern.why) : 'An unexpected error occurred');
+  const displayAction = action || (pattern ? (isArabic ? pattern.actionAr : pattern.action) : 'Try again or contact support if the issue persists');
 
   const Icon = severity === 'error' ? XCircle : AlertTriangle;
 

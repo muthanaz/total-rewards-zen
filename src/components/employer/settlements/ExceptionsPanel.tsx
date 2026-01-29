@@ -65,7 +65,10 @@ export function ExceptionsPanel({
           <CheckCircle2 className="w-10 h-10 text-success mx-auto mb-3" />
           <p className="font-medium text-success">No Exceptions</p>
           <p className="text-sm text-muted-foreground mt-1">
-            All payments are reconciled successfully
+            All settlements are processing normally.
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Exceptions appear when payments fail or reconciliation detects mismatches.
           </p>
         </CardContent>
       </Card>
