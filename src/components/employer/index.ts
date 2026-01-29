@@ -130,6 +130,7 @@ export { CreatePolicyModal } from './CreatePolicyModal';
 export { PolicyLogicEditor } from './PolicyLogicEditor';
 export { PolicyEditorSheetV2 } from './PolicyEditorSheetV2';
 export { PolicyManagementView } from './PolicyManagementView';
+export { PolicyTemplateSelector } from './PolicyTemplateSelector';
 export { PolicyInsightsDrawer } from './PolicyInsightsDrawer';
 export { PolicyInsightsTabContent } from './PolicyInsightsTabContent';
 export { KnowledgeBaseTabContent } from './KnowledgeBaseTabContent';
