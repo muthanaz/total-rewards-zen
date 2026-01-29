@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { PageLayout, MetricCard, MetricGrid } from '@/components/shared';
+import { PageLayout, MetricCard, MetricGrid, SSOTTooltip, MetricLabelWithTooltip } from '@/components/shared';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -181,7 +181,16 @@ export default function EmployerDataQualityRules() {
         <MetricCard title="Active Rules" value={stats.active} icon={ShieldCheck} />
         <MetricCard title="Total Violations" value={stats.totalViolations} icon={AlertTriangle} />
         <MetricCard title="Critical Issues" value={stats.criticalViolations} icon={XCircle} />
-        <MetricCard title="Compliance Rate" value={`${stats.complianceRate}%`} icon={CheckCircle} />
+        <MetricCard 
+          title="Data Quality Compliance"
+          value={`${stats.complianceRate}%`} 
+          icon={CheckCircle}
+          tooltip={{
+            formula: '(Passed Checks ÷ Total Checks) × 100',
+            dataSource: 'data_quality_rules + integration_runs tables',
+            notes: 'Covers completeness, accuracy, timeliness, and consistency checks.'
+          }}
+        />
       </MetricGrid>
 
       {/* Filters */}

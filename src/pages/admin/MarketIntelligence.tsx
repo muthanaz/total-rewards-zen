@@ -437,7 +437,7 @@ export default function AdminMarketIntelligence() {
             <CardHeader>
               <CardTitle className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
                 <Lightbulb className="w-5 h-5 text-primary" />
-                {t('AI-Identified Opportunities', 'الفرص المحددة بالذكاء الاصطناعي')}
+                {t('System-Identified Opportunities', 'الفرص المحددة من النظام')}
               </CardTitle>
               <CardDescription>
                 {t('Strategic recommendations based on data analysis', 'التوصيات الاستراتيجية بناءً على تحليل البيانات')}
@@ -461,7 +461,7 @@ export default function AdminMarketIntelligence() {
                     icon: Home,
                   },
                   {
-                    title: t('Transport Optimization', 'تحسين النقل'),
+                    title: t('Transport Value Recovery', 'استرداد قيمة النقل'),
                     description: t('Underutilized transport benefits present upselling opportunity', 'مزايا النقل غير المستغلة تمثل فرصة للبيع الإضافي'),
                     impact: 'AED 620K',
                     confidence: 85,

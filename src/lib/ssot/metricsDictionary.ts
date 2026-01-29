@@ -185,6 +185,33 @@ export const SSOT_METRICS: Record<string, SSOTMetricDefinition> = {
     higherIsBetter: true,
   },
 
+  data_quality_compliance: {
+    key: 'data_quality_compliance',
+    label: 'Data Quality Compliance',
+    labelAr: 'الامتثال لجودة البيانات',
+    definition: 'Percentage of data quality checks passing without violations.',
+    formula: '(Passed Checks ÷ Total Checks) × 100',
+    scope: 'All active data quality rules across connected sources.',
+    provenance: 'data_quality_rules + integration_runs tables',
+    status: 'defined',
+    unit: 'percent',
+    higherIsBetter: true,
+    notes: 'Covers completeness, accuracy, timeliness, and consistency checks.',
+  },
+
+  policy_compliance: {
+    key: 'policy_compliance',
+    label: 'Policy Compliance',
+    labelAr: 'الامتثال للسياسات',
+    definition: 'Percentage of claims that adhere to all benefit policy rules.',
+    formula: '(Compliant Claims ÷ Total Decided Claims) × 100',
+    scope: 'Last 30 days. Based on claim audit findings.',
+    provenance: 'requests + claim_notes tables',
+    status: 'defined',
+    unit: 'percent',
+    higherIsBetter: true,
+  },
+
   avg_processing_time: {
     key: 'avg_processing_time',
     label: 'Avg Processing Time',
@@ -209,6 +236,66 @@ export const SSOT_METRICS: Record<string, SSOTMetricDefinition> = {
     status: 'defined',
     unit: 'percent',
     higherIsBetter: true,
+  },
+
+  // ============= OPTIMIZATION METRICS =============
+
+  recoverable_spend: {
+    key: 'recoverable_spend',
+    label: 'Recoverable Spend',
+    labelAr: 'الإنفاق القابل للاسترداد',
+    definition: 'Budget allocated to benefits that can be recovered through targeted interventions.',
+    formula: 'SUM(unutilized_entitlements) WHERE intervention_available = true',
+    scope: 'Cap-based benefits with actionable recovery levers.',
+    provenance: 'benefit_entitlements + employer_actions tables',
+    status: 'estimated',
+    assumptionId: 'A004',
+    unit: 'currency',
+    higherIsBetter: false,
+    notes: 'Higher values indicate more opportunity for recovery interventions.',
+  },
+
+  utilization_uplift_potential: {
+    key: 'utilization_uplift_potential',
+    label: 'Utilization Uplift Potential',
+    labelAr: 'إمكانية رفع الاستخدام',
+    definition: 'Estimated increase in utilization achievable through awareness and friction reduction.',
+    formula: '(Current Utilization Gap) × Estimated Lift Factor (0.2-0.4)',
+    scope: 'Benefits with low awareness scores or high friction indicators.',
+    provenance: 'benefit_entitlements + employee_satisfaction_ratings tables',
+    status: 'estimated',
+    assumptionId: 'A005',
+    unit: 'percent',
+    higherIsBetter: true,
+    notes: 'Based on historical intervention effectiveness data.',
+  },
+
+  negotiation_opportunity: {
+    key: 'negotiation_opportunity',
+    label: 'Negotiation Opportunity',
+    labelAr: 'فرصة التفاوض',
+    definition: 'Estimated savings from vendor rate renegotiation based on market benchmarks.',
+    formula: '(Current Rate - Benchmark Rate) × Projected Volume',
+    scope: 'Vendor-provided benefits with available market comparisons.',
+    provenance: 'vendors + marketplace_offers tables',
+    status: 'estimated',
+    assumptionId: 'A006',
+    unit: 'currency',
+    higherIsBetter: true,
+    notes: 'Requires recent market benchmark data for accuracy.',
+  },
+
+  settlement_backlog: {
+    key: 'settlement_backlog',
+    label: 'Settlement Backlog',
+    labelAr: 'تراكم التسويات',
+    definition: 'Value of approved claims awaiting payment settlement.',
+    formula: 'SUM(approved_amount) WHERE status = "approved" AND payment_status = "pending"',
+    scope: 'All approved claims not yet settled.',
+    provenance: 'requests table (status, payment_status)',
+    status: 'defined',
+    unit: 'currency',
+    higherIsBetter: false,
   },
 };
 

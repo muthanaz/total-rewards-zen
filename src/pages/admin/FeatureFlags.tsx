@@ -23,8 +23,8 @@ import { useAdminAuditLog } from '@/hooks/useAdminAuditLog';
 const FEATURE_FLAG_DEFINITIONS = [
   { id: 'marketplace_enabled', name: 'Marketplace', nameAr: 'السوق', description: 'Employee perks and offers marketplace', descriptionAr: 'سوق الامتيازات والعروض للموظفين', icon: ShoppingBag },
   { id: 'gov_connect_enabled', name: 'GovConnect', nameAr: 'الربط الحكومي', description: 'Government services integration', descriptionAr: 'تكامل الخدمات الحكومية', icon: FileText },
-  { id: 'advanced_insights_enabled', name: 'Advanced Analytics', nameAr: 'التحليلات المتقدمة', description: 'AI-powered insights and predictions', descriptionAr: 'رؤى وتنبؤات مدعومة بالذكاء الاصطناعي', icon: BarChart3 },
-  { id: 'benefits_ai_enabled', name: 'Benefits AI', nameAr: 'ذكاء المزايا', description: 'AI recommendations for benefit optimization', descriptionAr: 'توصيات الذكاء الاصطناعي لتحسين المزايا', icon: Zap },
+  { id: 'advanced_insights_enabled', name: 'Advanced Analytics', nameAr: 'التحليلات المتقدمة', description: 'Data-driven insights and predictions', descriptionAr: 'رؤى وتنبؤات مبنية على البيانات', icon: BarChart3 },
+  { id: 'benefits_ai_enabled', name: 'Smart Benefits', nameAr: 'المزايا الذكية', description: 'System recommendations for benefit value recovery', descriptionAr: 'توصيات النظام لاسترداد قيمة المزايا', icon: Zap },
   { id: 'sso_enabled', name: 'SSO Integration', nameAr: 'تسجيل الدخول الموحد', description: 'Enterprise single sign-on support', descriptionAr: 'دعم تسجيل الدخول الموحد للمؤسسات', icon: Shield },
   { id: 'mobile_app_enabled', name: 'Mobile App Access', nameAr: 'الوصول عبر التطبيق', description: 'Native mobile application access', descriptionAr: 'الوصول عبر التطبيق المحمول', icon: Users },
 ];

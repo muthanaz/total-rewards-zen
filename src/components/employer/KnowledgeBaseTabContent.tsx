@@ -104,7 +104,7 @@ const METRIC_DEFINITIONS: MetricDefinition[] = [
     shortName: 'Leakage',
     icon: TrendingDown,
     category: 'financial',
-    tags: ['waste', 'cost', 'optimization'],
+    tags: ['waste', 'cost', 'recoverable'],
     definition: 'Benefits budget that is allocated but remains unused by employees.',
     formula: {
       display: 'Entitled Value - Claimed Amount',
@@ -123,7 +123,7 @@ const METRIC_DEFINITIONS: MetricDefinition[] = [
       'Measuring mid-year before annual benefits utilized',
     ],
     usedIn: [
-      { page: 'Optimization', path: '/employer/optimization' },
+      { page: 'Recoverable Spend', path: '/employer/optimization' },
       { page: 'Executive Dashboard', path: '/employer' },
     ],
   },

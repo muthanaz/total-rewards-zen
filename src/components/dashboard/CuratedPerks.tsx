@@ -186,7 +186,7 @@ export function CuratedPerks({ onActivate }: CuratedPerksProps) {
             <h2 className="font-display font-semibold text-lg flex items-center gap-2">
               Top Picks For You
               <Badge variant="secondary" className="text-[10px] font-normal">
-                AI-Powered
+                Personalized
               </Badge>
             </h2>
             <p className="text-sm text-muted-foreground">

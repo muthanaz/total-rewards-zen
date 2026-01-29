@@ -130,7 +130,7 @@ export const DEMO_TIPS = {
   },
   recommendations: {
     id: 'tip-recommendations',
-    title: 'AI-Powered Insights',
-    description: 'Recommendations are generated based on utilization patterns and employee feedback. Each includes expected ROI impact.',
+    title: 'System-Generated Insights',
+    description: 'Recommendations are generated based on utilization patterns and employee feedback. Each includes expected impact estimates.',
   },
 };

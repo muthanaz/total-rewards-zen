@@ -185,7 +185,7 @@ const quickWinFixes: PolicyFix[] = [
 const strategicFixes: PolicyFix[] = [
   { id: 'f4', policy: 'Wellbeing Policy', policyId: 'wellbeing-001', fix: 'Redesign expense category picker with visual icons', effort: 'medium', timeToImplement: '1 week', ownerRole: 'IT + Policy', dependencies: ['Design approval'], expectedImpact: { questionsReduction: 58, utilizationUplift: 15, costAvoidance: 45000 }, confidence: 'estimated', type: 'strategic', isLinkedToAction: false },
   { id: 'f5', policy: 'Housing Policy', policyId: 'housing-001', fix: 'Build interactive top-up calculator', effort: 'high', timeToImplement: '2 weeks', ownerRole: 'IT', expectedImpact: { rejectionsReduction: 25, costAvoidance: 30000 }, confidence: 'estimated', type: 'strategic', isLinkedToAction: false },
-  { id: 'f6', policy: 'All Policies', policyId: 'all', fix: 'Implement AI-powered policy Q&A chatbot', effort: 'high', timeToImplement: '1 month', ownerRole: 'IT + HR', dependencies: ['AI platform selection', 'Policy content audit'], expectedImpact: { questionsReduction: 40, cycleTimeReduction: 50, costAvoidance: 120000 }, confidence: 'proxy', type: 'strategic', isLinkedToAction: false },
+  { id: 'f6', policy: 'All Policies', policyId: 'all', fix: 'Implement automated policy Q&A chatbot', effort: 'high', timeToImplement: '1 month', ownerRole: 'IT + HR', dependencies: ['Platform selection', 'Policy content audit'], expectedImpact: { questionsReduction: 40, cycleTimeReduction: 50, costAvoidance: 120000 }, confidence: 'proxy', type: 'strategic', isLinkedToAction: false },
 ];
 
 export default function PolicyInsightsPage() {

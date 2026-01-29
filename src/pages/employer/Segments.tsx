@@ -2,7 +2,7 @@
  * Drivers & Segments Page
  * 
  * Dynamic segment builder with customizable filters, live preview,
- * AI-powered watchlist, and dual-view tabs for Exec/HR modes.
+ * data-driven watchlist, and dual-view tabs for Exec/HR modes.
  * 
  * MISSION: Every insight leads to a target list and an action.
  * - Every chart click opens a drilldown drawer
