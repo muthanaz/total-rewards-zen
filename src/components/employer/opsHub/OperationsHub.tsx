@@ -60,7 +60,7 @@ import { OpsQueueTable } from './OpsQueueTable';
 import { OpsQueueTabs } from './OpsQueueTabs';
 import { OpsQueueStats } from './OpsQueueStats';
 import { RequestTimelineDrawer } from './RequestTimelineDrawer';
-import { ClaimReviewSheet } from '@/components/employer/ClaimReviewSheet';
+import { ClaimDetailSheet } from './ClaimDetailSheet';
 import { FloatingActionBar } from '@/components/employer/FloatingActionBar';
 import type { QueueTab, QueueFilters, QueueItemRow, QueueStats, TeamMember, InlineAction } from './types';
 
@@ -700,8 +700,8 @@ export function OperationsHub() {
         />
       )}
 
-      {/* Detail Sheet */}
-      <ClaimReviewSheet
+      {/* Detail Sheet - New 4-tab version */}
+      <ClaimDetailSheet
         requestId={selectedRequestId}
         organizationId={organizationId}
         open={!!selectedRequestId}

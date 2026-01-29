@@ -10,4 +10,5 @@ export { OpsQueueTable } from './OpsQueueTable';
 export { OpsQueueTabs } from './OpsQueueTabs';
 export { OpsQueueStats } from './OpsQueueStats';
 export { RequestTimelineDrawer } from './RequestTimelineDrawer';
+export { ClaimDetailSheet } from './ClaimDetailSheet';
 export * from './types';
