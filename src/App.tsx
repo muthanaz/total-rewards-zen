@@ -40,6 +40,7 @@ import DocumentsPage from "./pages/employee/Documents";
 import GovConnectPage from "./pages/employee/GovConnect";
 import ProfilePage from "./pages/employee/Profile";
 import BenefitsPage from "./pages/employee/Benefits";
+import BenefitsOverviewPage from "./pages/employee/BenefitsOverview";
 import OnboardingPage from "./pages/employee/Onboarding";
 import KnowledgeHubPage from "./pages/employee/KnowledgeHub";
 import BenefitsAnalysisPage from "./pages/employee/BenefitsAnalysis";
@@ -225,7 +226,7 @@ function AppRoutes() {
         <Route path="benefits-analysis" element={<BenefitsAnalysisPage />} />
         <Route path="out-of-pocket" element={<OutOfPocketOptimizerPage />} />
         <Route path="money-planner" element={<MoneyPlannerPage />} />
-        <Route path="benefits" element={<BenefitsPage />} />
+        <Route path="benefits" element={<BenefitsOverviewPage />} />
 
         {/* Requests/Claims - new routes */}
         <Route path="requests" element={<ClaimsListPage />} />
@@ -252,7 +253,7 @@ function AppRoutes() {
         <Route path="knowledge" element={<KnowledgeHubPage />} />
         
         {/* Standardized benefit routes using BenefitDetailTemplate */}
-        <Route path="benefits/overview" element={<BenefitsPage />} />
+        <Route path="benefits/overview" element={<BenefitsOverviewPage />} />
         <Route path="benefits/housing" element={<HousingBenefitPage />} />
         <Route path="benefits/schooling" element={<SchoolingBenefitPage />} />
         <Route path="benefits/health" element={<HealthBenefitPage />} />
