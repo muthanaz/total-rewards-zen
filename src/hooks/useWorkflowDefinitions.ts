@@ -14,10 +14,22 @@ export function useWorkflowDefinitions(workflowType: string) {
   const query = useQuery({
     queryKey: ['workflow_definitions', workflowType, user?.id],
     queryFn: async () => {
+      // First get user's organization
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      const orgId = profile?.organization_id;
+
       const { data, error } = await supabase
         .from('workflow_definitions')
-        .select('*, workflow_steps(*)')
+        .select('*, workflow_steps(*, approver_group:approver_groups(id, name))')
         .eq('workflow_type', workflowType)
+        .or(orgId ? `organization_id.eq.${orgId},organization_id.is.null` : 'organization_id.is.null')
+        .eq('is_active', true)
+        .order('is_default', { ascending: false })
         .order('created_at', { ascending: false });
       
       if (error) throw error;

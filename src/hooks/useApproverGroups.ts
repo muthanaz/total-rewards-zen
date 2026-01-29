@@ -37,10 +37,20 @@ export function useApproverGroups() {
   const query = useQuery({
     queryKey: ['approver_groups', user?.id],
     queryFn: async () => {
+      // First get user's organization
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      const orgId = profile?.organization_id;
+
       const { data, error } = await supabase
         .from('approver_groups')
         .select('*, approver_group_members(*, profile:profiles(first_name, last_name, email))')
         .eq('is_active', true)
+        .eq('organization_id', orgId)
         .order('name');
       
       if (error) throw error;

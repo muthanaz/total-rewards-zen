@@ -1,6 +1,6 @@
 /**
  * Action Workflows Settings Page
- * Configure approval workflows for actions
+ * Configure approval workflows for claims and actions
  */
 
 import { useState } from 'react';
@@ -24,21 +24,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { 
   GitBranch, 
   Plus, 
   Trash2, 
-  Settings,
   ChevronRight,
   ArrowDown,
   Clock,
   Users,
+  CheckCircle2,
+  Edit,
 } from 'lucide-react';
 import { useWorkflowDefinitions } from '@/hooks/useWorkflowDefinitions';
 import { useApproverGroups } from '@/hooks/useApproverGroups';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface WorkflowStep {
   id?: string;
@@ -53,7 +63,7 @@ export default function ActionWorkflowsPage() {
   const { direction } = useLanguage();
   const isRTL = direction === 'rtl';
   
-  const { workflows, isLoading, createWorkflow, deleteWorkflow, setDefaultWorkflow, isCreating } = useWorkflowDefinitions('action_approval');
+  const { workflows, isLoading, createWorkflow, deleteWorkflow, setDefaultWorkflow, isCreating } = useWorkflowDefinitions('claim_approval');
   const { groups: approverGroups } = useApproverGroups();
   
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -156,18 +166,18 @@ export default function ActionWorkflowsPage() {
         </Button>
       </div>
 
-      {/* Workflows List */}
+      {/* Workflows Table */}
       {isLoading ? (
-        <div className="space-y-4">
-          {[1, 2].map(i => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="py-8">
-                <div className="h-4 bg-muted rounded w-1/3 mb-2" />
-                <div className="h-3 bg-muted rounded w-2/3" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card className="animate-pulse">
+          <CardContent className="py-8">
+            <div className="h-4 bg-muted rounded w-1/3 mb-4" />
+            <div className="space-y-2">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-12 bg-muted rounded" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       ) : workflows?.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="py-12 text-center">
@@ -177,8 +187,8 @@ export default function ActionWorkflowsPage() {
             </h3>
             <p className="text-muted-foreground text-sm mb-4">
               {isRTL 
-                ? 'أنشئ سير عمل أول للموافقات على الإجراءات'
-                : 'Create your first workflow for action approvals'
+                ? 'أنشئ سير عمل أول للموافقات'
+                : 'Create your first workflow for approvals'
               }
             </p>
             <Button onClick={() => setCreateDialogOpen(true)}>
@@ -188,71 +198,117 @@ export default function ActionWorkflowsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {workflows?.map((workflow: any) => (
-            <Card key={workflow.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <CardTitle className="text-lg">{workflow.name}</CardTitle>
-                      {workflow.is_default && (
-                        <Badge variant="secondary" className="bg-primary/10 text-primary">
-                          Default
-                        </Badge>
-                      )}
-                    </div>
-                    {workflow.description && (
-                      <CardDescription className="mt-1">{workflow.description}</CardDescription>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    {!workflow.is_default && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setDefaultWorkflow.mutate(workflow.id)}
-                      >
-                        Set as Default
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive"
-                      onClick={() => deleteWorkflow.mutate(workflow.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2 text-sm">
-                  <Badge variant="outline">
-                    {workflow.workflow_steps?.length || 0} steps
-                  </Badge>
-                  <span className="text-muted-foreground">•</span>
-                  <span className="text-muted-foreground">
-                    Created {new Date(workflow.created_at).toLocaleDateString()}
-                  </span>
-                </div>
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[280px]">Workflow Name</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead className="text-center">Active</TableHead>
+                <TableHead className="text-center">Steps</TableHead>
+                <TableHead>Used By</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {workflows?.map((workflow: any) => {
+                // Determine usage based on scope_type
+                const usedBy = workflow.scope_type === 'benefit' 
+                  ? workflow.name.split(' ')[0] // First word is often the benefit name
+                  : 'All Claims';
                 
-                {/* Steps Preview */}
+                return (
+                  <TableRow key={workflow.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium">{workflow.name}</div>
+                        {workflow.is_default && (
+                          <Badge variant="secondary" className="bg-primary/10 text-primary text-[10px]">
+                            Default
+                          </Badge>
+                        )}
+                      </div>
+                      {workflow.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                          {workflow.description}
+                        </p>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="capitalize">
+                        {workflow.scope_type === 'benefit' ? 'Benefit' : 'Claim'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {workflow.is_active ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 mx-auto" />
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="secondary">
+                        {workflow.workflow_steps?.length || 0}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-muted-foreground">{usedBy}</span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {!workflow.is_default && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDefaultWorkflow.mutate(workflow.id)}
+                          >
+                            Set Default
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => deleteWorkflow.mutate(workflow.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+          
+          {/* Steps Preview Section */}
+          <div className="border-t p-4 space-y-4">
+            <h3 className="text-sm font-medium text-muted-foreground">Workflow Steps Preview</h3>
+            {workflows?.slice(0, 3).map((workflow: any) => (
+              <div key={workflow.id} className="space-y-2">
+                <p className="text-sm font-medium">{workflow.name}</p>
                 {workflow.workflow_steps && workflow.workflow_steps.length > 0 && (
-                  <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-2">
+                  <div className="flex items-center gap-2 overflow-x-auto pb-2">
                     {workflow.workflow_steps
                       .sort((a: any, b: any) => a.step_order - b.step_order)
                       .map((step: any, index: number) => (
                         <div key={step.id} className="flex items-center gap-2">
-                          <div className="px-3 py-2 bg-muted rounded-lg text-sm whitespace-nowrap">
-                            <div className="font-medium">{step.name}</div>
-                            {step.sla_hours && (
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <Clock className="h-3 w-3" />
-                                {step.sla_hours}h SLA
-                              </div>
-                            )}
+                          <div className="px-3 py-2 bg-muted rounded-lg text-sm whitespace-nowrap min-w-[120px]">
+                            <div className="font-medium text-xs">{step.name}</div>
+                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-1">
+                              {step.approver_group?.name && (
+                                <span className="flex items-center gap-1">
+                                  <Users className="h-3 w-3" />
+                                  {step.approver_group.name}
+                                </span>
+                              )}
+                              {step.sla_hours && (
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  {step.sla_hours}h
+                                </span>
+                              )}
+                            </div>
                           </div>
                           {index < workflow.workflow_steps.length - 1 && (
                             <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -261,10 +317,10 @@ export default function ActionWorkflowsPage() {
                       ))}
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              </div>
+            ))}
+          </div>
+        </Card>
       )}
 
       {/* Create Workflow Dialog */}
