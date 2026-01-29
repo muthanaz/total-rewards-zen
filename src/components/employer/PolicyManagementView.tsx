@@ -77,9 +77,6 @@ import { PolicyApprovalDialog } from './PolicyApprovalDialog';
 import { PolicyVersionHistoryDrawer } from './PolicyVersionHistoryDrawer';
 import { PolicyOwnerDisplay } from './PolicyOwnerDisplay';
 import { PolicyInsightsDrawer } from './PolicyInsightsDrawer';
-import { PolicyTemplateSelector } from './PolicyTemplateSelector';
-import { useSeedDemoPolicies } from '@/hooks/useSeedDemoPolicies';
-import { usePolicyTemplates, type PolicyTemplate } from '@/hooks/usePolicyTemplates';
 
 interface PolicyRow {
   id: string;
@@ -143,12 +140,9 @@ export function PolicyManagementView() {
   const [versionHistoryPolicy, setVersionHistoryPolicy] = useState<PolicyRow | null>(null);
   // Policy insights drawer
   const [insightsDrawerOpen, setInsightsDrawerOpen] = useState(false);
-  // Template selector modal
-  const [templateSelectorOpen, setTemplateSelectorOpen] = useState(false);
   const { hasPermission } = useEmployerPermissions();
   const { user, role } = useAuth();
   const queryClient = useQueryClient();
-  const seedDemoPolicies = useSeedDemoPolicies();
 
   // Fetch organization ID
   const { data: profile } = useQuery({
@@ -845,49 +839,10 @@ export function PolicyManagementView() {
                 </Badge>
               }
             >
-              <div className="flex items-center gap-2">
-                {/* Seed Demo Policies button - only show if no published policies */}
-                {publishedCount === 0 && (
-                  <Button 
-                    variant="outline" 
-                    className="gap-2"
-                    onClick={() => {
-                      if (organizationId && user?.id) {
-                        seedDemoPolicies.mutate({ organizationId, userId: user.id });
-                      }
-                    }}
-                    disabled={seedDemoPolicies.isPending}
-                  >
-                    {seedDemoPolicies.isPending ? (
-                      <>
-                        <Clock className="w-4 h-4 animate-spin" />
-                        Seeding...
-                      </>
-                    ) : (
-                      <>
-                        <FileCheck className="w-4 h-4" />
-                        Seed Demo Policies
-                      </>
-                    )}
-                  </Button>
-                )}
-                
-                {/* Create from Template */}
-                <Button 
-                  variant="outline"
-                  className="gap-2" 
-                  onClick={() => setTemplateSelectorOpen(true)}
-                >
-                  <FileText className="w-4 h-4" />
-                  From Template
-                </Button>
-                
-                {/* Create Blank */}
-                <Button className="gap-2" onClick={() => setCreateModalOpen(true)}>
-                  <Plus className="w-4 h-4" />
-                  Create New Policy
-                </Button>
-              </div>
+              <Button className="gap-2" onClick={() => setCreateModalOpen(true)}>
+                <Plus className="w-4 h-4" />
+                Create New Policy
+              </Button>
             </PermissionGate>
           </div>
         }
@@ -1345,28 +1300,6 @@ export function PolicyManagementView() {
       <PolicyInsightsDrawer
         open={insightsDrawerOpen}
         onOpenChange={setInsightsDrawerOpen}
-      />
-
-      {/* Template Selector Modal */}
-      <PolicyTemplateSelector
-        open={templateSelectorOpen}
-        onOpenChange={setTemplateSelectorOpen}
-        onSelectTemplate={(template: PolicyTemplate) => {
-          // Open create modal with template pre-selected
-          // We'll dispatch an event to pre-fill the modal
-          setTemplateSelectorOpen(false);
-          setCreateModalOpen(true);
-          // Use a small delay to ensure modal is open, then dispatch event
-          setTimeout(() => {
-            window.dispatchEvent(new CustomEvent('policy-template-selected', {
-              detail: { template }
-            }));
-          }, 100);
-        }}
-        onStartBlank={() => {
-          setTemplateSelectorOpen(false);
-          setCreateModalOpen(true);
-        }}
       />
       </PageLayout>
     </TooltipProvider>
