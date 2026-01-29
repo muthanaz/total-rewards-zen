@@ -113,6 +113,8 @@ import AdminSessionManagement from "./pages/admin/SessionManagement";
 import AdminOnboarding from "./pages/admin/Onboarding";
 import AdminIntegrationReadiness from "./pages/admin/IntegrationReadiness";
 import DemoScriptPage from "./pages/Demo";
+import AdminDemoTools from "./pages/admin/DemoTools";
+import AdminQAChecklist from "./pages/admin/QAChecklist";
 
 import VendorDashboard from "./pages/vendor/Dashboard";
 import VendorOffers from "./pages/vendor/Offers";
@@ -348,6 +350,9 @@ function AppRoutes() {
         <Route path="policy-templates" element={<AdminPolicyTemplates />} />
         <Route path="policy-library" element={<AdminPolicyLibrary />} />
         <Route path="alerts" element={<AdminAlertsCenter />} />
+        {/* Demo & QA Tools */}
+        <Route path="demo-tools" element={<AdminDemoTools />} />
+        <Route path="qa-checklist" element={<AdminQAChecklist />} />
       </Route>
 
       {/* Vendor Routes */}
