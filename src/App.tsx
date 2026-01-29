@@ -34,12 +34,6 @@ import ClaimDetailPage from "./pages/employee/ClaimDetail";
 import HousingPage from "./pages/employee/Housing";
 import SchoolingPage from "./pages/employee/Schooling";
 import HealthPage from "./pages/employee/Health";
-import TransportPage from "./pages/employee/Transport";
-import WellbeingPage from "./pages/employee/Wellbeing";
-import FinancialPage from "./pages/employee/Financial";
-import LongTermFinancialsPage from "./pages/employee/LongTermFinancials";
-import EquityPage from "./pages/employee/Equity";
-import LearningPage from "./pages/employee/Learning";
 import LeavePage from "./pages/employee/Leave";
 import MarketplacePage from "./pages/employee/Marketplace";
 import DocumentsPage from "./pages/employee/Documents";
@@ -52,6 +46,16 @@ import BenefitsAnalysisPage from "./pages/employee/BenefitsAnalysis";
 import MyActionsPage from "./pages/employee/MyActions";
 import OutOfPocketOptimizerPage from "./pages/employee/OutOfPocketOptimizer";
 import MoneyPlannerPage from "./pages/employee/MoneyPlanner";
+// Standardized benefit pages using BenefitDetailTemplate
+import {
+  HousingBenefitPage,
+  SchoolingBenefitPage,
+  HealthBenefitPage,
+  TransportBenefitPage,
+  WellbeingBenefitPage,
+  LearningBenefitPage,
+  LongTermFinancialsBenefitPage,
+} from "./pages/employee/benefits";
 
 import EmployerDashboard from "./pages/employer/Dashboard";
 import SpendPage from "./pages/employer/Spend";
@@ -231,10 +235,10 @@ function AppRoutes() {
         <Route path="housing" element={<HousingPage />} />
         <Route path="schooling" element={<SchoolingPage />} />
         <Route path="health" element={<HealthPage />} />
-        <Route path="transport" element={<TransportPage />} />
-        <Route path="wellbeing" element={<WellbeingPage />} />
-        <Route path="long-term-financials" element={<LongTermFinancialsPage />} />
-        <Route path="learning" element={<LearningPage />} />
+        <Route path="transport" element={<TransportBenefitPage />} />
+        <Route path="wellbeing" element={<WellbeingBenefitPage />} />
+        <Route path="long-term-financials" element={<LongTermFinancialsBenefitPage />} />
+        <Route path="learning" element={<LearningBenefitPage />} />
         {/* Legacy routes - redirect to consolidated page */}
         <Route path="bonus" element={<Navigate to="/employee/long-term-financials" replace />} />
         <Route path="equity" element={<Navigate to="/employee/long-term-financials" replace />} />
@@ -246,6 +250,16 @@ function AppRoutes() {
         <Route path="profile" element={<ProfilePage />} />
         <Route path="onboarding" element={<OnboardingPage />} />
         <Route path="knowledge" element={<KnowledgeHubPage />} />
+        
+        {/* Standardized benefit routes using BenefitDetailTemplate */}
+        <Route path="benefits/overview" element={<BenefitsPage />} />
+        <Route path="benefits/housing" element={<HousingBenefitPage />} />
+        <Route path="benefits/schooling" element={<SchoolingBenefitPage />} />
+        <Route path="benefits/health" element={<HealthBenefitPage />} />
+        <Route path="benefits/transport" element={<TransportBenefitPage />} />
+        <Route path="benefits/wellbeing" element={<WellbeingBenefitPage />} />
+        <Route path="benefits/learning" element={<LearningBenefitPage />} />
+        <Route path="benefits/long-term-financials" element={<LongTermFinancialsBenefitPage />} />
 
         {/* Keep as-is for now */}
         <Route path="security" element={<Navigate to="/employee/profile" replace />} />
