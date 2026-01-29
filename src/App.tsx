@@ -29,7 +29,7 @@ import { VendorLayout } from "./components/layout/VendorLayout";
 
 import EmployeeDashboard from "./pages/employee/Dashboard";
 import ClaimsListPage from "./pages/employee/ClaimsList";
-import ClaimsNewWizard from "./pages/employee/ClaimsNew";
+import UniversalRequestWizard from "./pages/employee/UniversalRequestWizard";
 import ClaimDetailPage from "./pages/employee/ClaimDetail";
 import HousingPage from "./pages/employee/Housing";
 import SchoolingPage from "./pages/employee/Schooling";
@@ -229,7 +229,7 @@ function AppRoutes() {
 
         {/* Requests/Claims - new routes */}
         <Route path="requests" element={<ClaimsListPage />} />
-        <Route path="requests/new" element={<ClaimsNewWizard />} />
+        <Route path="requests/new" element={<UniversalRequestWizard />} />
         <Route path="requests/:id" element={<ClaimDetailPage />} />
         
         <Route path="housing" element={<HousingPage />} />
