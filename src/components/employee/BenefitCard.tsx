@@ -65,8 +65,7 @@ export function BenefitCard({
   
   return (
     <Card 
-      className="group cursor-pointer bg-card border border-border/40 hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300 overflow-hidden h-full flex flex-col"
-      style={{ animationDelay: `${index * 50}ms` }}
+      className="group cursor-pointer hover:border-accent/30 hover:shadow-md transition-shadow duration-150 overflow-hidden h-full flex flex-col"
       onClick={onClick}
     >
       {/* Main content area */}
@@ -74,19 +73,19 @@ export function BenefitCard({
         {/* Header: Icon + Name + Arrow */}
         <div className={cn("flex items-start gap-4", isRTL && "flex-row-reverse")}>
           {/* Icon container */}
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center group-hover:from-accent/20 group-hover:to-accent/8 transition-all duration-300 shrink-0">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center shrink-0">
             <Icon className="w-5 h-5 text-accent" />
           </div>
           
           {/* Title and description */}
           <div className={cn("flex-1 min-w-0", isRTL && "text-right")}>
             <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse justify-end")}>
-              <h3 className="font-semibold text-[15px] text-foreground group-hover:text-accent transition-colors leading-tight">
+              <h3 className="font-semibold text-[15px] text-foreground leading-tight">
                 {name}
               </h3>
               <ChevronRight className={cn(
-                "w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0",
-                isRTL && "rotate-180 group-hover:-translate-x-0.5"
+                "w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0",
+                isRTL && "rotate-180"
               )} />
             </div>
             <p className="text-[13px] text-muted-foreground mt-1.5 line-clamp-1">

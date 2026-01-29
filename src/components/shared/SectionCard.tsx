@@ -47,7 +47,7 @@ export function SectionCard({
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
   return (
-    <Card className={cn('border-border/50 shadow-sm', className)}>
+    <Card className={cn('border-border/50', className)}>
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-4">
           <div 
@@ -157,8 +157,7 @@ export function CompactSectionCard({
   return (
     <Card 
       className={cn(
-        'border-border/50 shadow-sm transition-all duration-200',
-        onClick && 'cursor-pointer hover:border-accent/40 hover:shadow-md',
+        onClick && 'cursor-pointer hover:shadow-md',
         className
       )}
       onClick={onClick}

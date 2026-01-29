@@ -79,7 +79,7 @@ export function BenefitGridCard({
   
   return (
     <Card 
-      className="group flex flex-col h-full bg-card border border-border/40 hover:border-accent/30 hover:shadow-md transition-all duration-200 overflow-hidden"
+      className="group flex flex-col h-full hover:border-accent/30 hover:shadow-md transition-shadow duration-150 overflow-hidden"
     >
       {/* Main content */}
       <div className="p-5 flex-1 flex flex-col">

@@ -61,11 +61,11 @@ export function CommunicationsStats({ stats }: StatsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {metrics.map((metric) => {
         const Icon = metric.icon;
         return (
-          <Card key={metric.label} className="border-border/50">
+          <Card key={metric.label}>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className={cn('p-2 rounded-lg', metric.bg)}>

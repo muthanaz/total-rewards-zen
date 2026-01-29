@@ -55,10 +55,10 @@ export function CalendarStats({ events }: CalendarStatsProps) {
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {stats.map((stat) => (
         <Card key={stat.label} className={`border-l-4 ${stat.borderColor}`}>
-          <CardContent className="pt-4 pb-4">
+          <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                <stat.icon className={`w-4 h-4 ${stat.color}`} />
               </div>
               <div>
                 <p className="text-2xl font-bold tabular-nums">{stat.value}</p>
