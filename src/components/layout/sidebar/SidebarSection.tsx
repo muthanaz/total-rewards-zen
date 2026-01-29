@@ -59,6 +59,7 @@ export function SidebarSection({
   return (
     <div className={cn('mb-1 mt-4 first:mt-0', className)}>
       {/* Section heading */}
+      {/* Section heading - teal color for headings */}
       <button
         onClick={handleToggle}
         className={cn(
@@ -68,8 +69,8 @@ export function SidebarSection({
         )}
       >
         <div className={cn('flex items-center gap-2', isRTL && 'flex-row-reverse')}>
-          <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
-          <span>{displayLabel}</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary shrink-0" />
+          <span className="text-sidebar-primary">{displayLabel}</span>
           {isBeta && (
             <Badge
               variant="outline"
@@ -80,9 +81,9 @@ export function SidebarSection({
           )}
         </div>
         {isOpen ? (
-          <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+          <ChevronDown className="w-3.5 h-3.5 shrink-0 text-sidebar-primary opacity-70 group-hover:opacity-100 transition-opacity" />
         ) : (
-          <ChevronCollapsed className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+          <ChevronCollapsed className="w-3.5 h-3.5 shrink-0 text-sidebar-primary opacity-70 group-hover:opacity-100 transition-opacity" />
         )}
       </button>
 

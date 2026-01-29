@@ -44,13 +44,13 @@ export function SidebarStandaloneLink({
           'flex items-center gap-2 w-full px-3 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors rounded-md',
           'hover:bg-sidebar-primary/10',
           isActive
-            ? 'text-accent bg-accent/10'
-            : 'text-sidebar-primary hover:text-accent',
+            ? 'text-sidebar-primary bg-sidebar-primary/10'
+            : 'text-sidebar-primary hover:text-sidebar-primary',
           isRTL && 'flex-row-reverse text-right'
         )}
       >
-        <Icon className="w-4 h-4 shrink-0" />
-        <span>{displayLabel}</span>
+        <Icon className="w-4 h-4 shrink-0 text-sidebar-primary" />
+        <span className="text-sidebar-primary">{displayLabel}</span>
       </Link>
     </div>
   );

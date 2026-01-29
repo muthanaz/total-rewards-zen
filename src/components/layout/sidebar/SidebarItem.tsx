@@ -83,8 +83,15 @@ export function SidebarItem({
         indentClass
       )}
     >
-      <Icon className={cn('w-4 h-4 shrink-0', isPrimary && finalActive && 'text-primary')} />
-      <span className={cn('text-sm flex-1', isRTL && 'text-right')}>{displayLabel}</span>
+      <Icon className={cn(
+        'w-4 h-4 shrink-0',
+        finalActive ? 'text-sidebar-primary' : 'text-sidebar-foreground/70'
+      )} />
+      <span className={cn(
+        'text-sm flex-1',
+        finalActive ? 'text-sidebar-primary' : 'text-sidebar-foreground',
+        isRTL && 'text-right'
+      )}>{displayLabel}</span>
       {badge && (
         <Badge
           variant="secondary"
@@ -98,7 +105,7 @@ export function SidebarItem({
           {badgeCount}
         </span>
       )}
-      {isBeta && <FlaskConical className="w-3 h-3 text-amber-500" />}
+      {isBeta && <FlaskConical className="w-3 h-3 text-amber-500 shrink-0" />}
     </Link>
   );
 }

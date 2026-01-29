@@ -246,10 +246,12 @@
      NAVIGATION
      ========================================================================== */
   
-  /* Nav Item - Sidebar navigation */
+  /* Nav Item - Sidebar navigation
+     Inactive: white text (sidebar-foreground)
+     Active: teal text (sidebar-primary) */
   .nav-item {
     @apply flex items-center gap-3 px-3 py-2.5 rounded-lg;
-    @apply text-sidebar-primary hover:text-sidebar-primary;
+    @apply text-sidebar-foreground hover:text-sidebar-foreground;
     @apply hover:bg-sidebar-accent;
     transition: background-color var(--transition-fast);
   }
