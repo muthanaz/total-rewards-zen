@@ -70,9 +70,9 @@ function generateNeeds(): string[] {
   return shuffled.slice(0, randomBetween(1, 3));
 }
 
-// Generate 312 mock employees to match GLOBAL_METRICS.activeEmployees
+// Generate 30 mock employees to match the coherent demo data (Nexa Holdings)
 // This ensures segment totals align with the shared demo context
-export const MOCK_EMPLOYEES: MockEmployee[] = Array.from({ length: 312 }, (_, i) => {
+export const MOCK_EMPLOYEES: MockEmployee[] = Array.from({ length: 30 }, (_, i) => {
   const grade = randomChoice(GRADES);
   const salary = generateSalary(grade);
   

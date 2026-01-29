@@ -166,19 +166,17 @@ export const RECENT_REPORTS: GeneratedReport[] = [
   },
 ];
 
+// Updated to match coherent demo data (4 departments from Nexa Holdings)
 export const MOCK_SEGMENTS = [
   { id: 'engineering', name: 'Engineering' },
-  { id: 'sales', name: 'Sales' },
-  { id: 'marketing', name: 'Marketing' },
+  { id: 'sales-marketing', name: 'Sales & Marketing' },
   { id: 'operations', name: 'Operations' },
-  { id: 'hr', name: 'Human Resources' },
-  { id: 'finance', name: 'Finance' },
+  { id: 'corporate', name: 'Corporate Services' },
 ];
 
 export const MOCK_GRADES = [
-  { id: 'L1', name: 'Grade L1' },
-  { id: 'L2', name: 'Grade L2' },
   { id: 'L3', name: 'Grade L3' },
   { id: 'L4', name: 'Grade L4' },
-  { id: 'L5', name: 'Grade L5+' },
+  { id: 'L5', name: 'Grade L5' },
+  { id: 'L6', name: 'Grade L6' },
 ];

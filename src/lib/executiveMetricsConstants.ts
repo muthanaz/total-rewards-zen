@@ -7,34 +7,38 @@
  * - ROI & Savings (Budget Leakage)
  * 
  * CEO/CFO-grade consistency: All pages show identical figures for overlapping metrics.
+ * 
+ * NOW SOURCED FROM: src/lib/demoData/index.ts (30 employees, 20 claims, reconciled)
  */
+
+import { EXECUTIVE_METRICS, CATEGORY_METRICS as DEMO_CATEGORY_METRICS, SEGMENT_METRICS } from './demoData/index';
 
 // ============================================================================
 // ORGANIZATION BASELINE (Nexa Holdings Demo Scenario)
 // ============================================================================
 
 export const ORG_BASELINE = {
-  employeeCount: 312,
-  fiscalYear: 2024,
+  employeeCount: EXECUTIVE_METRICS.employeeCount,
+  fiscalYear: EXECUTIVE_METRICS.fiscalYear,
   currency: 'AED',
 } as const;
 
 // ============================================================================
-// INVESTMENT & BUDGET METRICS
+// INVESTMENT & BUDGET METRICS (Derived from coherent demo data)
 // ============================================================================
 
 export const INVESTMENT_METRICS = {
   /** Total annual benefits budget allocated */
-  allocatedBudget: 6_150_000,
+  allocatedBudget: EXECUTIVE_METRICS.totalBudget,
   
   /** Total entitled value (what employees can claim) */
-  entitledValue: 5_850_000,
+  entitledValue: EXECUTIVE_METRICS.totalBudget,
   
   /** Total actual spend (claims approved/paid) */
-  actualSpend: 5_030_000,
+  actualSpend: EXECUTIVE_METRICS.ytdSpend,
   
   /** Target utilization rate (%) */
-  targetUtilization: 75,
+  targetUtilization: EXECUTIVE_METRICS.targetUtilization,
   
   /** Year-over-year spend change (%) */
   yoyChange: 8.2,
@@ -56,16 +60,16 @@ export const INVESTMENT_METRICS = {
 } as const;
 
 // ============================================================================
-// UTILIZATION METRICS
+// UTILIZATION METRICS (Derived from coherent demo data)
 // ============================================================================
 
 export const UTILIZATION_METRICS = {
   /** Overall utilization rate (%) - MUST match across all pages */
-  utilizationRate: 72,
+  utilizationRate: EXECUTIVE_METRICS.utilizationRate,
   
   /** Unrealized value (entitled - claimed) - KEY metric for Recovery page */
   get unrealizedValue() {
-    return INVESTMENT_METRICS.entitledValue - INVESTMENT_METRICS.actualSpend;
+    return EXECUTIVE_METRICS.unutilized;
   },
   
   /** Unrealized as % of budget */
@@ -75,8 +79,7 @@ export const UTILIZATION_METRICS = {
   
   /** Estimated recoverable (confidence-weighted) */
   get estimatedRecoverable() {
-    // Assume ~65% is recoverable based on cause analysis
-    return Math.round(this.unrealizedValue * 0.65);
+    return EXECUTIVE_METRICS.recoveryPotential;
   },
 } as const;
 
@@ -99,64 +102,30 @@ export const FRICTION_METRICS = {
 } as const;
 
 // ============================================================================
-// CATEGORY BREAKDOWN (for consistent drill-downs)
+// CATEGORY BREAKDOWN (derived from coherent demo data)
 // ============================================================================
 
-export const CATEGORY_METRICS = {
-  housing: {
-    name: 'Housing',
-    budget: 2_800_000,
-    entitled: 2_700_000,
-    claimed: 2_400_000,
+// Build from DEMO_CATEGORY_METRICS
+const buildCategoryMetric = (id: string, rootCause: 'awareness' | 'friction') => {
+  const cat = DEMO_CATEGORY_METRICS.find(c => c.id === id);
+  return {
+    name: cat?.name || id,
+    budget: cat?.entitled || 0,
+    entitled: cat?.entitled || 0,
+    claimed: cat?.paid || 0,
     get unused() { return this.entitled - this.claimed; },
-    get utilization() { return (this.claimed / this.entitled) * 100; },
-    rootCause: 'awareness' as const,
-  },
-  schooling: {
-    name: 'Schooling',
-    budget: 1_500_000,
-    entitled: 1_400_000,
-    claimed: 1_200_000,
-    get unused() { return this.entitled - this.claimed; },
-    get utilization() { return (this.claimed / this.entitled) * 100; },
-    rootCause: 'friction' as const,
-  },
-  health: {
-    name: 'Health',
-    budget: 900_000,
-    entitled: 850_000,
-    claimed: 800_000,
-    get unused() { return this.entitled - this.claimed; },
-    get utilization() { return (this.claimed / this.entitled) * 100; },
-    rootCause: 'awareness' as const,
-  },
-  transport: {
-    name: 'Transport',
-    budget: 500_000,
-    entitled: 480_000,
-    claimed: 400_000,
-    get unused() { return this.entitled - this.claimed; },
-    get utilization() { return (this.claimed / this.entitled) * 100; },
-    rootCause: 'awareness' as const,
-  },
-  learning: {
-    name: 'Learning',
-    budget: 300_000,
-    entitled: 280_000,
-    claimed: 150_000,
-    get unused() { return this.entitled - this.claimed; },
-    get utilization() { return (this.claimed / this.entitled) * 100; },
-    rootCause: 'awareness' as const,
-  },
-  wellbeing: {
-    name: 'Wellbeing',
-    budget: 150_000,
-    entitled: 140_000,
-    claimed: 80_000,
-    get unused() { return this.entitled - this.claimed; },
-    get utilization() { return (this.claimed / this.entitled) * 100; },
-    rootCause: 'friction' as const,
-  },
+    get utilization() { return this.entitled > 0 ? (this.claimed / this.entitled) * 100 : 0; },
+    rootCause,
+  };
+};
+
+export const CATEGORY_METRICS_EXEC = {
+  housing: buildCategoryMetric('housing', 'awareness'),
+  schooling: buildCategoryMetric('schooling', 'friction'),
+  health: buildCategoryMetric('health', 'awareness'),
+  transport: buildCategoryMetric('transport', 'awareness'),
+  learning: buildCategoryMetric('learning', 'awareness'),
+  wellbeing: buildCategoryMetric('wellbeing', 'friction'),
 } as const;
 
 // ============================================================================
