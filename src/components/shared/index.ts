@@ -3,6 +3,8 @@
 
 // Page Structure
 export { PageHeader } from './PageHeader';
+export { StandardPageHeader } from '@/components/layout/StandardPageHeader';
+export type { HeaderVariant } from '@/components/layout/StandardPageHeader';
 export { PageLayout, PageSection } from './PageLayout';
 export { FilterBar, StatusTabs } from './FilterBar';
 

@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, History, BookMarked, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { StandardPageHeader } from '@/components/shared';
 import {
   ReportsStats,
   ReportCard,
@@ -48,18 +49,21 @@ export default function ReportsPage() {
   const scheduledCount = DEFAULT_REPORTS.filter((r) => r.schedulable).length;
 
   return (
-    <div className={cn('p-6 space-y-6 animate-fade-in', isRTL && 'text-right')}>
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          {language === 'ar' ? 'مكتبة التقارير' : 'Report Library'}
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {language === 'ar'
-            ? 'تقارير جاهزة للتنفيذيين وفرق العمليات'
-            : 'Curated reports for executives and operations teams'}
-        </p>
-      </div>
+    <div className={cn('space-y-6 animate-fade-in', isRTL && 'text-right')}>
+      {/* Standard Page Header - HR Ops variant */}
+      <StandardPageHeader
+        variant="hr_ops"
+        title={language === 'ar' ? 'مكتبة التقارير' : 'Report Library'}
+        helperText={language === 'ar'
+          ? 'تقارير جاهزة للتنفيذيين وفرق العمليات'
+          : 'Curated reports for executives and operations teams'}
+        icon={FileText}
+        iconClassName="from-accent to-accent/80 shadow-accent/25"
+        metaBadges={[
+          { label: `${DEFAULT_REPORTS.length + 3} Reports`, variant: 'default' },
+          { label: `${scheduledCount} Scheduled`, variant: 'success' },
+        ]}
+      />
 
       {/* Stats */}
       <ReportsStats

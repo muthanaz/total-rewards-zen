@@ -19,6 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
+import { StandardPageHeader } from '@/components/shared';
 import {
   CommunicationsStats,
   AudienceBuilder,
@@ -126,28 +127,26 @@ export default function CommunicationsPage() {
   };
 
   return (
-    <div className={cn('p-6 space-y-6 animate-fade-in', isRTL && 'text-right')}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {language === 'ar' ? 'الاتصالات' : 'Communications'}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {language === 'ar' 
-              ? 'إدارة الحملات والإشعارات للموظفين'
-              : 'Manage targeted campaigns and employee notifications'
-            }
-          </p>
-        </div>
-        <Button 
-          className="gap-2"
-          onClick={() => setActiveTab('create')}
-        >
-          <Plus className="w-4 h-4" />
-          New Campaign
-        </Button>
-      </div>
+    <div className={cn('space-y-6 animate-fade-in', isRTL && 'text-right')}>
+      {/* Standard Page Header - HR Ops variant */}
+      <StandardPageHeader
+        variant="hr_ops"
+        title={language === 'ar' ? 'الاتصالات' : 'Communications'}
+        helperText={language === 'ar' 
+          ? 'إدارة الحملات والإشعارات للموظفين'
+          : 'Manage targeted campaigns and employee notifications'}
+        icon={Megaphone}
+        iconClassName="from-primary to-primary/80 shadow-primary/25"
+        primaryCTA={{
+          label: 'New Campaign',
+          icon: Plus,
+          onClick: () => setActiveTab('create'),
+        }}
+        metaBadges={[
+          { label: `${stats.sentCount} Sent`, variant: 'success' },
+          { label: `${stats.draftCount} Drafts`, variant: 'default' },
+        ]}
+      />
 
       {/* Stats */}
       <CommunicationsStats stats={stats} />

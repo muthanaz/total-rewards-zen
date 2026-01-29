@@ -70,7 +70,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn, formatCurrencyAED, formatRelativeTime, formatDate } from '@/lib/utils';
-import { PageHeader } from '@/components/shared/PageHeader';
+import { StandardPageHeader } from '@/components/shared';
 import { MetricCard, MetricGrid } from '@/components/shared';
 
 interface Organization {
@@ -402,17 +402,22 @@ export default function OrganizationsPage() {
 
   return (
     <div className={cn("space-y-6", isRTL && "text-right")}>
-      {/* Header */}
-      <PageHeader
+      {/* Standard Page Header */}
+      <StandardPageHeader
+        variant="hr_ops"
         title={t('Organizations', 'المنظمات')}
-        description={t('Manage organizations and user assignments', 'إدارة المنظمات وتعيينات المستخدمين')}
+        helperText={t('Manage organizations and user assignments', 'إدارة المنظمات وتعيينات المستخدمين')}
         icon={Building2}
-        actions={
-          <Button onClick={() => { setFormData({ name: '', domain: '' }); setCreateDialogOpen(true); }}>
-            <Plus className="w-4 h-4 me-2" />
-            {t('Add Organization', 'إضافة منظمة')}
-          </Button>
-        }
+        iconClassName="from-accent to-accent/80 shadow-accent/25"
+        primaryCTA={{
+          label: t('Add Organization', 'إضافة منظمة'),
+          icon: Plus,
+          onClick: () => { setFormData({ name: '', domain: '' }); setCreateDialogOpen(true); },
+        }}
+        metaBadges={[
+          { label: `${organizations.length} Orgs`, variant: 'default' },
+          { label: `${users.filter(u => u.organization_id).length} Assigned`, variant: 'success' },
+        ]}
       />
 
       {/* Stats Cards */}

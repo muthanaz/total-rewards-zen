@@ -8,9 +8,10 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { Users } from 'lucide-react';
+import { Users, Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { DemoModeBadge } from '@/components/shared/DemoDataGate';
+import { StandardPageHeader } from '@/components/shared';
 import {
   DirectoryStats,
   DirectoryTable,
@@ -86,20 +87,24 @@ export default function EmployeeDirectory() {
   return (
     <TooltipProvider>
       <div className="space-y-6 animate-fade-in">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div>
-              <h1 className="text-2xl font-display font-bold text-foreground">
-                Employee Directory
-              </h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {filteredEmployees.length} of {mockEmployees.length} employees
-              </p>
-            </div>
-            <DemoModeBadge />
-          </div>
-        </div>
+        {/* Standard Page Header - HR Ops variant */}
+        <StandardPageHeader
+          variant="hr_ops"
+          title="Employee Directory"
+          helperText={`${filteredEmployees.length} of ${mockEmployees.length} employees`}
+          icon={Users}
+          iconClassName="from-accent to-accent/80 shadow-accent/25"
+          secondaryActions={
+            <Button variant="outline" size="sm" className="gap-2">
+              <Download className="w-4 h-4" />
+              Export
+            </Button>
+          }
+          metaBadges={[
+            { label: `${mockEmployees.filter(e => e.status === 'active').length} Active`, variant: 'success' },
+            { label: `${mockEmployees.filter(e => e.status === 'on_leave').length} On Leave`, variant: 'warning' },
+          ]}
+        />
 
         {/* Stats */}
         <DirectoryStats employees={mockEmployees} />

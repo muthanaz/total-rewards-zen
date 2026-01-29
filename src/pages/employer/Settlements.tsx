@@ -9,10 +9,12 @@ import {
   RefreshCw,
   FileSpreadsheet,
   AlertTriangle,
+  Clock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
+import { StandardPageHeader } from '@/components/shared';
 import {
   SettlementStats,
   BatchTable,
@@ -111,31 +113,33 @@ export default function SettlementsPage() {
   };
 
   return (
-    <div className={cn('p-6 space-y-6 animate-fade-in', isRTL && 'text-right')}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {language === 'ar' ? 'التسويات' : 'Settlements'}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {language === 'ar' 
-              ? 'إدارة دفعات المطالبات ومطابقة البنك'
-              : 'Manage claim payments and bank reconciliation'
-            }
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+    <div className={cn('space-y-6 animate-fade-in', isRTL && 'text-right')}>
+      {/* Standard Page Header - HR Ops variant */}
+      <StandardPageHeader
+        variant="hr_ops"
+        title={language === 'ar' ? 'التسويات' : 'Settlements'}
+        helperText={language === 'ar' 
+          ? 'إدارة دفعات المطالبات ومطابقة البنك'
+          : 'Manage claim payments and bank reconciliation'
+        }
+        icon={Banknote}
+        iconClassName="from-success to-success/80 shadow-success/25"
+        primaryCTA={{
+          label: 'Create Batch',
+          icon: Plus,
+          onClick: () => setCreateModalOpen(true),
+        }}
+        secondaryActions={
           <Button variant="outline" className="gap-2">
             <FileSpreadsheet className="w-4 h-4" />
             Export Report
           </Button>
-          <Button className="gap-2" onClick={() => setCreateModalOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Create Batch
-          </Button>
-        </div>
-      </div>
+        }
+        metaBadges={[
+          { label: `${stats.ready} Ready`, variant: 'success' },
+          { label: `${mockExceptions.length} Exceptions`, variant: mockExceptions.length > 0 ? 'warning' : 'default' },
+        ]}
+      />
 
       {/* Lifecycle Stats */}
       <SettlementStats stats={stats} onStageClick={handleStageClick} />
