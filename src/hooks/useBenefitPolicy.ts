@@ -132,8 +132,9 @@ export function useBenefitPolicy(categoryKey: BenefitCategoryKey | null) {
           // Parse content_json
           const content = version.content_json as any;
           if (content) {
+            // Support both "summary" and "how_to_use" naming
             howItWorks = content.summary || content.how_to_use || [];
-            whatYouCanClaim = content.eligible_items || content.details?.split('\n').filter(Boolean) || [];
+            whatYouCanClaim = content.eligible_items || content.what_you_can_claim || [];
             faqs = content.faqs || [];
           }
           
@@ -141,10 +142,20 @@ export function useBenefitPolicy(categoryKey: BenefitCategoryKey | null) {
           const logic = version.logic_json as any;
           if (logic) {
             transactionModel = logic.transaction_model || 'claim_only';
-            annualCap = logic.limits_caps?.annual_cap || null;
-            perTransactionCap = logic.limits_caps?.per_transaction_cap || null;
-            frequency = logic.limits_caps?.frequency || 'annual';
-            requiredDocs = logic.required_docs || [];
+            // Support nested limits_caps structure
+            const limitsCaps = logic.limits_caps || logic;
+            annualCap = limitsCaps.annual_cap ?? null;
+            perTransactionCap = limitsCaps.per_transaction_cap ?? null;
+            frequency = limitsCaps.frequency || 'annual';
+            // Map required_docs with proper structure
+            const rawDocs = logic.required_docs || [];
+            requiredDocs = rawDocs.map((doc: any) => ({
+              id: doc.id || doc.doc_type,
+              doc_name: doc.doc_name || doc.docName || doc.name || 'Document',
+              doc_type: doc.doc_type || doc.docType || 'other',
+              is_required: doc.is_required ?? doc.isRequired ?? true,
+              description: doc.description || '',
+            }));
           }
         }
       }
