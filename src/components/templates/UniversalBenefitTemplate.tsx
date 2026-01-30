@@ -161,13 +161,13 @@ export function UniversalBenefitTemplate({
         }
       />
 
-      {/* 1. Summary Stats (Utilization) */}
+      {/* 1. Summary Stats (Utilization) - 3 cards to match BenefitDetailTemplate */}
       {utilization && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <SummaryStatsCard
             icon={Icon}
             value={formatCurrency(utilization.annualValue)}
-            label="Annual Value"
+            label="Annual entitlement"
             formula="Total annual benefit value"
             dataSource="Policy"
             variant="primary"
@@ -175,8 +175,8 @@ export function UniversalBenefitTemplate({
           <SummaryStatsCard
             icon={Wallet}
             value={formatCurrency(utilization.utilized)}
-            label="Utilized"
-            formula="Total claims/usage YTD"
+            label="Paid YTD"
+            formula="Paid claims only"
             dataSource="System"
             variant="utilized"
           />
@@ -184,18 +184,9 @@ export function UniversalBenefitTemplate({
             icon={TrendingDown}
             value={formatCurrency(utilization.remaining)}
             label="Remaining"
-            formula="Annual Value - Utilized"
+            formula="Annual entitlement - Paid YTD"
             dataSource="System"
             variant="remaining"
-          />
-          <SummaryStatsCard
-            icon={Percent}
-            value={`${utilization.utilizationPercent}%`}
-            label="Utilization"
-            formula="(Utilized / Value) × 100"
-            dataSource="System"
-            variant="utilization"
-            progress={utilization.utilizationPercent}
           />
         </div>
       )}

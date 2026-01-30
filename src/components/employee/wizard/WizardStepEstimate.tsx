@@ -75,7 +75,7 @@ export function WizardStepEstimate({
 
         <Card className="h-full min-h-[100px]">
           <CardContent className="p-4 flex flex-col justify-between h-full">
-            <span className="text-xs text-muted-foreground">Used So Far</span>
+            <span className="text-xs text-muted-foreground">Paid YTD</span>
             <span className="text-lg font-semibold tabular-nums">
               <Currency amount={utilized} size="lg" />
             </span>

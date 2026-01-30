@@ -207,13 +207,13 @@ async function fetchEntitlement(
   
   // First try benefit_entitlements table
   if (policyId) {
-    // Fetch approved/paid claims for this policy
+    // Fetch PAID claims only for this policy (reconciles with employer settlement totals)
     const { data: claims } = await supabase
       .from('requests')
       .select('amount')
       .eq('user_id', userId)
       .eq('policy_id', policyId)
-      .in('status', ['approved', 'paid'])
+      .in('status', ['paid'])
       .gte('created_at', startOfYear);
     
     utilized = (claims || []).reduce((sum, c) => sum + (c.amount || 0), 0);
