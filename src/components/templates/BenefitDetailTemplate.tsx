@@ -2,17 +2,18 @@
  * BenefitDetailTemplate
  * 
  * Standardized template for ALL employee benefit pages.
- * Renders 7 fixed sections in exact order with consistent spacing/typography.
+ * Renders sections in exact order with consistent spacing/typography.
  * Connected to policy_versions for dynamic content.
  * 
- * Sections:
- * A) Header: Benefit name + 1-line definition + policy ref badge
- * B) Your Entitlement strip: Annual, Used, Remaining (3 equal cards)
- * C) How it works (max 4 bullets, collapsible)
- * D) What you can claim/request (rules: caps, cycle, eligible items)
- * E) Required documents checklist
- * F) Start claim/request CTA
- * G) Recent activity (last 3 claims)
+ * Section Order:
+ * A) Header: Benefit name + 1-line definition + policy ref badge + primary CTA
+ * B) Entitlement strip: Annual entitlement, Paid YTD, Remaining (3 equal cards)
+ * C) Policy highlights (key-value meta: transaction type, SLA, caps, frequency)
+ * D) How it works (max 4 bullets, collapsible)
+ * E) Eligible items / What you can claim (list only, no caps duplication)
+ * F) Required documents checklist
+ * G) Category-specific content (children)
+ * H) Recent activity (last 3 claims)
  */
 
 import { useState } from 'react';
@@ -23,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { PolicyMetaCard } from '@/components/employee/PolicyMetaCard';
 import { EmployeeCreateRequestSheet } from '@/components/employee/EmployeeCreateRequestSheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn, formatCurrencyAED, formatDate } from '@/lib/utils';
@@ -66,15 +68,24 @@ export interface BenefitDetailTemplateProps {
   howItWorks?: string[];
   whatYouCanClaim?: string[];
   requiredDocs?: PolicyRequiredDoc[];
-  transactionModel?: TransactionModel;
+  transactionModel?: TransactionModel | 'informational';
   
   // Limits from logic_json
   annualCap?: number | null;
   perTransactionCap?: number | null;
   frequency?: 'annual' | 'monthly';
   
+  // Policy meta info
+  sla?: string | null;
+  enforcementMode?: 'soft' | 'strict' | null;
+  eligibilityHighlights?: string[];
+  isDeferredValue?: boolean;
+  
   // Recent activity
   recentClaims?: RecentClaim[];
+  
+  // Custom section title for eligible items
+  eligibleItemsTitle?: string;
   
   // Category-specific content (rendered after standard sections)
   children?: React.ReactNode;
@@ -85,6 +96,9 @@ export interface BenefitDetailTemplateProps {
   // States
   hasPolicyPublished?: boolean;
   hasEntitlementData?: boolean;
+  
+  // Hide the primary CTA (for informational benefits)
+  hidePrimaryCta?: boolean;
 }
 
 // ============================================================================
@@ -105,17 +119,26 @@ export function BenefitDetailTemplate({
   annualCap,
   perTransactionCap,
   frequency = 'annual',
+  sla,
+  enforcementMode,
+  eligibilityHighlights = [],
+  isDeferredValue = false,
   recentClaims = [],
+  eligibleItemsTitle,
   children,
   isLoading = false,
   hasPolicyPublished = true,
   hasEntitlementData = true,
+  hidePrimaryCta = false,
 }: BenefitDetailTemplateProps) {
   const [requestSheetOpen, setRequestSheetOpen] = useState(false);
   const [howItWorksOpen, setHowItWorksOpen] = useState(false);
   
   const category = BENEFIT_CATEGORIES[categoryKey];
   const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
+  
+  // Determine if this is an informational-only benefit
+  const isInformational = transactionModel === 'informational' || hidePrimaryCta;
   
   // Determine action text based on transaction model
   const actionLabel = transactionModel === 'claim_only' 
@@ -125,6 +148,15 @@ export function BenefitDetailTemplate({
       : 'Start Request';
   
   const requestType: 'claim' | 'request' = transactionModel === 'claim_only' ? 'claim' : 'request';
+  
+  // Default eligible items title based on transaction model
+  const defaultEligibleTitle = transactionModel === 'claim_only' 
+    ? 'What you can claim' 
+    : transactionModel === 'request_only'
+      ? 'What you can request'
+      : 'Eligible items';
+  
+  const sectionTitle = eligibleItemsTitle || defaultEligibleTitle;
 
   // Loading state
   if (isLoading) {
@@ -172,14 +204,16 @@ export function BenefitDetailTemplate({
         iconClassName={category?.gradientClass}
         badge={policyRef ? { label: policyRef, variant: 'default' } : undefined}
         actions={
-          <Button onClick={() => setRequestSheetOpen(true)} className="gap-2">
-            <Send className="h-4 w-4" />
-            {actionLabel}
-          </Button>
+          !isInformational ? (
+            <Button onClick={() => setRequestSheetOpen(true)} className="gap-2">
+              <Send className="h-4 w-4" />
+              {actionLabel}
+            </Button>
+          ) : undefined
         }
       />
 
-      {/* B) Your Entitlement Strip (3 equal cards) */}
+      {/* B) Entitlement Strip (3 equal cards) - ALWAYS FIRST */}
       <div className="grid grid-cols-3 gap-3">
         <SummaryStatsCard
           icon={Icon}
@@ -217,7 +251,18 @@ export function BenefitDetailTemplate({
         </div>
       )}
 
-      {/* C) How it works (collapsible, max 4 bullets) */}
+      {/* C) Policy Highlights (key-value meta) - AFTER ENTITLEMENT STRIP */}
+      <PolicyMetaCard
+        transactionModel={transactionModel}
+        sla={sla}
+        perTransactionCap={perTransactionCap}
+        frequency={frequency}
+        eligibilityHighlights={eligibilityHighlights}
+        enforcementMode={enforcementMode}
+        isDeferredValue={isDeferredValue}
+      />
+
+      {/* D) How it works (collapsible, max 4 bullets) */}
       {howItWorks.length > 0 && (
         <Collapsible open={howItWorksOpen} onOpenChange={setHowItWorksOpen}>
           <Card>
@@ -249,51 +294,29 @@ export function BenefitDetailTemplate({
         </Collapsible>
       )}
 
-      {/* D) What you can claim/request */}
-      {(whatYouCanClaim.length > 0 || annualCap || perTransactionCap) && (
+      {/* E) Eligible items / What you can claim (list only - NO CAPS here, they're in PolicyMetaCard) */}
+      {whatYouCanClaim.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-display flex items-center gap-2">
               <FileText className="w-5 h-5 text-muted-foreground" />
-              What you can {requestType === 'claim' ? 'claim' : 'request'}
+              {sectionTitle}
             </CardTitle>
-            <CardDescription>Rules, caps, and eligible items</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Caps display */}
-            {(annualCap || perTransactionCap) && (
-              <div className="grid grid-cols-2 gap-3">
-                {annualCap && (
-                  <div className="p-3 rounded-lg bg-muted/50 border">
-                    <p className="text-xs text-muted-foreground">{frequency === 'annual' ? 'Annual Cap' : 'Monthly Cap'}</p>
-                    <p className="font-semibold text-sm">{formatCurrency(annualCap)}</p>
-                  </div>
-                )}
-                {perTransactionCap && (
-                  <div className="p-3 rounded-lg bg-muted/50 border">
-                    <p className="text-xs text-muted-foreground">Per Transaction Cap</p>
-                    <p className="font-semibold text-sm">{formatCurrency(perTransactionCap)}</p>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {/* Eligible items */}
-            {whatYouCanClaim.length > 0 && (
-              <ul className="space-y-2">
-                {whatYouCanClaim.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            )}
+          <CardContent>
+            <ul className="space-y-2">
+              {whatYouCanClaim.map((item, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
+                  {item}
+                </li>
+              ))}
+            </ul>
           </CardContent>
         </Card>
       )}
 
-      {/* E) Required documents checklist */}
+      {/* F) Required documents checklist */}
       {requiredDocs.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
@@ -326,7 +349,10 @@ export function BenefitDetailTemplate({
         </Card>
       )}
 
-      {/* F) Recent activity (last 3 claims) */}
+      {/* G) Category-specific content */}
+      {children}
+
+      {/* H) Recent activity (last 3 claims) */}
       {recentClaims.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
@@ -369,16 +395,15 @@ export function BenefitDetailTemplate({
         </Card>
       )}
 
-      {/* Category-specific content */}
-      {children}
-
       {/* Request/Claim Sheet */}
-      <EmployeeCreateRequestSheet
-        open={requestSheetOpen}
-        onOpenChange={setRequestSheetOpen}
-        initialType={requestType}
-        initialCategory={title}
-      />
+      {!isInformational && (
+        <EmployeeCreateRequestSheet
+          open={requestSheetOpen}
+          onOpenChange={setRequestSheetOpen}
+          initialType={requestType}
+          initialCategory={title}
+        />
+      )}
     </div>
   );
 }
