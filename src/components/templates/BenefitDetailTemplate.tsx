@@ -23,7 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { PolicyHighlightsBullets } from '@/components/employee/PolicyHighlightsBullets';
+import { PolicyHighlightsBullets, PolicyHighlight } from '@/components/employee/PolicyHighlightsBullets';
 import { HowYourAllowanceWorks } from '@/components/employee/HowYourAllowanceWorks';
 import { EmployeeCreateRequestSheet } from '@/components/employee/EmployeeCreateRequestSheet';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -78,7 +78,7 @@ export interface BenefitDetailTemplateProps {
   // Policy meta info
   sla?: string | null;
   enforcementMode?: 'soft' | 'strict' | null;
-  eligibilityHighlights?: string[];
+  eligibilityHighlights?: (string | PolicyHighlight)[];
   isDeferredValue?: boolean;
   
   // Recent activity
@@ -256,22 +256,21 @@ export function BenefitDetailTemplate({
         </div>
       )}
 
-      {/* C) Policy Highlights (nicely designed bullet points) */}
-      <PolicyHighlightsBullets
-        transactionModel={transactionModel}
-        sla={sla}
-        perTransactionCap={perTransactionCap}
-        frequency={frequency}
-        enforcementMode={enforcementMode}
-        isDeferredValue={isDeferredValue}
-      />
+      {/* C) Policy Highlights (simple bullet points with checkmarks) */}
+      {eligibilityHighlights.length > 0 && (
+        <PolicyHighlightsBullets
+          highlights={eligibilityHighlights}
+          showSubmitClaim={!isInformational && transactionModel === 'claim_only'}
+          showViewPolicy={!!policyRef}
+          onSubmitClaim={() => setRequestSheetOpen(true)}
+        />
+      )}
 
-      {/* D) How your allowance works (step-based workflow) */}
+      {/* D) How your allowance works (horizontal cards with numbered steps) */}
       {howItWorks.length > 0 && (
         <HowYourAllowanceWorks
           title={howItWorksTitle}
           steps={howItWorks}
-          variant={howItWorksVariant}
         />
       )}
 

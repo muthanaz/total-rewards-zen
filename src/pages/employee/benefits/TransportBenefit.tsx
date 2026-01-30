@@ -8,6 +8,17 @@ import { BenefitDetailTemplate } from '@/components/templates/BenefitDetailTempl
 import { TransportComponentBoxes } from '@/components/employee/transport/TransportComponentBoxes';
 import { useBenefitPolicy } from '@/hooks/useBenefitPolicy';
 
+const POLICY_HIGHLIGHTS = [
+  'Fuel allowance: AED 1,500 per month auto-credited',
+  'Car allowance: AED 2,500 per month with salary',
+  'Annual flight tickets: Economy class for you + 2 dependents',
+  { text: 'Submit fuel receipts for reimbursement claims', type: 'tip' as const },
+  'Flight bookings require pre-approval',
+  'Unused flight allowance does not carry forward',
+  'Car allowance covers parking and tolls',
+  { text: 'Keep all receipts for audit purposes', type: 'warning' as const },
+];
+
 export default function TransportBenefitPage() {
   const { data: policyData, isLoading } = useBenefitPolicy('transport');
   
@@ -20,10 +31,7 @@ export default function TransportBenefitPage() {
       policyRef={policyData?.policyRef}
       entitlement={policyData?.entitlement}
       transactionModel={policyData?.transactionModel || 'claim_only'}
-      sla="72 hours"
-      perTransactionCap={policyData?.perTransactionCap}
-      frequency={policyData?.frequency || 'monthly'}
-      enforcementMode="soft"
+      eligibilityHighlights={POLICY_HIGHLIGHTS}
       howItWorks={[]}
       whatYouCanClaim={[]}
       requiredDocs={policyData?.requiredDocs || []}
