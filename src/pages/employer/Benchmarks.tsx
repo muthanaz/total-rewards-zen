@@ -64,16 +64,10 @@ export default function Benchmarks() {
         iconClassName="from-accent to-accent/80 shadow-accent/25"
         lastUpdated={new Date()}
         secondaryActions={
-          <>
-            <Button variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-1" />
-              Refresh
-            </Button>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-1" />
-              Export
-            </Button>
-          </>
+          <Button variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-1" />
+            Export
+          </Button>
         }
       />
 
@@ -198,17 +192,6 @@ export default function Benchmarks() {
               Operational
             </TabsTrigger>
           </TabsList>
-
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <RefreshCw className="h-3.5 w-3.5 mr-1" />
-              Refresh Data
-            </Button>
-            <Button variant="outline" size="sm">
-              <Download className="h-3.5 w-3.5 mr-1" />
-              Export Report
-            </Button>
-          </div>
         </div>
 
         <TabsContent value={activeTab} className="mt-4 space-y-4">

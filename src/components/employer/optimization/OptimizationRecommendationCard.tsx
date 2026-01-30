@@ -141,22 +141,12 @@ export function OptimizationRecommendationCard({
           </p>
         </div>
 
-        {/* Actions */}
+        {/* Actions - Single primary CTA: Create Action */}
         <div className="flex items-center gap-2 pt-2 border-t border-border/50">
-          <Button 
-            size="sm" 
-            className="gap-1.5 flex-1"
-            onClick={() => onSimulate(recommendation)}
-          >
-            <Play className="h-3.5 w-3.5" />
-            Simulate
-          </Button>
-          
           {onCreateAction && (
             <Button 
-              variant="outline" 
               size="sm" 
-              className="gap-1.5"
+              className="gap-1.5 flex-1"
               onClick={() => onCreateAction(recommendation)}
             >
               <Plus className="h-3.5 w-3.5" />
@@ -164,16 +154,23 @@ export function OptimizationRecommendationCard({
             </Button>
           )}
           
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="gap-1.5"
+            onClick={() => onSimulate(recommendation)}
+          >
+            <Play className="h-3.5 w-3.5" />
+            Simulate
+          </Button>
+          
           {onOpenPolicy && recommendation.relatedPolicyId && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="gap-1.5"
+            <span 
+              className="text-xs text-muted-foreground hover:text-foreground cursor-pointer underline underline-offset-2"
               onClick={() => onOpenPolicy(recommendation.relatedPolicyId!)}
             >
-              <FileText className="h-3.5 w-3.5" />
-              Open Policy
-            </Button>
+              View Policy
+            </span>
           )}
         </div>
       </CardContent>

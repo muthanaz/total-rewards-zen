@@ -14,6 +14,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   PageConfidenceGate, 
   useDataCoverageMetrics 
@@ -33,7 +34,7 @@ import {
   DrilldownContext,
   AIWatchlistExplainer,
 } from '@/components/employer/segments';
-import { Rocket, Download, BarChart3, Users, Sparkles } from 'lucide-react';
+import { Target, Download, BarChart3, Users, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { AI_WATCHLIST_SEGMENTS } from '@/components/employer/segments/mockData';
@@ -43,6 +44,7 @@ export default function SegmentsPage() {
   const coverageMetrics = useDataCoverageMetrics();
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'insights' | 'members'>('insights');
+  const [watchlistOpen, setWatchlistOpen] = useState(false);
   
   // Drilldown drawer state
   const [drilldownOpen, setDrilldownOpen] = useState(false);
@@ -79,8 +81,8 @@ export default function SegmentsPage() {
     });
   };
 
-  const handleLaunchCampaign = () => {
-    navigate(`/employer/actions?create=true&source=segments&segment=${encodeURIComponent(currentSegmentName)}`);
+  const handleCreateAction = () => {
+    navigate(`/employer/actions?create=true&source=segments&segment_id=${encodeURIComponent(currentSegmentName)}`);
   };
 
   const handleExportReport = () => {
@@ -167,11 +169,11 @@ export default function SegmentsPage() {
             </Button>
             <Button 
               className="gap-2" 
-              onClick={handleLaunchCampaign}
+              onClick={handleCreateAction}
               disabled={metrics.matches === 0}
             >
-              <Rocket className="h-4 w-4" />
-              Launch Campaign
+              <Target className="h-4 w-4" />
+              Create Action
             </Button>
           </div>
         </div>
@@ -179,12 +181,25 @@ export default function SegmentsPage() {
         {/* DATA TRUST PANEL */}
         <DataTrustPanel pageName="segments" />
 
-        {/* AI Watchlist Strip - now opens drilldown on click */}
-        <AIWatchlistStrip
-          selectedId={selectedWatchlistId}
-          onSelect={handleWatchlistClick}
-          savedSegments={savedSegments}
-        />
+        {/* AI Watchlist Strip - Collapsible section */}
+        <Collapsible open={watchlistOpen} onOpenChange={setWatchlistOpen}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="w-full justify-between h-10 px-3 bg-muted/30 hover:bg-muted/50">
+              <span className="text-sm font-medium flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-accent" />
+                AI Watchlist Segments
+              </span>
+              {watchlistOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-2">
+            <AIWatchlistStrip
+              selectedId={selectedWatchlistId}
+              onSelect={handleWatchlistClick}
+              savedSegments={savedSegments}
+            />
+          </CollapsibleContent>
+        </Collapsible>
 
         {/* AI Watchlist Explainer - Shows "Why this segment?" when AI segment selected */}
         {selectedWatchlistId && (
