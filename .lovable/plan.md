@@ -1,233 +1,176 @@
 
+# GLOBAL REFACTOR — bnft SSOT + Zero-Waste + Consistency
 
-# CEO-Grade Dashboard Enhancement Plan
+## Overview
 
-## Objective
-Transform the Executive Dashboard from an analytics display into a decision-support tool that a CEO can scan in 30 seconds and immediately know what requires attention.
-
----
-
-## Phase 1: Header Simplification
-
-### 1.1 Page Title & Subtitle
-**File:** `src/components/employer/ExecutiveDashboard.tsx`
-
-**Current:**
-```
-"Total Rewards Overview"
-"Strategic total rewards performance — FY 2024"
-```
-
-**Change to:**
-```
-"Benefits Investment Summary"
-"FY 2024 · 312 employees · AED 78.8K per head"
-```
-
-### 1.2 Remove Duplicate Status Badge
-- Remove the "On Track / Needs Attention" badge from header (lines 298-313)
-- Keep only the one in ExecSummaryStrip
-
-### 1.3 Simplify Toggle Labels
-**File:** `src/components/employer/ExecModeToggle.tsx`
-
-**Current:** "Board-ready" / "CFO Detail"
-**Change to:** "Summary" / "Detailed"
-
-### 1.4 Simplify Export Button
-**File:** `src/components/employer/BoardPackExportButton.tsx`
-
-**Current:** "Board Pack"
-**Change to:** "Export"
+This refactor enforces platform-wide consistency for employee benefit pages, terminology, and visual standards. The changes will ensure data reconciliation integrity and remove duplicate CTAs and purposeless buttons.
 
 ---
 
-## Phase 2: Executive Summary Strip Refinement
+## 1. Entitlement Strip Label Standardization
 
-**File:** `src/components/employer/ExecSummaryStrip.tsx`
+### Current State
+- `BenefitDetailTemplate.tsx` uses inconsistent labels:
+  - First card: `label="Annual"` or `label="Monthly"` (frequency-dependent)
+  - Second card: `label="Used"` (incorrect term)
+  - Third card: `label="Remaining"` (correct)
+- `UniversalBenefitTemplate.tsx` uses different labels:
+  - `label="Annual Value"`, `label="Utilized"`, `label="Remaining"`, plus a 4th card
 
-### 2.1 Terminology Updates
-| Current | Change to |
-|---------|-----------|
-| "Invested" | "Total Spend" |
-| "Utilized" | "Usage Rate" |
-| "Recoverable" | "Unused Value" |
-| "Unrealized value" (sublabel) | "opportunity to recapture" |
+### Required Changes
 
-### 2.2 Remove Duplicate Badge
-- Remove the "On Track / Action Needed" badge from this strip since header already has one (or vice versa - keep only ONE location)
+**File: `src/components/templates/BenefitDetailTemplate.tsx`**
+- Line 187: Change `label={frequency === 'annual' ? 'Annual' : 'Monthly'}` to `label="Annual entitlement"`
+- Line 195: Change `label="Used"` to `label="Paid YTD"`
+- Line 196: Change formula from `Claims YTD` to `Paid claims only`
+- Ensure all value outputs use `tabular-nums` class
 
----
+**File: `src/components/templates/UniversalBenefitTemplate.tsx`**
+- Line 170: Change `label="Annual Value"` to `label="Annual entitlement"`
+- Line 178: Change `label="Utilized"` to `label="Paid YTD"`
+- Remove the 4th card (Utilization percentage) to match 3-card pattern
 
-## Phase 3: Confidence Strip Transformation
-
-**File:** `src/components/employer/ExecHighlightsStrip.tsx`
-
-### 3.1 Option A: Simplify Dramatically
-Change entire strip to single line:
-```
-"✓ Data verified from HR, Finance, Benefits · Updated 2h ago"
-```
-
-Only show warning state if data is stale:
-```
-"⚠ Data is 3 days old · Some figures may be outdated"
-```
-
-### 3.2 Option B: Move to Footer
-Remove from main content area entirely. Add as subtle footer note below all cards.
-
-### 3.3 Terminology
-| Current | Change to |
-|---------|-----------|
-| "High Confidence" | "Verified" |
-| "Medium Confidence" | "Partial" |
-| "Low Confidence" | "Limited" |
-| "Sources: 3" | "HR, Finance, Benefits" (name them) |
+**File: `src/components/employee/wizard/WizardStepEstimate.tsx`**
+- Line 78: Change `"Used So Far"` to `"Paid YTD"`
 
 ---
 
-## Phase 4: KPI Cards Enhancement
+## 2. "Paid YTD" Calculation Fix (Paid-Only Status)
 
-**File:** `src/components/employer/ExecKPICards.tsx`
+### Current State
+- `useBenefitPolicy.ts` line 216 includes both `'approved'` and `'paid'` in the utilized calculation:
+  ```typescript
+  .in('status', ['approved', 'paid'])
+  ```
 
-### 4.1 Currency Abbreviation
-Always use abbreviated format:
-- `AED 24,600,000` → `AED 24.6M`
-- `AED 6,888,000` → `AED 6.9M`
+### Required Changes
 
-### 4.2 Surface "Why It Moved"
-Move the hidden tooltip content to a visible subtitle under each KPI value:
-```
-AED 24.6M
-Total Investment
-↑ 8% · headcount growth + L&D expansion
-```
-
-### 4.3 Simplify Sub-metrics
-| Current | Change to |
-|---------|-----------|
-| "+AED 1.2M (5.3%)" | "5% over budget" |
-| "Target: 75%" | "Target 75%" (no colon) |
-| "Benchmark: 80%" | "Benchmark 80%" (no colon) |
-
-### 4.4 Unrealized Value Breakdown
-Either:
-- Enlarge the mini-breakdown bar to be readable
-- OR replace with single "Top driver: Awareness Gap (35%)"
+**File: `src/hooks/useBenefitPolicy.ts`**
+- Line 216: Change `.in('status', ['approved', 'paid'])` to `.in('status', ['paid'])`
+- This ensures "Paid YTD" reflects only actually disbursed amounts
+- "Remaining" will correctly calculate as `Annual entitlement - Paid YTD`
 
 ---
 
-## Phase 5: Decisions & Actions Upgrade
+## 3. Remove Duplicate Primary CTAs
 
-**File:** `src/components/employer/DecisionsActionsCard.tsx`
+### Current State
+- `BenefitDetailTemplate.tsx` has TWO CTA buttons:
+  1. Header action button (line 175-179) in `PageHeader`
+  2. In-page CTA card (lines 329-347) with duplicate button
 
-### 5.1 Move Section Up
-In `ExecutiveDashboard.tsx`, move `<DecisionsActionsCard>` BEFORE the Investment Allocation section (above line 347).
+### Required Changes
 
-This prioritizes "what do I need to do" over "where does money go".
-
-### 5.2 Title Simplification
-| Current | Change to |
-|---------|-----------|
-| "Decisions & Actions" | "Action Required" |
-
-### 5.3 Status Label Updates
-| Current | Change to |
-|---------|-----------|
-| "Backlog" | "Pending" |
-| "In Progress" | "Active" |
-| "Blocked" | "Blocked" (keep) |
-| "Completed" | "Done" |
-
-### 5.4 Impact Clarity
-Change "AED 50,000 impact" to "Saves AED 50K" or "Recovers AED 50K"
-
-### 5.5 Empty State
-| Current | Change to |
-|---------|-----------|
-| "No actions scheduled for next 30 days" | "All caught up — no decisions needed" |
+**File: `src/components/templates/BenefitDetailTemplate.tsx`**
+- Remove Section F (lines 329-347): The in-page CTA card that duplicates the header action
+- Keep only the single primary CTA in `PageHeader.actions`
+- The section comment `{/* F) Start claim/request CTA */}` and card will be deleted
 
 ---
 
-## Phase 6: Investment Allocation Polish
+## 4. Terminology Enforcement
 
-### 6.1 Chart Title
-**File:** `src/components/employer/ExecutiveDashboard.tsx` (ChartWrapper props)
+### 4.1 "Used" to "Paid YTD" Mapping
+All employee benefit pages must use "Paid YTD" instead of "Used":
 
-| Current | Change to |
-|---------|-----------|
-| "Investment Allocation" | "Where Money Goes" |
+**Files to update:**
+- `src/components/templates/BenefitDetailTemplate.tsx` (line 195)
+- `src/components/templates/UniversalBenefitTemplate.tsx` (line 178)
+- `src/components/employee/wizard/WizardStepEstimate.tsx` (line 78)
+- `src/components/employee/benefits/NextActionPanel.tsx` (references to "utilized")
 
-### 6.2 Remove Subtitle
-Delete: "Budget distribution by benefit category"
+### 4.2 "Savings" to "Recovery" for recovery_potential metric
+Search and replace UI labels where "Savings" appears in context of recovery_potential:
 
-### 6.3 Add Center Total
-Add total value in donut hole: "AED 24.6M"
+**Files to audit:**
+- `src/components/dashboard/EmployerBenefitRecommendations.tsx` - function `calculateSavings` and `totalPotentialSavings` (internal variable names OK, but UI labels should say "Recovery")
+- Any UI text showing "Potential Savings" should become "Recovery Potential"
 
----
+### 4.3 "Zombie Spend" to "Budget Leakage" (Already Mostly Done)
+The codebase already uses "Budget Leakage" in UI. Remaining cleanup:
 
-## Phase 7: At-Risk Segments Polish
-
-**File:** `src/components/employer/AtRiskSegmentsCard.tsx`
-
-### 7.1 Consistent Casing
-Change "unrealized" → "Unrealized"
-
-### 7.2 Simplified Segment Names
-Remove internal codes like "Grade A (Executives)" → just "Executives"
-
----
-
-## Phase 8: Global Consistency Fixes
-
-### 8.1 Create Formatting Constants
-**File:** `src/lib/utils.ts`
-
-Add helper for consistent abbreviation:
-```typescript
-export function formatCurrencyCompact(amount: number): string {
-  if (amount >= 1_000_000) return `AED ${(amount / 1_000_000).toFixed(1)}M`;
-  if (amount >= 1_000) return `AED ${(amount / 1_000).toFixed(0)}K`;
-  return `AED ${amount}`;
-}
-```
-
-### 8.2 Enforce Conventions
-| Element | Standard |
-|---------|----------|
-| Currency > 10K | Always abbreviated (24.6M, 890K) |
-| Percentages | No space before % (72%, not 72 %) |
-| Labels | Title Case (Unrealized, not unrealized) |
-| "vs" | Always lowercase, no period (vs, not vs.) |
+**Files with lingering references:**
+- `src/hooks/useEmployerActions.ts` - `sourceType: 'zombie_spend'` (keep as data key, but ensure UI shows "Budget Leakage")
+- `src/contexts/UIVisibilityContext.tsx` - key `'zombie_spend'` (keep as key, UI label is correct)
+- Variable names like `zombieSpend` can remain as internal identifiers
 
 ---
 
-## Implementation Order
+## 5. Button Purpose Audit
 
-| Priority | Task | Effort |
-|----------|------|--------|
-| 1 | Remove duplicate status badge from header | 5 min |
-| 2 | Update terminology in ExecSummaryStrip | 10 min |
-| 3 | Move Decisions & Actions section up | 5 min |
-| 4 | Abbreviate all currency values | 15 min |
-| 5 | Simplify ExecModeToggle labels | 5 min |
-| 6 | Surface "Why it moved" as visible subtitle | 20 min |
-| 7 | Simplify/remove Confidence Strip | 15 min |
-| 8 | Update status labels in DecisionsActionsCard | 10 min |
-| 9 | Global consistency fixes | 15 min |
+### Buttons to Validate
 
-**Total estimated effort:** ~1.5 hours
+| Component | Button | Action | Status |
+|-----------|--------|--------|--------|
+| BenefitDetailTemplate | "View all claims" (line 386) | Routes to `/employee/requests` | Valid |
+| PageHeader | Partner Offers button | Routes to `/employee/marketplace?category=...` | Valid |
+| Dashboard | "See All" | Routes to `/employee/benefits` | Valid |
+
+### No purposeless buttons identified that need removal
 
 ---
 
-## Expected Outcome
+## 6. Ensure `tabular-nums` and `formatCurrencyAED()` Consistency
 
-**Before:** Dashboard requires 2+ minutes to parse, with technical jargon and hidden context.
+### Current State
+The `SummaryStatsCard` component already applies proper formatting internally.
 
-**After:** CEO can scan in 30 seconds and immediately understand:
-1. How much we're spending (and if it's on budget)
-2. How much employees are using (and if it meets target)
-3. How much value is being left unused
-4. What decisions need to be made NOW
+### Required Changes
+None - the component handles formatting correctly. Currency values passed through `formatCurrencyAED()` are already Western-digit compliant.
 
+---
+
+## 7. Section Order Enforcement
+
+### Standard Section Order for All Benefit Pages
+1. **Header** (PageHeader with title, description, icon, policy ref badge, primary CTA)
+2. **Entitlement Strip** (3 cards: Annual entitlement | Paid YTD | Remaining)
+3. **How it works** (collapsible, max 4 bullets)
+4. **What you can claim/request** (rules, caps, eligible items)
+5. **Required documents** (checklist)
+6. ~~Start claim/request CTA~~ (REMOVED - duplicate)
+7. **Recent activity** (last 3 claims with "View all claims" link)
+8. **Category-specific content** (children)
+
+All 7 benefit pages in `src/pages/employee/benefits/` already use `BenefitDetailTemplate`, so fixing the template fixes all pages.
+
+---
+
+## Technical Implementation Summary
+
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/components/templates/BenefitDetailTemplate.tsx` | 1. Update labels to "Annual entitlement", "Paid YTD", "Remaining"<br>2. Remove duplicate CTA card (Section F)<br>3. Update formula text |
+| `src/components/templates/UniversalBenefitTemplate.tsx` | 1. Update labels<br>2. Remove 4th utilization card |
+| `src/hooks/useBenefitPolicy.ts` | Change status filter from `['approved', 'paid']` to `['paid']` |
+| `src/components/employee/wizard/WizardStepEstimate.tsx` | Change "Used So Far" to "Paid YTD" |
+
+### No New Files Required
+
+### No Route Changes Required
+
+---
+
+## Acceptance Criteria Verification
+
+| Criterion | Implementation |
+|-----------|----------------|
+| Employee benefit pages show identical section order | Fixed in `BenefitDetailTemplate` - all 7 pages inherit |
+| Entitlement labels are exactly "Annual entitlement", "Paid YTD", "Remaining" | Updated in template |
+| Paid YTD equals paid-only totals | Changed query filter to `['paid']` only |
+| Paid YTD reconciles with employer paid totals | Status alignment ensures reconciliation |
+| No duplicate primary CTAs | Removed in-page CTA card |
+| formatCurrencyAED() + tabular-nums everywhere | Already enforced in SummaryStatsCard |
+| Empty values show "—" | Already enforced in formatNullable() |
+
+---
+
+## Risk Assessment
+
+**Low Risk**: All changes are isolated to specific templates and one hook. The 7 benefit pages consume the template without modification.
+
+**Data Reconciliation Impact**: Changing from `['approved', 'paid']` to `['paid']` will show lower "Paid YTD" values (approved claims won't count until actually paid). This is the CORRECT behavior per requirements.
+
+**Testing Focus**: Verify all benefit pages render correctly and that the entitlement strip values reconcile with the employer's settlement view.
