@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export type TimeRange = 'ytd' | 'quarter' | 'month' | 'custom';
+export type TimeRange = 'ytd' | 'fy' | 'month' | 'quarter' | 'custom';
 
 export interface SpendFilters {
   timeRange: TimeRange;
@@ -163,7 +163,7 @@ export function SpendFiltersBar({
       "sticky top-0 z-20 -mx-6 px-6 py-3 bg-background/95 backdrop-blur-sm border-b flex items-center gap-3 flex-wrap",
       className
     )}>
-      {/* Time Range Selector */}
+      {/* 1. Period Selector (YTD/FY/MTD) - First in consistent order */}
       <div className="flex items-center gap-2">
         <Calendar className="w-4 h-4 text-muted-foreground" />
         <Select
@@ -174,16 +174,16 @@ export function SpendFiltersBar({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="month">Month</SelectItem>
-            <SelectItem value="quarter">Quarter</SelectItem>
             <SelectItem value="ytd">YTD</SelectItem>
+            <SelectItem value="fy">Full Year</SelectItem>
+            <SelectItem value="month">MTD</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="h-6 w-px bg-border" />
 
-      {/* Segment Filters */}
+      {/* 2. Grade Filter */}
       <MultiSelectFilter
         label="Grade"
         icon={Users}
@@ -192,6 +192,7 @@ export function SpendFiltersBar({
         onSelectionChange={(selected) => updateFilter('grades', selected)}
       />
 
+      {/* 3. Department Filter */}
       <MultiSelectFilter
         label="Department"
         icon={Building2}
@@ -200,6 +201,7 @@ export function SpendFiltersBar({
         onSelectionChange={(selected) => updateFilter('departments', selected)}
       />
 
+      {/* 4. Location Filter */}
       <MultiSelectFilter
         label="Location"
         icon={MapPin}
@@ -208,9 +210,7 @@ export function SpendFiltersBar({
         onSelectionChange={(selected) => updateFilter('locations', selected)}
       />
 
-      <div className="h-6 w-px bg-border" />
-
-      {/* Benefit Filter */}
+      {/* 5. Benefit Pillar Filter - Last in consistent order */}
       <MultiSelectFilter
         label="Benefit Pillar"
         icon={Layers}

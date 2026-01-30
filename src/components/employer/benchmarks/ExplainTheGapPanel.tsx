@@ -16,7 +16,8 @@ import {
   Megaphone,
   Settings,
   ArrowRight,
-  Lightbulb
+  Lightbulb,
+  Plus
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -131,26 +132,34 @@ export function ExplainTheGapPanel({ metric, onClose }: ExplainTheGapPanelProps)
 
         {/* Action CTAs */}
         <div className="flex items-center gap-3 pt-2 border-t border-border/50">
+          {/* Primary CTA for below-median metrics */}
+          {!isAboveBenchmark && (
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="flex-1"
+              onClick={() => navigate(`/employer/actions?create=true&source=benchmarks&metric_key=${metric.key}`)}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Create Action
+              <ArrowRight className="h-3 w-3 ml-1" />
+            </Button>
+          )}
           <Button 
-            variant="default" 
+            variant={isAboveBenchmark ? "default" : "outline"}
             size="sm" 
             className="flex-1"
             onClick={handleOpenSpendForecast}
           >
             <DollarSign className="h-4 w-4 mr-1" />
-            Open Spend & Forecast
-            <ArrowRight className="h-3 w-3 ml-1" />
+            View Spend
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex-1"
+          <span 
+            className="text-xs text-muted-foreground hover:text-foreground cursor-pointer underline underline-offset-2"
             onClick={handleOpenPolicy}
           >
-            <FileText className="h-4 w-4 mr-1" />
-            Open Policy
-            <ArrowRight className="h-3 w-3 ml-1" />
-          </Button>
+            View Policy
+          </span>
         </div>
       </CardContent>
     </Card>

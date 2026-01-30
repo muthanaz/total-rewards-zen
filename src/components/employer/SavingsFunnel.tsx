@@ -45,7 +45,7 @@ export function SavingsFunnel({
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Filter className="w-4 h-4 text-primary" />
-          Savings Funnel
+          Recovery Funnel
           <InfoTooltip 
             formula="Identified → In Action Plan → Realized" 
             dataSource="optimization_opportunities + action_plan"
