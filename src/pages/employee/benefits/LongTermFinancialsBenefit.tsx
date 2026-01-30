@@ -1,12 +1,23 @@
 /**
  * Long-Term Financials Benefit Page
- * Layout: Summary → 4 Tabs (EOSB, Bonus, Savings, Equity) with tab-specific content
+ * Layout: Summary → Policy Highlights → 4 Tabs (EOSB, Bonus, Savings, Equity)
  */
 
 import { PiggyBank } from 'lucide-react';
 import { BenefitDetailTemplate } from '@/components/templates/BenefitDetailTemplate';
 import { LongTermFinancialsTabs } from '@/components/employee/longterm/LongTermFinancialsTabs';
 import { useBenefitPolicy } from '@/hooks/useBenefitPolicy';
+
+const POLICY_HIGHLIGHTS = [
+  'End of Service: 21-30 days basic salary per year',
+  'Annual bonus: Performance-based (0-200% of target)',
+  'Savings plan: Company matches up to 5% contribution',
+  { text: 'EOSB payable upon termination or resignation', type: 'tip' as const },
+  'Bonus paid annually in March after appraisal',
+  'Equity vesting: 25% per year over 4 years',
+  'Savings withdrawable after 2 years of service',
+  { text: 'Early withdrawal may forfeit matching contributions', type: 'warning' as const },
+];
 
 export default function LongTermFinancialsBenefitPage() {
   const { data: policyData, isLoading } = useBenefitPolicy('financial');
@@ -22,10 +33,7 @@ export default function LongTermFinancialsBenefitPage() {
       transactionModel="informational"
       hidePrimaryCta={true}
       isDeferredValue={true}
-      sla={null}
-      perTransactionCap={null}
-      frequency="annual"
-      enforcementMode={null}
+      eligibilityHighlights={POLICY_HIGHLIGHTS}
       howItWorks={[]}
       whatYouCanClaim={[]}
       requiredDocs={[]}

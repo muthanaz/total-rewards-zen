@@ -11,11 +11,21 @@ import { BenefitDetailTemplate } from '@/components/templates/BenefitDetailTempl
 import { SchoolingChildrenCards } from '@/components/employee/BenefitSpecificContent';
 import { useBenefitPolicy } from '@/hooks/useBenefitPolicy';
 
+const POLICY_HIGHLIGHTS = [
+  'AED 30,000 allowance per child per year',
+  'Each child can attend different schools',
+  'Direct payment to approved schools',
+  { text: 'Submit: School invoice + proof of payment (term-by-term or annually)', type: 'tip' as const },
+  'Allowances do not combine between children',
+  'Excess fees deducted from monthly salary',
+  'Covers tuition, registration, and books',
+  { text: 'Extracurricular activities may require approval', type: 'warning' as const },
+];
+
 const FALLBACK_HOW_IT_WORKS = [
-  'Each child receives their own separate allowance',
-  'Register your children and their school details',
-  'Submit fee invoice before the school deadline',
-  'Direct payment to school or reimbursement to you',
+  'Per-Child Allowance — Each child receives AED 30,000 per year — allowances are separate and do not combine',
+  'Different Schools OK — Each child can attend a different school — you choose what\'s best for their age and needs',
+  'Top-Up If Needed — If school fees exceed AED 30,000, the extra is deducted from your salary automatically',
 ];
 
 const FALLBACK_ELIGIBLE_EXPENSES = [
@@ -58,18 +68,9 @@ export default function SchoolingBenefitPage() {
       entitlement={policyData?.entitlement}
       // Policy meta
       transactionModel={policyData?.transactionModel || 'request_and_claim'}
-      sla="5 business days"
-      perTransactionCap={policyData?.perTransactionCap || 30000}
-      frequency={policyData?.frequency || 'annual'}
-      enforcementMode="strict"
-      eligibilityHighlights={[
-        'Per-child allowance (not shared)',
-        'Accredited schools only',
-        'Documentation required annually',
-      ]}
+      eligibilityHighlights={POLICY_HIGHLIGHTS}
       // How it works
-      howItWorksTitle="How your schooling allowance works"
-      howItWorksVariant="horizontal"
+      howItWorksTitle="How Your Schooling Allowance Works"
       howItWorks={policyData?.howItWorks?.length ? policyData.howItWorks : FALLBACK_HOW_IT_WORKS}
       // Eligible items
       whatYouCanClaim={policyData?.whatYouCanClaim?.length ? policyData.whatYouCanClaim : FALLBACK_ELIGIBLE_EXPENSES}

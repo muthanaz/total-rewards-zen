@@ -8,6 +8,24 @@ import { BenefitDetailTemplate } from '@/components/templates/BenefitDetailTempl
 import { WellbeingCategoriesListings } from '@/components/employee/wellbeing/WellbeingCategoriesListings';
 import { useBenefitPolicy } from '@/hooks/useBenefitPolicy';
 
+const POLICY_HIGHLIGHTS = [
+  'AED 5,000 annual allowance for wellness activities',
+  'Gym memberships at approved facilities',
+  'Mental health and counseling sessions covered',
+  { text: 'Pre-approval required for courses over AED 1,000', type: 'tip' as const },
+  'Fitness equipment reimbursement up to AED 2,000',
+  'Wellness apps and subscriptions included',
+  'Sports club memberships eligible',
+  { text: 'Receipts required within 30 days of purchase', type: 'warning' as const },
+];
+
+const FALLBACK_HOW_IT_WORKS = [
+  'Browse Categories — Explore gym, mental health, sports, and wellness options',
+  'Choose Provider — Select from approved vendors or request new provider approval',
+  'Submit Claim — Upload receipt and proof of payment within 30 days',
+  'Get Reimbursed — Claims processed within 48 hours',
+];
+
 export default function WellbeingBenefitPage() {
   const { data: policyData, isLoading } = useBenefitPolicy('wellbeing');
   
@@ -20,11 +38,9 @@ export default function WellbeingBenefitPage() {
       policyRef={policyData?.policyRef}
       entitlement={policyData?.entitlement}
       transactionModel={policyData?.transactionModel || 'claim_only'}
-      sla="48 hours"
-      perTransactionCap={policyData?.perTransactionCap}
-      frequency={policyData?.frequency || 'annual'}
-      enforcementMode="soft"
-      howItWorks={[]}
+      eligibilityHighlights={POLICY_HIGHLIGHTS}
+      howItWorksTitle="How Your Wellbeing Allowance Works"
+      howItWorks={policyData?.howItWorks?.length ? policyData.howItWorks : FALLBACK_HOW_IT_WORKS}
       whatYouCanClaim={[]}
       requiredDocs={policyData?.requiredDocs || []}
       recentClaims={policyData?.recentClaims || []}

@@ -11,11 +11,22 @@ import { BenefitDetailTemplate } from '@/components/templates/BenefitDetailTempl
 import { HealthNetworkCard } from '@/components/employee/BenefitSpecificContent';
 import { useBenefitPolicy } from '@/hooks/useBenefitPolicy';
 
+const POLICY_HIGHLIGHTS = [
+  'Comprehensive medical coverage for you and family',
+  'In-network providers: Direct billing — no upfront payment',
+  'Out-of-network: 80% reimbursement after deductible',
+  { text: 'Pre-authorization required for planned procedures', type: 'tip' as const },
+  'Prescription medications covered at 80%',
+  'Dental and optical included (annual sub-limits apply)',
+  'Maternity coverage after 10-month waiting period',
+  { text: 'Submit out-of-network claims within 60 days', type: 'warning' as const },
+];
+
 const FALLBACK_HOW_IT_WORKS = [
-  'Visit any in-network provider with your insurance card',
-  'In-network care uses direct billing — no upfront payment',
-  'Pre-authorization required for planned procedures',
-  'Out-of-network: pay first, submit receipts within 60 days',
+  'Find a Provider — Use your insurance card at any in-network clinic or hospital',
+  'Direct Billing — In-network care uses direct billing — no upfront payment required',
+  'Pre-Authorization — Get pre-approval for elective procedures and surgeries',
+  'Out-of-Network Claims — Pay first, then submit receipts within 60 days for 80% reimbursement',
 ];
 
 const FALLBACK_COVERAGE = [
@@ -40,13 +51,9 @@ export default function HealthBenefitPage() {
       entitlement={policyData?.entitlement}
       // Policy meta
       transactionModel={policyData?.transactionModel || 'claim_only'}
-      sla="5 business days"
-      perTransactionCap={policyData?.perTransactionCap}
-      frequency={policyData?.frequency || 'annual'}
-      enforcementMode="soft"
+      eligibilityHighlights={POLICY_HIGHLIGHTS}
       // How it works
-      howItWorksTitle="How your health insurance works"
-      howItWorksVariant="horizontal"
+      howItWorksTitle="How Your Health Insurance Works"
       howItWorks={policyData?.howItWorks?.length ? policyData.howItWorks : FALLBACK_HOW_IT_WORKS}
       // Coverage items
       whatYouCanClaim={policyData?.whatYouCanClaim?.length ? policyData.whatYouCanClaim : FALLBACK_COVERAGE}

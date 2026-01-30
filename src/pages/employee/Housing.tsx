@@ -10,10 +10,19 @@ import { HousingListingsDirectory } from '@/components/employee/housing/HousingL
 import { useBenefitPolicy } from '@/hooks/useBenefitPolicy';
 
 const FALLBACK_HOW_IT_WORKS = [
-  'Housing allowance is paid monthly with your salary',
-  'Submit your tenancy contract once a year for records',
-  'Choose any residential area within your budget',
-  'Top-up from salary if rent exceeds allowance',
+  'Monthly Payment — Allowance is paid directly with your salary each month',
+  'Submit Contract — Upload tenancy contract once a year for company records',
+  'Choose Your Area — Any residential area within budget is eligible',
+  'Top-Up Available — Excess rent is automatically deducted from salary',
+];
+
+const POLICY_HIGHLIGHTS = [
+  'AED 120,000 annual allowance based on your grade',
+  'Paid monthly as cash with your salary',
+  'Covers rent for any approved residential area',
+  'Tenancy contract required once per year',
+  'Can be used for rent or mortgage payments',
+  'Excess rent can be topped-up from salary',
 ];
 
 export default function HousingPage() {
@@ -29,12 +38,8 @@ export default function HousingPage() {
       policyRef={policyData?.policyRef}
       entitlement={policyData?.entitlement}
       transactionModel={policyData?.transactionModel || 'request_only'}
-      sla="48 hours"
-      perTransactionCap={policyData?.perTransactionCap}
-      frequency={policyData?.frequency}
-      enforcementMode="soft"
-      howItWorksTitle="How your housing allowance works"
-      howItWorksVariant="vertical"
+      eligibilityHighlights={POLICY_HIGHLIGHTS}
+      howItWorksTitle="How Your Housing Allowance Works"
       howItWorks={policyData?.howItWorks?.length ? policyData.howItWorks : FALLBACK_HOW_IT_WORKS}
       whatYouCanClaim={[]}
       requiredDocs={policyData?.requiredDocs || []}
