@@ -1,6 +1,9 @@
 /**
  * Wellbeing Benefit Page
  * Uses BenefitDetailTemplate connected to policy_versions
+ * 
+ * Section Order: Summary → Policy highlights → How it works → 
+ *                Eligible items → Required docs → Recent activity
  */
 
 import { Dumbbell } from 'lucide-react';
@@ -14,7 +17,7 @@ const FALLBACK_HOW_IT_WORKS = [
   'Mental health sessions are 100% confidential',
 ];
 
-const FALLBACK_WHAT_YOU_CAN_CLAIM = [
+const FALLBACK_ELIGIBLE_ITEMS = [
   'Gym and fitness center memberships',
   'Wellness app subscriptions (Calm, Headspace)',
   'Counseling and mental health sessions',
@@ -32,13 +35,17 @@ export default function WellbeingBenefitPage() {
       icon={Dumbbell}
       policyRef={policyData?.policyRef}
       entitlement={policyData?.entitlement}
-      howItWorks={policyData?.howItWorks?.length ? policyData.howItWorks : FALLBACK_HOW_IT_WORKS}
-      whatYouCanClaim={policyData?.whatYouCanClaim?.length ? policyData.whatYouCanClaim : FALLBACK_WHAT_YOU_CAN_CLAIM}
-      requiredDocs={policyData?.requiredDocs || []}
+      // Policy meta for PolicyMetaCard
       transactionModel={policyData?.transactionModel || 'claim_only'}
-      annualCap={policyData?.annualCap}
+      sla="48 hours"
       perTransactionCap={policyData?.perTransactionCap}
-      frequency={policyData?.frequency}
+      frequency={policyData?.frequency || 'annual'}
+      enforcementMode="soft"
+      // Content sections
+      howItWorks={policyData?.howItWorks?.length ? policyData.howItWorks : FALLBACK_HOW_IT_WORKS}
+      whatYouCanClaim={policyData?.whatYouCanClaim?.length ? policyData.whatYouCanClaim : FALLBACK_ELIGIBLE_ITEMS}
+      eligibleItemsTitle="Eligible items"
+      requiredDocs={policyData?.requiredDocs || []}
       recentClaims={policyData?.recentClaims || []}
       isLoading={isLoading}
       hasPolicyPublished={policyData?.hasPolicyPublished ?? true}

@@ -1,6 +1,9 @@
 /**
  * Schooling Benefit Page
  * Uses BenefitDetailTemplate connected to policy_versions
+ * 
+ * Section Order: Summary → Policy highlights → How it works → 
+ *                Eligible items → Required docs → Recent activity
  */
 
 import { GraduationCap } from 'lucide-react';
@@ -32,13 +35,22 @@ export default function SchoolingBenefitPage() {
       icon={GraduationCap}
       policyRef={policyData?.policyRef}
       entitlement={policyData?.entitlement}
+      // Policy meta for PolicyMetaCard
+      transactionModel={policyData?.transactionModel || 'request_and_claim'}
+      sla="5 business days"
+      perTransactionCap={policyData?.perTransactionCap}
+      frequency={policyData?.frequency || 'annual'}
+      enforcementMode="strict"
+      eligibilityHighlights={[
+        'Per-child allowance (not shared)',
+        'Accredited schools only',
+        'Documentation required annually',
+      ]}
+      // Content sections
       howItWorks={policyData?.howItWorks?.length ? policyData.howItWorks : FALLBACK_HOW_IT_WORKS}
       whatYouCanClaim={policyData?.whatYouCanClaim?.length ? policyData.whatYouCanClaim : FALLBACK_WHAT_YOU_CAN_CLAIM}
+      eligibleItemsTitle="Eligible expenses"
       requiredDocs={policyData?.requiredDocs || []}
-      transactionModel={policyData?.transactionModel || 'claim_only'}
-      annualCap={policyData?.annualCap}
-      perTransactionCap={policyData?.perTransactionCap}
-      frequency={policyData?.frequency}
       recentClaims={policyData?.recentClaims || []}
       isLoading={isLoading}
       hasPolicyPublished={policyData?.hasPolicyPublished ?? true}

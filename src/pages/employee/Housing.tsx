@@ -2,6 +2,9 @@
  * Housing Benefit Page
  * Uses BenefitDetailTemplate connected to policy_versions
  * Market browsing moved to /employee/housing/market
+ * 
+ * Section Order: Summary → Policy highlights → How it works → Eligible uses → 
+ *                Required docs → Market link → Recent activity
  */
 
 import { Home, MapPin, ArrowRight } from 'lucide-react';
@@ -19,7 +22,7 @@ const FALLBACK_HOW_IT_WORKS = [
   'Allowance based on your grade and location',
 ];
 
-const FALLBACK_WHAT_YOU_CAN_CLAIM = [
+const FALLBACK_ELIGIBLE_USES = [
   'Rent payments for residential property',
   'Mortgage payments (with documentation)',
   'Accommodation during relocation period',
@@ -36,13 +39,17 @@ export default function HousingPage() {
       icon={Home}
       policyRef={policyData?.policyRef}
       entitlement={policyData?.entitlement}
-      howItWorks={policyData?.howItWorks?.length ? policyData.howItWorks : FALLBACK_HOW_IT_WORKS}
-      whatYouCanClaim={policyData?.whatYouCanClaim?.length ? policyData.whatYouCanClaim : FALLBACK_WHAT_YOU_CAN_CLAIM}
-      requiredDocs={policyData?.requiredDocs || []}
-      transactionModel={policyData?.transactionModel || 'claim_only'}
-      annualCap={policyData?.annualCap}
+      // Policy meta for PolicyMetaCard
+      transactionModel={policyData?.transactionModel || 'request_only'}
+      sla="48 hours"
       perTransactionCap={policyData?.perTransactionCap}
       frequency={policyData?.frequency}
+      enforcementMode="soft"
+      // Content sections
+      howItWorks={policyData?.howItWorks?.length ? policyData.howItWorks : FALLBACK_HOW_IT_WORKS}
+      whatYouCanClaim={policyData?.whatYouCanClaim?.length ? policyData.whatYouCanClaim : FALLBACK_ELIGIBLE_USES}
+      eligibleItemsTitle="Eligible uses"
+      requiredDocs={policyData?.requiredDocs || []}
       recentClaims={policyData?.recentClaims || []}
       isLoading={isLoading}
       hasPolicyPublished={policyData?.hasPolicyPublished ?? true}
