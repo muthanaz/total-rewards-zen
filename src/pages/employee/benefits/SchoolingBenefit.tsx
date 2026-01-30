@@ -3,29 +3,50 @@
  * Uses BenefitDetailTemplate connected to policy_versions
  * 
  * Section Order: Summary → Policy highlights → How it works → 
- *                Eligible items → Required docs → Recent activity
+ *                Children overview → Eligible expenses → Docs → Activity
  */
 
 import { GraduationCap } from 'lucide-react';
 import { BenefitDetailTemplate } from '@/components/templates/BenefitDetailTemplate';
+import { SchoolingChildrenCards } from '@/components/employee/BenefitSpecificContent';
 import { useBenefitPolicy } from '@/hooks/useBenefitPolicy';
 
 const FALLBACK_HOW_IT_WORKS = [
-  'AED 30,000 allowance per child per year',
-  'Each child gets their own separate allowance',
-  'Direct payment to approved schools',
-  'Excess fees deducted from monthly salary',
+  'Each child receives their own separate allowance',
+  'Register your children and their school details',
+  'Submit fee invoice before the school deadline',
+  'Direct payment to school or reimbursement to you',
 ];
 
-const FALLBACK_WHAT_YOU_CAN_CLAIM = [
+const FALLBACK_ELIGIBLE_EXPENSES = [
   'Tuition fees for accredited schools',
   'Registration and enrollment fees',
   'Required textbooks and materials',
   'School uniforms (where required)',
+  'School bus transportation',
+  'Exam and assessment fees',
 ];
 
 export default function SchoolingBenefitPage() {
   const { data: policyData, isLoading } = useBenefitPolicy('schooling');
+  
+  // Mock children data - would come from user profile in real app
+  const mockChildren = [
+    { 
+      name: 'Sarah', 
+      grade: 'Grade 5', 
+      school: 'GEMS Wellington Academy',
+      allowanceUsed: 18000,
+      allowanceTotal: 30000,
+    },
+    { 
+      name: 'Omar', 
+      grade: 'Grade 2', 
+      school: 'Dubai International Academy',
+      allowanceUsed: 12000,
+      allowanceTotal: 30000,
+    },
+  ];
   
   return (
     <BenefitDetailTemplate
@@ -35,10 +56,10 @@ export default function SchoolingBenefitPage() {
       icon={GraduationCap}
       policyRef={policyData?.policyRef}
       entitlement={policyData?.entitlement}
-      // Policy meta for PolicyMetaCard
+      // Policy meta
       transactionModel={policyData?.transactionModel || 'request_and_claim'}
       sla="5 business days"
-      perTransactionCap={policyData?.perTransactionCap}
+      perTransactionCap={policyData?.perTransactionCap || 30000}
       frequency={policyData?.frequency || 'annual'}
       enforcementMode="strict"
       eligibilityHighlights={[
@@ -46,15 +67,24 @@ export default function SchoolingBenefitPage() {
         'Accredited schools only',
         'Documentation required annually',
       ]}
-      // Content sections
+      // How it works
+      howItWorksTitle="How your schooling allowance works"
+      howItWorksVariant="horizontal"
       howItWorks={policyData?.howItWorks?.length ? policyData.howItWorks : FALLBACK_HOW_IT_WORKS}
-      whatYouCanClaim={policyData?.whatYouCanClaim?.length ? policyData.whatYouCanClaim : FALLBACK_WHAT_YOU_CAN_CLAIM}
+      // Eligible items
+      whatYouCanClaim={policyData?.whatYouCanClaim?.length ? policyData.whatYouCanClaim : FALLBACK_ELIGIBLE_EXPENSES}
       eligibleItemsTitle="Eligible expenses"
       requiredDocs={policyData?.requiredDocs || []}
       recentClaims={policyData?.recentClaims || []}
       isLoading={isLoading}
       hasPolicyPublished={policyData?.hasPolicyPublished ?? true}
       hasEntitlementData={policyData?.hasEntitlementData ?? true}
-    />
+    >
+      {/* Children Overview Cards */}
+      <SchoolingChildrenCards 
+        children={mockChildren}
+        perChildAllowance={30000}
+      />
+    </BenefitDetailTemplate>
   );
 }
