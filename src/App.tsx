@@ -57,6 +57,7 @@ import {
   LearningBenefitPage,
   LongTermFinancialsBenefitPage,
 } from "./pages/employee/benefits";
+import HousingMarketPage from "./pages/employee/benefits/HousingMarket";
 
 import EmployerDashboard from "./pages/employer/Dashboard";
 import SpendPage from "./pages/employer/Spend";
@@ -238,6 +239,7 @@ function AppRoutes() {
         <Route path="requests/:id" element={<ClaimDetailPage />} />
         
         <Route path="housing" element={<HousingPage />} />
+        <Route path="housing/market" element={<HousingMarketPage />} />
         <Route path="schooling" element={<SchoolingPage />} />
         <Route path="health" element={<HealthPage />} />
         <Route path="transport" element={<TransportBenefitPage />} />

@@ -363,7 +363,7 @@ export function BenefitDetailTemplate({
               ))}
             </div>
             <Button variant="ghost" size="sm" className="w-full mt-3" asChild>
-              <Link to="/employee/requests">View all claims</Link>
+              <Link to="/employee/requests">See all requests</Link>
             </Button>
           </CardContent>
         </Card>
