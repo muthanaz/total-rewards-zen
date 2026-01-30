@@ -6,7 +6,7 @@
  * Shows structured component cards for EOSB, Bonus, Pension, Equity.
  * 
  * Section Order: Summary → Policy highlights (with Deferred Value badge) → 
- *                How it works → Long-term components → Recent activity
+ *                How it works → Long-term components → Activity
  */
 
 import { PiggyBank, Award, Landmark, TrendingUp, Coins } from 'lucide-react';
@@ -15,10 +15,10 @@ import { LongTermComponentCard } from '@/components/employee/LongTermComponentCa
 import { useBenefitPolicy } from '@/hooks/useBenefitPolicy';
 
 const FALLBACK_HOW_IT_WORKS = [
-  'Annual bonus based on performance rating',
-  'Gratuity calculated per UAE Labor Law',
-  'Equity vests over 4 years with 1-year cliff',
-  'Savings plan with 5% employer match',
+  'Gratuity accrues automatically based on years of service',
+  'Annual bonus is determined by performance rating',
+  'Equity vests according to your grant schedule',
+  'All values are projected and conditional on employment',
 ];
 
 export default function LongTermFinancialsBenefitPage() {
@@ -41,26 +41,24 @@ export default function LongTermFinancialsBenefitPage() {
       perTransactionCap={null}
       frequency="annual"
       enforcementMode={null}
-      eligibilityHighlights={[
-        'Gratuity accrual begins after 1 year of service',
-        'Bonus eligibility requires performance rating',
-        'Equity vests according to grant schedule',
-      ]}
-      // Content sections
+      // How it works
+      howItWorksTitle="How your long-term benefits work"
+      howItWorksVariant="vertical"
       howItWorks={policyData?.howItWorks?.length ? policyData.howItWorks : FALLBACK_HOW_IT_WORKS}
-      whatYouCanClaim={[]} // No claim items for informational benefit
-      requiredDocs={[]} // No docs needed
+      // No claim items for informational benefit
+      whatYouCanClaim={[]}
+      requiredDocs={[]}
       recentClaims={policyData?.recentClaims || []}
       isLoading={isLoading}
       hasPolicyPublished={policyData?.hasPolicyPublished ?? true}
       hasEntitlementData={policyData?.hasEntitlementData ?? true}
     >
-      {/* Your Long-Term Components Section */}
+      {/* Long-Term Components Section */}
       <div className="space-y-4">
         <h3 className="text-base font-display font-semibold">Your long-term components</h3>
         
         <div className="grid md:grid-cols-2 gap-4">
-          {/* EOSB Card - values will be null with "Definition pending" tooltip */}
+          {/* EOSB Card */}
           <LongTermComponentCard
             title="End-of-service gratuity (EOSB)"
             icon={Landmark}

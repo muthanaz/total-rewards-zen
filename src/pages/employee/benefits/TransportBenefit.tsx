@@ -3,36 +3,37 @@
  * Uses BenefitDetailTemplate connected to policy_versions
  * 
  * Section Order: Summary → Policy highlights → How it works → 
- *                Transport components → Required docs → Recent activity
+ *                Transport components (Fuel, Car, Flight) → Docs → Activity
  */
 
 import { Car } from 'lucide-react';
 import { BenefitDetailTemplate } from '@/components/templates/BenefitDetailTemplate';
-import { TransportComponentCards } from '@/components/employee/TransportComponentCards';
+import { TransportBenefitCards } from '@/components/employee/BenefitSpecificContent';
 import { useBenefitPolicy } from '@/hooks/useBenefitPolicy';
 
 const FALLBACK_HOW_IT_WORKS = [
-  'Fuel allowance paid monthly with salary',
-  'Car allowance for eligible grades',
-  'Annual flight tickets for you and dependents',
-  'Business class available for senior grades',
+  'Fuel allowance is auto-credited to your salary on the 25th',
+  'Car allowance requires submitting loan/lease statement',
+  'Book annual flights through the travel portal or claim later',
+  'Submit receipts within 60 days for reimbursement',
 ];
 
-const FALLBACK_WHAT_YOU_CAN_CLAIM = [
-  'Fuel expenses (monthly auto-credit)',
-  'Car loan/lease contributions',
+const FALLBACK_ELIGIBLE_ITEMS = [
+  'Monthly fuel for personal vehicle',
+  'Car loan or lease payments',
   'Annual return flights to home country',
-  'Local transportation during business travel',
+  'Airport parking during business travel',
 ];
 
 export default function TransportBenefitPage() {
   const { data: policyData, isLoading } = useBenefitPolicy('transport');
   
-  // Calculate required docs count for the component cards
-  const requiredDocsCount = policyData?.requiredDocs?.filter(d => d.is_required)?.length || 0;
-  
-  // Auto-credit amount: use per-transaction cap as proxy, or null
-  const autoCreditAmount = policyData?.perTransactionCap ?? null;
+  // Mock component data - would come from policy in real app
+  const fuelAllowance = 1500; // Example: AED 1,500/month
+  const carAllowance = policyData?.perTransactionCap ? policyData.perTransactionCap * 0.4 : null;
+  const flightAllowance = policyData?.entitlement?.annualValue 
+    ? Math.round(policyData.entitlement.annualValue * 0.3) 
+    : null;
   
   return (
     <BenefitDetailTemplate
@@ -42,15 +43,18 @@ export default function TransportBenefitPage() {
       icon={Car}
       policyRef={policyData?.policyRef}
       entitlement={policyData?.entitlement}
-      // Policy meta for PolicyMetaCard
+      // Policy meta
       transactionModel={policyData?.transactionModel || 'claim_only'}
       sla="72 hours"
       perTransactionCap={policyData?.perTransactionCap}
       frequency={policyData?.frequency || 'monthly'}
       enforcementMode="soft"
-      // Content sections
+      // How it works
+      howItWorksTitle="How your transport benefit works"
+      howItWorksVariant="horizontal"
       howItWorks={policyData?.howItWorks?.length ? policyData.howItWorks : FALLBACK_HOW_IT_WORKS}
-      whatYouCanClaim={policyData?.whatYouCanClaim?.length ? policyData.whatYouCanClaim : FALLBACK_WHAT_YOU_CAN_CLAIM}
+      // Eligible items
+      whatYouCanClaim={policyData?.whatYouCanClaim?.length ? policyData.whatYouCanClaim : FALLBACK_ELIGIBLE_ITEMS}
       eligibleItemsTitle="Eligible expenses"
       requiredDocs={policyData?.requiredDocs || []}
       recentClaims={policyData?.recentClaims || []}
@@ -58,14 +62,13 @@ export default function TransportBenefitPage() {
       hasPolicyPublished={policyData?.hasPolicyPublished ?? true}
       hasEntitlementData={policyData?.hasEntitlementData ?? true}
     >
-      {/* Transport Components Section */}
-      <TransportComponentCards
-        autoCreditAmount={autoCreditAmount}
-        autoCreditFrequency={policyData?.frequency || 'monthly'}
-        autoCreditNote="Automatically credited to your salary account on the 25th of each month"
-        perTransactionCap={policyData?.perTransactionCap}
-        requiredDocsCount={requiredDocsCount}
-        hasReimbursableClaims={true}
+      {/* Transport Components: Fuel, Car, Flight */}
+      <TransportBenefitCards
+        fuelAllowance={fuelAllowance}
+        carAllowance={carAllowance}
+        flightAllowance={flightAllowance}
+        flightClass="Economy"
+        dependentTickets={2}
       />
     </BenefitDetailTemplate>
   );

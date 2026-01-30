@@ -8,23 +8,23 @@
  * Section Order:
  * A) Header: Benefit name + 1-line definition + policy ref badge + primary CTA
  * B) Entitlement strip: Annual entitlement, Paid YTD, Remaining (3 equal cards)
- * C) Policy highlights (key-value meta: transaction type, SLA, caps, frequency)
- * D) How it works (max 4 bullets, collapsible)
- * E) Eligible items / What you can claim (list only, no caps duplication)
- * F) Required documents checklist
- * G) Category-specific content (children)
+ * C) Policy highlights (nicely designed bullet points with icons)
+ * D) How your allowance works (step-based workflow)
+ * E) Benefit-specific content (children - housing market, transport components, etc.)
+ * F) Eligible items / What you can claim (list only, no caps duplication)
+ * G) Required documents checklist
  * H) Recent activity (last 3 claims)
  */
 
 import { useState } from 'react';
-import { LucideIcon, Send, FileText, Clock, AlertCircle, BookOpen, CheckCircle, ChevronDown, ChevronUp, Wallet, TrendingDown, AlertTriangle, ExternalLink } from 'lucide-react';
+import { LucideIcon, Send, FileText, Clock, AlertCircle, CheckCircle, Wallet, TrendingDown, AlertTriangle, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { SummaryStatsCard } from '@/components/ui/summary-stats-card';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { PolicyMetaCard } from '@/components/employee/PolicyMetaCard';
+import { PolicyHighlightsBullets } from '@/components/employee/PolicyHighlightsBullets';
+import { HowYourAllowanceWorks } from '@/components/employee/HowYourAllowanceWorks';
 import { EmployeeCreateRequestSheet } from '@/components/employee/EmployeeCreateRequestSheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn, formatCurrencyAED, formatDate } from '@/lib/utils';
@@ -87,7 +87,11 @@ export interface BenefitDetailTemplateProps {
   // Custom section title for eligible items
   eligibleItemsTitle?: string;
   
-  // Category-specific content (rendered after standard sections)
+  // How it works section customization
+  howItWorksTitle?: string;
+  howItWorksVariant?: 'vertical' | 'horizontal' | 'compact';
+  
+  // Category-specific content (rendered AFTER policy highlights & how it works)
   children?: React.ReactNode;
   
   // Loading state
@@ -125,6 +129,8 @@ export function BenefitDetailTemplate({
   isDeferredValue = false,
   recentClaims = [],
   eligibleItemsTitle,
+  howItWorksTitle = "How your allowance works",
+  howItWorksVariant = 'vertical',
   children,
   isLoading = false,
   hasPolicyPublished = true,
@@ -132,7 +138,6 @@ export function BenefitDetailTemplate({
   hidePrimaryCta = false,
 }: BenefitDetailTemplateProps) {
   const [requestSheetOpen, setRequestSheetOpen] = useState(false);
-  const [howItWorksOpen, setHowItWorksOpen] = useState(false);
   
   const category = BENEFIT_CATEGORIES[categoryKey];
   const formatCurrency = (value: number) => formatCurrencyAED(value, { abbreviate: false });
@@ -251,50 +256,29 @@ export function BenefitDetailTemplate({
         </div>
       )}
 
-      {/* C) Policy Highlights (key-value meta) - AFTER ENTITLEMENT STRIP */}
-      <PolicyMetaCard
+      {/* C) Policy Highlights (nicely designed bullet points) */}
+      <PolicyHighlightsBullets
         transactionModel={transactionModel}
         sla={sla}
         perTransactionCap={perTransactionCap}
         frequency={frequency}
-        eligibilityHighlights={eligibilityHighlights}
         enforcementMode={enforcementMode}
         isDeferredValue={isDeferredValue}
       />
 
-      {/* D) How it works (collapsible, max 4 bullets) */}
+      {/* D) How your allowance works (step-based workflow) */}
       {howItWorks.length > 0 && (
-        <Collapsible open={howItWorksOpen} onOpenChange={setHowItWorksOpen}>
-          <Card>
-            <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base font-display flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-muted-foreground" />
-                    How it works
-                    <Badge variant="secondary" className="ml-2">{Math.min(howItWorks.length, 4)}</Badge>
-                  </CardTitle>
-                  {howItWorksOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </div>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="pt-0">
-                <ul className="space-y-2">
-                  {howItWorks.slice(0, 4).map((item, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
+        <HowYourAllowanceWorks
+          title={howItWorksTitle}
+          steps={howItWorks}
+          variant={howItWorksVariant}
+        />
       )}
 
-      {/* E) Eligible items / What you can claim (list only - NO CAPS here, they're in PolicyMetaCard) */}
+      {/* E) Benefit-specific content (children - housing market, transport components, etc.) */}
+      {children}
+
+      {/* F) Eligible items / What you can claim (list only - NO CAPS here) */}
       {whatYouCanClaim.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
@@ -304,7 +288,7 @@ export function BenefitDetailTemplate({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2">
+            <ul className="grid sm:grid-cols-2 gap-2">
               {whatYouCanClaim.map((item, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                   <CheckCircle className="w-4 h-4 text-success mt-0.5 shrink-0" />
@@ -316,7 +300,7 @@ export function BenefitDetailTemplate({
         </Card>
       )}
 
-      {/* F) Required documents checklist */}
+      {/* G) Required documents checklist */}
       {requiredDocs.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
@@ -327,7 +311,7 @@ export function BenefitDetailTemplate({
             <CardDescription>Documents needed when submitting</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="grid sm:grid-cols-2 gap-2">
               {requiredDocs.map((doc, i) => (
                 <div key={doc.id || i} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="flex items-center gap-3">
@@ -339,7 +323,7 @@ export function BenefitDetailTemplate({
                       )}
                     </div>
                   </div>
-                  <Badge variant={doc.is_required ? 'default' : 'outline'} className="text-xs">
+                  <Badge variant={doc.is_required ? 'default' : 'outline'} className="text-xs shrink-0">
                     {doc.is_required ? 'Required' : 'Optional'}
                   </Badge>
                 </div>
@@ -348,9 +332,6 @@ export function BenefitDetailTemplate({
           </CardContent>
         </Card>
       )}
-
-      {/* G) Category-specific content */}
-      {children}
 
       {/* H) Recent activity (last 3 claims) */}
       {recentClaims.length > 0 && (

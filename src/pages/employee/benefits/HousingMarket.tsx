@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { Home, Search, Star, Clock, ExternalLink, MapPin, Bath, Bed, ArrowLeft } from 'lucide-react';
+import { Home, Search, Star, Clock, ExternalLink, MapPin, Bath, Bed, ArrowLeft, Building } from 'lucide-react';
 import { useHousingAreas, useHousingListings } from '@/hooks/useSupabaseData';
 import { useBenefitPolicy } from '@/hooks/useBenefitPolicy';
 import { formatCurrencyAED } from '@/lib/utils';
