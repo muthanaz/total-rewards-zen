@@ -184,16 +184,16 @@ export function BenefitDetailTemplate({
         <SummaryStatsCard
           icon={Icon}
           value={formatCurrency(entitlement.annualValue)}
-          label={frequency === 'annual' ? 'Annual' : 'Monthly'}
-          formula={`Total ${frequency} benefit value`}
+          label="Annual entitlement"
+          formula="Total annual benefit value"
           dataSource="Policy"
           variant="primary"
         />
         <SummaryStatsCard
           icon={Wallet}
           value={formatCurrency(entitlement.utilized)}
-          label="Used"
-          formula={`${requestType === 'claim' ? 'Claims' : 'Requests'} YTD`}
+          label="Paid YTD"
+          formula="Paid claims only"
           dataSource={entitlement.isEstimated ? 'Estimated' : 'System'}
           variant="utilized"
         />
@@ -201,7 +201,7 @@ export function BenefitDetailTemplate({
           icon={TrendingDown}
           value={formatCurrency(entitlement.remaining)}
           label="Remaining"
-          formula={`${frequency === 'annual' ? 'Annual' : 'Monthly'} - Used`}
+          formula="Annual entitlement - Paid YTD"
           dataSource="System"
           variant="remaining"
         />
@@ -326,27 +326,7 @@ export function BenefitDetailTemplate({
         </Card>
       )}
 
-      {/* F) Start claim/request CTA */}
-      <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-display font-semibold">{actionLabel}</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                {transactionModel === 'claim_only' 
-                  ? 'Submit your receipts and get reimbursed'
-                  : 'Request approval before incurring the expense'}
-              </p>
-            </div>
-            <Button onClick={() => setRequestSheetOpen(true)} size="lg" className="gap-2">
-              <Send className="h-4 w-4" />
-              {actionLabel}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* G) Recent activity (last 3 claims) */}
+      {/* F) Recent activity (last 3 claims) */}
       {recentClaims.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
