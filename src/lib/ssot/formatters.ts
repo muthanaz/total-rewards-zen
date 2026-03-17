@@ -63,9 +63,7 @@ export function formatMetricValue(
 
   switch (unit) {
     case 'currency':
-      // Import dynamically to avoid circular deps
-      const { formatCurrencyAED } = require('@/lib/utils');
-      return formatCurrencyAED(value, { abbreviate: true });
+      return `AED ${value >= 1000000 ? (value / 1000000).toFixed(1) + 'M' : value >= 1000 ? (value / 1000).toFixed(0) + 'K' : value.toFixed(0)}`;
     
     case 'percent':
       return `${value.toFixed(1)}%`;
