@@ -97,8 +97,8 @@ export function formatDelta(
   
   switch (unit) {
     case 'currency':
-      const { formatCurrencyAED } = require('@/lib/utils');
-      return `${sign}${formatCurrencyAED(value, { abbreviate: true })}`;
+      const absVal = Math.abs(value);
+      return `${sign}AED ${absVal >= 1000000 ? (absVal / 1000000).toFixed(1) + 'M' : absVal >= 1000 ? (absVal / 1000).toFixed(0) + 'K' : absVal.toFixed(0)}`;
     
     case 'percent':
       return `${sign}${value.toFixed(1)}%`;
