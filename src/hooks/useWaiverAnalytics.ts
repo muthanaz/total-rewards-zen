@@ -244,7 +244,7 @@ export function useWaiverAnalytics(options?: {
 
     const byPolicy: PolicyWaiverStats[] = Object.entries(policyWaivers)
       .map(([policyId, stats]) => {
-        const policy = policyMap.get(policyId);
+        const policy = policyMap.get(policyId) as any;
         return {
           policy_id: policyId,
           policy_title: policy?.title || 'Unknown Policy',

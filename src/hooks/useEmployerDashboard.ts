@@ -143,7 +143,7 @@ export function useExecutiveMetrics(organizationId?: string) {
       const excludedLifeAreas = ['health', 'money']; // Coverage and deferred
       
       const capBasedEntitlements = entitlements.filter(e => {
-        const lifeArea = benefitLifeAreaMap.get(e.benefit_id);
+        const lifeArea = benefitLifeAreaMap.get(e.benefit_id) as string | undefined;
         return lifeArea && !excludedLifeAreas.includes(lifeArea);
       });
       

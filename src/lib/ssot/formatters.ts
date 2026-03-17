@@ -63,9 +63,7 @@ export function formatMetricValue(
 
   switch (unit) {
     case 'currency':
-      // Import dynamically to avoid circular deps
-      const { formatCurrencyAED } = require('@/lib/utils');
-      return formatCurrencyAED(value, { abbreviate: true });
+      return `AED ${value >= 1000000 ? (value / 1000000).toFixed(1) + 'M' : value >= 1000 ? (value / 1000).toFixed(0) + 'K' : value.toFixed(0)}`;
     
     case 'percent':
       return `${value.toFixed(1)}%`;
@@ -99,8 +97,8 @@ export function formatDelta(
   
   switch (unit) {
     case 'currency':
-      const { formatCurrencyAED } = require('@/lib/utils');
-      return `${sign}${formatCurrencyAED(value, { abbreviate: true })}`;
+      const absVal = Math.abs(value);
+      return `${sign}AED ${absVal >= 1000000 ? (absVal / 1000000).toFixed(1) + 'M' : absVal >= 1000 ? (absVal / 1000).toFixed(0) + 'K' : absVal.toFixed(0)}`;
     
     case 'percent':
       return `${sign}${value.toFixed(1)}%`;
@@ -153,6 +151,5 @@ export function formatLastUpdated(date: Date | string | null | undefined): strin
   if (diffHours < 24) return `${diffHours}h ago`;
   
   // Fall back to absolute date
-  const { formatDate } = require('@/lib/utils');
-  return formatDate(d);
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }

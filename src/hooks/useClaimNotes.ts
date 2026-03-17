@@ -51,7 +51,7 @@ export function useClaimNotes(requestId: string | null, includeInternal = true) 
         .select('user_id, first_name, last_name, email')
         .in('user_id', authorIds);
       
-      const profileMap = new Map(profiles?.map(p => [
+      const profileMap = new Map(profiles?.map((p: any) => [
         p.user_id, 
         { name: `${p.first_name || ''} ${p.last_name || ''}`.trim(), email: p.email }
       ]) || []);
