@@ -62,7 +62,7 @@ export function useSessionSecurity(options: UseSessionSecurityOptions = {}) {
     const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
     
     // Debounce activity tracking
-    let activityTimeout: NodeJS.Timeout | null = null;
+    let activityTimeout: ReturnType<typeof setTimeout> | null = null;
     const throttledActivity = () => {
       if (activityTimeout) return;
       activityTimeout = setTimeout(() => {

@@ -133,7 +133,7 @@ export function useSharedRequests(options: UseSharedRequestsOptions = {}) {
         .select('user_id, first_name, last_name, email, department, grade')
         .in('user_id', userIds);
       
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p as { user_id: string; first_name: string | null; last_name: string | null; email: string | null; department: string | null; grade: string | null }]) || []);
       
       // Transform data with computed fields
       const now = new Date();

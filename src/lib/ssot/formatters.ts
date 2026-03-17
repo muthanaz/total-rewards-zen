@@ -151,6 +151,5 @@ export function formatLastUpdated(date: Date | string | null | undefined): strin
   if (diffHours < 24) return `${diffHours}h ago`;
   
   // Fall back to absolute date
-  const { formatDate } = require('@/lib/utils');
-  return formatDate(d);
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
